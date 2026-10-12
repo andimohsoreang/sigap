@@ -1,0 +1,103 @@
+# SIGAP — stack Docker. Jalankan dari folder ini (deploy/docker):
+#   cp .env.example .env   # isi nilainya
+#   docker compose build && docker compose up -d
+# Detail: docs/DEPLOY.md
+
+name: ${COMPOSE_PROJECT_NAME:-sigap}
+
+x-app: &app
+  image: ${SIGAP_IMAGE:-sigap-app}:${SIGAP_TAG:-latest}
+  pull_policy: never
+  env_file: .env
+  restart: unless-stopped
+  volumes:
+    - storage:/var/www/html/storage
+  networks: [internal]
+  depends_on:
+    db:
+      condition: service_healthy
+  logging: &logging
+    driver: json-file
+    options: { max-size: "10m", max-file: "5" }
+
+services:
+  app:
+    <<: *app
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+      target: app
+      args:
+        VITE_APP_NAME: ${VITE_APP_NAME:-SIGAP}
+        VITE_REVERB_APP_KEY: ${VITE_REVERB_APP_KEY:-}
+        VITE_REVERB_HOST: ${VITE_REVERB_HOST:-}
+        VITE_REVERB_PORT: ${VITE_REVERB_PORT:-443}
+        VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME:-https}
+    healthcheck:
+      test: ["CMD-SHELL", "SCRIPT_NAME=/fpm-ping SCRIPT_FILENAME=/fpm-ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000 | grep -q pong"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  queue:
+    <<: *app
+    command: ["php", "artisan", "queue:work", "--tries=3", "--backoff=10", "--max-time=3600", "--sleep=3"]
+    stop_grace_period: 60s
+
+  scheduler:
+    <<: *app
+    command: ["php", "artisan", "schedule:work"]
+
+  reverb:
+    <<: *app
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+
+  web:
+    image: ${SIGAP_WEB_IMAGE:-sigap-web}:${SIGAP_TAG:-latest}
+    pull_policy: never
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+      target: web
+      args:
+        VITE_APP_NAME: ${VITE_APP_NAME:-SIGAP}
+        VITE_REVERB_APP_KEY: ${VITE_REVERB_APP_KEY:-}
+        VITE_REVERB_HOST: ${VITE_REVERB_HOST:-}
+        VITE_REVERB_PORT: ${VITE_REVERB_PORT:-443}
+        VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME:-https}
+    restart: unless-stopped
+    # Hanya di loopback host: cloudflared (di host) → http://127.0.0.1:${WEB_PORT}.
+    # Docker melewati ufw untuk port yang dipublikasikan, jadi JANGAN ubah ke 0.0.0.0.
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8092}:80"
+    depends_on:
+      app:
+        condition: service_healthy
+      reverb:
+        condition: service_started
+    networks: [internal]
+    logging: *logging
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-sigap}
+      POSTGRES_USER: ${DB_USERNAME:-sigap}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib diisi di .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+volumes:
+  storage:
+  pgdata:
+
+networks:
+  internal:
