@@ -231,19 +231,35 @@
 
 /* --------------------------------------------------------------------------
    Scope gaya absol.id untuk panel admin (tidak memengaruhi halaman publik).
-   Tipografi: Space Grotesk (heading, uppercase) + Jost (body); tombol pill;
+   Tipografi: Inter untuk semua teks (x-height tinggi, terbaca di tabel padat
+   dan ukuran kecil) + JetBrains Mono untuk kode tiket/IP; tombol pill;
    input/select membulat 12px seperti .form-control milik absol.id.
    -------------------------------------------------------------------------- */
 .absol-admin {
-    font-family: var(--font-body);
+    /* Utilitas font-heading/font-body/font-mono di dalam admin ikut Inter/Mono. */
+    --font-heading: var(--font-sans);
+    --font-body: var(--font-sans);
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    font-family: var(--font-sans);
+    /* cv05: "l" berekor, cv08: "I" berserif — l/I/1 tidak tertukar di NIK & kode. */
+    font-feature-settings:
+        'cv05' 1,
+        'cv08' 1;
+    -webkit-font-smoothing: antialiased;
 }
 
 .absol-admin h1,
 .absol-admin h2,
 .absol-admin h3 {
     font-family: var(--font-heading);
-    letter-spacing: -0.01em;
-    text-transform: uppercase;
+    letter-spacing: -0.015em;
+}
+
+/* Angka sejajar per kolom di tabel & kartu statistik. */
+.absol-admin table,
+.absol-admin .tabular-nums {
+    font-variant-numeric: tabular-nums;
 }
 
 .absol-admin button:not([role='combobox']) {

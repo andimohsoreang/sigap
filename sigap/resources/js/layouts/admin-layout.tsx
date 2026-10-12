@@ -129,11 +129,7 @@ export default function AdminLayout({ children, title, subtitle, actions }: Admi
         <div className="absol-admin dark:bg-dark-bg min-h-screen bg-gray-50 transition-colors">
             <Head title={`${title} — Admin SIGAP`}>
                 <link rel="preconnect" href="https://fonts.bunny.net" />
-                <link
-                    rel="stylesheet"
-                    href="https://fonts.bunny.net/css?family=space-grotesk:500,700|jost:300,400,500,600,700"
-                    head-key="absol-fonts"
-                />
+                <link rel="stylesheet" href="https://fonts.bunny.net/css?family=jetbrains-mono:400,500" head-key="admin-fonts" />
             </Head>
 
             {/* Topbar */}
