@@ -80,15 +80,15 @@ export default function Pengaturan({ settings, categories, can_edit: canEdit }: 
     return (
         <AdminLayout title="Pengaturan & Preferensi" subtitle="Profil, SLA/EWS, kategori, dan notifikasi.">
             {!canEdit && (
-                <p className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/10 dark:text-blue-300">
+                <p className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
                     Pengaturan sistem, kategori, dan notifikasi hanya dapat diubah Super Admin. Anda tetap dapat memperbarui profil Anda sendiri.
                 </p>
             )}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {/* Profil */}
-                <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
-                    <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                        <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
+                <Card className="border-gray-200">
+                    <CardHeader className="border-b border-gray-100 pb-3">
+                        <CardTitle className="flex items-center gap-2 text-base text-gray-800">
                             <UserCog className="text-brand-light h-5 w-5" /> Profil Admin
                         </CardTitle>
                     </CardHeader>
@@ -134,9 +134,9 @@ export default function Pengaturan({ settings, categories, can_edit: canEdit }: 
                 </Card>
 
                 {/* SLA & EWS */}
-                <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
-                    <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                        <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
+                <Card className="border-gray-200">
+                    <CardHeader className="border-b border-gray-100 pb-3">
+                        <CardTitle className="flex items-center gap-2 text-base text-gray-800">
                             <Timer className="text-brand-light h-5 w-5" /> Konfigurasi SLA &amp; EWS
                         </CardTitle>
                     </CardHeader>
@@ -173,9 +173,9 @@ export default function Pengaturan({ settings, categories, can_edit: canEdit }: 
                 </Card>
 
                 {/* Kategori */}
-                <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
-                    <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                        <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
+                <Card className="border-gray-200">
+                    <CardHeader className="border-b border-gray-100 pb-3">
+                        <CardTitle className="flex items-center gap-2 text-base text-gray-800">
                             <ListChecks className="text-brand-light h-5 w-5" /> Manajemen Kategori Laporan
                         </CardTitle>
                     </CardHeader>
@@ -194,11 +194,11 @@ export default function Pengaturan({ settings, categories, can_edit: canEdit }: 
                             </div>
                         )}
                         {categoryError && <p className="mb-2 text-xs font-semibold text-rose-500">{categoryError}</p>}
-                        <div className="h-48 space-y-2 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-2 dark:border-gray-700 dark:bg-gray-800">
+                        <div className="h-48 space-y-2 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-2">
                             {categories.map((c) => (
                                 <div
                                     key={c.id}
-                                    className="flex items-center justify-between rounded border border-gray-100 bg-white p-2 text-xs font-bold text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                                    className="flex items-center justify-between rounded border border-gray-100 bg-white p-2 text-xs font-bold text-gray-700"
                                 >
                                     <span>{c.name}</span>
                                     {canEdit && (
@@ -217,16 +217,14 @@ export default function Pengaturan({ settings, categories, can_edit: canEdit }: 
                 </Card>
 
                 {/* Notifikasi internal */}
-                <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
-                    <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                        <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
+                <Card className="border-gray-200">
+                    <CardHeader className="border-b border-gray-100 pb-3">
+                        <CardTitle className="flex items-center gap-2 text-base text-gray-800">
                             <Bell className="h-5 w-5 text-orange-500" /> Notifikasi Tiket Internal
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6">
-                        <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
-                            Tujuan notifikasi saat pegawai mengirim laporan gangguan sarana &amp; TIK.
-                        </p>
+                        <p className="mb-4 text-xs text-gray-500">Tujuan notifikasi saat pegawai mengirim laporan gangguan sarana &amp; TIK.</p>
                         <form onSubmit={submitNotif} className="space-y-4">
                             <fieldset disabled={!canEdit} className="space-y-4">
                                 <Field
@@ -250,13 +248,11 @@ export default function Pengaturan({ settings, categories, can_edit: canEdit }: 
                                         placeholder="081234567890"
                                     />
                                 </Field>
-                                <div className="flex items-center gap-3 rounded-lg border border-gray-200 p-3 opacity-60 dark:border-gray-700">
+                                <div className="flex items-center gap-3 rounded-lg border border-gray-200 p-3 opacity-60">
                                     <Checkbox checked={false} disabled />
                                     <div>
-                                        <p className="text-xs font-bold text-gray-800 dark:text-white">
-                                            Kirim WhatsApp otomatis untuk urgensi Kritis
-                                        </p>
-                                        <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                        <p className="text-xs font-bold text-gray-800">Kirim WhatsApp otomatis untuk urgensi Kritis</p>
+                                        <p className="text-[11px] text-gray-500">
                                             Belum diaktifkan (PRD D10). Notifikasi hanya lewat email &amp; in-app.
                                         </p>
                                     </div>
@@ -281,9 +277,9 @@ export default function Pengaturan({ settings, categories, can_edit: canEdit }: 
 
 function ToggleRow({ label, checked, onChange, disabled }: { label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
     return (
-        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-3 transition hover:bg-gray-50 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60 dark:border-gray-700 dark:hover:bg-gray-800">
+        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-3 transition hover:bg-gray-50 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60">
             <Checkbox checked={checked} disabled={disabled} onCheckedChange={(v) => onChange(Boolean(v))} />
-            <span className="text-xs font-bold text-gray-800 dark:text-white">{label}</span>
+            <span className="text-xs font-bold text-gray-800">{label}</span>
         </label>
     );
 }
@@ -291,7 +287,7 @@ function ToggleRow({ label, checked, onChange, disabled }: { label: string; chec
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
     return (
         <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-gray-600 dark:text-gray-400">{label}</Label>
+            <Label className="text-xs font-bold text-gray-600">{label}</Label>
             {children}
             {error && <p className="text-xs font-semibold text-rose-500">{error}</p>}
         </div>

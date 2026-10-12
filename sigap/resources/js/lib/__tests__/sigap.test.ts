@@ -24,12 +24,12 @@ describe('STATUS_LABELS', () => {
         expect(STATUS_LABELS.selesai).toBe('Selesai');
     });
 
-    it('setiap status punya kelas warna (light & dark)', () => {
+    it('setiap status punya kelas warna', () => {
         for (const key of Object.keys(STATUS_LABELS)) {
             const classes = STATUS_CLASSES[key];
 
             expect(classes).toBeTruthy();
-            expect(classes).toContain('dark:');
+            expect(classes).not.toContain('dark:');
         }
     });
 });

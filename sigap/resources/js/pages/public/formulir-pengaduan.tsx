@@ -84,20 +84,20 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
                     <Link href="/katalog" className="hover:text-brand-light">
                         Katalog Pengaduan
                     </Link>{' '}
-                    &gt; <span className="text-gray-700 dark:text-gray-300">Formulir SIGAP</span>
+                    &gt; <span className="text-gray-700">Formulir SIGAP</span>
                 </p>
 
-                <Card className="dark:bg-dark-card border-gray-100 dark:border-gray-800">
+                <Card className="border-gray-100">
                     <CardContent className="p-6 md:p-8">
-                        <h1 className="text-primary dark:text-brand-light mb-1 text-2xl font-bold">Silakan lengkapi formulir aduan</h1>
-                        <p className="mb-8 text-sm text-gray-500 dark:text-gray-400">
+                        <h1 className="text-primary mb-1 text-2xl font-bold">Silakan lengkapi formulir aduan</h1>
+                        <p className="mb-8 text-sm text-gray-500">
                             Anda tetap bisa mengajukan pengaduan tanpa login. Sertakan detail lokasi &amp; bukti agar cepat ditindaklanjuti.
                         </p>
 
                         <form onSubmit={submit} className="space-y-8">
                             {/* DATA PELAPOR */}
                             <fieldset className="space-y-4">
-                                <legend className="mb-2 text-sm font-bold tracking-wide text-gray-800 uppercase dark:text-white">Data Pelapor</legend>
+                                <legend className="mb-2 text-sm font-bold tracking-wide text-gray-800 uppercase">Data Pelapor</legend>
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <Field label="NIK (KTP)" htmlFor="nik" required error={errors.nik}>
                                         <Input
@@ -135,9 +135,7 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
 
                             {/* DETAIL LAPORAN */}
                             <fieldset className="space-y-4">
-                                <legend className="mb-2 text-sm font-bold tracking-wide text-gray-800 uppercase dark:text-white">
-                                    Detail Laporan
-                                </legend>
+                                <legend className="mb-2 text-sm font-bold tracking-wide text-gray-800 uppercase">Detail Laporan</legend>
                                 <Field label="Judul Laporan" htmlFor="judul" required error={errors.judul}>
                                     <Input id="judul" name="judul" value={data.judul} onChange={(e) => setData('judul', e.target.value)} />
                                 </Field>
@@ -219,9 +217,7 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
 
                             {/* PRIVASI & LAMPIRAN */}
                             <fieldset className="space-y-4">
-                                <legend className="mb-2 text-sm font-bold tracking-wide text-gray-800 uppercase dark:text-white">
-                                    Privasi &amp; Lampiran
-                                </legend>
+                                <legend className="mb-2 text-sm font-bold tracking-wide text-gray-800 uppercase">Privasi &amp; Lampiran</legend>
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                                     {VISIBILITIES.map((v) => (
                                         <button
@@ -230,20 +226,20 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
                                             onClick={() => setData('visibility', v.value)}
                                             className={`rounded-xl border p-4 text-left transition ${
                                                 data.visibility === v.value
-                                                    ? 'border-primary bg-brand-soft/60 dark:bg-gray-800'
-                                                    : 'hover:border-brand-light border-gray-200 dark:border-gray-700'
+                                                    ? 'border-primary bg-brand-soft/60'
+                                                    : 'hover:border-brand-light border-gray-200'
                                             }`}
                                         >
-                                            <p className="font-bold text-gray-800 dark:text-white">{v.label}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{v.desc}</p>
+                                            <p className="font-bold text-gray-800">{v.label}</p>
+                                            <p className="text-xs text-gray-500">{v.desc}</p>
                                         </button>
                                     ))}
                                 </div>
                                 {errors.visibility && <p className="text-xs font-semibold text-rose-500">{errors.visibility}</p>}
                                 <Field label="Lampiran Bukti (Opsional)" error={errors.attachment}>
-                                    <label className="hover:border-brand-light flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-8 text-center transition dark:border-gray-600 dark:bg-gray-800">
+                                    <label className="hover:border-brand-light flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-8 text-center transition">
                                         <Upload className="mb-2 h-6 w-6 text-gray-400" />
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        <span className="text-sm text-gray-500">
                                             {data.attachment ? data.attachment.name : 'Klik untuk unggah (JPG/PNG/PDF, maks. 5 MB)'}
                                         </span>
                                         <input
@@ -260,7 +256,7 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
                             {/* reCAPTCHA v3 berjalan tak terlihat; teks wajib dari Google. */}
                             <RecaptchaNotice enabled={recaptcha.enabled} error={recaptcha.error ?? errors.recaptcha_token} />
 
-                            <label className="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
+                            <label className="flex items-start gap-3 text-sm text-gray-600">
                                 <Checkbox
                                     aria-label="Pernyataan benar"
                                     checked={data.agree}
@@ -306,7 +302,7 @@ function Field({
 }) {
     return (
         <div className="space-y-2">
-            <Label htmlFor={htmlFor} className="text-gray-700 dark:text-gray-300">
+            <Label htmlFor={htmlFor} className="text-gray-700">
                 {label} {required && <span className="text-rose-500">*</span>}
             </Label>
             {children}

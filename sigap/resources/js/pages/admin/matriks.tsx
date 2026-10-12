@@ -41,7 +41,7 @@ export default function Matriks({ tickets, rekap, filters, options }: Props) {
         {
             id: 'no',
             header: 'No',
-            meta: { label: 'No', disableToggle: true, disableSorting: true, className: 'w-[60px] text-gray-500 dark:text-gray-400' },
+            meta: { label: 'No', disableToggle: true, disableSorting: true, className: 'w-[60px] text-gray-500' },
             cell: ({ row }) => (tickets.meta.from ?? 1) + row.index,
         },
         {
@@ -50,7 +50,7 @@ export default function Matriks({ tickets, rekap, filters, options }: Props) {
             cell: ({ row }) => (
                 <div>
                     <div className="text-brand-light font-bold">#{row.original.nomor}</div>
-                    <div className="mt-0.5 max-w-[220px] truncate text-xs text-gray-500 dark:text-gray-400">{row.original.judul}</div>
+                    <div className="mt-0.5 max-w-[220px] truncate text-xs text-gray-500">{row.original.judul}</div>
                 </div>
             ),
         },
@@ -80,11 +80,11 @@ export default function Matriks({ tickets, rekap, filters, options }: Props) {
             header: 'SLA / EWS',
             cell: ({ row }) =>
                 row.original.overdue ? (
-                    <span className="flex w-fit items-center gap-1.5 rounded bg-red-50 px-2 py-0.5 font-bold text-red-600 dark:bg-red-900/30">
+                    <span className="flex w-fit items-center gap-1.5 rounded bg-red-50 px-2 py-0.5 font-bold text-red-600">
                         <AlertTriangle className="h-3.5 w-3.5" /> EWS
                     </span>
                 ) : (
-                    <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
+                    <span className="flex items-center gap-1.5 text-gray-600">
                         <Clock className="h-3.5 w-3.5 text-green-500" /> Aman
                     </span>
                 ),
@@ -183,7 +183,7 @@ export default function Matriks({ tickets, rekap, filters, options }: Props) {
                         ],
                     },
                 ]}
-                rowClassName={(row) => cn(row.overdue && 'bg-red-50/40 hover:bg-red-50/60 dark:bg-red-900/10 dark:hover:bg-red-900/20')}
+                rowClassName={(row) => cn(row.overdue && 'bg-red-50/40 hover:bg-red-50/60')}
                 serverSide={{
                     url: '/admin/matriks',
                     meta: tickets.meta,

@@ -104,7 +104,7 @@ export default function NotificationBell() {
             <button
                 type="button"
                 onClick={() => setOpen((v) => !v)}
-                className="hover:text-primary relative text-gray-400 dark:text-gray-300"
+                className="hover:text-primary relative text-gray-400"
                 aria-label={`Notifikasi${unread ? ` (${unread} baru)` : ''}`}
                 aria-expanded={open}
             >
@@ -119,9 +119,9 @@ export default function NotificationBell() {
             {open && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
-                    <div className="dark:bg-dark-card absolute right-0 z-50 mt-3 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700">
-                        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-700">
-                            <span className="text-sm font-bold text-gray-800 dark:text-white">Notifikasi</span>
+                    <div className="absolute right-0 z-50 mt-3 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                            <span className="text-sm font-bold text-gray-800">Notifikasi</span>
                             {unread > 0 && (
                                 <button
                                     type="button"
@@ -143,15 +143,15 @@ export default function NotificationBell() {
                                         type="button"
                                         onClick={() => openItem(n)}
                                         className={cn(
-                                            'flex w-full items-start gap-3 border-b border-gray-50 p-3 text-left transition hover:bg-gray-50 dark:border-gray-700/50 dark:hover:bg-gray-800',
+                                            'flex w-full items-start gap-3 border-b border-gray-50 p-3 text-left transition hover:bg-gray-50',
                                         )}
                                     >
-                                        <div className="bg-brand-soft text-primary dark:bg-primary-light/20 dark:text-brand-light mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
+                                        <div className="bg-brand-soft text-primary mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
                                             <Ticket className="h-4 w-4" />
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="truncate text-xs font-bold text-gray-800 dark:text-white">{n.title}</p>
-                                            <p className="truncate text-[11px] text-gray-500 dark:text-gray-400">{n.subtitle}</p>
+                                            <p className="truncate text-xs font-bold text-gray-800">{n.title}</p>
+                                            <p className="truncate text-[11px] text-gray-500">{n.subtitle}</p>
                                         </div>
                                     </button>
                                 ))

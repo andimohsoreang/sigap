@@ -51,22 +51,22 @@ export function Pagination({
 
     if (meta.total === 0) {
         return (
-            <div className={cn('px-5 py-4 text-xs text-gray-500 dark:text-gray-400', className)}>Tidak ada {itemLabel}.</div>
+            <div className={cn('px-5 py-4 text-xs text-gray-500', className)}>Tidak ada {itemLabel}.</div>
         );
     }
 
     return (
         <div
             className={cn(
-                'flex flex-col items-center justify-between gap-3 border-t border-gray-200 px-5 py-3 sm:flex-row dark:border-gray-700',
+                'flex flex-col items-center justify-between gap-3 border-t border-gray-200 px-5 py-3 sm:flex-row',
                 className,
             )}
         >
             <div className="flex items-center gap-4">
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                    Menampilkan <strong className="text-gray-700 dark:text-gray-200">{from}</strong>–
-                    <strong className="text-gray-700 dark:text-gray-200">{to}</strong> dari{' '}
-                    <strong className="text-gray-700 dark:text-gray-200">{meta.total}</strong> {itemLabel}
+                <span className="text-xs text-gray-500">
+                    Menampilkan <strong className="text-gray-700">{from}</strong>–
+                    <strong className="text-gray-700">{to}</strong> dari{' '}
+                    <strong className="text-gray-700">{meta.total}</strong> {itemLabel}
                 </span>
                 {onPerPageChange && (
                     <Select value={String(meta.per_page)} onValueChange={(v) => onPerPageChange(Number(v))}>

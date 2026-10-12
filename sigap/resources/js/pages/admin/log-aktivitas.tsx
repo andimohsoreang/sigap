@@ -65,7 +65,7 @@ export default function LogAktivitas({ logs, filters, actions }: Props) {
             accessorKey: 'action',
             header: 'Aksi',
             cell: ({ getValue }) => (
-                <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700">
                     {ACTION_LABEL[getValue<string>()] ?? getValue<string>()}
                 </span>
             ),

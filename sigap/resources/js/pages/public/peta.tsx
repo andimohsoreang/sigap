@@ -45,15 +45,15 @@ export default function Peta({ regions, points }: Props) {
             <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
                 <div className="mb-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-                            SIGAP <span className="text-primary dark:text-brand-light">Peta</span>
+                        <h1 className="text-3xl font-bold text-gray-800">
+                            SIGAP <span className="text-primary">Peta</span>
                         </h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-gray-500">
                             {regions} Kawasan Transmigrasi · {points.reduce((s, p) => s + p.kk_count, 0)} KK
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">Kawasan / Wilayah</span>
+                        <span className="text-sm text-gray-500">Kawasan / Wilayah</span>
                         <Select value={province} onValueChange={setProvince}>
                             <SelectTrigger className="w-52">
                                 <SelectValue placeholder="Semua Wilayah" />
@@ -70,7 +70,7 @@ export default function Peta({ regions, points }: Props) {
                     </div>
                 </div>
 
-                <Card className="dark:bg-dark-card overflow-hidden border-gray-100 dark:border-gray-800">
+                <Card className="overflow-hidden border-gray-100">
                     <CardContent className="p-0">
                         {mounted ? (
                             <MapContainer center={center} zoom={5} scrollWheelZoom className="h-[520px] w-full">
@@ -98,11 +98,11 @@ export default function Peta({ regions, points }: Props) {
 
                 <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {filtered.map((p) => (
-                        <Card key={p.id} className="dark:bg-dark-card border-gray-100 dark:border-gray-800">
+                        <Card key={p.id} className="border-gray-100">
                             <CardContent className="p-4">
                                 <p className="text-secondary text-xs font-bold">{p.code}</p>
-                                <p className="font-bold text-gray-800 dark:text-white">{p.name}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                <p className="font-bold text-gray-800">{p.name}</p>
+                                <p className="text-xs text-gray-500">
                                     {p.province} · {p.kk_count} KK
                                 </p>
                             </CardContent>

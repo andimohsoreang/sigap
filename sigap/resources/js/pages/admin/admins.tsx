@@ -74,7 +74,7 @@ export default function Admins({ admins, regions, roles }: Props) {
             accessorKey: 'role_value',
             header: 'Peran',
             cell: ({ getValue }) => (
-                <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-bold text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-bold text-purple-700">
                     {getValue<string | null>() === 'super_admin' ? 'Super Admin' : 'Admin Biasa'}
                 </span>
             ),
@@ -93,9 +93,9 @@ export default function Admins({ admins, regions, roles }: Props) {
 
     return (
         <AdminLayout title="Daftar Admin SIGAP" subtitle="Kelola akun petugas dan admin kawasan.">
-            <Card className="dark:bg-dark-card mb-6 border-gray-200 dark:border-gray-700">
-                <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                    <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
+            <Card className="mb-6 border-gray-200">
+                <CardHeader className="border-b border-gray-100 pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base text-gray-800">
                         <UserPlus className="text-brand-light h-5 w-5" /> Formulir Tambah Admin Baru
                     </CardTitle>
                 </CardHeader>
@@ -210,7 +210,7 @@ function Field({
 }) {
     return (
         <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-gray-600 dark:text-gray-400">
+            <Label className="text-xs font-bold text-gray-600">
                 {label} {required && <span className="text-red-500">*</span>}
             </Label>
             {children}

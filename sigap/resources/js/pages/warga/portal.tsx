@@ -37,11 +37,11 @@ interface Props {
 }
 
 const STATUS_STYLE: Record<string, string> = {
-    baru: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    verifikasi: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
-    diproses: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
-    selesai: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-    ditolak: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+    baru: 'bg-amber-100 text-amber-700',
+    verifikasi: 'bg-sky-100 text-sky-700',
+    diproses: 'bg-indigo-100 text-indigo-700',
+    selesai: 'bg-emerald-100 text-emerald-700',
+    ditolak: 'bg-rose-100 text-rose-700',
 };
 
 export default function WargaPortal({ profile, tickets }: Props) {
@@ -69,11 +69,11 @@ export default function WargaPortal({ profile, tickets }: Props) {
                     <Link href="/" className="hover:text-brand-light">
                         Beranda
                     </Link>{' '}
-                    &gt; <span className="text-gray-700 dark:text-gray-300">Portal Warga</span>
+                    &gt; <span className="text-gray-700">Portal Warga</span>
                 </p>
 
                 {(flash?.success || flash?.error) && (
-                    <div className="dark:bg-dark-card mb-6 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300">
+                    <div className="mb-6 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600">
                         {flash.success ?? flash.error}
                     </div>
                 )}
@@ -109,14 +109,14 @@ export default function WargaPortal({ profile, tickets }: Props) {
                     <AkunForm profile={profile} />
 
                     {/* RIWAYAT TIKET */}
-                    <Card className="dark:bg-dark-card w-full border-gray-100 transition-colors lg:w-2/3 dark:border-gray-700">
-                        <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                            <CardTitle className="flex items-center gap-2 text-lg text-gray-800 dark:text-white">
+                    <Card className="w-full border-gray-100 transition-colors lg:w-2/3">
+                        <CardHeader className="border-b border-gray-100 pb-3">
+                            <CardTitle className="flex items-center gap-2 text-lg text-gray-800">
                                 <Clock className="text-brand-light h-5 w-5" /> Riwayat Tiket Pengaduan
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
-                            <div className="border-b border-gray-100 p-4 dark:border-gray-700">
+                            <div className="border-b border-gray-100 p-4">
                                 <div className="relative">
                                     <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                     <Input
@@ -130,7 +130,7 @@ export default function WargaPortal({ profile, tickets }: Props) {
 
                             <div className="overflow-x-auto">
                                 <table className="w-full min-w-[640px] text-left text-sm whitespace-nowrap">
-                                    <thead className="border-b border-gray-200 bg-gray-50 text-[11px] font-bold text-gray-600 uppercase dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                    <thead className="border-b border-gray-200 bg-gray-50 text-[11px] font-bold text-gray-600 uppercase">
                                         <tr>
                                             <th scope="col" className="px-5 py-3">
                                                 ID Tiket
@@ -149,7 +149,7 @@ export default function WargaPortal({ profile, tickets }: Props) {
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-100 text-gray-700 dark:divide-gray-700 dark:text-gray-300">
+                                    <tbody className="divide-y divide-gray-100 text-gray-700">
                                         {filteredTickets.length === 0 ? (
                                             <tr>
                                                 <td colSpan={5} className="px-5 py-10 text-center text-sm text-gray-400">
@@ -160,7 +160,7 @@ export default function WargaPortal({ profile, tickets }: Props) {
                                             </tr>
                                         ) : (
                                             filteredTickets.map((t) => (
-                                                <tr key={t.nomor} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                                <tr key={t.nomor} className="transition-colors hover:bg-gray-50">
                                                     <td className="text-brand-light px-5 py-3 font-semibold">
                                                         #{t.nomor}
                                                         {t.kode_akses && (
@@ -171,7 +171,7 @@ export default function WargaPortal({ profile, tickets }: Props) {
                                                     </td>
                                                     <td className="px-5 py-3">{formatDate(t.tanggal)}</td>
                                                     <td className="max-w-[260px] truncate px-5 py-3">
-                                                        <span className="font-medium text-gray-800 dark:text-white">{t.judul}</span>
+                                                        <span className="font-medium text-gray-800">{t.judul}</span>
                                                         <span className="block text-xs text-gray-400">
                                                             {t.kategori ?? 'Umum'}
                                                             {t.kawasan ? ` • ${t.kawasan}` : ''} • {t.jenis}
@@ -206,7 +206,7 @@ export default function WargaPortal({ profile, tickets }: Props) {
                                 </table>
                             </div>
 
-                            <div className="flex items-center justify-between border-t border-gray-200 p-4 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                            <div className="flex items-center justify-between border-t border-gray-200 p-4 text-xs text-gray-500">
                                 <span>
                                     Menampilkan {filteredTickets.length} dari {tickets.length} tiket
                                 </span>
@@ -239,37 +239,37 @@ function AkunForm({ profile }: { profile: Profile }) {
     };
 
     return (
-        <Card className="dark:bg-dark-card h-fit w-full border-gray-100 transition-colors lg:w-1/3 dark:border-gray-700">
-            <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                <CardTitle className="flex items-center gap-2 text-lg text-gray-800 dark:text-white">
+        <Card className="h-fit w-full border-gray-100 transition-colors lg:w-1/3">
+            <CardHeader className="border-b border-gray-100 pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg text-gray-800">
                     <UserRound className="text-brand-light h-5 w-5" /> Pengaturan Akun
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
                 <form onSubmit={submit} className="space-y-4">
                     <div className="space-y-1.5">
-                        <Label htmlFor="nik" className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                        <Label htmlFor="nik" className="text-xs font-bold text-gray-600">
                             NIK
                         </Label>
                         {/* NIK hanya ditampilkan tersamar dan tidak dapat diubah (A-21). */}
                         <Input id="nik" value={profile.nik_masked ?? '-'} readOnly disabled aria-readonly className="font-mono" />
                     </div>
                     <div className="space-y-1.5">
-                        <Label htmlFor="email" className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                        <Label htmlFor="email" className="text-xs font-bold text-gray-600">
                             Alamat Email
                         </Label>
                         <Input id="email" type="email" value={data.email} onChange={(e) => setData('email', e.target.value)} />
                         {errors.email && <p className="text-xs font-semibold text-rose-500">{errors.email}</p>}
                     </div>
                     <div className="space-y-1.5">
-                        <Label htmlFor="telp" className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                        <Label htmlFor="telp" className="text-xs font-bold text-gray-600">
                             No. Telp / WhatsApp
                         </Label>
                         <Input id="telp" type="tel" value={data.telp} onChange={(e) => setData('telp', e.target.value)} />
                         {errors.telp && <p className="text-xs font-semibold text-rose-500">{errors.telp}</p>}
                     </div>
                     <div className="space-y-1.5">
-                        <Label htmlFor="current_password" className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                        <Label htmlFor="current_password" className="text-xs font-bold text-gray-600">
                             Kata Sandi Saat Ini
                         </Label>
                         <Input
@@ -283,7 +283,7 @@ function AkunForm({ profile }: { profile: Profile }) {
                         {errors.current_password && <p className="text-xs font-semibold text-rose-500">{errors.current_password}</p>}
                     </div>
                     <div className="space-y-1.5">
-                        <Label htmlFor="password" className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                        <Label htmlFor="password" className="text-xs font-bold text-gray-600">
                             Kata Sandi Baru
                         </Label>
                         <Input
@@ -298,7 +298,7 @@ function AkunForm({ profile }: { profile: Profile }) {
                         {errors.password && <p className="text-xs font-semibold text-rose-500">{errors.password}</p>}
                     </div>
                     <div className="space-y-1.5">
-                        <Label htmlFor="password_confirmation" className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                        <Label htmlFor="password_confirmation" className="text-xs font-bold text-gray-600">
                             Konfirmasi Kata Sandi
                         </Label>
                         <Input

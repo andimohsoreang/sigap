@@ -62,7 +62,7 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
 
     return (
         <PublicLayout title="Beranda">
-            <Head title="Beranda (Gaya Absol) — SIGAP">
+            <Head title="Beranda — SIGAP">
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link
                     rel="stylesheet"
@@ -124,7 +124,7 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
 
                         <form
                             onSubmit={submitTrack}
-                            className="mb-12 flex w-full max-w-4xl flex-col items-center rounded-3xl border border-white/25 bg-white p-2.5 shadow-2xl md:flex-row md:rounded-full dark:bg-gray-800"
+                            className="mb-12 flex w-full max-w-4xl flex-col items-center rounded-3xl border border-white/25 bg-white p-2.5 shadow-2xl md:flex-row md:rounded-full"
                         >
                             <div className="flex w-full flex-grow items-center py-2 pl-4">
                                 <Search className="mr-3 hidden h-4 w-4 text-gray-400 md:block" />
@@ -132,7 +132,7 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
                                     placeholder="Masukkan Nomor Tiket (Cth: TKT-261012-7KQ4MZ)…"
-                                    className="border-0 bg-transparent font-medium text-gray-700 shadow-none focus-visible:ring-0 md:text-lg dark:text-white"
+                                    className="border-0 bg-transparent font-medium text-gray-700 shadow-none focus-visible:ring-0 md:text-lg"
                                 />
                             </div>
                             <Button
@@ -148,25 +148,25 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                                 <Link
                                     key={page}
                                     href={`/${page === 'tentang' ? 'tentang' : page}`}
-                                    className="group border-border/70 relative flex flex-col items-start overflow-hidden rounded-xl border bg-white/95 p-6 shadow-md backdrop-blur transition-all duration-300 hover:-translate-y-2 hover:border-white hover:shadow-2xl dark:border-gray-700 dark:bg-gray-800/95"
+                                    className="group border-border/70 relative flex flex-col items-start overflow-hidden rounded-xl border bg-white/95 p-6 shadow-md backdrop-blur transition-all duration-300 hover:-translate-y-2 hover:border-white hover:shadow-2xl"
                                 >
                                     <Icon className="text-brand absolute -right-4 -bottom-4 h-24 w-24 opacity-5 transition duration-500 group-hover:scale-110" />
                                     <div className="bg-brand-light/10 text-brand-light group-hover:bg-brand-light mb-8 flex h-16 w-16 items-center justify-center rounded-full transition-colors duration-300 group-hover:text-white">
                                         <Icon className="h-7 w-7" />
                                     </div>
-                                    <h3 className="font-heading text-brand group-hover:text-brand-light relative z-10 text-lg leading-tight font-bold tracking-tight uppercase transition-colors dark:text-white">
+                                    <h3 className="font-heading text-brand group-hover:text-brand-light relative z-10 text-lg leading-tight font-bold tracking-tight uppercase transition-colors">
                                         {label}
                                         <br />
                                         {sub}
                                     </h3>
                                 </Link>
                             ))}
-                            <div className="group border-border/70 relative flex cursor-pointer flex-col items-start overflow-hidden rounded-xl border bg-white/95 p-6 shadow-md backdrop-blur transition-all duration-300 hover:-translate-y-2 hover:border-white hover:shadow-2xl dark:border-gray-700 dark:bg-gray-800/95">
+                            <div className="group border-border/70 relative flex cursor-pointer flex-col items-start overflow-hidden rounded-xl border bg-white/95 p-6 shadow-md backdrop-blur transition-all duration-300 hover:-translate-y-2 hover:border-white hover:shadow-2xl">
                                 <Headset className="text-brand absolute -right-4 -bottom-4 h-24 w-24 opacity-5 transition duration-500 group-hover:scale-110" />
                                 <div className="bg-brand-light/10 text-brand-light group-hover:bg-brand-light mb-8 flex h-16 w-16 items-center justify-center rounded-full transition-colors duration-300 group-hover:text-white">
                                     <Headset className="h-7 w-7" />
                                 </div>
-                                <h3 className="font-heading text-brand group-hover:text-brand-light relative z-10 text-lg leading-tight font-bold tracking-tight uppercase transition-colors dark:text-white">
+                                <h3 className="font-heading text-brand group-hover:text-brand-light relative z-10 text-lg leading-tight font-bold tracking-tight uppercase transition-colors">
                                     Kontak Kami
                                     <br />
                                     SIGAP
@@ -178,14 +178,14 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
 
                 {/* 5 KANAL */}
                 <section className="relative z-20 mx-auto my-16 max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="dark:bg-dark-card flex flex-col items-center gap-6 rounded-xl border border-gray-100 bg-white p-8 shadow-sm transition-shadow duration-300 hover:shadow-lg md:flex-row md:items-start md:gap-12 md:p-12 dark:border-gray-800">
+                    <div className="flex flex-col items-center gap-6 rounded-xl border border-gray-100 bg-white p-8 shadow-sm transition-shadow duration-300 hover:shadow-lg md:flex-row md:items-start md:gap-12 md:p-12">
                         <div className="flex shrink-0 items-start gap-4 md:w-1/3">
                             <span className="text-secondary font-heading text-7xl leading-none font-extrabold md:text-8xl">
                                 {stats.kanal_count || 5}
                             </span>
                             <div className="pt-1">
                                 <span className="text-brand-light mb-2 block text-xs font-bold tracking-[3px] uppercase">Kanal Resmi</span>
-                                <h2 className="font-heading text-brand dark:text-brand-light text-2xl leading-tight font-bold tracking-tight uppercase md:text-3xl">
+                                <h2 className="font-heading text-brand text-2xl leading-tight font-bold tracking-tight uppercase md:text-3xl">
                                     Kanal
                                     <br />
                                     Pengaduan
@@ -202,7 +202,7 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                                     <a
                                         key={ch.id}
                                         href={ch.url ?? '#'}
-                                        className="border-brand-light/40 text-brand hover:bg-brand-light font-heading hover:border-brand-light dark:text-brand-light flex w-fit items-center gap-4 rounded-full border-2 bg-white px-6 py-3 font-bold tracking-wide uppercase transition hover:text-white dark:bg-gray-800"
+                                        className="border-brand-light/40 text-brand hover:bg-brand-light font-heading hover:border-brand-light flex w-fit items-center gap-4 rounded-full border-2 bg-white px-6 py-3 font-bold tracking-wide uppercase transition hover:text-white"
                                     >
                                         <Icon className="h-5 w-5 shrink-0" />
                                         <span className="text-left text-sm leading-tight md:text-base">{ch.name}</span>
@@ -215,33 +215,31 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
 
                 {/* MAKLUMAT */}
                 <section className="mx-auto mb-16 max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="dark:bg-dark-card flex flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md transition-shadow duration-300 hover:shadow-xl md:flex-row dark:border-gray-800">
-                        <div className="bg-brand-light/5 relative flex flex-col items-center justify-center border-b border-gray-100 p-8 text-center md:w-1/3 md:border-r md:border-b-0 dark:border-gray-700 dark:bg-gray-800">
+                    <div className="flex flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md transition-shadow duration-300 hover:shadow-xl md:flex-row">
+                        <div className="bg-brand-light/5 relative flex flex-col items-center justify-center border-b border-gray-100 p-8 text-center md:w-1/3 md:border-r md:border-b-0">
                             <span className="bg-brand-light absolute top-0 left-0 h-full w-1 md:w-1.5" />
                             <div className="relative mb-4">
                                 <div className="bg-brand-light absolute inset-0 rounded-xl opacity-20 blur-md" />
-                                <div className="text-brand dark:text-brand-light relative flex h-24 w-20 items-center justify-center rounded-xl border border-gray-200 bg-white text-4xl shadow-md dark:border-gray-600 dark:bg-gray-700">
+                                <div className="text-brand relative flex h-24 w-20 items-center justify-center rounded-xl border border-gray-200 bg-white text-4xl shadow-md">
                                     <FileSignature className="h-9 w-9" />
                                     <span className="absolute right-2 bottom-2 rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                                         PDF
                                     </span>
                                 </div>
                             </div>
-                            <h3 className="font-heading text-brand mb-1 font-bold tracking-tight uppercase dark:text-white">
-                                Dokumen Resmi Maklumat
-                            </h3>
-                            <p className="mb-5 text-xs text-gray-500 dark:text-gray-400">Diperbarui: Jan 2026 | Ukuran: 1.2 MB</p>
+                            <h3 className="font-heading text-brand mb-1 font-bold tracking-tight uppercase">Dokumen Resmi Maklumat</h3>
+                            <p className="mb-5 text-xs text-gray-500">Diperbarui: Jan 2026 | Ukuran: 1.2 MB</p>
                             <Button size="sm" className="font-heading rounded-full font-bold tracking-wide uppercase">
                                 <FileSignature className="h-4 w-4" /> Unduh File
                             </Button>
                         </div>
                         <div className="flex flex-col justify-center p-8 md:w-2/3">
                             <span className="text-brand-light mb-3 w-fit text-xs font-bold tracking-[3px] uppercase">Komitmen SIGAP</span>
-                            <h2 className="font-heading text-brand dark:text-brand-light mb-4 text-2xl font-bold tracking-tight uppercase">
+                            <h2 className="font-heading text-brand mb-4 text-2xl font-bold tracking-tight uppercase">
                                 Maklumat Pelayanan dan Penilaian
                             </h2>
                             <div className="bg-brand-light mb-6 h-[3px] w-20 rounded-full" />
-                            <p className="leading-relaxed text-gray-600 dark:text-gray-300">
+                            <p className="leading-relaxed text-gray-600">
                                 "Kami Pimpinan dan Seluruh Agen SIGAP menyatakan sanggup menyelenggarakan pelayanan publik pada program transformasi
                                 5T yang sesuai standar pelayanan. Apabila kami tidak menepati maklumat ini, kami siap menerima sanksi sesuai dengan
                                 peraturan perundang-undangan."
@@ -254,7 +252,7 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                 <section className="mx-auto mb-16 max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto mb-10 max-w-4xl text-center">
                         <span className="text-brand-light mb-3 block text-xs font-bold tracking-[3px] uppercase">Pertanyaan Umum</span>
-                        <h2 className="font-heading text-brand text-3xl font-extrabold tracking-tight uppercase md:text-4xl dark:text-white">
+                        <h2 className="font-heading text-brand text-3xl font-extrabold tracking-tight uppercase md:text-4xl">
                             Frequently Asked Questions
                         </h2>
                         <div className="bg-brand-light mx-auto mt-5 h-[3px] w-20 rounded-full" />
@@ -273,24 +271,22 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                         {filteredFaqs.map((faq) => (
                             <details
                                 key={faq.question}
-                                className="group dark:bg-dark-card hover:border-brand-light/40 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-gray-800"
+                                className="group hover:border-brand-light/40 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                             >
                                 <summary className="flex cursor-pointer list-none items-center gap-4 p-5">
                                     <div className="bg-brand-light flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white">
                                         <ChevronDown className="h-5 w-5 transition group-open:rotate-180" />
                                     </div>
-                                    <h3 className="font-heading text-brand text-sm leading-snug font-bold tracking-tight md:text-[15px] dark:text-white">
+                                    <h3 className="font-heading text-brand text-sm leading-snug font-bold tracking-tight md:text-[15px]">
                                         {faq.question}
                                     </h3>
                                 </summary>
-                                <div className="border-t border-gray-50 px-5 pt-4 pb-5 pl-[72px] text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                                    {faq.answer}
-                                </div>
+                                <div className="border-t border-gray-50 px-5 pt-4 pb-5 pl-[72px] text-sm text-gray-500">{faq.answer}</div>
                             </details>
                         ))}
                     </div>
                     {filteredFaqs.length === 0 && (
-                        <p className="mt-8 text-center text-gray-500 italic dark:text-gray-400">Maaf, pertanyaan yang Anda cari tidak ditemukan.</p>
+                        <p className="mt-8 text-center text-gray-500 italic">Maaf, pertanyaan yang Anda cari tidak ditemukan.</p>
                     )}
                 </section>
             </div>

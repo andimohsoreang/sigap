@@ -32,7 +32,7 @@ export default function PedomanLayanan() {
                                 {idx + 1}
                             </span>
                             <div>
-                                <p className="font-bold text-gray-800 dark:text-white">{step}</p>
+                                <p className="font-bold text-gray-800">{step}</p>
                                 <p className="text-sm">{desc}</p>
                             </div>
                         </li>
@@ -44,10 +44,7 @@ export default function PedomanLayanan() {
                 <p>SIGAP menyediakan 5 kanal resmi berikut. Laporan di luar kanal ini tidak dapat dijamin diproses.</p>
                 <div className="flex flex-wrap gap-3">
                     {KANAL.map((k) => (
-                        <span
-                            key={k}
-                            className="border-secondary/60 text-primary dark:bg-dark-card dark:text-brand-light rounded-full border bg-white px-4 py-2 text-sm font-medium"
-                        >
+                        <span key={k} className="border-secondary/60 text-primary rounded-full border bg-white px-4 py-2 text-sm font-medium">
                             {k}
                         </span>
                     ))}
@@ -55,22 +52,22 @@ export default function PedomanLayanan() {
             </Section>
 
             <Section title="Standar Waktu Layanan (SLA)">
-                <Card className="dark:bg-dark-card overflow-hidden border-gray-100 dark:border-gray-800">
+                <Card className="overflow-hidden border-gray-100">
                     <CardContent className="overflow-x-auto p-0">
                         <table className="w-full text-sm">
-                            <thead className="bg-gray-50 dark:bg-gray-800">
+                            <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-5 py-3 text-left font-bold text-gray-600 dark:text-gray-300">Kategori Aduan</th>
-                                    <th className="px-5 py-3 text-left font-bold text-gray-600 dark:text-gray-300">Target Respons Awal</th>
-                                    <th className="px-5 py-3 text-left font-bold text-gray-600 dark:text-gray-300">Target Penyelesaian</th>
+                                    <th className="px-5 py-3 text-left font-bold text-gray-600">Kategori Aduan</th>
+                                    <th className="px-5 py-3 text-left font-bold text-gray-600">Target Respons Awal</th>
+                                    <th className="px-5 py-3 text-left font-bold text-gray-600">Target Penyelesaian</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {SLA.map(([kat, resp, done]) => (
-                                    <tr key={kat} className="border-t border-gray-50 dark:border-gray-700">
-                                        <td className="px-5 py-3 font-semibold text-gray-800 dark:text-white">{kat}</td>
-                                        <td className="px-5 py-3 text-gray-600 dark:text-gray-300">{resp}</td>
-                                        <td className="px-5 py-3 text-gray-600 dark:text-gray-300">{done}</td>
+                                    <tr key={kat} className="border-t border-gray-50">
+                                        <td className="px-5 py-3 font-semibold text-gray-800">{kat}</td>
+                                        <td className="px-5 py-3 text-gray-600">{resp}</td>
+                                        <td className="px-5 py-3 text-gray-600">{done}</td>
                                     </tr>
                                 ))}
                             </tbody>

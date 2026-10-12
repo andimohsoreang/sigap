@@ -79,10 +79,8 @@ export default function Lacak({ query, kode = '', butuh_kode: butuhKode = false,
             <Head title="Lacak Tiket — SIGAP" />
 
             <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
-                <h1 className="mb-2 text-center text-3xl font-bold text-gray-800 dark:text-white">Lacak Status Laporan</h1>
-                <p className="mb-8 text-center text-gray-500 dark:text-gray-400">
-                    Masukkan nomor tiket yang Anda terima (contoh: {TICKET_NO_EXAMPLE}).
-                </p>
+                <h1 className="mb-2 text-center text-3xl font-bold text-gray-800">Lacak Status Laporan</h1>
+                <p className="mb-8 text-center text-gray-500">Masukkan nomor tiket yang Anda terima (contoh: {TICKET_NO_EXAMPLE}).</p>
 
                 <form onSubmit={submit} className="mx-auto mb-10 max-w-xl" noValidate>
                     <div className="flex gap-2">
@@ -105,7 +103,7 @@ export default function Lacak({ query, kode = '', butuh_kode: butuhKode = false,
                     </div>
                     {legacy && (
                         <div className="mt-3">
-                            <label htmlFor="kode-akses" className="mb-1 block text-xs font-bold text-gray-600 dark:text-gray-400">
+                            <label htmlFor="kode-akses" className="mb-1 block text-xs font-bold text-gray-600">
                                 Kode akses
                             </label>
                             <Input
@@ -132,17 +130,15 @@ export default function Lacak({ query, kode = '', butuh_kode: butuhKode = false,
                 </form>
 
                 {notFound && (
-                    <Card className="dark:bg-dark-card mx-auto max-w-xl border-rose-100 dark:border-rose-900/40">
+                    <Card className="mx-auto max-w-xl border-rose-100">
                         <CardContent className="flex flex-col items-center p-8 text-center">
                             <XCircle className="mb-3 h-12 w-12 text-rose-500" />
-                            <h2 className="mb-1 text-lg font-bold text-gray-800 dark:text-white">Tiket Tidak Ditemukan</h2>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <h2 className="mb-1 text-lg font-bold text-gray-800">Tiket Tidak Ditemukan</h2>
+                            <p className="text-sm text-gray-500">
                                 Nomor <strong>{query}</strong> tidak ditemukan atau merupakan tiket internal yang tidak dapat diakses publik.
                             </p>
                             {butuhKode && (
-                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                    Untuk nomor format lama, pastikan kode akses yang Anda masukkan benar.
-                                </p>
+                                <p className="mt-2 text-sm text-gray-500">Untuk nomor format lama, pastikan kode akses yang Anda masukkan benar.</p>
                             )}
                         </CardContent>
                     </Card>
@@ -150,49 +146,49 @@ export default function Lacak({ query, kode = '', butuh_kode: butuhKode = false,
 
                 {data && (
                     <div className="space-y-6">
-                        <Card className="dark:bg-dark-card border-gray-100 dark:border-gray-800">
+                        <Card className="border-gray-100">
                             <CardContent className="p-6">
                                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                                     <div>
                                         <p className="text-sm text-gray-400">Status Laporan Anda</p>
-                                        <h2 className="text-primary dark:text-brand-light text-2xl font-bold">#{data.nomor}</h2>
+                                        <h2 className="text-primary text-2xl font-bold">#{data.nomor}</h2>
                                     </div>
                                     <span className={`rounded-full px-4 py-1.5 text-sm font-bold ${statusClass(data.status)}`}>
                                         {statusLabel(data.status)}
                                     </span>
                                 </div>
                                 <Separator className="my-4" />
-                                <h3 className="mb-1 font-bold text-gray-800 dark:text-white">{data.judul}</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">{data.deskripsi}</p>
+                                <h3 className="mb-1 font-bold text-gray-800">{data.judul}</h3>
+                                <p className="text-sm text-gray-600">{data.deskripsi}</p>
 
                                 <div className="mt-5 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
                                     <div>
                                         <p className="text-xs font-bold text-gray-400 uppercase">Kategori</p>
-                                        <p className="text-gray-700 dark:text-gray-300">{data.kategori ?? '-'}</p>
+                                        <p className="text-gray-700">{data.kategori ?? '-'}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs font-bold text-gray-400 uppercase">Kawasan</p>
-                                        <p className="text-gray-700 dark:text-gray-300">{data.kawasan ?? '-'}</p>
+                                        <p className="text-gray-700">{data.kawasan ?? '-'}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs font-bold text-gray-400 uppercase">Diajukan</p>
-                                        <p className="text-gray-700 dark:text-gray-300">{formatDateTime(data.created_at)}</p>
+                                        <p className="text-gray-700">{formatDateTime(data.created_at)}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs font-bold text-gray-400 uppercase">Tenggat SLA</p>
-                                        <p className="text-gray-700 dark:text-gray-300">{formatDateTime(data.tenggat_sla)}</p>
+                                        <p className="text-gray-700">{formatDateTime(data.tenggat_sla)}</p>
                                     </div>
                                     {data.pelapor && (
                                         <div>
                                             <p className="text-xs font-bold text-gray-400 uppercase">Pelapor</p>
-                                            <p className="text-gray-700 dark:text-gray-300">{data.pelapor}</p>
+                                            <p className="text-gray-700">{data.pelapor}</p>
                                         </div>
                                     )}
                                     {/* NIK tidak pernah dikirim ke jalur publik (selalu null) — tidak ditampilkan. */}
                                     {data.petugas && (
                                         <div>
                                             <p className="text-xs font-bold text-gray-400 uppercase">Petugas</p>
-                                            <p className="text-gray-700 dark:text-gray-300">{data.petugas}</p>
+                                            <p className="text-gray-700">{data.petugas}</p>
                                         </div>
                                     )}
                                 </div>
@@ -200,14 +196,14 @@ export default function Lacak({ query, kode = '', butuh_kode: butuhKode = false,
                         </Card>
 
                         {data.riwayat?.length > 0 && (
-                            <Card className="dark:bg-dark-card border-gray-100 dark:border-gray-800">
+                            <Card className="border-gray-100">
                                 <CardContent className="p-6">
-                                    <h3 className="mb-4 font-bold text-gray-800 dark:text-white">Riwayat Penanganan</h3>
-                                    <ol className="border-brand-soft relative space-y-6 border-l-2 pl-6 dark:border-gray-700">
+                                    <h3 className="mb-4 font-bold text-gray-800">Riwayat Penanganan</h3>
+                                    <ol className="border-brand-soft relative space-y-6 border-l-2 pl-6">
                                         {data.riwayat.map((h, idx) => (
                                             <li key={idx} className="relative">
-                                                <CircleDot className="text-primary dark:bg-dark-card dark:text-brand-light absolute top-0 -left-[31px] h-5 w-5 bg-white" />
-                                                <p className="font-semibold text-gray-800 dark:text-white">{statusLabel(h.ke)}</p>
+                                                <CircleDot className="text-primary absolute top-0 -left-[31px] h-5 w-5 bg-white" />
+                                                <p className="font-semibold text-gray-800">{statusLabel(h.ke)}</p>
                                                 <p className="text-xs text-gray-400">{formatDateTime(h.pada)}</p>
                                             </li>
                                         ))}
@@ -217,19 +213,14 @@ export default function Lacak({ query, kode = '', butuh_kode: butuhKode = false,
                         )}
 
                         {data.tanggapan?.length > 0 && (
-                            <Card className="dark:bg-dark-card border-gray-100 dark:border-gray-800">
+                            <Card className="border-gray-100">
                                 <CardContent className="p-6">
-                                    <h3 className="mb-4 font-bold text-gray-800 dark:text-white">Tanggapan Petugas</h3>
+                                    <h3 className="mb-4 font-bold text-gray-800">Tanggapan Petugas</h3>
                                     <div className="space-y-4">
                                         {data.tanggapan.map((r) => (
-                                            <div
-                                                key={r.id}
-                                                className="border-brand-light bg-brand-soft/50 rounded-lg border-l-4 p-4 dark:bg-gray-800"
-                                            >
-                                                <p className="text-primary dark:text-brand-light mb-1 text-xs font-bold">
-                                                    {r.author ?? 'Petugas SIGAP'}
-                                                </p>
-                                                <p className="text-sm text-gray-700 dark:text-gray-300">{r.body}</p>
+                                            <div key={r.id} className="border-brand-light bg-brand-soft/50 rounded-lg border-l-4 p-4">
+                                                <p className="text-primary mb-1 text-xs font-bold">{r.author ?? 'Petugas SIGAP'}</p>
+                                                <p className="text-sm text-gray-700">{r.body}</p>
                                                 <p className="mt-1 text-xs text-gray-400">{formatDateTime(r.created_at)}</p>
                                             </div>
                                         ))}
@@ -239,15 +230,13 @@ export default function Lacak({ query, kode = '', butuh_kode: butuhKode = false,
                         )}
 
                         {data.status === 'selesai' && (
-                            <Card className="dark:bg-dark-card border-emerald-100 dark:border-emerald-900/40">
+                            <Card className="border-emerald-100">
                                 <CardContent className="flex flex-col items-center p-6 text-center">
                                     <CheckCircle2 className="mb-2 h-10 w-10 text-emerald-500" />
-                                    <h3 className="font-bold text-gray-800 dark:text-white">Laporan Selesai Ditangani</h3>
-                                    <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-                                        Aduan Anda telah diselesaikan. Terima kasih telah membantu kami.
-                                    </p>
+                                    <h3 className="font-bold text-gray-800">Laporan Selesai Ditangani</h3>
+                                    <p className="mb-4 text-sm text-gray-500">Aduan Anda telah diselesaikan. Terima kasih telah membantu kami.</p>
                                     {data.sudah_disurvei ? (
-                                        <p className="flex items-center gap-1.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                                        <p className="flex items-center gap-1.5 text-sm font-semibold text-emerald-600">
                                             <CheckCircle2 className="h-4 w-4" /> Survei kepuasan sudah Anda kirim.
                                         </p>
                                     ) : (
@@ -293,14 +282,14 @@ function SurveyModal({ ticket, kode, onClose }: { ticket: string; kode: string; 
             aria-modal="true"
             aria-labelledby="survey-title"
         >
-            <form onSubmit={submit} className="dark:bg-dark-card w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-2xl">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-500 shadow-sm dark:bg-green-900/30">
+            <form onSubmit={submit} className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-2xl">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-500 shadow-sm">
                     <Star className="h-7 w-7" />
                 </div>
-                <h2 id="survey-title" className="mb-2 text-2xl font-bold text-gray-800 dark:text-white">
+                <h2 id="survey-title" className="mb-2 text-2xl font-bold text-gray-800">
                     Survei Kepuasan
                 </h2>
-                <p className="mb-6 text-sm leading-relaxed text-gray-500 dark:text-gray-400">Bagaimana pengalaman Anda menggunakan layanan SIGAP?</p>
+                <p className="mb-6 text-sm leading-relaxed text-gray-500">Bagaimana pengalaman Anda menggunakan layanan SIGAP?</p>
 
                 <div className="mb-6 flex justify-center gap-2" role="radiogroup" aria-label="Penilaian 1 sampai 5 bintang">
                     {[1, 2, 3, 4, 5].map((n) => (
@@ -311,7 +300,7 @@ function SurveyModal({ ticket, kode, onClose }: { ticket: string; kode: string; 
                             aria-checked={form.data.rating === n}
                             aria-label={`${n} bintang`}
                             onClick={() => form.setData('rating', n)}
-                            className={cn('transition-colors', n <= form.data.rating ? 'text-secondary' : 'text-gray-300 dark:text-gray-600')}
+                            className={cn('transition-colors', n <= form.data.rating ? 'text-secondary' : 'text-gray-300')}
                         >
                             <Star className={cn('h-8 w-8', n <= form.data.rating && 'fill-current')} />
                         </button>
@@ -319,10 +308,7 @@ function SurveyModal({ ticket, kode, onClose }: { ticket: string; kode: string; 
                 </div>
                 {form.errors.rating && <p className="mb-3 text-xs font-semibold text-rose-500">{form.errors.rating}</p>}
                 {form.errors.ticket && (
-                    <p
-                        role="alert"
-                        className="mb-3 rounded-lg bg-rose-50 p-3 text-xs font-semibold text-rose-600 dark:bg-rose-900/20 dark:text-rose-400"
-                    >
+                    <p role="alert" className="mb-3 rounded-lg bg-rose-50 p-3 text-xs font-semibold text-rose-600">
                         {form.errors.ticket}
                     </p>
                 )}

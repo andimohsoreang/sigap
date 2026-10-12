@@ -53,8 +53,8 @@ export default function Katalog({ channels, categories }: Props) {
             <Head title="Katalog Pengaduan — SIGAP" />
 
             <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-                <h1 className="mb-2 text-3xl font-bold text-gray-800 dark:text-white">Katalog Pengaduan</h1>
-                <p className="mb-8 text-gray-500 dark:text-gray-400">Pilih kanal pengaduan resmi yang sesuai dengan kebutuhan Anda.</p>
+                <h1 className="mb-2 text-3xl font-bold text-gray-800">Katalog Pengaduan</h1>
+                <p className="mb-8 text-gray-500">Pilih kanal pengaduan resmi yang sesuai dengan kebutuhan Anda.</p>
 
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                     {cards.map((c) => (
@@ -62,10 +62,10 @@ export default function Katalog({ channels, categories }: Props) {
                             <span className={`absolute top-1 left-5 z-10 rounded px-3 py-1 text-[10px] font-bold shadow-sm ${c.badge}`}>
                                 {c.key === 'internal' ? 'Internal' : 'Pengaduan'}
                             </span>
-                            <Card className="dark:bg-dark-card h-full border-gray-100 pt-8 shadow-sm dark:border-gray-800">
+                            <Card className="h-full border-gray-100 pt-8 shadow-sm">
                                 <CardContent className="flex flex-grow flex-col p-5">
-                                    <h3 className="mb-2 text-[17px] font-bold text-gray-800 dark:text-white">{c.title}</h3>
-                                    <p className="mb-6 flex-grow text-xs text-gray-500 dark:text-gray-400">{c.desc}</p>
+                                    <h3 className="mb-2 text-[17px] font-bold text-gray-800">{c.title}</h3>
+                                    <p className="mb-6 flex-grow text-xs text-gray-500">{c.desc}</p>
                                     <Button asChild className={`w-fit ${c.buttonClass}`}>
                                         <Link href={c.href}>{c.action}</Link>
                                     </Button>
@@ -82,13 +82,13 @@ export default function Katalog({ channels, categories }: Props) {
                                 <span className={`absolute top-1 left-5 z-10 rounded px-3 py-1 text-[10px] font-bold shadow-sm ${style.badge}`}>
                                     {style.label}
                                 </span>
-                                <Card className="dark:bg-dark-card h-full border-gray-100 pt-8 shadow-sm dark:border-gray-800">
+                                <Card className="h-full border-gray-100 pt-8 shadow-sm">
                                     <CardContent className="flex flex-grow flex-col p-5">
                                         <div className="mb-2 flex items-center gap-2">
-                                            <Icon className="text-primary dark:text-brand-light h-5 w-5" />
-                                            <h3 className="text-[17px] font-bold text-gray-800 dark:text-white">{ch.name}</h3>
+                                            <Icon className="text-primary h-5 w-5" />
+                                            <h3 className="text-[17px] font-bold text-gray-800">{ch.name}</h3>
                                         </div>
-                                        <p className="mb-6 flex-grow text-xs text-gray-500 dark:text-gray-400">
+                                        <p className="mb-6 flex-grow text-xs text-gray-500">
                                             {ch.account_name ?? 'Kanal pengaduan resmi Kementerian Transmigrasi.'}
                                         </p>
                                         <Button asChild variant="outline" className="w-fit">
@@ -102,12 +102,12 @@ export default function Katalog({ channels, categories }: Props) {
                 </div>
 
                 <div className="mt-12">
-                    <h2 className="mb-4 text-lg font-bold text-gray-800 dark:text-white">Kategori Aduan</h2>
+                    <h2 className="mb-4 text-lg font-bold text-gray-800">Kategori Aduan</h2>
                     <div className="flex flex-wrap gap-3">
                         {categories.map((cat) => (
                             <span
                                 key={cat.id}
-                                className="border-secondary/60 text-primary dark:bg-dark-card dark:text-brand-light rounded-full border bg-white px-4 py-2 text-sm font-medium"
+                                className="border-secondary/60 text-primary rounded-full border bg-white px-4 py-2 text-sm font-medium"
                             >
                                 {cat.name}
                             </span>

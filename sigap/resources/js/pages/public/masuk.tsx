@@ -25,11 +25,11 @@ export default function Masuk() {
             <Head title="Masuk — SIGAP" />
 
             <div className="mx-auto flex max-w-md flex-col px-4 py-12 sm:px-6">
-                <Card className="dark:bg-dark-card border-gray-100 shadow-lg dark:border-gray-800">
+                <Card className="border-gray-100 shadow-lg">
                     <CardContent className="p-8">
                         <div className="mb-6 text-center">
-                            <h1 className="text-primary dark:text-brand-light text-2xl font-bold">Masuk ke SIGAP</h1>
-                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Untuk warga (NIK) maupun petugas/admin (username)</p>
+                            <h1 className="text-primary text-2xl font-bold">Masuk ke SIGAP</h1>
+                            <p className="mt-1 text-sm text-gray-500">Untuk warga (NIK) maupun petugas/admin (username)</p>
                         </div>
 
                         <form onSubmit={submit} className="space-y-5">
@@ -68,7 +68,7 @@ export default function Masuk() {
 
                             <div className="flex items-center gap-2">
                                 <Checkbox id="remember" checked={data.remember} onCheckedChange={(v) => setData('remember', Boolean(v))} />
-                                <Label htmlFor="remember" className="text-sm font-normal text-gray-600 dark:text-gray-300">
+                                <Label htmlFor="remember" className="text-sm font-normal text-gray-600">
                                     Ingat saya
                                 </Label>
                             </div>
@@ -79,7 +79,7 @@ export default function Masuk() {
                             </Button>
                         </form>
 
-                        <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                        <p className="mt-6 text-center text-sm text-gray-500">
                             Anda tetap bisa{' '}
                             <Link href="/katalog" className="text-brand-light font-bold hover:underline">
                                 mengajukan pengaduan tanpa login

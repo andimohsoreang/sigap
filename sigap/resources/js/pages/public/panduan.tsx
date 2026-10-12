@@ -478,7 +478,7 @@ export default function Panduan() {
                                     'font-heading flex items-center gap-2 rounded-full border-2 px-6 py-3 text-sm font-bold tracking-wide uppercase transition',
                                     tab === key
                                         ? 'border-brand bg-brand text-white shadow-lg'
-                                        : 'border-brand-light/40 text-brand hover:border-brand-light hover:bg-brand-light/10 dark:text-brand-light',
+                                        : 'border-brand-light/40 text-brand hover:border-brand-light hover:bg-brand-light/10',
                                 )}
                             >
                                 <Icon className="h-4 w-4" /> {label}
@@ -487,8 +487,8 @@ export default function Panduan() {
                     </div>
 
                     {/* INDEKS FITUR */}
-                    <div className="dark:bg-dark-card mb-12 rounded-xl border border-gray-100 bg-white p-6 shadow-md dark:border-gray-800">
-                        <h2 className="font-heading text-brand mb-4 flex items-center gap-2 text-sm font-bold tracking-[2px] uppercase dark:text-white">
+                    <div className="mb-12 rounded-xl border border-gray-100 bg-white p-6 shadow-md">
+                        <h2 className="font-heading text-brand mb-4 flex items-center gap-2 text-sm font-bold tracking-[2px] uppercase">
                             <BookOpen className="text-brand-light h-4 w-4" /> Daftar Fitur — {tab === 'warga' ? 'Masyarakat' : 'Admin'}
                         </h2>
                         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
@@ -497,12 +497,12 @@ export default function Panduan() {
                                     key={f.id}
                                     type="button"
                                     onClick={() => jump(f.id)}
-                                    className="group border-brand-light/30 hover:border-brand-light hover:bg-brand-light/10 flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition dark:border-gray-700 dark:hover:border-gray-500"
+                                    className="group border-brand-light/30 hover:border-brand-light hover:bg-brand-light/10 flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition"
                                 >
                                     <span className="bg-brand-light/15 text-brand-light group-hover:bg-brand-light flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition group-hover:text-white">
                                         {i + 1}
                                     </span>
-                                    <span className="group-hover:text-brand truncate font-medium text-gray-700 dark:text-gray-200">{f.title}</span>
+                                    <span className="group-hover:text-brand truncate font-medium text-gray-700">{f.title}</span>
                                 </button>
                             ))}
                         </div>
@@ -517,18 +517,18 @@ export default function Panduan() {
                                         {i + 1}
                                     </span>
                                     <div className="min-w-0">
-                                        <h2 className="font-heading text-brand flex flex-wrap items-center gap-2 text-xl leading-tight font-bold tracking-tight uppercase md:text-2xl dark:text-white">
+                                        <h2 className="font-heading text-brand flex flex-wrap items-center gap-2 text-xl leading-tight font-bold tracking-tight uppercase md:text-2xl">
                                             <f.icon className="text-brand-light h-6 w-6 shrink-0" />
                                             {f.title}
                                         </h2>
                                         <div className="bg-brand-light mt-2 h-[3px] w-14 rounded-full" />
                                     </div>
                                 </div>
-                                <p className="mb-4 leading-relaxed text-gray-600 md:ml-16 dark:text-gray-300">{f.desc}</p>
+                                <p className="mb-4 leading-relaxed text-gray-600 md:ml-16">{f.desc}</p>
                                 {f.tips && (
                                     <ul className="mb-5 space-y-2 md:ml-16">
                                         {f.tips.map((t) => (
-                                            <li key={t} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
+                                            <li key={t} className="flex items-start gap-2 text-sm text-gray-600">
                                                 <CheckCircle2 className="text-brand-light mt-0.5 h-4 w-4 shrink-0" />
                                                 {t}
                                             </li>
@@ -542,12 +542,12 @@ export default function Panduan() {
                                             <button
                                                 type="button"
                                                 onClick={() => setLightbox({ shots: f.shots, index: si })}
-                                                className="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800"
+                                                className="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md transition duration-300 hover:-translate-y-1 hover:shadow-xl"
                                                 aria-label={`Perbesar gambar: ${shot.caption}`}
                                             >
                                                 <img src={shot.src} alt={shot.alt} loading="lazy" className="w-full" />
                                             </button>
-                                            <figcaption className="mt-2 flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                            <figcaption className="mt-2 flex items-start gap-2 text-xs text-gray-500">
                                                 <FileImage className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                                                 {shot.caption}
                                             </figcaption>
@@ -559,16 +559,14 @@ export default function Panduan() {
                     </div>
 
                     {/* KETENTUAN LAMPIRAN */}
-                    <div className="dark:bg-dark-card mt-14 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md dark:border-gray-800">
-                        <div className="bg-brand-light/5 border-brand-light flex flex-col items-start gap-4 border-l-4 p-6 md:flex-row md:items-center dark:bg-gray-800">
+                    <div className="mt-14 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md">
+                        <div className="bg-brand-light/5 border-brand-light flex flex-col items-start gap-4 border-l-4 p-6 md:flex-row md:items-center">
                             <div className="bg-brand-light/10 text-brand-light flex h-14 w-14 shrink-0 items-center justify-center rounded-full">
                                 <Lightbulb className="h-6 w-6" />
                             </div>
                             <div>
-                                <h3 className="font-heading text-brand mb-1 font-bold tracking-tight uppercase dark:text-white">
-                                    Ketentuan Lampiran & Data
-                                </h3>
-                                <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+                                <h3 className="font-heading text-brand mb-1 font-bold tracking-tight uppercase">Ketentuan Lampiran & Data</h3>
+                                <p className="text-sm leading-relaxed text-gray-600">
                                     Lampiran bukti menerima berkas <strong>JPG, PNG, atau PDF</strong> dengan ukuran maksimal <strong>5 MB</strong>.
                                     Uraian laporan minimal 10 karakter dan NIK pelapor wajib 16 digit. Dokumen yang sudah diunggah{' '}
                                     <strong>tidak dapat dihapus mandiri</strong> demi akuntabilitas — hubungi admin melalui Live Chat bila perlu
@@ -593,13 +591,13 @@ export default function Panduan() {
                             <Link
                                 key={href}
                                 href={href}
-                                className="group dark:bg-dark-card rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-gray-800"
+                                className="group rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
                             >
                                 <div className="bg-brand-light/10 text-brand-light group-hover:bg-brand-light mb-4 flex h-12 w-12 items-center justify-center rounded-full transition group-hover:text-white">
                                     <Icon className="h-5 w-5" />
                                 </div>
-                                <h3 className="font-heading text-brand font-bold tracking-tight uppercase dark:text-white">{title}</h3>
-                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{desc}</p>
+                                <h3 className="font-heading text-brand font-bold tracking-tight uppercase">{title}</h3>
+                                <p className="mt-1 text-sm text-gray-500">{desc}</p>
                             </Link>
                         ))}
                     </div>

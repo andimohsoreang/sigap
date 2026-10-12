@@ -42,7 +42,7 @@ export default function Internal({ tickets, stats, filters, statuses }: Props) {
             header: 'Pegawai / Kontak',
             cell: ({ row }) => (
                 <div>
-                    <span className="font-semibold text-gray-800 dark:text-white">{row.original.nama ?? '—'}</span>
+                    <span className="font-semibold text-gray-800">{row.original.nama ?? '—'}</span>
                     <br />
                     <span className="text-[11px] text-gray-400">
                         {row.original.kontak ?? '—'} · {formatDate(row.original.created_at)}

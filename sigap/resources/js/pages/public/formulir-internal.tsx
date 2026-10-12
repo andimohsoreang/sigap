@@ -55,10 +55,10 @@ export default function FormulirInternal({ units, categories }: Props) {
                     <Link href="/katalog" className="hover:text-brand-light">
                         Katalog Pengaduan
                     </Link>{' '}
-                    &gt; <span className="text-gray-700 dark:text-gray-300">Pengaduan Internal Pegawai</span>
+                    &gt; <span className="text-gray-700">Pengaduan Internal Pegawai</span>
                 </p>
 
-                <div className="mb-4 flex items-start gap-2 rounded-lg border border-orange-100 bg-orange-50 px-4 py-3 text-xs text-gray-600 dark:border-orange-900/30 dark:bg-orange-900/10 dark:text-gray-300">
+                <div className="mb-4 flex items-start gap-2 rounded-lg border border-orange-100 bg-orange-50 px-4 py-3 text-xs text-gray-600">
                     <Info className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
                     <span>
                         Gunakan formulir ini hanya untuk kendala teknis internal kantor (mis. internet/jaringan mati, listrik padam, perangkat rusak).
@@ -70,16 +70,14 @@ export default function FormulirInternal({ units, categories }: Props) {
                     </span>
                 </div>
 
-                <Card className="dark:bg-dark-card border-gray-100 dark:border-gray-800">
+                <Card className="border-gray-100">
                     <CardContent className="p-6 md:p-8">
-                        <h1 className="mb-1 text-2xl font-bold text-gray-800 dark:text-white">Pengaduan Internal Pegawai</h1>
-                        <p className="mb-8 text-sm text-gray-500 dark:text-gray-400">
-                            Gangguan sarana &amp; TIK kantor — khusus pegawai Kementerian Transmigrasi
-                        </p>
+                        <h1 className="mb-1 text-2xl font-bold text-gray-800">Pengaduan Internal Pegawai</h1>
+                        <p className="mb-8 text-sm text-gray-500">Gangguan sarana &amp; TIK kantor — khusus pegawai Kementerian Transmigrasi</p>
 
                         <form onSubmit={submit} className="space-y-8">
                             <fieldset className="space-y-4">
-                                <legend className="mb-2 text-sm font-bold tracking-wide text-gray-800 uppercase dark:text-white">Data Pegawai</legend>
+                                <legend className="mb-2 text-sm font-bold tracking-wide text-gray-800 uppercase">Data Pegawai</legend>
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <Field label="NIP / ID Pegawai" required error={errors.nip}>
                                         <Input value={data.nip} onChange={(e) => setData('nip', e.target.value)} />
@@ -108,9 +106,7 @@ export default function FormulirInternal({ units, categories }: Props) {
                             </fieldset>
 
                             <fieldset className="space-y-4">
-                                <legend className="mb-2 text-sm font-bold tracking-wide text-gray-800 uppercase dark:text-white">
-                                    Detail Gangguan
-                                </legend>
+                                <legend className="mb-2 text-sm font-bold tracking-wide text-gray-800 uppercase">Detail Gangguan</legend>
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <Field label="Kategori Gangguan" required error={errors.kategori}>
                                         <Select value={data.kategori} onValueChange={(v) => setData('kategori', v)}>
@@ -157,9 +153,9 @@ export default function FormulirInternal({ units, categories }: Props) {
                                     />
                                 </Field>
                                 <Field label="Lampiran (Opsional)" error={errors.attachment}>
-                                    <label className="hover:border-brand-light flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-8 text-center transition dark:border-gray-600 dark:bg-gray-800">
+                                    <label className="hover:border-brand-light flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-8 text-center transition">
                                         <Upload className="mb-2 h-6 w-6 text-gray-400" />
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        <span className="text-sm text-gray-500">
                                             {data.attachment ? data.attachment.name : 'Klik untuk unggah (JPG/PNG/PDF, maks. 5 MB)'}
                                         </span>
                                         <input
@@ -194,7 +190,7 @@ export default function FormulirInternal({ units, categories }: Props) {
 function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
     return (
         <div className="space-y-2">
-            <Label className="text-gray-700 dark:text-gray-300">
+            <Label className="text-gray-700">
                 {label} {required && <span className="text-rose-500">*</span>}
             </Label>
             {children}

@@ -88,7 +88,7 @@ export default function Kawasan({ regions, is_super_admin: isSuper, own_region_i
                             <span className="bg-brand-soft text-primary ml-2 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase">Kawasan Anda</span>
                         )}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{row.original.name}</div>
+                    <div className="text-xs text-gray-500">{row.original.name}</div>
                 </div>
             ),
         },
@@ -180,15 +180,15 @@ export default function Kawasan({ regions, is_super_admin: isSuper, own_region_i
             }
         >
             {!isSuper && !editing && (
-                <p className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/10 dark:text-blue-300">
+                <p className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
                     Penambahan dan penghapusan kawasan hanya dapat dilakukan Super Admin. Anda dapat mengubah data kawasan Anda sendiri melalui tombol
                     Edit.
                 </p>
             )}
             {(isSuper || editing) && (
-                <Card className="dark:bg-dark-card mb-6 border-gray-200 dark:border-gray-700">
-                    <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                        <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
+                <Card className="mb-6 border-gray-200">
+                    <CardHeader className="border-b border-gray-100 pb-3">
+                        <CardTitle className="flex items-center gap-2 text-base text-gray-800">
                             {editing ? <Pencil className="text-brand-light h-5 w-5" /> : <Plus className="text-brand-light h-5 w-5" />}
                             {editing ? `Edit Kawasan ${editing.code}` : 'Tambah Kawasan Baru'}
                         </CardTitle>
@@ -271,9 +271,9 @@ export default function Kawasan({ regions, is_super_admin: isSuper, own_region_i
 
 function InfraBadge({ value }: { value: string | null }) {
     const styles: Record<string, string> = {
-        Memadai: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-        Berkembang: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-        Tertinggal: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+        Memadai: 'bg-green-100 text-green-700',
+        Berkembang: 'bg-yellow-100 text-yellow-700',
+        Tertinggal: 'bg-red-100 text-red-700',
     };
     if (!value) return <span className="text-gray-400">—</span>;
     return <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${styles[value] ?? 'bg-gray-100 text-gray-600'}`}>{value}</span>;
@@ -282,7 +282,7 @@ function InfraBadge({ value }: { value: string | null }) {
 function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
     return (
         <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-gray-600 dark:text-gray-400">
+            <Label className="text-xs font-bold text-gray-600">
                 {label} {required && <span className="text-red-500">*</span>}
             </Label>
             {children}

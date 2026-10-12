@@ -178,9 +178,9 @@ export function DataTable<T extends object>({
     };
 
     return (
-        <Card className="dark:bg-dark-card overflow-hidden rounded-xl border-gray-200 shadow-md dark:border-gray-700">
+        <Card className="overflow-hidden rounded-xl border-gray-200 shadow-md">
             {/* Toolbar */}
-            <div className="flex flex-col gap-3 border-b border-gray-100 p-4 lg:flex-row lg:items-center dark:border-gray-700">
+            <div className="flex flex-col gap-3 border-b border-gray-100 p-4 lg:flex-row lg:items-center">
                 {toolbarTitle && (
                     <h3 className="text-brand-light flex items-center gap-2 text-sm font-bold tracking-[2px] whitespace-nowrap">
                         <span className="bg-brand-light h-[2px] w-5 rounded-full" />
@@ -281,9 +281,9 @@ export function DataTable<T extends object>({
             </div>
 
             <Table>
-                <TableHeader className="bg-gray-50 dark:bg-gray-800">
+                <TableHeader className="bg-gray-50">
                     {table.getHeaderGroups().map((headerGroup) => (
-                        <TableRow key={headerGroup.id} className="hover:bg-transparent dark:hover:bg-transparent">
+                        <TableRow key={headerGroup.id} className="hover:bg-transparent">
                             {headerGroup.headers.map((header) => {
                                 const meta = header.column.columnDef.meta as DataTableColumnMeta | undefined;
                                 const canSort = header.column.getCanSort() && !meta?.disableSorting;
@@ -308,7 +308,7 @@ export function DataTable<T extends object>({
                                             <button
                                                 type="button"
                                                 onClick={toggleSort}
-                                                className="-ml-1 flex cursor-pointer items-center gap-1 hover:text-gray-700 dark:hover:text-white"
+                                                className="-ml-1 flex cursor-pointer items-center gap-1 hover:text-gray-700"
                                                 aria-label={`Urutkan ${typeof header.column.columnDef.header === 'string' ? header.column.columnDef.header : header.column.id}`}
                                             >
                                                 {flexRender(header.column.columnDef.header, header.getContext())}
@@ -331,7 +331,7 @@ export function DataTable<T extends object>({
                 </TableHeader>
                 <TableBody>
                     {table.getRowModel().rows.length === 0 ? (
-                        <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
+                        <TableRow className="hover:bg-transparent">
                             <TableCell colSpan={columns.length} className="py-10 text-center text-gray-400">
                                 {emptyMessage}
                             </TableCell>
@@ -342,7 +342,7 @@ export function DataTable<T extends object>({
                                 {row.getVisibleCells().map((cell) => {
                                     const meta = cell.column.columnDef.meta as DataTableColumnMeta | undefined;
                                     return (
-                                        <TableCell key={cell.id} className={cn('text-gray-700 dark:text-gray-300', meta?.className)}>
+                                        <TableCell key={cell.id} className={cn('text-gray-700', meta?.className)}>
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </TableCell>
                                     );

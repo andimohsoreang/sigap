@@ -48,13 +48,13 @@ export default function Kanal({ channels, integrations, logs, is_super_admin }: 
         {
             accessorKey: 'name',
             header: 'Nama Kanal / Akun',
-            cell: ({ getValue }) => <span className="font-bold text-gray-800 dark:text-white">{getValue<string>()}</span>,
+            cell: ({ getValue }) => <span className="font-bold text-gray-800">{getValue<string>()}</span>,
         },
         {
             accessorKey: 'type',
             header: 'Jenis Kanal',
             cell: ({ row }) => (
-                <span className="text-primary dark:text-brand-light rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase dark:bg-blue-900/30">
+                <span className="text-primary rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase">
                     {row.original.type_label ?? row.original.type}
                 </span>
             ),
@@ -64,9 +64,7 @@ export default function Kanal({ channels, integrations, logs, is_super_admin }: 
             header: 'Informasi / Tautan',
             accessorFn: (c) => c.url ?? c.account_name ?? '',
             cell: ({ row }) => (
-                <span className="max-w-[220px] truncate text-xs text-gray-500 dark:text-gray-400">
-                    {row.original.url ?? row.original.account_name ?? '—'}
-                </span>
+                <span className="max-w-[220px] truncate text-xs text-gray-500">{row.original.url ?? row.original.account_name ?? '—'}</span>
             ),
         },
         {
@@ -81,12 +79,12 @@ export default function Kanal({ channels, integrations, logs, is_super_admin }: 
         {
             accessorKey: 'channel',
             header: 'Kanal',
-            cell: ({ getValue }) => <span className="font-bold text-gray-800 dark:text-white">{getValue<string | null>() ?? '—'}</span>,
+            cell: ({ getValue }) => <span className="font-bold text-gray-800">{getValue<string | null>() ?? '—'}</span>,
         },
         {
             accessorKey: 'created_at',
             header: 'Waktu',
-            cell: ({ getValue }) => <span className="text-xs text-gray-500 dark:text-gray-400">{formatDateTime(getValue<string | null>())}</span>,
+            cell: ({ getValue }) => <span className="text-xs text-gray-500">{formatDateTime(getValue<string | null>())}</span>,
         },
         {
             accessorKey: 'pulled_count',
@@ -122,15 +120,15 @@ export default function Kanal({ channels, integrations, logs, is_super_admin }: 
         <AdminLayout title="Manajemen Kanal Pengaduan" subtitle="Kanal medsos, kantor, dan integrasi nasional.">
             {/* A-05: penambahan kanal hanya untuk Super Admin. */}
             {!is_super_admin && (
-                <p className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/10 dark:text-blue-300">
+                <p className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
                     Penambahan kanal dan sinkronisasi integrasi nasional hanya dapat dilakukan Super Admin.
                 </p>
             )}
             {is_super_admin && (
                 <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
-                        <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                            <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
+                    <Card className="border-gray-200">
+                        <CardHeader className="border-b border-gray-100 pb-3">
+                            <CardTitle className="flex items-center gap-2 text-base text-gray-800">
                                 <Hash className="text-brand-light h-5 w-5" /> Tambah Media Sosial
                             </CardTitle>
                         </CardHeader>
@@ -173,9 +171,9 @@ export default function Kanal({ channels, integrations, logs, is_super_admin }: 
                         </CardContent>
                     </Card>
 
-                    <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
-                        <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                            <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
+                    <Card className="border-gray-200">
+                        <CardHeader className="border-b border-gray-100 pb-3">
+                            <CardTitle className="flex items-center gap-2 text-base text-gray-800">
                                 <Building2 className="text-brand-light h-5 w-5" /> Tambah Kantor Pengaduan
                             </CardTitle>
                         </CardHeader>
@@ -223,10 +221,10 @@ export default function Kanal({ channels, integrations, logs, is_super_admin }: 
             />
 
             {/* Integrasi nasional */}
-            <h3 className="mb-1 flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white">
+            <h3 className="mb-1 flex items-center gap-2 text-lg font-bold text-gray-800">
                 <RotateCw className="text-brand-light h-5 w-5" /> Integrasi Kanal Nasional
             </h3>
-            <p className="mb-4 max-w-2xl text-xs text-gray-500 dark:text-gray-400">
+            <p className="mb-4 max-w-2xl text-xs text-gray-500">
                 Sinkronisasi data pengaduan dari sistem nasional (Perpres No. 76 Tahun 2013). Adapter masih berupa <strong>stub</strong> (PRD D7).
                 Hanya Super Admin yang dapat memicu sinkronisasi.
             </p>
@@ -235,19 +233,19 @@ export default function Kanal({ channels, integrations, logs, is_super_admin }: 
                 {integrations.map((integ) => {
                     const lastLog = logs.find((l) => (l.channel ?? '').toLowerCase().includes(integ.key));
                     return (
-                        <Card key={integ.key} className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
+                        <Card key={integ.key} className="border-gray-200">
                             <CardContent className="p-6">
-                                <div className="mb-4 flex items-start justify-between border-b border-gray-100 pb-3 dark:border-gray-700">
-                                    <h4 className="flex items-center gap-2 font-bold text-gray-800 dark:text-white">
+                                <div className="mb-4 flex items-start justify-between border-b border-gray-100 pb-3">
+                                    <h4 className="flex items-center gap-2 font-bold text-gray-800">
                                         <ShieldCheck className="text-brand-light h-4 w-4" /> {integ.label}
                                     </h4>
-                                    <span className="rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-bold text-green-600 dark:bg-green-900/20 dark:text-green-400">
+                                    <span className="rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-bold text-green-600">
                                         Terhubung (stub)
                                     </span>
                                 </div>
-                                <p className="mb-4 text-[11px] text-gray-400 dark:text-gray-500">
+                                <p className="mb-4 text-[11px] text-gray-400">
                                     Terakhir sinkron:{' '}
-                                    <span className="font-semibold text-gray-600 dark:text-gray-300">
+                                    <span className="font-semibold text-gray-600">
                                         {lastLog ? formatDateTime(lastLog.created_at) : 'Belum pernah'}
                                     </span>
                                     {lastLog && <> · {lastLog.pulled_count} tiket ditarik</>}
@@ -284,7 +282,7 @@ export default function Kanal({ channels, integrations, logs, is_super_admin }: 
 function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
     return (
         <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-gray-600 dark:text-gray-400">
+            <Label className="text-xs font-bold text-gray-600">
                 {label} {required && <span className="text-red-500">*</span>}
             </Label>
             {children}

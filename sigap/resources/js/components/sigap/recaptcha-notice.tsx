@@ -9,7 +9,7 @@ export function RecaptchaNotice({ enabled, error }: { enabled: boolean; error?: 
     return (
         <div className="space-y-1">
             {enabled && (
-                <p className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <p className="flex items-start gap-2 text-xs text-gray-500">
                     <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                     <span>
                         Situs ini dilindungi oleh reCAPTCHA dan berlaku{' '}

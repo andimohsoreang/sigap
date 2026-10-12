@@ -63,7 +63,7 @@ export default function InputManual({ options, region_locked: regionLocked = fal
 
     return (
         <AdminLayout title="Input Pengaduan Manual" subtitle="Penerimaan laporan offline & media sosial.">
-            <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
+            <Card className="border-gray-200">
                 <CardContent className="p-6 md:p-8">
                     <form onSubmit={submit} className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2">
                         <SectionTitle icon={Building2} title="Info Penerimaan Laporan" />
@@ -88,12 +88,7 @@ export default function InputManual({ options, region_locked: regionLocked = fal
                         </Field>
                         <Field label="Admin / Agen Penerima">
                             {/* Hanya tampilan: server selalu mencatat akun yang login. */}
-                            <Input
-                                value={auth?.user?.name ?? ''}
-                                readOnly
-                                aria-readonly
-                                className="cursor-not-allowed bg-gray-100 dark:bg-gray-700"
-                            />
+                            <Input value={auth?.user?.name ?? ''} readOnly aria-readonly className="cursor-not-allowed bg-gray-100" />
                         </Field>
 
                         <SectionTitle icon={UserRound} title="Data Pelapor / Akun" />
@@ -144,7 +139,7 @@ export default function InputManual({ options, region_locked: regionLocked = fal
                                         value={ownRegion?.name ?? 'Kawasan belum ditetapkan'}
                                         readOnly
                                         aria-label="Kawasan Transmigrasi"
-                                        className="cursor-not-allowed bg-gray-100 dark:bg-gray-700"
+                                        className="cursor-not-allowed bg-gray-100"
                                     />
                                     <p className="text-[11px] text-gray-400">Tiket otomatis diterbitkan ke kawasan tugas Anda.</p>
                                 </>
@@ -193,9 +188,9 @@ export default function InputManual({ options, region_locked: regionLocked = fal
                             </Select>
                         </Field>
                         <Field label="Lampiran Bukti (Opsional)" error={errors.attachment}>
-                            <label className="hover:border-brand-light flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-center transition dark:border-gray-600 dark:bg-gray-800">
+                            <label className="hover:border-brand-light flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-center transition">
                                 <Upload className="mb-2 h-6 w-6 text-gray-400" />
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                <span className="text-sm text-gray-500">
                                     {data.attachment ? data.attachment.name : 'Klik untuk unggah (Maks. 5 MB)'}
                                 </span>
                                 <input
@@ -223,8 +218,8 @@ export default function InputManual({ options, region_locked: regionLocked = fal
 
 function SectionTitle({ icon: Icon, title }: { icon: typeof Building2; title: string }) {
     return (
-        <div className="mb-1 border-b border-gray-100 pb-2 md:col-span-2 dark:border-gray-700">
-            <h3 className="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white">
+        <div className="mb-1 border-b border-gray-100 pb-2 md:col-span-2">
+            <h3 className="flex items-center gap-2 text-lg font-bold text-gray-800">
                 <Icon className="text-brand-light h-5 w-5" /> {title}
             </h3>
         </div>
@@ -234,7 +229,7 @@ function SectionTitle({ icon: Icon, title }: { icon: typeof Building2; title: st
 function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
     return (
         <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-gray-600 dark:text-gray-400">
+            <Label className="text-xs font-bold text-gray-600">
                 {label} {required && <span className="text-red-500">*</span>}
             </Label>
             {children}

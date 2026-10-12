@@ -92,24 +92,24 @@ export default function TiketDetail({ ticket, statuses }: Props) {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {/* Kolom kiri: detail */}
                 <div className="space-y-6 lg:col-span-2">
-                    <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
-                        <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                            <CardTitle className="text-base text-gray-800 dark:text-white">Detail Laporan</CardTitle>
+                    <Card className="border-gray-200">
+                        <CardHeader className="border-b border-gray-100 pb-3">
+                            <CardTitle className="text-base text-gray-800">Detail Laporan</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4 p-6">
                             <div className="flex flex-wrap items-center gap-2">
                                 <StatusBadge value={ticket.status} label={ticket.status_label} />
                                 <ImpactBadge value={ticket.impact} label={ticket.impact_label} />
                                 {ticket.overdue && (
-                                    <span className="rounded-full bg-red-100 px-2.5 py-1 text-[10px] font-bold text-red-700 uppercase dark:bg-red-900/30 dark:text-red-400">
+                                    <span className="rounded-full bg-red-100 px-2.5 py-1 text-[10px] font-bold text-red-700 uppercase">
                                         EWS · Melewati SLA
                                     </span>
                                 )}
                             </div>
 
-                            <p className="text-gray-700 dark:text-gray-200">{ticket.deskripsi}</p>
+                            <p className="text-gray-700">{ticket.deskripsi}</p>
 
-                            <dl className="grid grid-cols-1 gap-4 border-t border-gray-100 pt-4 sm:grid-cols-2 dark:border-gray-700">
+                            <dl className="grid grid-cols-1 gap-4 border-t border-gray-100 pt-4 sm:grid-cols-2">
                                 <Info icon={Tag} label="Kategori" value={ticket.kategori} />
                                 <Info icon={MapPin} label="Kawasan" value={ticket.kawasan} />
                                 <Info icon={User2} label="Pelapor" value={ticket.pelapor} />
@@ -130,7 +130,7 @@ export default function TiketDetail({ ticket, statuses }: Props) {
                                         <Link2 className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
                                         <div className="min-w-0">
                                             <dt className="text-[10px] font-bold text-gray-400 uppercase">Tautan Sumber</dt>
-                                            <dd className="text-sm break-all text-gray-700 dark:text-gray-200">
+                                            <dd className="text-sm break-all text-gray-700">
                                                 {isHttpUrl(ticket.tautan) ? (
                                                     <a
                                                         href={ticket.tautan}
@@ -160,9 +160,9 @@ export default function TiketDetail({ ticket, statuses }: Props) {
                     </Card>
 
                     {/* Tanggapan */}
-                    <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
-                        <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                            <CardTitle className="text-base text-gray-800 dark:text-white">Tanggapan</CardTitle>
+                    <Card className="border-gray-200">
+                        <CardHeader className="border-b border-gray-100 pb-3">
+                            <CardTitle className="text-base text-gray-800">Tanggapan</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4 p-6">
                             {ticket.tanggapan.length === 0 ? (
@@ -172,21 +172,21 @@ export default function TiketDetail({ ticket, statuses }: Props) {
                                     {ticket.tanggapan.map((r) => (
                                         <div
                                             key={r.id}
-                                            className={`rounded-lg border p-3 text-sm ${r.is_public ? 'border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800' : 'border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-900/10'}`}
+                                            className={`rounded-lg border p-3 text-sm ${r.is_public ? 'border-gray-100 bg-white' : 'border-amber-200 bg-amber-50'}`}
                                         >
                                             <div className="mb-1 flex items-center justify-between">
-                                                <span className="text-xs font-bold text-gray-700 dark:text-gray-200">{r.penulis}</span>
+                                                <span className="text-xs font-bold text-gray-700">{r.penulis}</span>
                                                 <span className="text-[10px] text-gray-400">
                                                     {r.is_public ? 'Publik' : 'Catatan internal'} · {formatDateTime(r.pada)}
                                                 </span>
                                             </div>
-                                            <p className="text-gray-700 dark:text-gray-200">{r.body}</p>
+                                            <p className="text-gray-700">{r.body}</p>
                                         </div>
                                     ))}
                                 </div>
                             )}
 
-                            <form onSubmit={submitReply} className="space-y-3 border-t border-gray-100 pt-4 dark:border-gray-700">
+                            <form onSubmit={submitReply} className="space-y-3 border-t border-gray-100 pt-4">
                                 <Textarea
                                     value={replyForm.data.body}
                                     onChange={(e) => replyForm.setData('body', e.target.value)}
@@ -194,7 +194,7 @@ export default function TiketDetail({ ticket, statuses }: Props) {
                                     placeholder="Tulis tanggapan..."
                                 />
                                 {replyForm.errors.body && <p className="text-xs text-rose-500">{replyForm.errors.body}</p>}
-                                <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                                <label className="flex items-center gap-2 text-sm text-gray-600">
                                     <Checkbox
                                         checked={replyForm.data.is_public}
                                         onCheckedChange={(v) => replyForm.setData('is_public', Boolean(v))}
@@ -211,15 +211,13 @@ export default function TiketDetail({ ticket, statuses }: Props) {
 
                 {/* Kolom kanan: aksi + riwayat */}
                 <div className="space-y-6">
-                    <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
-                        <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                            <CardTitle className="text-base text-gray-800 dark:text-white">Ubah Status</CardTitle>
+                    <Card className="border-gray-200">
+                        <CardHeader className="border-b border-gray-100 pb-3">
+                            <CardTitle className="text-base text-gray-800">Ubah Status</CardTitle>
                         </CardHeader>
                         <CardContent className="p-6">
                             {transisi.length === 0 ? (
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    Tidak ada perubahan status yang diizinkan dari status saat ini.
-                                </p>
+                                <p className="text-sm text-gray-500">Tidak ada perubahan status yang diizinkan dari status saat ini.</p>
                             ) : (
                                 <form onSubmit={submitStatus} className="space-y-4">
                                     <div className="space-y-1.5">
@@ -257,21 +255,21 @@ export default function TiketDetail({ ticket, statuses }: Props) {
                         </CardContent>
                     </Card>
 
-                    <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
-                        <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                            <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
+                    <Card className="border-gray-200">
+                        <CardHeader className="border-b border-gray-100 pb-3">
+                            <CardTitle className="flex items-center gap-2 text-base text-gray-800">
                                 <History className="text-brand-light h-4 w-4" /> Riwayat
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-6">
                             <ol className="space-y-4">
                                 {ticket.riwayat.map((h, i) => (
-                                    <li key={i} className="border-l-2 border-gray-100 pl-4 dark:border-gray-700">
-                                        <p className="text-sm font-semibold text-gray-800 dark:text-white">
+                                    <li key={i} className="border-l-2 border-gray-100 pl-4">
+                                        <p className="text-sm font-semibold text-gray-800">
                                             {h.dari ? `${statuses[h.dari] ?? h.dari} → ` : ''}
                                             {statuses[h.ke] ?? h.ke}
                                         </p>
-                                        {h.catatan && <p className="text-xs text-gray-500 dark:text-gray-400">{h.catatan}</p>}
+                                        {h.catatan && <p className="text-xs text-gray-500">{h.catatan}</p>}
                                         <p className="mt-0.5 text-[10px] text-gray-400">
                                             {h.oleh ?? 'Sistem'} · {formatDate(h.pada)}
                                         </p>
@@ -292,7 +290,7 @@ function Info({ icon: Icon, label, value }: { icon: typeof Tag; label: string; v
             <Icon className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
             <div>
                 <dt className="text-[10px] font-bold text-gray-400 uppercase">{label}</dt>
-                <dd className="text-sm text-gray-700 dark:text-gray-200">{value || '—'}</dd>
+                <dd className="text-sm text-gray-700">{value || '—'}</dd>
             </div>
         </div>
     );

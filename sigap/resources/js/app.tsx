@@ -5,7 +5,6 @@ import { configureEcho } from '@laravel/echo-react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { route as routeFn } from 'ziggy-js';
-import { initializeTheme } from './hooks/use-appearance';
 import { reverbClientOptions } from './lib/reverb';
 
 // Reverb (PRD D5). Nilai VITE_REVERB_* DITANAM saat `npm run build`, jadi
@@ -39,6 +38,3 @@ createInertiaApp({
         color: '#4B5563',
     },
 });
-
-// This will set light / dark mode on load...
-initializeTheme();

@@ -232,7 +232,7 @@ export default function LiveChatWidget() {
             <div
                 id="sigap-live-chat"
                 className={cn(
-                    'dark:bg-dark-card fixed right-4 bottom-20 z-[100] flex w-[calc(100vw-2rem)] max-w-sm origin-bottom-right flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-transform duration-300 sm:right-6 sm:bottom-24 sm:w-80 dark:border-gray-700',
+                    'fixed right-4 bottom-20 z-[100] flex w-[calc(100vw-2rem)] max-w-sm origin-bottom-right flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-transform duration-300 sm:right-6 sm:bottom-24 sm:w-80',
                     open ? 'scale-100' : 'pointer-events-none scale-0',
                 )}
                 role="dialog"
@@ -243,7 +243,7 @@ export default function LiveChatWidget() {
                     if (e.key === 'Escape') close();
                 }}
             >
-                <div className="bg-primary flex items-center justify-between px-4 py-3 text-white dark:bg-blue-900">
+                <div className="bg-primary flex items-center justify-between px-4 py-3 text-white">
                     <div className="flex min-w-0 items-center gap-2">
                         <Headset className="h-5 w-5 shrink-0" aria-hidden="true" />
                         <div className="min-w-0">
@@ -276,7 +276,7 @@ export default function LiveChatWidget() {
                             role="log"
                             aria-live="polite"
                             aria-label="Riwayat percakapan"
-                            className="flex h-72 max-h-[55vh] flex-col gap-3 overflow-y-auto scroll-smooth bg-gray-50 p-4 text-sm dark:bg-gray-900"
+                            className="flex h-72 max-h-[55vh] flex-col gap-3 overflow-y-auto scroll-smooth bg-gray-50 p-4 text-sm"
                         >
                             <Bubble mine={false} author="Petugas SIGAP">
                                 Halo{identity ? `, ${identity.nama}` : ''}! 👋 Ada yang bisa kami bantu?
@@ -290,18 +290,12 @@ export default function LiveChatWidget() {
                         </div>
 
                         {error && (
-                            <p
-                                role="alert"
-                                className="border-t border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-600 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300"
-                            >
+                            <p role="alert" className="border-t border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-600">
                                 {error}
                             </p>
                         )}
 
-                        <form
-                            onSubmit={submit}
-                            className="dark:bg-dark-card flex items-center gap-2 border-t border-gray-200 p-3 dark:border-gray-700"
-                        >
+                        <form onSubmit={submit} className="flex items-center gap-2 border-t border-gray-200 p-3">
                             <label htmlFor="sigap-chat-input" className="sr-only">
                                 Ketik pesan
                             </label>
@@ -314,7 +308,7 @@ export default function LiveChatWidget() {
                                 onChange={(e) => setInput(e.target.value)}
                                 placeholder="Ketik pesan..."
                                 autoComplete="off"
-                                className="flex-grow rounded-full border px-4 py-2 text-xs focus:outline-none dark:bg-gray-800 dark:text-white"
+                                className="flex-grow rounded-full border px-4 py-2 text-xs focus:outline-none"
                             />
                             <button
                                 type="submit"
@@ -345,9 +339,7 @@ function Bubble({ mine, author, time, children }: { mine: boolean; author: strin
                 <div
                     className={cn(
                         'rounded-lg p-2.5 text-xs break-words whitespace-pre-wrap shadow-sm',
-                        mine
-                            ? 'bg-primary rounded-tr-none text-white'
-                            : 'rounded-tl-none border border-gray-100 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200',
+                        mine ? 'bg-primary rounded-tr-none text-white' : 'rounded-tl-none border border-gray-100 bg-white text-gray-700',
                     )}
                 >
                     {children}
@@ -415,18 +407,18 @@ function IdentityStep({ onStarted }: { onStarted: (identity: Identity, conversat
     };
 
     return (
-        <div className="space-y-4 bg-gray-50 p-4 text-sm dark:bg-gray-900">
+        <div className="space-y-4 bg-gray-50 p-4 text-sm">
             <div className="flex gap-2">
                 <div className="bg-brand-light flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white" aria-hidden="true">
                     <Headset className="h-4 w-4" />
                 </div>
-                <p className="rounded-lg rounded-tl-none border border-gray-100 bg-white p-2.5 text-xs text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                <p className="rounded-lg rounded-tl-none border border-gray-100 bg-white p-2.5 text-xs text-gray-700 shadow-sm">
                     Halo! 👋 Sebelum mulai, boleh kami tahu nama Anda? Agar petugas tahu siapa yang bertanya.
                 </p>
             </div>
 
             <form onSubmit={submit} className="space-y-2" noValidate>
-                <label htmlFor="sigap-chat-name" className="block text-xs font-semibold text-gray-700 dark:text-gray-200">
+                <label htmlFor="sigap-chat-name" className="block text-xs font-semibold text-gray-700">
                     Nama <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
@@ -442,11 +434,11 @@ function IdentityStep({ onStarted }: { onStarted: (identity: Identity, conversat
                         aria-invalid={Boolean(error)}
                         aria-describedby={error ? 'sigap-chat-name-error' : undefined}
                         placeholder="Nama lengkap"
-                        className="w-full rounded-lg border bg-white py-2 pr-3 pl-9 text-xs focus:outline-none dark:bg-gray-800 dark:text-white"
+                        className="w-full rounded-lg border bg-white py-2 pr-3 pl-9 text-xs focus:outline-none"
                     />
                 </div>
                 {error && (
-                    <p id="sigap-chat-name-error" role="alert" className="text-xs text-rose-600 dark:text-rose-300">
+                    <p id="sigap-chat-name-error" role="alert" className="text-xs text-rose-600">
                         {error}
                     </p>
                 )}
@@ -457,7 +449,7 @@ function IdentityStep({ onStarted }: { onStarted: (identity: Identity, conversat
                 >
                     {busy || recaptcha.verifying ? 'Memulai…' : 'Mulai chat'}
                 </button>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                <p className="text-[11px] text-gray-500">
                     Dengan memulai chat, Anda menyetujui{' '}
                     <Link href="/kebijakan-privasi" className="underline">
                         Kebijakan Privasi
@@ -468,11 +460,11 @@ function IdentityStep({ onStarted }: { onStarted: (identity: Identity, conversat
             </form>
 
             <div className="flex items-center gap-2 text-[11px] text-gray-400">
-                <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" /> atau <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+                <span className="h-px flex-1 bg-gray-200" /> atau <span className="h-px flex-1 bg-gray-200" />
             </div>
             <Link
                 href="/masuk"
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
             >
                 <LogIn className="h-4 w-4" aria-hidden="true" /> Masuk sebagai warga
             </Link>

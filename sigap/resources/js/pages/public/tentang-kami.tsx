@@ -17,18 +17,18 @@ export default function TentangKami() {
             </Section>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <Card className="dark:bg-dark-card border-gray-100 dark:border-gray-800">
+                <Card className="border-gray-100">
                     <CardContent className="p-6">
-                        <h2 className="text-primary dark:text-brand-light mb-2 text-lg font-bold">Visi</h2>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                        <h2 className="text-primary mb-2 text-lg font-bold">Visi</h2>
+                        <p className="text-sm text-gray-600">
                             Mewujudkan layanan pengaduan masyarakat yang cepat, transparan, dan akuntabel di seluruh kawasan transmigrasi Indonesia.
                         </p>
                     </CardContent>
                 </Card>
-                <Card className="dark:bg-dark-card border-gray-100 dark:border-gray-800">
+                <Card className="border-gray-100">
                     <CardContent className="p-6">
-                        <h2 className="text-primary dark:text-brand-light mb-2 text-lg font-bold">Misi</h2>
-                        <ul className="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                        <h2 className="text-primary mb-2 text-lg font-bold">Misi</h2>
+                        <ul className="list-inside list-disc space-y-1 text-sm text-gray-600">
                             <li>Mempermudah akses pelaporan lewat 5 kanal resmi;</li>
                             <li>Menjamin tindak lanjut sesuai standar waktu layanan;</li>
                             <li>Melindungi kerahasiaan data pelapor sesuai UU PDP.</li>

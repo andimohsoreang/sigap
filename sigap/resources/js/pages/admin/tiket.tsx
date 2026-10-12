@@ -35,7 +35,7 @@ export default function ManajemenTiket({ tickets, filters, statuses }: Props) {
             cell: ({ row }) => (
                 <div>
                     <div className="text-brand-light font-bold">#{row.original.nomor}</div>
-                    <div className="mt-0.5 max-w-[240px] truncate text-xs text-gray-500 dark:text-gray-400">{row.original.judul}</div>
+                    <div className="mt-0.5 max-w-[240px] truncate text-xs text-gray-500">{row.original.judul}</div>
                 </div>
             ),
         },
@@ -59,7 +59,7 @@ export default function ManajemenTiket({ tickets, filters, statuses }: Props) {
             accessorKey: 'prioritas',
             header: 'Prioritas',
             cell: ({ getValue }) => (
-                <span className="bg-brand-soft text-primary dark:bg-primary-light/20 dark:text-brand-light rounded px-2 py-0.5 text-[10px] font-bold uppercase">
+                <span className="bg-brand-soft text-primary rounded px-2 py-0.5 text-[10px] font-bold uppercase">
                     {getValue<string | null>() ?? 'umum'}
                 </span>
             ),
