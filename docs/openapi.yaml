@@ -1,0 +1,1204 @@
+openapi: 3.1.0
+info:
+  title: SIGAP API
+  version: 1.0.0
+  description: |
+    REST API **SIGAP** — *Suara Masyarakat, Inisiatif Gerak Aksi, Penyelesaian Tuntas* —
+    sistem pengelolaan pengaduan pelayanan publik Kementerian Transmigrasi RI.
+
+    Lapisan API ini dihasilkan dari aplikasi Laravel (Inertia + React) dan **dapat
+    dikeluarkan kapan pun diminta** (PRD D1). Logika bisnis yang sama melayani jalur
+    Inertia (web) maupun JSON (`/api/v1`).
+
+    **Autentikasi:** Sanctum. SPA memakai cookie sesi (`cookieAuth`); klien eksternal
+    memakai Bearer token (`bearerAuth`).
+
+    **Keputusan terkait:** D2 PostgreSQL · D3 NIK+Password · D4 disk lokal ·
+    D5 Reverb · D6 Leaflet · D7 stub adapter · D8 staging terpisah ·
+    D9 data spasial dummy · D10 tanpa WhatsApp.
+  contact:
+    name: Unit Pelayanan Pengaduan Masyarakat
+    email: pengaduan@kemenatrans.go.id
+  license:
+    name: Proprietary — Kementerian Transmigrasi RI
+servers:
+  - url: https://app1.andimohamad.my.id/api/v1
+    description: Produksi (D8)
+  - url: https://staging-app1.andimohamad.my.id/api/v1
+    description: Staging (D8)
+  - url: http://sigap.test/api/v1
+    description: Lokal
+
+tags:
+  - name: Auth
+    description: Login gabungan warga (NIK) & petugas (username)
+  - name: Publik
+    description: Pengaduan publik, pelacakan, survei, katalog
+  - name: Warga
+    description: Portal warga terautentikasi
+  - name: Wilayah
+    description: Data kawasan transmigrasi (Leaflet, D6/D9)
+  - name: Admin - Tiket
+    description: Manajemen tiket & tiket internal
+  - name: Admin - Master
+    description: Kawasan, kanal, admin, pengaturan
+  - name: Admin - Dashboard
+    description: Rekapitulasi & statistik
+  - name: Chat
+    description: Live chat real-time (Reverb, D5)
+  - name: Integrasi
+    description: Stub adapter SP4N-LAPOR! & WBS (D7)
+  - name: Sistem
+    description: Health & utilitas
+
+security:
+  - cookieAuth: []
+
+paths:
+  # ============================================================ AUTH
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login gabungan (warga NIK / petugas username)
+      description: |
+        Satu pintu masuk. Server menentukan peran dari `identifier` (NIK 16 digit untuk
+        warga, username untuk admin) dan menerbitkan sesi cookie. Rate limit per
+        NIK/username + IP (D3).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              warga:
+                value: { identifier: "3171010101010001", password: "rahasia" }
+              admin:
+                value: { identifier: "admin", password: "rahasia" }
+      responses:
+        '200':
+          description: Berhasil
+          headers:
+            Set-Cookie:
+              schema: { type: string }
+              description: Sigap session cookie (HttpOnly; Secure)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Kredensial salah
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: "NIK/username atau kata sandi salah." }
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout (cabut sesi)
+      responses:
+        '200':
+          description: Sesi dicabut
+          content:
+            application/json:
+              schema: { type: object, properties: { ok: { type: boolean, example: true } } }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/session:
+    get:
+      tags: [Auth]
+      summary: Status sesi saat ini
+      responses:
+        '200':
+          description: Status sesi
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionResponse' }
+
+  # ============================================================ PUBLIK
+  /pengaduan:
+    post:
+      tags: [Publik]
+      summary: Buat pengaduan publik (formulir SIGAP)
+      description: |
+        Membuat tiket baru. Server menghitung `priority` & `sla_due_at` dari `impact`
+        (PRD §6.1, memperbaiki bug B1/B2). Mendukung lampiran multipart (D4) dan
+        reCAPTCHA (SEC-10).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PengaduanRequest' }
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/PengaduanRequest'
+                - type: object
+                  properties:
+                    attachment:
+                      type: string
+                      format: binary
+                      description: Bukti, maks 5 MB (D4)
+      responses:
+        '201':
+          description: Tiket dibuat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TicketCreated' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /pengaduan/internal:
+    post:
+      tags: [Publik]
+      summary: Buat pengaduan internal pegawai (sarana & TIK)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PengaduanInternalRequest' }
+      responses:
+        '201':
+          description: Tiket internal dibuat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TicketCreated' }
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /tiket/{ticket_no}:
+    get:
+      tags: [Publik]
+      summary: Lacak tiket berdasarkan nomor
+      description: |
+        Mengembalikan detail tiket untuk pelacakan publik. NIK pelapor **di-mask**.
+        Tiket dengan `is_internal = true` **tidak pernah** dikembalikan (SEC-11, memperbaiki B4).
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TicketNo'
+      responses:
+        '200':
+          description: Detail tiket
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TicketDetail' }
+        '400':
+          description: Format nomor tidak valid
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: "Format nomor tiket tidak valid." }
+        '404':
+          description: Tidak ditemukan (termasuk tiket internal)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: "Tiket tidak ditemukan." }
+
+  /survei/{ticket_no}:
+    post:
+      tags: [Publik]
+      summary: Kirim survei kepuasan untuk tiket
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TicketNo'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SurveyRequest' }
+      responses:
+        '201':
+          description: Survei tersimpan
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Success' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /katalog/kanal:
+    get:
+      tags: [Publik]
+      summary: Daftar kanal pengaduan publik
+      security: []
+      responses:
+        '200':
+          description: Daftar kanal
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Channel' }
+
+  # ============================================================ WARGA
+  /warga/session:
+    get:
+      tags: [Warga]
+      summary: Status sesi warga
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WargaSessionResponse' }
+        '401':
+          $ref: '#/components/responses/UnauthorizedWarga'
+
+  /warga/profile:
+    get:
+      tags: [Warga]
+      summary: Profil warga
+      responses:
+        '200':
+          description: Profil
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WargaProfile' }
+        '401':
+          $ref: '#/components/responses/UnauthorizedWarga'
+    patch:
+      tags: [Warga]
+      summary: Perbarui profil warga
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WargaProfileUpdate' }
+      responses:
+        '200':
+          description: Diperbarui
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Success' }
+        '401':
+          $ref: '#/components/responses/UnauthorizedWarga'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /warga/tickets:
+    get:
+      tags: [Warga]
+      summary: Riwayat tiket milik warga yang login
+      description: Server menentukan kepemilikan dari sesi, bukan parameter klien (SEC-07).
+      responses:
+        '200':
+          description: Riwayat tiket
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/WargaTicket' }
+        '401':
+          $ref: '#/components/responses/UnauthorizedWarga'
+
+  # ============================================================ WILAYAH
+  /regions:
+    get:
+      tags: [Wilayah]
+      summary: Daftar kawasan transmigrasi (untuk peta Leaflet)
+      description: |
+        Mengembalikan daftar kawasan dengan koordinat. **Fase ini memakai data dummy**
+        (D9); field `geometry` (GeoJSON) tersedia sebagai slot untuk data nyata.
+      security: []
+      parameters:
+        - name: province
+          in: query
+          schema: { type: string }
+        - name: infrastructure_status
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Daftar kawasan
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Region' }
+
+  # ============================================================ ADMIN - TIKET
+  /admin/tickets:
+    get:
+      tags: [Admin - Tiket]
+      summary: Daftar tiket (dengan filter & paginasi)
+      parameters:
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/TicketStatus' } }
+        - { name: region_id, in: query, schema: { type: integer } }
+        - { name: category_id, in: query, schema: { type: integer } }
+        - { name: impact, in: query, schema: { $ref: '#/components/schemas/TicketImpact' } }
+        - { name: q, in: query, schema: { type: string }, description: Pencarian judul/deskripsi }
+        - { name: internal, in: query, schema: { type: boolean }, description: Filter tiket internal }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Daftar tiket
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedTickets' }
+        '401':
+          $ref: '#/components/responses/UnauthorizedAdmin'
+
+  /admin/tickets/{ticket_no}:
+    get:
+      tags: [Admin - Tiket]
+      summary: Detail tiket (riwayat & tanggapan)
+      parameters:
+        - $ref: '#/components/parameters/TicketNo'
+      responses:
+        '200':
+          description: Detail tiket
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TicketAdminDetail' }
+        '401':
+          $ref: '#/components/responses/UnauthorizedAdmin'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/tickets/{ticket_no}/status:
+    post:
+      tags: [Admin - Tiket]
+      summary: Ubah status tiket
+      description: Menulis `ticket_histories` (audit trail) dan memicu Reverb `TicketStatusChanged`.
+      parameters:
+        - $ref: '#/components/parameters/TicketNo'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StatusUpdateRequest' }
+      responses:
+        '200':
+          description: Status diperbarui
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TicketAdminDetail' }
+        '400':
+          description: Status tidak valid
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: "Status tidak valid. Pilihan: baru, verifikasi, diproses, selesai, ditolak" }
+        '401':
+          $ref: '#/components/responses/UnauthorizedAdmin'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/tickets/{ticket_no}/tanggapan:
+    post:
+      tags: [Admin - Tiket]
+      summary: Tambah tanggapan admin/petugas
+      parameters:
+        - $ref: '#/components/parameters/TicketNo'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReplyRequest' }
+      responses:
+        '201':
+          description: Tanggapan dibuat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TicketReply' }
+        '401':
+          $ref: '#/components/responses/UnauthorizedAdmin'
+
+  /admin/tiket-internal:
+    get:
+      tags: [Admin - Tiket]
+      summary: Daftar tiket internal pegawai + statistik
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Daftar tiket internal
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InternalTicketList' }
+        '401':
+          $ref: '#/components/responses/UnauthorizedAdmin'
+
+  /admin/input-manual:
+    post:
+      tags: [Admin - Tiket]
+      summary: Terbitkan tiket dari kanal offline/medsos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InputManualRequest' }
+      responses:
+        '201':
+          description: Tiket manual dibuat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TicketCreated' }
+        '401':
+          $ref: '#/components/responses/UnauthorizedAdmin'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  # ============================================================ ADMIN - MASTER
+  /admin/kawasan:
+    get:
+      tags: [Admin - Master]
+      summary: Daftar kawasan
+      responses:
+        '200':
+          description: Daftar kawasan
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Region' }
+        '401':
+          $ref: '#/components/responses/UnauthorizedAdmin'
+    post:
+      tags: [Admin - Master]
+      summary: Tambah kawasan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegionInput' }
+      responses:
+        '201':
+          description: Dibuat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Region' }
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /admin/kawasan/{id}:
+    put:
+      tags: [Admin - Master]
+      summary: Perbarui kawasan
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegionInput' }
+      responses:
+        '200':
+          description: Diperbarui
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Region' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Admin - Master]
+      summary: Hapus kawasan
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '204': { description: Terhapus }
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/kanal:
+    get:
+      tags: [Admin - Master]
+      summary: Daftar kanal
+      responses:
+        '200':
+          description: Daftar kanal
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Channel' }
+        '401':
+          $ref: '#/components/responses/UnauthorizedAdmin'
+    post:
+      tags: [Admin - Master]
+      summary: Tambah kanal (medsos/kantor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChannelInput' }
+      responses:
+        '201':
+          description: Dibuat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Channel' }
+
+  /admin/admins:
+    get:
+      tags: [Admin - Master]
+      summary: Daftar admin/petugas
+      responses:
+        '200':
+          description: Daftar admin
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AdminUser' }
+        '401':
+          $ref: '#/components/responses/UnauthorizedAdmin'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Admin - Master]
+      summary: Tambah admin baru (super admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminUserInput' }
+      responses:
+        '201':
+          description: Dibuat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUser' }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/pengaturan:
+    get:
+      tags: [Admin - Master]
+      summary: Ambil konfigurasi (SLA/EWS/kategori/notifikasi)
+      responses:
+        '200':
+          description: Konfigurasi
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Settings' }
+        '401':
+          $ref: '#/components/responses/UnauthorizedAdmin'
+    put:
+      tags: [Admin - Master]
+      summary: Simpan konfigurasi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Settings' }
+      responses:
+        '200':
+          description: Tersimpan
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Settings' }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ============================================================ ADMIN - DASHBOARD
+  /admin/rekap:
+    get:
+      tags: [Admin - Dashboard]
+      summary: Rekapitulasi tiket (matriks)
+      description: Statistik total, per status, EWS, dan persentase SLA. Rumus `sla_pct` diperbaiki (B3).
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - { name: region_id, in: query, schema: { type: integer } }
+        - { name: category_id, in: query, schema: { type: integer } }
+      responses:
+        '200':
+          description: Rekapitulasi
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Rekap' }
+        '401':
+          $ref: '#/components/responses/UnauthorizedAdmin'
+
+  # ============================================================ CHAT
+  /chat/conversations:
+    get:
+      tags: [Chat]
+      summary: Daftar percakapan (admin) / milik pengguna
+      responses:
+        '200':
+          description: Daftar percakapan
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ChatConversation' }
+
+  /chat/{conversation}/messages:
+    get:
+      tags: [Chat]
+      summary: Riwayat pesan percakapan
+      parameters:
+        - { name: conversation, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Daftar pesan
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ChatMessage' }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Chat]
+      summary: Kirim pesan (broadcast Reverb)
+      parameters:
+        - { name: conversation, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChatMessageInput' }
+      responses:
+        '201':
+          description: Pesan terkirim
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChatMessage' }
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  # ============================================================ INTEGRASI
+  /admin/integrasi/{channel}:
+    post:
+      tags: [Integrasi]
+      summary: Jalankan sinkronisasi kanal nasional (stub adapter D7)
+      parameters:
+        - name: channel
+          in: path
+          required: true
+          schema: { type: string, enum: [sp4n, wbs] }
+      responses:
+        '200':
+          description: Hasil sinkronisasi (stub)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SyncResult' }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ============================================================ SISTEM
+  /health:
+    get:
+      tags: [Sistem]
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Sehat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  service: { type: string, example: sigap-api }
+                  tickets: { type: integer }
+                  time: { type: string, format: date-time }
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sigap_session
+      description: Sesi Sanctum (HttpOnly; Secure) untuk SPA
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Sanctum personal access token untuk klien eksternal
+
+  parameters:
+    TicketNo:
+      name: ticket_no
+      in: path
+      required: true
+      schema: { type: string, pattern: '^TKT-\d+$', example: TKT-1 }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PerPage:
+      name: per_page
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 15 }
+
+  responses:
+    BadRequest:
+      description: Permintaan tidak valid
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: "NIK harus 16 digit angka." }
+    ValidationError:
+      description: Gagal validasi (422)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ValidationError' }
+    Unauthorized:
+      description: Belum login
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { authenticated: false, error: "Endpoint API tidak ditemukan" }
+    UnauthorizedWarga:
+      description: Akses khusus warga
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { authenticated: false, error: "Akses khusus warga" }
+    UnauthorizedAdmin:
+      description: Akses khusus petugas
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { authenticated: false, error: "Akses khusus petugas" }
+    Forbidden:
+      description: Terautentikasi tetapi tidak berwenang
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: "Tidak berwenang mengakses sumber daya ini." }
+    NotFound:
+      description: Tidak ditemukan
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: "Tiket tidak ditemukan." }
+    TooManyRequests:
+      description: Terlalu banyak permintaan
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: "Terlalu banyak percobaan login. Coba 1 menit lagi." }
+
+  schemas:
+    # ---------- umum
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+    ValidationError:
+      type: object
+      properties:
+        message: { type: string, example: "Data yang diberikan tidak valid." }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+    Success:
+      type: object
+      properties:
+        ok: { type: boolean, example: true }
+    PaginationMeta:
+      type: object
+      properties:
+        total: { type: integer }
+        per_page: { type: integer }
+        current_page: { type: integer }
+        last_page: { type: integer }
+
+    # ---------- auth
+    LoginRequest:
+      type: object
+      required: [identifier, password]
+      properties:
+        identifier:
+          type: string
+          description: NIK 16 digit (warga) atau username (admin/pegawai)
+        password: { type: string, format: password }
+    LoginResponse:
+      type: object
+      properties:
+        role: { $ref: '#/components/schemas/UserRole' }
+        nama: { type: string, example: "Warga Demo Transmigrasi" }
+        id: { type: integer, example: 2 }
+    SessionResponse:
+      type: object
+      properties:
+        authenticated: { type: boolean }
+        role: { oneOf: [{ $ref: '#/components/schemas/UserRole' }, { type: 'null' }] }
+        nama: { oneOf: [{ type: string }, { type: 'null' }] }
+    WargaSessionResponse:
+      type: object
+      properties:
+        authenticated: { type: boolean }
+        nama: { oneOf: [{ type: string }, { type: 'null' }] }
+
+    UserRole:
+      type: string
+      enum: [warga, pegawai, admin_kawasan, super_admin]
+
+    # ---------- pengaduan
+    PengaduanRequest:
+      type: object
+      required: [nik, nama, judul, uraian, kategori, impact]
+      properties:
+        nik: { type: string, pattern: '^\d{16}$', example: "3171010101010001" }
+        nama: { type: string, example: "Ahmad Subagyo" }
+        email: { type: string, format: email }
+        telepon: { type: string, example: "081200000000" }
+        judul: { type: string, maxLength: 255 }
+        uraian: { type: string, minLength: 10 }
+        koordinat: { type: string, example: "-8.4991, 140.4011", description: Terisi dari geolocation }
+        region_id: { type: integer, description: Kawasan transmigrasi }
+        category_id: { type: integer }
+        impact: { $ref: '#/components/schemas/TicketImpact' }
+        visibility: { $ref: '#/components/schemas/TicketVisibility' }
+        recaptcha_token: { type: string }
+    PengaduanInternalRequest:
+      type: object
+      required: [nip, nama, unit, kontak, kategori, urgensi, lokasi, deskripsi]
+      properties:
+        nip: { type: string, example: "NIP-19800101" }
+        nama: { type: string }
+        unit: { type: string, example: "Biro Umum & TIK" }
+        kontak: { type: string }
+        kategori: { type: string, example: "Internet / Jaringan Mati" }
+        urgensi: { type: string, enum: [Rendah, Sedang, Tinggi, Kritis] }
+        lokasi: { type: string, example: "Gedung A Lt. 3" }
+        deskripsi: { type: string }
+    InputManualRequest:
+      type: object
+      required: [sumber_laporan, nama, judul, uraian, region_id, category_id]
+      properties:
+        sumber_laporan: { type: string, enum: [tatap_muka, call_center, surat, instagram, x, facebook, tiktok] }
+        admin_penerima: { type: string }
+        nik: { type: string }
+        nama: { type: string }
+        telepon: { type: string }
+        tautan: { type: string, description: URL khusus medsos }
+        judul: { type: string }
+        uraian: { type: string }
+        region_id: { type: integer }
+        category_id: { type: integer }
+
+    TicketCreated:
+      type: object
+      properties:
+        ok: { type: boolean, example: true }
+        nomor_tiket: { type: string, example: "TKT-1" }
+        id: { type: string, example: "TKT-1" }
+
+    TicketStatus:
+      type: string
+      enum: [baru, verifikasi, diproses, selesai, ditolak]
+    TicketImpact:
+      type: string
+      enum: [rendah, sedang, tinggi, kritis]
+    TicketPriority:
+      type: string
+      enum: [umum, prioritas, darurat]
+    TicketVisibility:
+      type: string
+      enum: [publik, anonim, rahasia]
+    ChannelType:
+      type: string
+      enum: [sosmed, kantor, nasional, internal]
+
+    TicketHistory:
+      type: object
+      properties:
+        from_status: { oneOf: [{ $ref: '#/components/schemas/TicketStatus' }, { type: 'null' }] }
+        to_status: { $ref: '#/components/schemas/TicketStatus' }
+        actor: { oneOf: [{ type: string }, { type: 'null' }] }
+        note: { oneOf: [{ type: string }, { type: 'null' }] }
+        created_at: { type: string, format: date-time }
+
+    TicketDetail:
+      type: object
+      description: Detail tiket untuk pelacakan publik
+      properties:
+        nomor: { type: string, example: "TKT-1" }
+        judul: { type: string }
+        deskripsi: { type: string }
+        status: { $ref: '#/components/schemas/TicketStatus' }
+        prioritas: { $ref: '#/components/schemas/TicketPriority' }
+        impact: { $ref: '#/components/schemas/TicketImpact' }
+        kategori: { oneOf: [{ type: string }, { type: 'null' }] }
+        kawasan: { oneOf: [{ type: string }, { type: 'null' }] }
+        kanal: { oneOf: [{ type: string }, { type: 'null' }] }
+        petugas: { oneOf: [{ type: string }, { type: 'null' }] }
+        pelapor: { type: string }
+        nik: { type: string, example: "3171********0001", description: Di-mask }
+        created_at: { type: string, format: date-time }
+        tenggat_sla: { oneOf: [{ type: string, format: date-time }, { type: 'null' }] }
+        is_internal: { type: boolean, description: Selalu false pada endpoint ini }
+        riwayat:
+          type: array
+          items: { $ref: '#/components/schemas/TicketHistory' }
+        tanggapan:
+          type: array
+          items: { $ref: '#/components/schemas/TicketReply' }
+
+    TicketReply:
+      type: object
+      properties:
+        id: { type: integer }
+        author: { type: string }
+        body: { type: string }
+        is_public: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    TicketAdmin:
+      type: object
+      properties:
+        nomor_tiket: { type: string }
+        judul: { type: string }
+        status: { $ref: '#/components/schemas/TicketStatus' }
+        created_at: { type: string, format: date-time }
+        tenggat_sla: { oneOf: [{ type: string, format: date-time }, { type: 'null' }] }
+        is_internal: { type: boolean }
+        nama_pelapor: { type: string }
+        kategori: { oneOf: [{ type: string }, { type: 'null' }] }
+        kawasan: { oneOf: [{ type: string }, { type: 'null' }] }
+        prioritas: { $ref: '#/components/schemas/TicketPriority' }
+
+    TicketAdminDetail:
+      allOf:
+        - $ref: '#/components/schemas/TicketDetail'
+        - type: object
+          properties:
+            assignee: { oneOf: [{ type: string }, { type: 'null' }] }
+            responded_at: { oneOf: [{ type: string, format: date-time }, { type: 'null' }] }
+            resolved_at: { oneOf: [{ type: string, format: date-time }, { type: 'null' }] }
+
+    PaginatedTickets:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/TicketAdmin' }
+        meta: { $ref: '#/components/schemas/PaginationMeta' }
+
+    StatusUpdateRequest:
+      type: object
+      required: [status]
+      properties:
+        status: { $ref: '#/components/schemas/TicketStatus' }
+        note: { type: string }
+
+    ReplyRequest:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string }
+        is_public: { type: boolean, default: true }
+
+    InternalTicket:
+      type: object
+      properties:
+        id: { type: string, example: "TKT-3" }
+        nama: { type: string }
+        unit: { type: string }
+        kategori: { type: string }
+        lokasi: { type: string }
+        urgensi: { type: string, enum: [Rendah, Sedang, Tinggi, Kritis] }
+        status: { $ref: '#/components/schemas/TicketStatus' }
+        created_at: { type: string, format: date-time }
+    InternalTicketList:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/InternalTicket' }
+        stats:
+          type: object
+          properties:
+            today: { type: integer }
+            this_month: { type: integer }
+            top_category: { type: string }
+            avg_resolution_hours: { type: number }
+
+    # ---------- warga
+    WargaProfile:
+      type: object
+      properties:
+        nama: { type: string }
+        nik: { type: string, example: "3171********0001" }
+        email: { type: string, format: email }
+        telp: { type: string }
+    WargaProfileUpdate:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        telp: { type: string }
+        password: { type: string, format: password, minLength: 8 }
+    WargaTicket:
+      type: object
+      properties:
+        id: { type: string, example: "#TKT-2" }
+        tanggal: { type: string, example: "05 Okt 2026" }
+        judul: { type: string }
+        status: { $ref: '#/components/schemas/TicketStatus' }
+
+    SurveyRequest:
+      type: object
+      required: [rating]
+      properties:
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string }
+
+    # ---------- wilayah
+    Region:
+      type: object
+      properties:
+        id: { type: integer }
+        code: { type: string, example: "KWS-001" }
+        name: { type: string, example: "SP1 Merauke" }
+        province: { type: string, example: "Papua Selatan" }
+        latitude: { type: number, example: -8.4991 }
+        longitude: { type: number, example: 140.4011 }
+        geometry:
+          oneOf: [{ type: object, description: GeoJSON }, { type: 'null' }]
+          description: "Slot data spasial nyata; null selama fase dummy (D9)"
+        infrastructure_status: { type: string, example: "Berkembang" }
+        kk_count: { type: integer }
+    RegionInput:
+      type: object
+      required: [code, name]
+      properties:
+        code: { type: string }
+        name: { type: string }
+        province: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+        infrastructure_status: { type: string }
+        kk_count: { type: integer }
+
+    # ---------- kanal
+    Channel:
+      type: object
+      properties:
+        id: { type: integer }
+        type: { $ref: '#/components/schemas/ChannelType' }
+        name: { type: string, example: "@SIGAP_RI" }
+        account_name: { type: string }
+        url: { type: string, example: "https://instagram.com/sigap" }
+        status: { type: string, example: "aktif" }
+        last_synced_at: { oneOf: [{ type: string, format: date-time }, { type: 'null' }] }
+    ChannelInput:
+      type: object
+      required: [type, name]
+      properties:
+        type: { $ref: '#/components/schemas/ChannelType' }
+        name: { type: string }
+        account_name: { type: string }
+        url: { type: string }
+        status: { type: string, default: aktif }
+
+    # ---------- admin
+    AdminUser:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        nip: { type: string, example: "NIP-19800101" }
+        role: { $ref: '#/components/schemas/UserRole' }
+        region: { oneOf: [{ type: string }, { type: 'null' }] }
+        status: { type: string, example: "Aktif" }
+    AdminUserInput:
+      type: object
+      required: [name, nip, role]
+      properties:
+        name: { type: string }
+        nip: { type: string }
+        role: { $ref: '#/components/schemas/UserRole' }
+        region_id: { type: integer }
+
+    # ---------- dashboard
+    Rekap:
+      type: object
+      properties:
+        total: { type: integer, example: 5287 }
+        byStatus:
+          type: object
+          additionalProperties: { type: integer }
+          example: { baru: 2, verifikasi: 0, diproses: 1, selesai: 1, ditolak: 0 }
+        ews: { type: integer, description: Jumlah tiket melampaui SLA }
+        sla_pct: { type: number, description: Persentase SLA terpenuhi (0-100), rumus diperbaiki }
+
+    # ---------- settings
+    Settings:
+      type: object
+      properties:
+        sla_response_minutes: { type: integer, example: 60 }
+        ews_enabled: { type: boolean }
+        auto_disposition: { type: boolean }
+        categories:
+          type: array
+          items: { $ref: '#/components/schemas/Category' }
+        notification:
+          type: object
+          properties:
+            pic_email: { type: string, format: email }
+            pic_phone: { type: string, description: "Disimpan untuk paritas; WA tidak dikirim (D10)" }
+            whatsapp_enabled: { type: boolean, default: false, description: "Selalu false (D10)" }
+    Category:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string, example: "Infrastruktur Dasar" }
+        slug: { type: string }
+        priority_default: { $ref: '#/components/schemas/TicketPriority' }
+        sla_days: { type: integer, example: 14 }
+
+    # ---------- chat
+    ChatConversation:
+      type: object
+      properties:
+        id: { type: integer }
+        user: { oneOf: [{ type: string }, { type: 'null' }] }
+        subject: { type: string }
+        last_message: { type: string }
+        unread_admin: { type: integer }
+        unread_user: { type: integer }
+        last_message_at: { type: string, format: date-time }
+    ChatMessage:
+      type: object
+      properties:
+        id: { type: integer }
+        conversation_id: { type: integer }
+        sender_type: { type: string, enum: [user, admin, system] }
+        sender: { oneOf: [{ type: string }, { type: 'null' }] }
+        body: { type: string }
+        read_at: { oneOf: [{ type: string, format: date-time }, { type: 'null' }] }
+        created_at: { type: string, format: date-time }
+    ChatMessageInput:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string }
+
+    # ---------- integrasi
+    SyncResult:
+      type: object
+      properties:
+        channel: { type: string, example: "sp4n" }
+        pulled_count: { type: integer, example: 950 }
+        status: { type: string, example: "berhasil" }
+        stub: { type: boolean, example: true, description: "Menandakan adapter masih stub (D7)" }
+        synced_at: { type: string, format: date-time }
+
+webhooks: {}

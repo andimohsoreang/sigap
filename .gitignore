@@ -1,0 +1,8 @@
+sigap/node_modules/
+sigap/vendor/
+sigap/public/build/
+sigap/storage/framework/views/*.php
+sigap/storage/logs/*.log
+sigap/.env
+sigap/.phpunit.result.cache
+*.sqlite

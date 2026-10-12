@@ -1,0 +1,257 @@
+@import 'tailwindcss';
+
+@plugin 'tailwindcss-animate';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Tipografi referensi absol.id: Space Grotesk (heading) + Jost (body). */
+    --font-heading: 'Space Grotesk', 'Kumbh Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Jost', ui-sans-serif, system-ui, sans-serif;
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    /* ===== Brand SIGAP (paritas token lama) ===== */
+    --color-brand: #0e5b72; /* primary lama */
+    --color-brand-light: #0093b6; /* primaryLight lama */
+    --color-brand-soft: #e5f4f7; /* primarySoft lama */
+    --color-gold: #c3a167; /* secondary lama */
+    --color-dark-bg: #0f172a; /* darkBg lama */
+    --color-dark-card: #1e293b; /* darkCard lama */
+    --color-surface-light: #f3f4f6; /* light lama */
+
+    --color-sidebar: var(--sidebar-background);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+:root {
+    --background: hsl(0, 0%, 100%);
+    --foreground: hsl(222, 47%, 11%);
+    --card: hsl(0, 0%, 100%);
+    --card-foreground: hsl(222, 47%, 11%);
+    --popover: hsl(0, 0%, 100%);
+    --popover-foreground: hsl(222, 47%, 11%);
+    /* SIGAP brand: #0E5B72 */
+    --primary: hsl(192, 79%, 25%);
+    --primary-foreground: hsl(0, 0%, 98%);
+    /* SIGAP secondary: #C3A167 (gold) */
+    --secondary: hsl(40, 44%, 58%);
+    --secondary-foreground: hsl(222, 47%, 11%);
+    /* SIGAP primarySoft: #E5F4F7 */
+    --muted: hsl(190, 55%, 93%);
+    --muted-foreground: hsl(200, 15%, 40%);
+    --accent: hsl(190, 55%, 93%);
+    --accent-foreground: hsl(192, 79%, 20%);
+    --destructive: hsl(0, 84.2%, 60.2%);
+    --destructive-foreground: hsl(0, 0%, 98%);
+    --border: hsl(200, 15%, 90%);
+    --input: hsl(200, 15%, 88%);
+    --ring: hsl(192, 79%, 25%);
+    --chart-1: hsl(192, 100%, 36%);
+    --chart-2: hsl(40, 44%, 58%);
+    --chart-3: hsl(192, 79%, 25%);
+    --chart-4: hsl(173, 58%, 39%);
+    --chart-5: hsl(27, 87%, 67%);
+    --radius: 0.5rem;
+    --sidebar-background: hsl(190, 55%, 97%);
+    --sidebar-foreground: hsl(192, 79%, 20%);
+    --sidebar-primary: hsl(192, 79%, 25%);
+    --sidebar-primary-foreground: hsl(0, 0%, 98%);
+    --sidebar-accent: hsl(190, 55%, 93%);
+    --sidebar-accent-foreground: hsl(192, 79%, 20%);
+    --sidebar-border: hsl(190, 30%, 88%);
+    --sidebar-ring: hsl(192, 100%, 36%);
+}
+
+.dark {
+    --background: hsl(222, 47%, 11%);
+    --foreground: hsl(210, 40%, 98%);
+    --card: hsl(217, 33%, 17%);
+    --card-foreground: hsl(210, 40%, 98%);
+    --popover: hsl(217, 33%, 17%);
+    --popover-foreground: hsl(210, 40%, 98%);
+    /* SIGAP brandLight: #0093B6 */
+    --primary: hsl(191, 100%, 36%);
+    --primary-foreground: hsl(222, 47%, 11%);
+    --secondary: hsl(40, 44%, 58%);
+    --secondary-foreground: hsl(222, 47%, 11%);
+    --muted: hsl(217, 33%, 20%);
+    --muted-foreground: hsl(215, 20%, 65%);
+    --accent: hsl(217, 33%, 22%);
+    --accent-foreground: hsl(191, 100%, 60%);
+    --destructive: hsl(0, 84%, 60%);
+    --destructive-foreground: hsl(0, 0%, 98%);
+    --border: hsl(217, 33%, 22%);
+    --input: hsl(217, 33%, 22%);
+    --ring: hsl(191, 100%, 36%);
+    --chart-1: hsl(191, 100%, 45%);
+    --chart-2: hsl(40, 44%, 58%);
+    --chart-3: hsl(192, 79%, 40%);
+    --chart-4: hsl(160, 60%, 45%);
+    --chart-5: hsl(340, 75%, 55%);
+    --sidebar-background: hsl(217, 33%, 15%);
+    --sidebar-foreground: hsl(210, 40%, 90%);
+    --sidebar-primary: hsl(191, 100%, 36%);
+    --sidebar-primary-foreground: hsl(222, 47%, 11%);
+    --sidebar-accent: hsl(217, 33%, 22%);
+    --sidebar-accent-foreground: hsl(191, 100%, 60%);
+    --sidebar-border: hsl(217, 33%, 25%);
+    --sidebar-ring: hsl(191, 100%, 36%);
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+
+    html {
+        transition: font-size 0.3s ease;
+    }
+}
+
+/* Animasi halaman (paritas .page-section / .admin-section lama) */
+@keyframes sigap-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sigap-page-enter {
+    animation: sigap-fade-in 0.4s ease-in-out;
+}
+
+/* Latar hero beranimasi (halaman pembanding gaya absol.id). */
+@keyframes absol-drift {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+        transform: translate3d(3rem, -2rem, 0) scale(1.12);
+    }
+}
+
+@keyframes absol-grid-pan {
+    from {
+        background-position: 0 0;
+    }
+    to {
+        background-position: 56px 56px;
+    }
+}
+
+.absol-orb {
+    animation: absol-drift 16s ease-in-out infinite;
+    will-change: transform;
+}
+
+.absol-grid-pan {
+    animation: absol-grid-pan 24s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .absol-orb,
+    .absol-grid-pan {
+        animation: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Scope gaya absol.id untuk panel admin (tidak memengaruhi halaman publik).
+   Tipografi: Space Grotesk (heading, uppercase) + Jost (body); tombol pill;
+   input/select membulat 12px seperti .form-control milik absol.id.
+   -------------------------------------------------------------------------- */
+.absol-admin {
+    font-family: var(--font-body);
+}
+
+.absol-admin h1,
+.absol-admin h2,
+.absol-admin h3 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+}
+
+.absol-admin button:not([role='combobox']) {
+    border-radius: 9999px;
+}
+
+.absol-admin button[role='combobox'],
+.absol-admin input,
+.absol-admin textarea {
+    border-radius: 12px;
+}
