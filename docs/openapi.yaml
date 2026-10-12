@@ -22,10 +22,10 @@ info:
   license:
     name: Proprietary — Kementerian Transmigrasi RI
 servers:
-  - url: https://app1.andimohamad.my.id/api/v1
-    description: Produksi (D8)
-  - url: https://staging-app1.andimohamad.my.id/api/v1
-    description: Staging (D8)
+  - url: https://app2.andimohamad.my.id/api/v1
+    description: Produksi (D8, stack Docker app2-sigap)
+  - url: https://staging-app2.andimohamad.my.id/api/v1
+    description: Staging (D8, opsional)
   - url: http://sigap.test/api/v1
     description: Lokal
 

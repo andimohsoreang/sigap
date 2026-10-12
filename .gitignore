@@ -6,3 +6,9 @@ sigap/storage/logs/*.log
 sigap/.env
 sigap/.phpunit.result.cache
 *.sqlite
+
+# Deploy Docker — rahasia & backup, JANGAN di-commit
+deploy/docker/.env
+deploy/docker/.env.*
+!deploy/docker/.env.example
+deploy/docker/backups/

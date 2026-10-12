@@ -282,7 +282,8 @@ CREATE TABLE settings (
 CREATE TABLE chat_conversations (
   id              BIGSERIAL PRIMARY KEY,
   user_id         BIGINT REFERENCES users(id),      -- NULL utk tamu
-  guest_token     VARCHAR(64),                      -- identitas tamu anonim
+  guest_token     VARCHAR(64),                      -- kunci sesi tamu
+  guest_name      VARCHAR(100),                     -- nama tamu (WAJIB sebelum chat; warga pakai akun)
   subject         VARCHAR(200),
   last_message_at TIMESTAMPTZ,
   unread_admin    INTEGER NOT NULL DEFAULT 0,
@@ -294,7 +295,7 @@ CREATE TABLE chat_messages (
   id              BIGSERIAL PRIMARY KEY,
   conversation_id BIGINT NOT NULL REFERENCES chat_conversations(id) ON DELETE CASCADE,
   sender_id       BIGINT REFERENCES users(id),      -- NULL bila tamu/sistem
-  sender_type     VARCHAR(20) NOT NULL DEFAULT 'user', -- user|admin|system
+  sender_type     VARCHAR(20) NOT NULL DEFAULT 'user', -- user|guest|admin|system
   body            TEXT NOT NULL,
   read_at         TIMESTAMPTZ,
   created_at      TIMESTAMPTZ DEFAULT now()
@@ -365,8 +366,10 @@ Base: `https://<domain>/api/v1`. Auth: Sanctum. Untuk SPA (Inertia) memakai cook
 | GET/PUT | `/admin/pengaturan` | super_admin | SLA/EWS/kategori/notifikasi |
 | POST | `/admin/integrasi/{sp4n\|wbs}` | super_admin | jalankan stub sync |
 | GET | `/admin/chat` | admin | daftar percakapan |
-| GET | `/chat/{conversation}/messages` | any | riwayat pesan |
-| POST | `/chat/{conversation}/messages` | any | kirim pesan (+ broadcast Reverb) |
+| GET | `/chat/pesan` (web) | any | identitas + riwayat pesan (`mine` per pesan); `?baca=1` tandai balasan dibaca |
+| POST | `/chat/mulai` (web) | tamu | isi nama (+ reCAPTCHA) sebelum chat; throttle 5/10 mnt/IP |
+| POST | `/chat/pesan` (web) | any | kirim pesan (+ broadcast); tamu tanpa nama → 422 `identity_required`; throttle `chat` |
+| POST | `/admin/chat/{id}/baca` · GET `/admin/chat/belum-dibaca` | admin | tandai dibaca · total belum dibaca (badge sidebar; realtime via kanal privat `admin.chat` event `.chat.unread`) |
 | GET | `/health` | — | `{ok, service, database, time}` — ping DB, tanpa statistik; throttle 60/menit/IP; 503 bila DB mati |
 
 **Nomor tiket**: format baru `TKT-YYMMDD-XXXXXX` — tanggal dibuat + 6 karakter acak dari
@@ -493,7 +496,7 @@ pages/
 - Channel per pengguna: `user.{id}` (hanya pemilik akun). Notifikasi panel (tiket baru/perubahan status, EWS) dikirim ke admin yang berwenang atas kawasan tiket — tidak ada lagi kanal admin bersama.
 - Event: `ChatMessageSent` (`.chat.message`), `TicketChanged` (`.ticket.changed`), `NotificationBroadcast` (`.notification.incoming`).
 - Klien: `configureEcho` di `resources/js/app.tsx` dengan opsi dari `lib/reverb.ts` (`VITE_REVERB_*`, ditanam saat build). Key kosong → realtime dilewati tanpa crash; skema `https` → `wss` port 443.
-- Server vs klien dipisah: `REVERB_HOST/PORT/SCHEME` = alamat yang dipakai PHP untuk publikasi (produksi `127.0.0.1:8080` http); `VITE_REVERB_*` = alamat browser (`wss://app1.andimohamad.my.id`). `REVERB_ALLOWED_ORIGINS` membatasi origin WebSocket (default host `APP_URL`), rate limit & `max_connections` aktif.
+- Server vs klien dipisah: `REVERB_HOST/PORT/SCHEME` = alamat yang dipakai PHP untuk publikasi (produksi Docker: `reverb:8080` http di jaringan internal); `VITE_REVERB_*` = alamat browser (`wss://app2.andimohamad.my.id`). `REVERB_ALLOWED_ORIGINS` membatasi origin WebSocket (default host `APP_URL`), rate limit & `max_connections` aktif.
 - Fallback: bila WebSocket gagal, widget chat menampilkan pesan "koneksi terputus" (bukan balas palsu).
 
 ---
@@ -537,7 +540,7 @@ final class WbsStubAdapter implements PengaduanChannelAdapter { /* agregat conto
 | SEC-02 | Sanctum stateful, cookie `HttpOnly; Secure; SameSite=Lax/Strict`; CSRF aktif |
 | SEC-03 | Middleware `SecurityHeaders`: CSP (ketat di semua lingkungan selain `local`/`testing`, termasuk staging: `script-src 'self' 'nonce-…'` per request lewat `Vite::useCspNonce()`, dipakai `@vite`/`@routes`; `connect-src` hanya `'self'` + origin WSS Reverb; domain reCAPTCHA hanya bila key diisi), HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy. Ziggy hanya mengekspos grup rute sesuai peran (`config/ziggy.php`) |
 | SEC-04 | Blade/React escape + `Resource` output; sanitasi rich text bila ada |
-| SEC-05 | `RateLimiter` (AppServiceProvider): `login` 5/menit per identifier+IP, 20/menit per IP & 30/jam per identifier (web `POST /masuk` dan API), `pengaduan` 10/10 menit per IP, `lookup` 30/menit per IP (lacak & survei publik), `health` 60/menit. IP = IP asli (nginx real_ip dari `CF-Connecting-IP`, `TRUSTED_PROXIES=127.0.0.1`) |
+| SEC-05 | `RateLimiter` (AppServiceProvider): `login` 5/menit per identifier+IP, 20/menit per IP & 30/jam per identifier (web `POST /masuk` dan API), `pengaduan` 10/10 menit per IP, `lookup` 30/menit per IP (lacak & survei publik), `health` 60/menit. IP = IP asli (nginx container `real_ip` dari `CF-Connecting-IP`, `TRUSTED_PROXIES=127.0.0.1`) |
 | SEC-06 | FormRequest + `$fillable`/`$guarded`; whitelist field |
 | SEC-07 | `TicketPolicy` (warga hanya miliknya; admin kawasan hanya region-nya) |
 | SEC-08 | `ticket_histories` + log admin (`activity` sederhana) |
@@ -558,29 +561,33 @@ final class WbsStubAdapter implements PengaduanChannelAdapter { /* agregat conto
 
 ## 11. Deployment
 
+> Keputusan 12 Okt 2026: **Docker Compose** (bukan instalasi native). Detail: `docs/DEPLOY.md`,
+> sasaran & tahapan: `docs/PRD-DEPLOY.md`.
+
 ### 11.1 Lingkungan (D8)
 
 | Lingkungan | Domain | Catatan |
 |---|---|---|
-| Produksi | `app1.andimohamad.my.id` | data nyata |
-| **Staging** | **`staging-app1.andimohamad.my.id`** | data dummy/migrasi uji, Basic Auth opsional, `APP_ENV=staging`, `APP_DEBUG=false` |
+| Produksi (baru) | `app2.andimohamad.my.id` | stack Compose `app2-sigap`, data nyata |
+| Staging (opsional) | `staging-app2.andimohamad.my.id` | stack kedua, `WEB_PORT` & volume terpisah, `APP_ENV=staging`, Cloudflare Access |
+| Sistem lama | `app1.andimohamad.my.id` | stack `app1-sigap`, dipensiunkan saat cutover |
 | Lokal | `sigap.test` | Laravel Herd/Valet |
 
-> ✅ Terkonfirmasi: **`staging-app1.andimohamad.my.id`**.
-
-- Dua vhost nginx, dua database PostgreSQL, dua set `.env`, dua `.env` Reverb (app id/key beda).
-- Cloudflare: subdomain staging dengan **Access/WAF** opsional agar tidak terindeks.
-
 ### 11.2 Umum
-- Cloudflare (proxied, Full strict + Authenticated Origin Pulls) → nginx → PHP-FPM 8.4 + Reverb (127.0.0.1:8080).
-- **Database produksi: PostgreSQL 16** di host yang sama (`listen_addresses=localhost`, `DB_SSLMODE=prefer`; bila DB remote wajib `verify-full`). SQLite hanya untuk dev/test lokal & E2E.
-- Cache/sesi/queue: driver `database` (default) atau **Redis** opsional (bind 127.0.0.1, `requirepass`).
-- Queue worker + scheduler (systemd/supervisor) **wajib** — surel & broadcast di-queue.
-- `.env` final **sebelum** `npm run build` (variabel `VITE_*`), lalu `php artisan optimize`.
-- Lampiran di disk privat (`serve => false`), tanpa `storage:link`.
-- Log harian (`LOG_STACK=daily`, `LOG_LEVEL=warning`, simpan 14 hari).
-- Health check `/api/v1/health` (ping DB).
-- Detail langkah, nginx, firewall, backup, dan rollback: `docs/DEPLOY.md`.
+- Cloudflare → **Cloudflare Tunnel** (`cloudflared`) → `127.0.0.1:${WEB_PORT}` → container `web` (nginx) →
+  container `app` (PHP-FPM 8.4) + `reverb` (WebSocket :8080, jaringan internal).
+- Image `sigap-app` (php:8.4-fpm-alpine, non-root `www-data`) dipakai `app`, `queue` (`queue:work`),
+  `scheduler` (`schedule:work`), `reverb`; image `sigap-web` = nginx + `public/`.
+- **Database produksi: PostgreSQL 16** di container `db` (volume `pgdata`, tidak dipublikasikan ke host).
+  SQLite hanya untuk dev/test lokal & E2E.
+- Cache/sesi/queue: driver `database`. Redis tidak dipakai.
+- Queue worker + scheduler **wajib** jalan (container `restart: unless-stopped`) — surel & broadcast di-queue.
+- Variabel `VITE_*` ditanam saat **build image**; `php artisan optimize` dijalankan saat container `app` start.
+- Lampiran di disk privat (volume `storage`, `serve => false`), tanpa `storage:link`.
+- IP asli: nginx `real_ip` dari `CF-Connecting-IP` (hanya dari alamat lokal/Docker); `TRUSTED_PROXIES=127.0.0.1`.
+- Log: stdout container (dirotasi) + harian di `storage/logs` (`LOG_STACK=daily,stderr`, 14 hari).
+- Health check `/up` dan `/api/v1/health` (ping DB).
+- Rilis/rollback: `scripts/deploy.sh` / `scripts/deploy.sh --rollback`; backup: `scripts/backup.sh`.
 
 ---
 

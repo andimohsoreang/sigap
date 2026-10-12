@@ -88,7 +88,7 @@ Tujuan proyek: membangun ulang pada stack modern yang **terkelola, aman, dan dap
 | Real-time | **Laravel Reverb** (WebSocket) | Live chat & notifikasi real-time |
 | Peta | **Leaflet** + OpenStreetMap tiles | Peta kawasan |
 | Integrasi | **Stub adapter** (SP4N/WBS/WBS) | Kontrak jelas, implementasi nyata menyusul |
-| Deploy | nginx + PHP-FPM + Node build; di belakang Cloudflare | Sama seperti sekarang |
+| Deploy | **Docker Compose** (nginx + PHP-FPM + Reverb + queue + scheduler + PostgreSQL); Cloudflare Tunnel | Seragam dengan stack lain di server; lihat `docs/PRD-DEPLOY.md` |
 
 ### 4.2 Keputusan Arsitektur (Terkunci)
 
@@ -101,7 +101,7 @@ Tujuan proyek: membangun ulang pada stack modern yang **terkelola, aman, dan dap
 | D5 | Real-time | **Laravel Reverb** saja | Chat & notifikasi via WebSocket; tidak pakai polling |
 | D6 | Peta | **Leaflet** | Tiles OSM; marker kawasan dari API |
 | D7 | Integrasi SP4N/WBS | **Stub adapter** dulu | Interface + fake driver, mudah ditukar ke HTTP driver nanti |
-| D8 | Lingkungan | **Staging terpisah**: `staging-app1.andimohamad.my.id` | Prod: `app1.andimohamad.my.id` |
+| D8 | Lingkungan | **Docker Compose**, stack baru `app2-sigap` di `app2.andimohamad.my.id`; staging opsional `staging-app2.andimohamad.my.id` | `app1.andimohamad.my.id` (sistem lama) dialihkan ke stack baru saat cutover |
 | D9 | Data spasial kawasan | **Dummy dahulu** (koordinat contoh) | Struktur data nyata, isi placeholder; ganti saat shapefile tersedia |
 | D10 | Gateway WhatsApp | **Tidak dipakai dulu** | Notifikasi hanya email/in-app; adapter WA disiapkan tapi disabled |
 
@@ -389,7 +389,7 @@ Semua pertanyaan terbuka sebelumnya **sudah diputuskan** (lihat §4.2):
 | D5 | Real-time: **Laravel Reverb** saja |
 | D6 | Peta: **Leaflet** |
 | D7 | Integrasi SP4N/WBS: **stub adapter** dahulu |
-| D8 | Lingkungan: **staging terpisah** `staging-app1.andimohamad.my.id` (prod `app1.andimohamad.my.id`) |
+| D8 | Lingkungan: **Docker Compose**, prod baru `app2.andimohamad.my.id` (stack `app2-sigap`), staging opsional `staging-app2.andimohamad.my.id`; `app1` dialihkan saat cutover |
 | D9 | Data spasial kawasan: **dummy** dahulu |
 | D10 | Gateway WhatsApp: **tidak dipakai dulu** (email/in-app saja) |
 
@@ -398,7 +398,7 @@ Semua pertanyaan terbuka sebelumnya **sudah diputuskan** (lihat §4.2):
 2. **Kebijakan retensi & anonimisasi** data pribadi (UU PDP).
 3. **SMTP/email** kementerian untuk notifikasi (penyedia & kredensial).
 
-> ✅ **Domain terkonfirmasi:** `staging-app1.andimohamad.my.id` (prod `app1.andimohamad.my.id`).
+> ✅ **Diperbarui 12 Okt 2026:** deploy memakai Docker; SIGAP baru di `app2.andimohamad.my.id` (lihat `docs/PRD-DEPLOY.md`).
 
 ---
 

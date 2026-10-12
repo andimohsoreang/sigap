@@ -9,7 +9,8 @@ Migrasi dari SPA statis (`index.html` ~323 KB + `sigap-api`) ke **Laravel 12 · 
 | `../docs/PRD.md` | Product Requirements Document |
 | `../docs/TECH-SPEC.md` | Spesifikasi teknis (arsitektur, kontrak API, SEC-01..11) |
 | `../docs/openapi.yaml` | Kontrak API `/api/v1` |
-| `../docs/DEPLOY.md` | Panduan deploy & cutover |
+| `../docs/DEPLOY.md` | Panduan deploy Docker & cutover |
+| `../docs/PRD-DEPLOY.md` | Sasaran, tahapan & kriteria selesai deploy |
 
 > **Struktur repositori.** Root repo Git adalah folder **induk** yang berisi `docs/` dan `sigap/`
 > (aplikasi Laravel ini). Workflow CI berada di `.github/workflows/` pada root tersebut dan
