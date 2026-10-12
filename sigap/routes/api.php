@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\PengaduanController;
 use App\Http\Controllers\Api\V1\SurveiController;
 use App\Http\Controllers\Api\V1\TiketController;
 use App\Http\Controllers\Api\V1\WargaController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,12 +23,22 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
 
-    Route::get('/health', fn () => response()->json([
-        'ok' => true,
-        'service' => 'sigap-api',
-        'tickets' => \App\Models\Ticket::count(),
-        'time' => now()->toIso8601String(),
-    ]));
+    // Health check (L-02): hanya status & ping DB — tanpa statistik data.
+    Route::get('/health', function () {
+        try {
+            DB::connection()->select('select 1');
+            $database = true;
+        } catch (Throwable) {
+            $database = false;
+        }
+
+        return response()->json([
+            'ok' => $database,
+            'service' => 'sigap-api',
+            'database' => $database ? 'ok' : 'down',
+            'time' => now()->toIso8601String(),
+        ], $database ? 200 : 503);
+    })->middleware('throttle:health');
 
     // ---- Auth (publik) ----
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
@@ -37,8 +48,9 @@ Route::prefix('v1')->group(function () {
     // ---- Publik ----
     Route::post('/pengaduan', [PengaduanController::class, 'store'])->middleware('throttle:pengaduan');
     Route::post('/pengaduan/internal', [PengaduanController::class, 'storeInternal'])->middleware('throttle:pengaduan');
-    Route::get('/tiket/{ticket_no}', [TiketController::class, 'show']);
-    Route::post('/survei/{ticket_no}', [SurveiController::class, 'store'])->middleware('throttle:pengaduan');
+    // Pencarian tiket & survei publik dibatasi limiter 'lookup' (anti-enumerasi).
+    Route::get('/tiket/{ticket_no}', [TiketController::class, 'show'])->middleware('throttle:lookup');
+    Route::post('/survei/{ticket_no}', [SurveiController::class, 'store'])->middleware(['throttle:lookup', 'throttle:pengaduan']);
     Route::get('/katalog/kanal', [KatalogController::class, 'kanal']);
     Route::get('/regions', [KatalogController::class, 'regions']);
 

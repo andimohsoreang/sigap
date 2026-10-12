@@ -6,6 +6,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Policies\TicketPolicy;
 use App\Policies\UserPolicy;
+use App\Support\Nik;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -21,20 +22,44 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // D-01: produksi wajib punya NIK_HASH_KEY — gagal jelas saat boot
+        // (request web/API), bukan diam-diam memakai APP_KEY. Perintah artisan
+        // tetap jalan agar `config:cache`/`key:generate` dapat dipakai.
+        if (! $this->app->runningInConsole()) {
+            Nik::assertKeyConfigured();
+        }
+
         Gate::policy(Ticket::class, TicketPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
 
-        // Rate limiter (PRD SEC-05). 'login' membatasi per identifier + IP.
+        // Rate limiter (PRD SEC-05). Semua kunci memakai $request->ip(), yang
+        // berisi IP klien asli karena nginx menulis ulang REMOTE_ADDR dari
+        // CF-Connecting-IP (lihat DEPLOY.md §nginx) & TrustProxies hanya
+        // mempercayai proxy di config('trustedproxy.proxies').
+
+        // 'login' (web /masuk & API /auth/login): 5x/menit per identifier+IP
+        // (menahan tebak sandi satu akun) dan 20x/menit per IP (menahan
+        // credential stuffing lintas akun dari satu sumber), plus 30x/jam per
+        // identifier dari IP mana pun (tebak sandi terdistribusi).
         RateLimiter::for('login', function (Request $request) {
-            $key = (string) $request->input('identifier');
+            $identifier = mb_strtolower(trim((string) $request->input('identifier')));
 
             return [
-                Limit::perMinute(5)->by($key.'|'.$request->ip()),
-                Limit::perMinute(20)->by($request->ip()),
+                Limit::perMinute(5)->by('login:id:'.sha1($identifier).'|'.$request->ip()),
+                Limit::perMinute(20)->by('login:ip:'.$request->ip()),
+                // Per akun lintas IP: menahan tebak sandi terdistribusi (botnet).
+                Limit::perHour(30)->by('login:id:'.sha1($identifier)),
             ];
         });
 
-        // 'pengaduan' membatasi spam tiket publik & survei.
-        RateLimiter::for('pengaduan', fn (Request $request) => Limit::perMinutes(10, 10)->by($request->ip()));
+        // 'pengaduan' membatasi spam tiket publik, chat & survei (per IP asli).
+        RateLimiter::for('pengaduan', fn (Request $request) => Limit::perMinutes(10, 10)->by('pengaduan:'.$request->ip()));
+
+        // 'lookup' membatasi pencarian nomor tiket publik (anti-enumerasi):
+        // GET /lacak/{no}, GET /api/v1/tiket/{no}, dan rute survei.
+        RateLimiter::for('lookup', fn (Request $request) => Limit::perMinute(30)->by('lookup:'.$request->ip()));
+
+        // 'health' untuk /api/v1/health (monitor uptime cukup beberapa kali/menit).
+        RateLimiter::for('health', fn (Request $request) => Limit::perMinute(60)->by('health:'.$request->ip()));
     }
 }

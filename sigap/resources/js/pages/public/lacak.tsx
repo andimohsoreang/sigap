@@ -1,10 +1,12 @@
+import { RecaptchaNotice } from '@/components/sigap/recaptcha-notice';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { useRecaptcha } from '@/hooks/use-recaptcha';
 import PublicLayout from '@/layouts/public-layout';
-import { formatDateTime, statusClass, statusLabel } from '@/lib/sigap';
+import { formatDateTime, isLegacyTicketNo, isValidTicketNo, normalizeTicketNo, statusClass, statusLabel, TICKET_NO_EXAMPLE } from '@/lib/sigap';
 import { cn } from '@/lib/utils';
 import { Head, router, useForm } from '@inertiajs/react';
 import { CheckCircle2, CircleDot, Search, Star, Ticket, XCircle } from 'lucide-react';
@@ -19,7 +21,12 @@ interface TicketData {
     impact: string | null;
     kategori: string | null;
     kawasan: string | null;
+    /** Disamarkan untuk publik, mis. "B*** S***" atau "Anonim". */
     pelapor: string | null;
+    /** Selalu null di jalur publik — baris disembunyikan. */
+    nik?: string | null;
+    /** Selalu null di jalur publik — baris disembunyikan. */
+    petugas?: string | null;
     created_at: string | null;
     tenggat_sla: string | null;
     riwayat: { dari: string | null; ke: string; pada: string | null }[];
@@ -29,21 +36,43 @@ interface TicketData {
 
 interface Props {
     query: string;
+    /** Kode akses yang dikirim (untuk nomor format lama). */
+    kode?: string;
+    /** Nomor format lama — tamu wajib menyertakan kode akses. */
+    butuh_kode?: boolean;
     ticket: TicketData | null | false;
-    statuses: Record<string, string>;
+    statuses?: Record<string, string>;
 }
 
-export default function Lacak({ query, ticket, statuses }: Props) {
+export default function Lacak({ query, kode = '', butuh_kode: butuhKode = false, ticket }: Props) {
     const [input, setInput] = useState(query);
+    const [kodeInput, setKodeInput] = useState(kode);
+    const legacy = isLegacyTicketNo(input);
+    const [inputError, setInputError] = useState<string | null>(null);
     const [surveyOpen, setSurveyOpen] = useState(false);
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        if (input.trim()) router.get('/lacak', { ticket: input.trim().toUpperCase() });
+        const nomor = normalizeTicketNo(input);
+        if (!nomor) return;
+
+        if (!isValidTicketNo(nomor)) {
+            setInputError(`Format nomor tiket tidak dikenali. Contoh: ${TICKET_NO_EXAMPLE} (atau format lama TKT-123).`);
+            return;
+        }
+
+        const code = kodeInput.trim().toUpperCase();
+        if (isLegacyTicketNo(nomor) && !code) {
+            setInputError('Nomor tiket format lama memerlukan kode akses. Kode tersedia di portal warga atau dapat diminta ke petugas.');
+            return;
+        }
+
+        setInputError(null);
+        router.get(`/lacak/${encodeURIComponent(nomor)}`, isLegacyTicketNo(nomor) ? { kode: code } : {});
     };
 
     const notFound = ticket === false;
-    const data = ticket && ticket !== false ? ticket : null;
+    const data = ticket || null;
 
     return (
         <PublicLayout title="Lacak Tiket">
@@ -51,16 +80,55 @@ export default function Lacak({ query, ticket, statuses }: Props) {
 
             <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
                 <h1 className="mb-2 text-center text-3xl font-bold text-gray-800 dark:text-white">Lacak Status Laporan</h1>
-                <p className="mb-8 text-center text-gray-500 dark:text-gray-400">Masukkan nomor tiket yang Anda terima (contoh: TKT-9920).</p>
+                <p className="mb-8 text-center text-gray-500 dark:text-gray-400">
+                    Masukkan nomor tiket yang Anda terima (contoh: {TICKET_NO_EXAMPLE}).
+                </p>
 
-                <form onSubmit={submit} className="mx-auto mb-10 flex max-w-xl gap-2">
-                    <div className="relative flex-grow">
-                        <Ticket className="absolute top-3 left-3 h-4 w-4 text-gray-400" />
-                        <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="TKT-XXXX" className="pl-9" />
+                <form onSubmit={submit} className="mx-auto mb-10 max-w-xl" noValidate>
+                    <div className="flex gap-2">
+                        <div className="relative flex-grow">
+                            <Ticket className="absolute top-3 left-3 h-4 w-4 text-gray-400" />
+                            <Input
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                placeholder="TKT-YYMMDD-XXXXXX"
+                                aria-label="Nomor tiket"
+                                aria-invalid={inputError ? true : undefined}
+                                autoCapitalize="characters"
+                                maxLength={32}
+                                className="pl-9 uppercase placeholder:normal-case"
+                            />
+                        </div>
+                        <Button type="submit">
+                            <Search className="h-4 w-4" /> Cari
+                        </Button>
                     </div>
-                    <Button type="submit">
-                        <Search className="h-4 w-4" /> Cari
-                    </Button>
+                    {legacy && (
+                        <div className="mt-3">
+                            <label htmlFor="kode-akses" className="mb-1 block text-xs font-bold text-gray-600 dark:text-gray-400">
+                                Kode akses
+                            </label>
+                            <Input
+                                id="kode-akses"
+                                value={kodeInput}
+                                onChange={(e) => setKodeInput(e.target.value)}
+                                placeholder="8 karakter, mis. 7KQ4MZ2P"
+                                autoCapitalize="characters"
+                                autoComplete="off"
+                                maxLength={16}
+                                className="font-mono uppercase placeholder:normal-case"
+                            />
+                            <p className="mt-1 text-[11px] text-gray-400">
+                                Nomor format lama memerlukan kode akses. Lihat di portal warga (jika laporan dibuat dengan akun) atau minta ke
+                                petugas.
+                            </p>
+                        </div>
+                    )}
+                    {inputError && (
+                        <p role="alert" className="mt-2 text-xs font-semibold text-rose-500">
+                            {inputError}
+                        </p>
+                    )}
                 </form>
 
                 {notFound && (
@@ -71,6 +139,11 @@ export default function Lacak({ query, ticket, statuses }: Props) {
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                                 Nomor <strong>{query}</strong> tidak ditemukan atau merupakan tiket internal yang tidak dapat diakses publik.
                             </p>
+                            {butuhKode && (
+                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                    Untuk nomor format lama, pastikan kode akses yang Anda masukkan benar.
+                                </p>
+                            )}
                         </CardContent>
                     </Card>
                 )}
@@ -109,6 +182,19 @@ export default function Lacak({ query, ticket, statuses }: Props) {
                                         <p className="text-xs font-bold text-gray-400 uppercase">Tenggat SLA</p>
                                         <p className="text-gray-700 dark:text-gray-300">{formatDateTime(data.tenggat_sla)}</p>
                                     </div>
+                                    {data.pelapor && (
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-400 uppercase">Pelapor</p>
+                                            <p className="text-gray-700 dark:text-gray-300">{data.pelapor}</p>
+                                        </div>
+                                    )}
+                                    {/* NIK tidak pernah dikirim ke jalur publik (selalu null) — tidak ditampilkan. */}
+                                    {data.petugas && (
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-400 uppercase">Petugas</p>
+                                            <p className="text-gray-700 dark:text-gray-300">{data.petugas}</p>
+                                        </div>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
@@ -180,19 +266,23 @@ export default function Lacak({ query, ticket, statuses }: Props) {
                 )}
             </div>
 
-            {surveyOpen && data && <SurveyModal ticket={data.nomor} onClose={() => setSurveyOpen(false)} />}
+            {surveyOpen && data && <SurveyModal ticket={data.nomor} kode={kode} onClose={() => setSurveyOpen(false)} />}
         </PublicLayout>
     );
 }
 
-function SurveyModal({ ticket, onClose }: { ticket: string; onClose: () => void }) {
-    const form = useForm({ ticket, rating: 0, comment: '' });
+function SurveyModal({ ticket, kode, onClose }: { ticket: string; kode: string; onClose: () => void }) {
+    const form = useForm({ ticket, kode, rating: 0, comment: '', recaptcha_token: '' });
+    const recaptcha = useRecaptcha('survei');
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        form.post('/lacak/survei', {
-            preserveScroll: true,
-            onSuccess: () => onClose(),
+        void recaptcha.withToken((token) => {
+            form.transform((d) => ({ ...d, recaptcha_token: token }));
+            form.post('/lacak/survei', {
+                preserveScroll: true,
+                onSuccess: () => onClose(),
+            });
         });
     };
 
@@ -228,6 +318,15 @@ function SurveyModal({ ticket, onClose }: { ticket: string; onClose: () => void 
                     ))}
                 </div>
                 {form.errors.rating && <p className="mb-3 text-xs font-semibold text-rose-500">{form.errors.rating}</p>}
+                {form.errors.ticket && (
+                    <p
+                        role="alert"
+                        className="mb-3 rounded-lg bg-rose-50 p-3 text-xs font-semibold text-rose-600 dark:bg-rose-900/20 dark:text-rose-400"
+                    >
+                        {form.errors.ticket}
+                    </p>
+                )}
+                {form.errors.comment && <p className="mb-3 text-xs font-semibold text-rose-500">{form.errors.comment}</p>}
 
                 <Textarea
                     value={form.data.comment}
@@ -237,11 +336,19 @@ function SurveyModal({ ticket, onClose }: { ticket: string; onClose: () => void 
                     className="mb-4"
                 />
 
+                <div className="mb-4 text-left">
+                    <RecaptchaNotice enabled={recaptcha.enabled} error={recaptcha.error ?? form.errors.recaptcha_token} />
+                </div>
+
                 <div className="flex gap-3">
                     <Button type="button" variant="outline" onClick={onClose} className="w-1/3">
                         Nanti
                     </Button>
-                    <Button type="submit" disabled={form.processing || form.data.rating === 0} className="w-2/3 bg-green-500 hover:bg-green-600">
+                    <Button
+                        type="submit"
+                        disabled={form.processing || recaptcha.verifying || form.data.rating === 0}
+                        className="w-2/3 bg-green-500 hover:bg-green-600"
+                    >
                         Kirim Penilaian
                     </Button>
                 </div>

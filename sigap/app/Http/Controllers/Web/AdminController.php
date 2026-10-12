@@ -7,8 +7,8 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInputManualRequest;
 use App\Http\Requests\UpdateTicketStatusRequest;
-use App\Models\Category;
 use App\Models\ActivityLog;
+use App\Models\Category;
 use App\Models\Channel;
 use App\Models\ChannelSyncLog;
 use App\Models\ChatConversation;
@@ -17,14 +17,18 @@ use App\Models\Region;
 use App\Models\Setting;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Services\AccountService;
 use App\Services\AttachmentService;
 use App\Services\AuditService;
 use App\Services\Channels\ChannelAdapterManager;
 use App\Services\ChatService;
+use App\Services\StatsService;
 use App\Services\TicketService;
+use App\Support\Search;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
@@ -42,6 +46,8 @@ class AdminController extends Controller
         private readonly AttachmentService $attachments,
         private readonly ChatService $chat,
         private readonly AuditService $audit,
+        private readonly StatsService $stats,
+        private readonly AccountService $accounts,
     ) {}
 
     /* --------------------------- Matriks Rekap --------------------------- */
@@ -62,23 +68,19 @@ class AdminController extends Controller
         $paginator = $query->paginate($perPage)->withQueryString();
 
         $counts = $this->scopedTickets(Ticket::query());
+        $byStatus = $this->stats->statusCounts($counts);
 
         return Inertia::render('admin/matriks', [
             'tickets' => [
                 'data' => collect($paginator->items())->map(fn (Ticket $t) => $this->ticketRow($t)),
                 'meta' => $this->paginationMeta($paginator),
             ],
+            // D-05: agregat SQL (tanpa memuat semua tiket).
             'rekap' => [
-                'total' => (clone $counts)->count(),
-                'ews' => (clone $counts)
-                    ->whereIn('status', [TicketStatus::Baru->value, TicketStatus::Verifikasi->value, TicketStatus::Diproses->value])
-                    ->whereNotNull('sla_due_at')
-                    ->where('sla_due_at', '<', now())
-                    ->count(),
-                'sla_pct' => $this->slaPercentage(),
-                'by_status' => collect(TicketStatus::cases())->mapWithKeys(
-                    fn (TicketStatus $s) => [$s->value => (clone $counts)->where('status', $s->value)->count()]
-                ),
+                'total' => array_sum($byStatus),
+                'ews' => $this->stats->overdueCount($counts),
+                'sla_pct' => $this->stats->slaPercentage($counts),
+                'by_status' => $byStatus,
             ],
             'filters' => $this->filterProps($request),
             'options' => $this->formOptions(),
@@ -167,25 +169,25 @@ class AdminController extends Controller
         $file = $this->attachments->file($ticket->attachment_path);
         abort_if($file === null, 404);
 
+        $this->audit->safe('ticket.attachment_downloaded', $ticket, "Lampiran tiket {$ticket->ticket_no} diunduh.");
+
         return response()->download($file->getPathname(), basename($ticket->attachment_path));
     }
 
     /* --------------------------- Tiket Internal -------------------------- */
 
+    /** Tiket internal pegawai — super admin saja (A-05). */
     public function internal(Request $request): Response
     {
-        $this->authorize('viewAny', Ticket::class);
+        $this->authorize('viewInternal', Ticket::class);
 
-        $query = $this->scopedTickets(Ticket::query())->internal();
+        $query = $this->scopedTickets(Ticket::query())->internal()->with('category');
 
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
         }
         if ($request->filled('q')) {
-            $term = '%'.$request->string('q').'%';
-            $query->where(fn ($q) => $q->where('title', 'like', $term)
-                ->orWhere('ticket_no', 'like', $term)
-                ->orWhere('reporter_name', 'like', $term));
+            Search::apply($query, ['title', 'ticket_no', 'reporter_name', 'reporter_unit'], $request->string('q')->toString());
         }
 
         $perPage = min(max($request->integer('per_page', 15), 1), 100);
@@ -195,8 +197,6 @@ class AdminController extends Controller
         $paginator = $query->paginate($perPage)->withQueryString();
 
         $base = $this->scopedTickets(Ticket::query())->internal();
-        $resolved = (clone $base)->where('status', TicketStatus::Selesai->value)->whereNotNull('resolved_at');
-        $avgHours = $resolved->get()->avg(fn (Ticket $t) => $t->created_at->diffInHours($t->resolved_at));
 
         $topCategory = (clone $base)
             ->select('category_id', DB::raw('count(*) as total'))
@@ -212,6 +212,9 @@ class AdminController extends Controller
                     'nomor' => $t->ticket_no,
                     'nama' => $t->reporter_name,
                     'kontak' => $t->reporter_phone,
+                    'nip' => $t->reporter_nip,
+                    'unit' => $t->reporter_unit,
+                    'lokasi' => $t->location,
                     'kategori' => $t->category?->name,
                     'urgensi' => $t->impact?->label(),
                     'status' => $t->status?->value,
@@ -221,10 +224,10 @@ class AdminController extends Controller
                 'meta' => $this->paginationMeta($paginator),
             ],
             'stats' => [
-                'today' => (clone $base)->whereDate('created_at', today())->count(),
-                'this_month' => (clone $base)->whereMonth('created_at', now()->month)->count(),
+                'today' => $this->stats->todayCount($base),
+                'this_month' => $this->stats->thisMonthCount($base),
                 'top_category' => $topCategory?->category?->name ?? '—',
-                'avg_resolution_hours' => round((float) $avgHours, 1),
+                'avg_resolution_hours' => $this->stats->averageResolutionHours($base),
             ],
             'filters' => [
                 'q' => $request->string('q')->toString(),
@@ -241,8 +244,13 @@ class AdminController extends Controller
     {
         $this->authorize('create', Ticket::class);
 
+        $user = request()->user();
+
         return Inertia::render('admin/input-manual', [
             'options' => $this->formOptions(),
+            // A-11: admin kawasan selalu menerbitkan tiket ke kawasannya sendiri.
+            'region_locked' => $user->role === UserRole::AdminKawasan,
+            'own_region' => $user->region ? ['id' => $user->region->id, 'name' => $user->region->name] : null,
         ]);
     }
 
@@ -250,19 +258,8 @@ class AdminController extends Controller
     {
         $this->authorize('create', Ticket::class);
 
-        $data = $request->validated();
-
-        $ticket = $this->tickets->create([
-            'title' => $data['judul'],
-            'description' => $data['uraian'],
-            'impact' => $data['impact'],
-            'region_id' => $data['region_id'],
-            'category_id' => $data['category_id'],
-            'reporter_name' => $data['nama'],
-            'reporter_nik' => $data['nik'] ?? null,
-            'reporter_phone' => $data['telepon'] ?? null,
-            'actor_id' => $request->user()->id,
-        ]);
+        // A-11: admin kawasan dipaksa ke kawasannya; lampiran & sumber disimpan.
+        $ticket = $this->tickets->create($request->ticketData($request->user()));
 
         $this->audit->safe('ticket.created_manual', $ticket, "Tiket {$ticket->ticket_no} dibuat lewat input manual.");
 
@@ -273,6 +270,15 @@ class AdminController extends Controller
 
     /* ------------------------------ Chat --------------------------------- */
 
+    /**
+     * Live chat panel admin.
+     *
+     * Catatan otorisasi (A-05): percakapan chat TIDAK terikat kawasan (warga
+     * dan tamu belum memilih kawasan saat membuka chat), sehingga SEMUA admin —
+     * super admin maupun admin kawasan — dapat melihat & membalas semua
+     * percakapan. Ini perilaku yang disengaja; kanal broadcast `chat.{id}`
+     * mengikuti aturan yang sama (routes/channels.php).
+     */
     public function chat(Request $request): Response
     {
         $this->authorize('viewAny', Ticket::class);
@@ -349,15 +355,9 @@ class AdminController extends Controller
     {
         $this->authorize('manageAdmins', User::class);
 
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:150'],
-            'nip' => ['required', 'string', 'max:50', 'unique:users,username'],
-            'role' => ['required', Rule::in(UserRole::adminValues())],
-            'region_id' => ['nullable', 'integer', 'exists:regions,id'],
-            'password' => ['required', 'string', Password::min(8)],
-        ]);
+        $data = $request->validate(self::adminRules($request), self::adminMessages());
 
-        User::create([
+        $created = User::create([
             'name' => $data['name'],
             'username' => $data['nip'],
             'role' => UserRole::from($data['role']),
@@ -366,11 +366,46 @@ class AdminController extends Controller
             'is_active' => true,
         ]);
 
-        $this->audit->safe('admin.created', null, "Akun admin {$data['name']} ({$data['nip']}) dibuat.", [
+        $this->audit->safe('admin.created', $created, "Akun admin {$data['name']} ({$data['nip']}) dibuat.", [
             'role' => $data['role'],
         ]);
 
         return back()->with('success', 'Admin baru berhasil disimpan.');
+    }
+
+    /**
+     * Aturan validasi akun admin baru — dipakai juga oleh API (MasterController).
+     *
+     * A-05: admin kawasan WAJIB memiliki kawasan. A-18: kata sandi minimal 12
+     * karakter dengan huruf besar, huruf kecil & angka.
+     *
+     * @return array<string, mixed>
+     */
+    public static function adminRules(Request $request): array
+    {
+        return [
+            'name' => ['required', 'string', 'max:150'],
+            'nip' => ['required', 'string', 'max:50', 'unique:users,username'],
+            'role' => ['required', Rule::in(UserRole::adminValues())],
+            'region_id' => [
+                Rule::requiredIf(fn () => $request->input('role') === UserRole::AdminKawasan->value),
+                'nullable', 'integer', 'exists:regions,id',
+            ],
+            'password' => ['required', 'string', self::adminPasswordRule()],
+        ];
+    }
+
+    /** @return array<string, string> */
+    public static function adminMessages(): array
+    {
+        return [
+            'region_id.required' => 'Admin kawasan wajib memiliki kawasan tugas.',
+        ];
+    }
+
+    public static function adminPasswordRule(): Password
+    {
+        return Password::min(12)->mixedCase()->numbers();
     }
 
     /** Log aktivitas admin (PRD SEC-08) — super admin saja. */
@@ -384,8 +419,7 @@ class AdminController extends Controller
             $query->where('action', $request->string('action'));
         }
         if ($request->filled('q')) {
-            $term = '%'.$request->string('q').'%';
-            $query->where(fn ($q) => $q->where('username', 'like', $term)->orWhere('description', 'like', $term));
+            Search::apply($query, ['username', 'description'], $request->string('q')->toString());
         }
 
         $perPage = min(max($request->integer('per_page', 20), 1), 100);
@@ -436,13 +470,17 @@ class AdminController extends Controller
                 'infrastructure_status' => $r->infrastructure_status,
                 'kk_count' => $r->kk_count,
                 'is_active' => (bool) $r->is_active,
+                'can_edit' => request()->user()->can('updateRegion', [User::class, $r]),
             ]),
+            // A-05: hanya super admin yang dapat menambah/menghapus kawasan.
+            'is_super_admin' => request()->user()->isSuperAdmin(),
+            'own_region_id' => request()->user()->region_id,
         ]);
     }
 
     public function storeRegion(Request $request): RedirectResponse
     {
-        $this->authorize('manageMaster', User::class);
+        $this->authorize('manageAdmins', User::class);
 
         Region::create($request->validate([
             'code' => ['required', 'string', 'max:30', 'unique:regions,code'],
@@ -461,7 +499,8 @@ class AdminController extends Controller
 
     public function updateRegion(Request $request, Region $region): RedirectResponse
     {
-        $this->authorize('manageMaster', User::class);
+        // A-05: admin kawasan hanya boleh mengubah kawasannya sendiri.
+        $this->authorize('updateRegion', [User::class, $region]);
 
         $region->update($request->validate([
             'code' => ['sometimes', 'string', 'max:30', Rule::unique('regions', 'code')->ignore($region->id)],
@@ -480,7 +519,7 @@ class AdminController extends Controller
 
     public function destroyRegion(Region $region): RedirectResponse
     {
-        $this->authorize('manageMaster', User::class);
+        $this->authorize('manageAdmins', User::class);
 
         $region->delete();
 
@@ -519,13 +558,13 @@ class AdminController extends Controller
 
     public function storeChannel(Request $request): RedirectResponse
     {
-        $this->authorize('manageMaster', User::class);
+        $this->authorize('manageAdmins', User::class);
 
         Channel::create($request->validate([
             'type' => ['required', Rule::in(['sosmed', 'kantor', 'nasional', 'internal'])],
             'name' => ['required', 'string', 'max:120'],
             'account_name' => ['nullable', 'string', 'max:120'],
-            'url' => ['nullable', 'url', 'max:500'],
+            'url' => ['nullable', 'url:http,https', 'max:500'],
             'status' => ['nullable', 'string', 'max:30'],
         ]));
 
@@ -572,12 +611,14 @@ class AdminController extends Controller
                 ],
             ],
             'categories' => Category::query()->orderBy('id')->get(['id', 'name', 'slug', 'sla_days']),
+            // A-05: pengaturan & kategori hanya dapat diubah super admin.
+            'can_edit' => request()->user()->isSuperAdmin(),
         ]);
     }
 
     public function updatePengaturan(Request $request): RedirectResponse
     {
-        $this->authorize('manageMaster', User::class);
+        $this->authorize('manageAdmins', User::class);
 
         $data = $request->validate([
             'sla_response_minutes' => ['nullable', 'integer', 'min:1'],
@@ -606,15 +647,48 @@ class AdminController extends Controller
         return back()->with('success', 'Pengaturan disimpan.');
     }
 
+    /**
+     * Profil admin sendiri (nama & kata sandi) — semua peran admin.
+     *
+     * Ganti kata sandi wajib `current_password` + konfirmasi dan mengikuti
+     * kebijakan kata sandi admin (A-18). Sesi/token lain dicabut (D-02).
+     */
+    public function updateOwnProfile(Request $request): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:150'],
+            'current_password' => ['nullable', 'required_with:password', 'string', 'current_password:web'],
+            'password' => ['nullable', 'string', 'confirmed', self::adminPasswordRule()],
+        ], [
+            'current_password.required_with' => 'Masukkan kata sandi saat ini untuk mengganti kata sandi.',
+            'current_password.current_password' => 'Kata sandi saat ini tidak sesuai.',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
+        ]);
+
+        if ($data['name'] !== $user->name) {
+            $user->forceFill(['name' => $data['name']])->save();
+            $this->audit->safe('account.profile_updated', $user, 'Profil admin diperbarui.', ['fields' => ['name']]);
+        }
+
+        if (! empty($data['password'])) {
+            $this->accounts->updateProfile($user, ['password' => $data['password']], $request->session()->getId());
+        }
+
+        return back()->with('success', 'Profil berhasil diperbarui.');
+    }
+
     public function storeCategory(Request $request): RedirectResponse
     {
-        $this->authorize('manageMaster', User::class);
+        $this->authorize('manageAdmins', User::class);
 
         $data = $request->validate(['name' => ['required', 'string', 'max:120']]);
 
         Category::create([
             'name' => $data['name'],
-            'slug' => \Illuminate\Support\Str::slug($data['name']),
+            'slug' => Str::slug($data['name']),
             'is_active' => true,
         ]);
 
@@ -625,7 +699,7 @@ class AdminController extends Controller
 
     public function destroyCategory(Category $category): RedirectResponse
     {
-        $this->authorize('manageMaster', User::class);
+        $this->authorize('manageAdmins', User::class);
 
         $category->delete();
 
@@ -709,8 +783,7 @@ class AdminController extends Controller
             $query->where('impact', $request->string('impact'));
         }
         if ($request->filled('q')) {
-            $term = '%'.$request->string('q').'%';
-            $query->where(fn ($q) => $q->where('title', 'like', $term)->orWhere('ticket_no', 'like', $term));
+            Search::apply($query, ['title', 'ticket_no'], $request->string('q')->toString());
         }
     }
 
@@ -762,11 +835,22 @@ class AdminController extends Controller
     {
         return array_merge($this->ticketRow($t), [
             'deskripsi' => $t->description,
+            // Kode akses pelacakan publik — diberikan kepada pelapor bila perlu.
+            'kode_akses' => $t->lookup_token,
             'nik' => $t->maskedNik(),
             'email' => $t->reporter_email,
             'telepon' => $t->reporter_phone,
             'kanal' => $t->channel?->name,
             'petugas' => $t->assignee?->name,
+            'visibility' => $t->visibility?->value,
+            'nip' => $t->reporter_nip,
+            'unit' => $t->reporter_unit,
+            'lokasi' => $t->location,
+            'sumber_laporan' => $t->source,
+            'tautan' => $t->source_url,
+            'admin_penerima' => $t->received_by,
+            // A-20: status tujuan yang diizinkan dari status saat ini.
+            'transisi' => $t->status ? array_map(fn (TicketStatus $s) => $s->value, $t->status->allowedTransitions()) : [],
             'riwayat' => $t->histories->map(fn ($h) => [
                 'dari' => $h->from_status,
                 'ke' => $h->to_status,
@@ -802,22 +886,6 @@ class AdminController extends Controller
                 'pada' => $m->created_at?->toIso8601String(),
             ]),
         ];
-    }
-
-    private function slaPercentage(): float
-    {
-        $finished = $this->scopedTickets(Ticket::query())
-            ->where('status', TicketStatus::Selesai->value)
-            ->whereNotNull('sla_due_at')
-            ->get(['sla_due_at', 'resolved_at']);
-
-        if ($finished->isEmpty()) {
-            return 100.0;
-        }
-
-        $met = $finished->filter(fn (Ticket $t) => $t->resolved_at && $t->resolved_at->lessThanOrEqualTo($t->sla_due_at))->count();
-
-        return round($met / $finished->count() * 100, 1);
     }
 
     /** @return array<string, mixed> */

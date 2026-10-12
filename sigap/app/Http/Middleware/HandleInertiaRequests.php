@@ -48,6 +48,10 @@ class HandleInertiaRequests extends Middleware
                     'is_admin' => $user->isAdmin(),
                 ] : null,
             ],
+            // reCAPTCHA v3 (SEC-10): hanya site key publik; kosong = lewati (lokal).
+            'recaptcha' => [
+                'site_key' => config('services.recaptcha.site_key') ?: null,
+            ],
             'flash' => [
                 'status' => fn () => $request->session()->get('status'),
                 'success' => fn () => $request->session()->get('success'),

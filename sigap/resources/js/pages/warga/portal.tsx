@@ -9,6 +9,7 @@ import { type FormEvent, useMemo, useState } from 'react';
 
 interface Profile {
     nama: string;
+    /** Sudah tersamar dari server (A-21) — hanya untuk tampilan. */
     nik: string | null;
     nik_masked: string | null;
     email: string | null;
@@ -18,6 +19,8 @@ interface Profile {
 
 interface TicketRow {
     nomor: string;
+    /** Kode akses pelacakan (perlu dibagikan bila melacak tanpa login untuk nomor format lama). */
+    kode_akses?: string | null;
     tanggal: string | null;
     judul: string;
     status: string;
@@ -158,7 +161,14 @@ export default function WargaPortal({ profile, tickets }: Props) {
                                         ) : (
                                             filteredTickets.map((t) => (
                                                 <tr key={t.nomor} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                                    <td className="text-brand-light px-5 py-3 font-semibold">#{t.nomor}</td>
+                                                    <td className="text-brand-light px-5 py-3 font-semibold">
+                                                        #{t.nomor}
+                                                        {t.kode_akses && (
+                                                            <span className="block font-mono text-[10px] font-normal text-gray-400">
+                                                                Kode akses: {t.kode_akses}
+                                                            </span>
+                                                        )}
+                                                    </td>
                                                     <td className="px-5 py-3">{formatDate(t.tanggal)}</td>
                                                     <td className="max-w-[260px] truncate px-5 py-3">
                                                         <span className="font-medium text-gray-800 dark:text-white">{t.judul}</span>
@@ -214,6 +224,7 @@ function AkunForm({ profile }: { profile: Profile }) {
     const { data, setData, patch, processing, errors, reset } = useForm({
         email: profile.email ?? '',
         telp: profile.telp ?? '',
+        current_password: '',
         password: '',
         password_confirmation: '',
     });
@@ -222,7 +233,8 @@ function AkunForm({ profile }: { profile: Profile }) {
         e.preventDefault();
         patch('/portal-warga/profil', {
             preserveScroll: true,
-            onSuccess: () => reset('password', 'password_confirmation'),
+            onSuccess: () => reset('current_password', 'password', 'password_confirmation'),
+            onError: () => reset('current_password', 'password', 'password_confirmation'),
         });
     };
 
@@ -235,6 +247,13 @@ function AkunForm({ profile }: { profile: Profile }) {
             </CardHeader>
             <CardContent className="p-6">
                 <form onSubmit={submit} className="space-y-4">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="nik" className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                            NIK
+                        </Label>
+                        {/* NIK hanya ditampilkan tersamar dan tidak dapat diubah (A-21). */}
+                        <Input id="nik" value={profile.nik_masked ?? '-'} readOnly disabled aria-readonly className="font-mono" />
+                    </div>
                     <div className="space-y-1.5">
                         <Label htmlFor="email" className="text-xs font-bold text-gray-600 dark:text-gray-400">
                             Alamat Email
@@ -250,6 +269,20 @@ function AkunForm({ profile }: { profile: Profile }) {
                         {errors.telp && <p className="text-xs font-semibold text-rose-500">{errors.telp}</p>}
                     </div>
                     <div className="space-y-1.5">
+                        <Label htmlFor="current_password" className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                            Kata Sandi Saat Ini
+                        </Label>
+                        <Input
+                            id="current_password"
+                            type="password"
+                            autoComplete="current-password"
+                            placeholder="Wajib diisi jika mengganti kata sandi"
+                            value={data.current_password}
+                            onChange={(e) => setData('current_password', e.target.value)}
+                        />
+                        {errors.current_password && <p className="text-xs font-semibold text-rose-500">{errors.current_password}</p>}
+                    </div>
+                    <div className="space-y-1.5">
                         <Label htmlFor="password" className="text-xs font-bold text-gray-600 dark:text-gray-400">
                             Kata Sandi Baru
                         </Label>
@@ -261,6 +294,7 @@ function AkunForm({ profile }: { profile: Profile }) {
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
                         />
+                        <p className="text-[11px] text-gray-400">Minimal 8 karakter, berisi huruf dan angka.</p>
                         {errors.password && <p className="text-xs font-semibold text-rose-500">{errors.password}</p>}
                     </div>
                     <div className="space-y-1.5">
@@ -275,6 +309,7 @@ function AkunForm({ profile }: { profile: Profile }) {
                             value={data.password_confirmation}
                             onChange={(e) => setData('password_confirmation', e.target.value)}
                         />
+                        {errors.password_confirmation && <p className="text-xs font-semibold text-rose-500">{errors.password_confirmation}</p>}
                     </div>
                     <Button type="submit" disabled={processing} className="mt-4 w-full">
                         {processing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Simpan Perubahan

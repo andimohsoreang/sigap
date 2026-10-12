@@ -1,9 +1,11 @@
+import { RecaptchaNotice } from '@/components/sigap/recaptcha-notice';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useRecaptcha } from '@/hooks/use-recaptcha';
 import PublicLayout from '@/layouts/public-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { AlertTriangle, Info, LoaderCircle, Send, Upload } from 'lucide-react';
@@ -17,7 +19,7 @@ interface Props {
 const URGENSI = ['Rendah', 'Sedang', 'Tinggi', 'Kritis'];
 
 export default function FormulirInternal({ units, categories }: Props) {
-    const { data, setData, post, processing, errors, progress } = useForm({
+    const { data, setData, post, transform, processing, errors, progress } = useForm({
         nip: '',
         nama: '',
         unit: '',
@@ -27,11 +29,17 @@ export default function FormulirInternal({ units, categories }: Props) {
         lokasi: '',
         deskripsi: '',
         attachment: null as File | null,
+        recaptcha_token: '',
     });
+    const recaptcha = useRecaptcha('pengaduan_internal');
+    const busy = processing || recaptcha.verifying;
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        post('/pengaduan/internal', { forceFormData: true });
+        void recaptcha.withToken((token) => {
+            transform((form) => ({ ...form, recaptcha_token: token }));
+            post('/pengaduan/internal', { forceFormData: true });
+        });
     };
 
     return (
@@ -165,9 +173,11 @@ export default function FormulirInternal({ units, categories }: Props) {
                                 </Field>
                             </fieldset>
 
+                            <RecaptchaNotice enabled={recaptcha.enabled} error={recaptcha.error ?? errors.recaptcha_token} />
+
                             <div className="flex flex-col gap-3 sm:flex-row">
-                                <Button type="submit" disabled={processing} className="w-full sm:w-auto">
-                                    {processing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Kirim Laporan
+                                <Button type="submit" disabled={busy} className="w-full sm:w-auto">
+                                    {busy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Kirim Laporan
                                 </Button>
                                 <Button asChild variant="outline" className="w-full sm:w-auto">
                                     <Link href="/katalog">Batal</Link>

@@ -131,7 +131,7 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                                 <Input
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
-                                    placeholder="Masukkan Nomor Tiket (Cth: TKT-9920)..."
+                                    placeholder="Masukkan Nomor Tiket (Cth: TKT-261012-7KQ4MZ)…"
                                     className="border-0 bg-transparent font-medium text-gray-700 shadow-none focus-visible:ring-0 md:text-lg dark:text-white"
                                 />
                             </div>

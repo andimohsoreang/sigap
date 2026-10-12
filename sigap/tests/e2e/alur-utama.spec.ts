@@ -56,12 +56,18 @@ test.describe('Alur utama SIGAP (TECH-SPEC §10)', () => {
         await page.goto(`/admin/tiket/${ticketNo}`);
         await expect(page.getByText(ticketNo).first()).toBeVisible();
 
-        await page.getByRole('combobox', { name: 'Status Baru' }).click();
-        await page.getByRole('option', { name: 'Selesai' }).click();
-        await page.getByLabel('Catatan (opsional)').fill('Sudah ditangani petugas lapangan.');
-        await page.getByRole('button', { name: 'Simpan Status' }).click();
-
-        await expect(page.getByText(/Diverifikasi|Diproses|Selesai/).first()).toBeVisible();
+        // Transisi status mengikuti alur sah (Menunggu → Diproses → Selesai).
+        for (const [status, note] of [
+            ['Diproses', 'Petugas lapangan menuju lokasi.'],
+            ['Selesai', 'Sudah ditangani petugas lapangan.'],
+        ]) {
+            await page.getByRole('combobox', { name: 'Status Baru' }).click();
+            await page.getByRole('option', { name: status, exact: true }).click();
+            await page.getByLabel('Catatan (opsional)').fill(note);
+            const saved = page.waitForResponse((r) => r.url().includes(`/admin/tiket/${ticketNo}`) && r.request().method() === 'GET');
+            await page.getByRole('button', { name: 'Simpan Status' }).click();
+            await saved;
+        }
 
         // 4) Halaman lacak publik kini menampilkan tombol survei.
         await page.goto(`/lacak/${ticketNo}`);

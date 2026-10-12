@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Events\ChatMessageSent;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Logika bisnis live chat (PRD D5 — Reverb). Dipakai bersama oleh jalur Web
@@ -26,21 +27,21 @@ class ChatService
             'body' => $body,
         ]);
 
-        $updates = ['last_message_at' => now()];
+        // D-09: penambahan penghitung belum-dibaca secara atomik di SQL
+        // (UPDATE ... SET unread = unread + 1) agar pesan bersamaan tidak hilang.
+        ChatConversation::query()
+            ->whereKey($conversation->getKey())
+            ->increment($senderType === 'admin' ? 'unread_user' : 'unread_admin', 1, [
+                'last_message_at' => now(),
+            ]);
 
-        if ($senderType === 'admin') {
-            $updates['unread_user'] = $conversation->unread_user + 1;
-        } else {
-            $updates['unread_admin'] = $conversation->unread_admin + 1;
-        }
-
-        $conversation->update($updates);
+        $conversation->refresh();
 
         // Best-effort: pesan sudah tersimpan meski Reverb sedang mati (PRD D5).
         try {
             ChatMessageSent::dispatch($message);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Broadcast chat gagal: '.$e->getMessage());
+            Log::warning('Broadcast chat gagal: '.$e->getMessage());
         }
 
         return $message;

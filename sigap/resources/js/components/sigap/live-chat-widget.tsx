@@ -1,9 +1,9 @@
-import { echo, echoIsConfigured } from '@laravel/echo-react';
+import { cn } from '@/lib/utils';
+import { type SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
+import { echo, echoIsConfigured } from '@laravel/echo-react';
 import { Headset, MessagesSquare, Send, X } from 'lucide-react';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
-import { type SharedData } from '@/types';
-import { cn } from '@/lib/utils';
 
 /**
  * Widget Live Chat SIGAP (PRD D5).
@@ -137,7 +137,7 @@ export default function LiveChatWidget() {
                 aria-label={open ? 'Tutup live chat' : 'Buka live chat'}
                 aria-expanded={open}
                 className={cn(
-                    'fixed right-6 bottom-6 z-[100] flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-white shadow-[0_4px_15px_rgba(195,161,103,0.4)] transition-transform hover:scale-110',
+                    'bg-secondary fixed right-6 bottom-6 z-[100] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-[0_4px_15px_rgba(195,161,103,0.4)] transition-transform hover:scale-110',
                     open && 'scale-0',
                 )}
             >
@@ -147,13 +147,13 @@ export default function LiveChatWidget() {
             {/* Jendela chat */}
             <div
                 className={cn(
-                    'fixed right-6 bottom-24 z-[100] flex w-80 origin-bottom-right flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-transform duration-300 dark:border-gray-700 dark:bg-dark-card',
+                    'dark:bg-dark-card fixed right-6 bottom-24 z-[100] flex w-80 origin-bottom-right flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-transform duration-300 dark:border-gray-700',
                     open ? 'scale-100' : 'pointer-events-none scale-0',
                 )}
                 role="dialog"
                 aria-label="Live chat SIGAP"
             >
-                <div className="flex items-center justify-between bg-primary px-4 py-3 text-white dark:bg-blue-900">
+                <div className="bg-primary flex items-center justify-between px-4 py-3 text-white dark:bg-blue-900">
                     <div className="flex items-center gap-2">
                         <Headset className="h-5 w-5" />
                         <span className="text-sm font-bold">Admin SIGAP</span>
@@ -168,11 +168,11 @@ export default function LiveChatWidget() {
                     role="log"
                     aria-live="polite"
                     aria-label="Riwayat percakapan"
-                    className="flex h-64 flex-col gap-3 overflow-y-auto bg-gray-50 p-4 text-sm scroll-smooth dark:bg-gray-900"
+                    className="flex h-64 flex-col gap-3 overflow-y-auto scroll-smooth bg-gray-50 p-4 text-sm dark:bg-gray-900"
                 >
                     {/* Sapaan pembuka (paritas tampilan lama). */}
                     <div className="flex gap-2">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-light text-white">
+                        <div className="bg-brand-light flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white">
                             <Headset className="h-4 w-4" />
                         </div>
                         <div className="max-w-[85%] rounded-lg border border-gray-100 bg-white p-2.5 text-xs shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
@@ -183,7 +183,7 @@ export default function LiveChatWidget() {
                     {messages.map((m) => (
                         <div key={m.id} className={cn('flex gap-2', m.sender_type === 'admin' && 'justify-end')}>
                             {m.sender_type !== 'admin' && (
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-light text-white">
+                                <div className="bg-brand-light flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white">
                                     <Headset className="h-4 w-4" />
                                 </div>
                             )}
@@ -191,7 +191,7 @@ export default function LiveChatWidget() {
                                 className={cn(
                                     'max-w-[85%] rounded-lg p-2.5 text-xs shadow-sm',
                                     m.sender_type === 'admin'
-                                        ? 'rounded-tr-none bg-primary text-white'
+                                        ? 'bg-primary rounded-tr-none text-white'
                                         : 'rounded-tl-none border border-gray-100 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200',
                                 )}
                             >
@@ -201,7 +201,7 @@ export default function LiveChatWidget() {
                     ))}
                 </div>
 
-                <form onSubmit={submit} className="flex items-center gap-2 border-t border-gray-200 p-3 dark:border-gray-700 dark:bg-dark-card">
+                <form onSubmit={submit} className="dark:bg-dark-card flex items-center gap-2 border-t border-gray-200 p-3 dark:border-gray-700">
                     <label htmlFor="sigap-chat-input" className="sr-only">
                         Ketik pesan
                     </label>
@@ -218,7 +218,7 @@ export default function LiveChatWidget() {
                         type="submit"
                         disabled={sending}
                         aria-label="Kirim pesan"
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-light text-white disabled:opacity-50"
+                        className="bg-brand-light flex h-9 w-9 items-center justify-center rounded-full text-white disabled:opacity-50"
                     >
                         <Send className="h-4 w-4" />
                     </button>

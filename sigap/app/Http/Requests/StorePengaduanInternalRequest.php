@@ -2,11 +2,20 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\VerifiesRecaptcha;
+use App\Services\RecaptchaService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StorePengaduanInternalRequest extends FormRequest
 {
+    use VerifiesRecaptcha;
+
+    protected function recaptchaAction(): string
+    {
+        return RecaptchaService::ACTION_PENGADUAN_INTERNAL;
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -25,6 +34,7 @@ class StorePengaduanInternalRequest extends FormRequest
             'lokasi' => ['required', 'string', 'max:150'],
             'deskripsi' => ['required', 'string', 'min:10'],
             'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            ...$this->recaptchaRules(),
         ];
     }
 

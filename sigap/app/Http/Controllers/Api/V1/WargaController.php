@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateWargaProfileRequest;
-use App\Http\Resources\V1\TicketResource;
+use App\Services\AccountService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class WargaController extends Controller
 {
+    public function __construct(private readonly AccountService $accounts) {}
+
     /** GET /api/v1/warga/session */
     public function session(): JsonResponse
     {
@@ -29,27 +30,20 @@ class WargaController extends Controller
 
         return response()->json([
             'nama' => $user->name,
-            'nik' => $user->nik ? substr($user->nik, 0, 4).str_repeat('*', 8).substr($user->nik, -4) : null,
+            'nik' => $user->maskedNik(),
             'email' => $user->email,
             'telp' => $user->phone,
         ]);
     }
 
-    /** PATCH /api/v1/warga/profile */
+    /** PATCH /api/v1/warga/profile — aturan sama dengan portal web (A-09/A-10). */
     public function updateProfile(UpdateWargaProfileRequest $request): JsonResponse
     {
-        $user = Auth::user();
-
-        if ($request->filled('email')) {
-            $user->email = $request->validated('email');
-        }
-        if ($request->filled('telp')) {
-            $user->phone = $request->validated('telp');
-        }
-        if ($request->filled('password')) {
-            $user->password = $request->validated('password');
-        }
-        $user->save();
+        $this->accounts->updateProfile(
+            $request->user(),
+            $request->validated(),
+            $request->hasSession() ? $request->session()->getId() : null,
+        );
 
         return response()->json(['ok' => true]);
     }
@@ -60,7 +54,6 @@ class WargaController extends Controller
         $user = Auth::user();
 
         $tickets = $user->tickets()
-            ->with(['category', 'region', 'channel', 'assignee', 'histories', 'replies.author'])
             ->latest()
             ->get()
             ->map(fn ($t) => [
@@ -68,6 +61,8 @@ class WargaController extends Controller
                 'tanggal' => $t->created_at?->translatedFormat('d M Y'),
                 'judul' => $t->title,
                 'status' => $t->status?->value,
+                // Kode akses pelacakan (dibutuhkan tamu untuk nomor format lama).
+                'kode_akses' => $t->lookup_token,
             ]);
 
         return response()->json($tickets);

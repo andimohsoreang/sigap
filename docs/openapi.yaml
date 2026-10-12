@@ -62,8 +62,9 @@ paths:
       summary: Login gabungan (warga NIK / petugas username)
       description: |
         Satu pintu masuk. Server menentukan peran dari `identifier` (NIK 16 digit untuk
-        warga, username untuk admin) dan menerbitkan sesi cookie. Rate limit per
-        NIK/username + IP (D3).
+        warga, username untuk admin) dan menerbitkan sesi cookie. Rate limit `login`:
+        5/menit per NIK/username + IP dan 20/menit per IP (D3); berlaku juga untuk
+        login web `POST /masuk`.
       security: []
       requestBody:
         required: true
@@ -183,11 +184,18 @@ paths:
       tags: [Publik]
       summary: Lacak tiket berdasarkan nomor
       description: |
-        Mengembalikan detail tiket untuk pelacakan publik. NIK pelapor **di-mask**.
-        Tiket dengan `is_internal = true` **tidak pernah** dikembalikan (SEC-11, memperbaiki B4).
+        Mengembalikan detail tiket untuk pelacakan publik. Kunci payload tetap, tetapi
+        identitas disamarkan: `pelapor` berupa inisial tersamar (mis. `B*** S***`) atau
+        `Anonim`, `nik` dan `petugas` selalu `null`, dan penulis tanggapan petugas selalu
+        `Petugas SIGAP`. Tiket internal (`is_internal = true`) dan tiket **rahasia**
+        dijawab 404 (SEC-11, memperbaiki B4). Dibatasi limiter `lookup` (30/menit per IP).
+        Nomor **format lama** `TKT-<angka>` mudah ditebak: tamu wajib menyertakan
+        `?kode=<kode akses>`; tanpa/salah kode dijawab 404. Pelapor (login) & admin
+        berwenang tidak perlu kode. Nomor format baru tidak memerlukan kode.
       security: []
       parameters:
         - $ref: '#/components/parameters/TicketNo'
+        - $ref: '#/components/parameters/KodeAkses'
       responses:
         '200':
           description: Detail tiket
@@ -206,11 +214,14 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
               example: { error: "Tiket tidak ditemukan." }
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
 
   /survei/{ticket_no}:
     post:
       tags: [Publik]
       summary: Kirim survei kepuasan untuk tiket
+      description: Dibatasi limiter `lookup` (30/menit) dan `pengaduan` (10/10 menit) per IP. Sertakan `recaptcha_token` (aksi `survei`) bila reCAPTCHA aktif.
       security: []
       parameters:
         - $ref: '#/components/parameters/TicketNo'
@@ -702,19 +713,22 @@ paths:
     get:
       tags: [Sistem]
       summary: Health check
+      description: Ping database saja — tidak mengembalikan statistik data. Dibatasi 60 permintaan/menit per IP.
       security: []
       responses:
         '200':
           description: Sehat
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  ok: { type: boolean, example: true }
-                  service: { type: string, example: sigap-api }
-                  tickets: { type: integer }
-                  time: { type: string, format: date-time }
+              schema: { $ref: '#/components/schemas/Health' }
+        '503':
+          description: Database tidak dapat dihubungi
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+              example: { ok: false, service: sigap-api, database: down, time: "2026-10-12T00:00:00+00:00" }
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
 
 components:
   securitySchemes:
@@ -729,11 +743,28 @@ components:
       description: Sanctum personal access token untuk klien eksternal
 
   parameters:
+    KodeAkses:
+      name: kode
+      in: query
+      required: false
+      description: |
+        Kode akses pelacakan (8 karakter, alfabet sama dengan nomor tiket, tidak peka
+        huruf besar/kecil). Wajib bagi tamu untuk nomor format lama `TKT-<angka>`.
+        Ditampilkan ke pelapor di portal warga (`kode_akses`) dan ke petugas di detail tiket.
+      schema:
+        type: string
+        maxLength: 16
     TicketNo:
       name: ticket_no
       in: path
       required: true
-      schema: { type: string, pattern: '^TKT-\d+$', example: TKT-1 }
+      description: |
+        Nomor tiket, tidak peka huruf besar/kecil. Format baru `TKT-YYMMDD-XXXXXX`
+        (6 karakter dari `23456789ABCDEFGHJKMNPQRSTUVWXYZ`); format lama `TKT-<angka>` tetap valid.
+      schema:
+        type: string
+        pattern: '^[Tt][Kk][Tt]-(\d{6}-[2-9A-HJKMNP-Za-hjkmnp-z]{6}|\d+)$'
+        example: TKT-261012-7KQ4MZ
     Page:
       name: page
       in: query
@@ -790,7 +821,11 @@ components:
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
-          example: { error: "Terlalu banyak percobaan login. Coba 1 menit lagi." }
+          example: { message: "Too Many Attempts." }
+      headers:
+        Retry-After:
+          description: Detik sampai boleh mencoba lagi
+          schema: { type: integer }
 
   schemas:
     # ---------- umum
@@ -866,7 +901,7 @@ components:
         category_id: { type: integer }
         impact: { $ref: '#/components/schemas/TicketImpact' }
         visibility: { $ref: '#/components/schemas/TicketVisibility' }
-        recaptcha_token: { type: string }
+        recaptcha_token: { type: string, description: Token reCAPTCHA v3 (aksi `pengaduan`); opsional bila reCAPTCHA nonaktif }
     PengaduanInternalRequest:
       type: object
       required: [nip, nama, unit, kontak, kategori, urgensi, lokasi, deskripsi]
@@ -879,12 +914,12 @@ components:
         urgensi: { type: string, enum: [Rendah, Sedang, Tinggi, Kritis] }
         lokasi: { type: string, example: "Gedung A Lt. 3" }
         deskripsi: { type: string }
+        recaptcha_token: { type: string, description: Token reCAPTCHA v3 (aksi `pengaduan_internal`) }
     InputManualRequest:
       type: object
       required: [sumber_laporan, nama, judul, uraian, region_id, category_id]
       properties:
         sumber_laporan: { type: string, enum: [tatap_muka, call_center, surat, instagram, x, facebook, tiktok] }
-        admin_penerima: { type: string }
         nik: { type: string }
         nama: { type: string }
         telepon: { type: string }
@@ -898,8 +933,8 @@ components:
       type: object
       properties:
         ok: { type: boolean, example: true }
-        nomor_tiket: { type: string, example: "TKT-1" }
-        id: { type: string, example: "TKT-1" }
+        nomor_tiket: { type: string, example: "TKT-261012-7KQ4MZ" }
+        id: { type: string, example: "TKT-261012-7KQ4MZ" }
 
     TicketStatus:
       type: string
@@ -930,7 +965,7 @@ components:
       type: object
       description: Detail tiket untuk pelacakan publik
       properties:
-        nomor: { type: string, example: "TKT-1" }
+        nomor: { type: string, example: "TKT-261012-7KQ4MZ" }
         judul: { type: string }
         deskripsi: { type: string }
         status: { $ref: '#/components/schemas/TicketStatus' }
@@ -939,9 +974,9 @@ components:
         kategori: { oneOf: [{ type: string }, { type: 'null' }] }
         kawasan: { oneOf: [{ type: string }, { type: 'null' }] }
         kanal: { oneOf: [{ type: string }, { type: 'null' }] }
-        petugas: { oneOf: [{ type: string }, { type: 'null' }] }
-        pelapor: { type: string }
-        nik: { type: string, example: "3171********0001", description: Di-mask }
+        petugas: { type: 'null', description: Selalu null di jalur publik }
+        pelapor: { type: string, example: "B*** S***", description: "Nama tersamar, atau \"Anonim\"" }
+        nik: { type: 'null', description: Selalu null di jalur publik }
         created_at: { type: string, format: date-time }
         tenggat_sla: { oneOf: [{ type: string, format: date-time }, { type: 'null' }] }
         is_internal: { type: boolean, description: Selalu false pada endpoint ini }
@@ -980,6 +1015,7 @@ components:
         - $ref: '#/components/schemas/TicketDetail'
         - type: object
           properties:
+            kode_akses: { type: string, description: Kode akses pelacakan publik (berikan ke pelapor bila diminta) }
             assignee: { oneOf: [{ type: string }, { type: 'null' }] }
             responded_at: { oneOf: [{ type: string, format: date-time }, { type: 'null' }] }
             resolved_at: { oneOf: [{ type: string, format: date-time }, { type: 'null' }] }
@@ -1058,7 +1094,17 @@ components:
       required: [rating]
       properties:
         rating: { type: integer, minimum: 1, maximum: 5 }
-        comment: { type: string }
+        comment: { type: string, maxLength: 1000 }
+        kode: { type: string, maxLength: 16, description: Kode akses — wajib bagi tamu untuk nomor format lama `TKT-<angka>` }
+        recaptcha_token: { type: string, description: Token reCAPTCHA v3 (aksi `survei`); opsional bila reCAPTCHA nonaktif }
+
+    Health:
+      type: object
+      properties:
+        ok: { type: boolean, example: true }
+        service: { type: string, example: sigap-api }
+        database: { type: string, enum: [ok, down] }
+        time: { type: string, format: date-time }
 
     # ---------- wilayah
     Region:

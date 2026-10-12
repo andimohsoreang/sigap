@@ -27,9 +27,10 @@ class SurveyTest extends TestCase
 
         $this->post('/lacak/survei', [
             'ticket' => 'TKT-500',
+            'kode' => $ticket->lookup_token,
             'rating' => 5,
             'comment' => 'Pelayanan sangat cepat.',
-        ])->assertRedirect('/lacak/TKT-500');
+        ])->assertRedirect('/lacak/TKT-500?kode='.$ticket->lookup_token);
 
         $this->assertDatabaseHas('surveys', [
             'ticket_id' => $ticket->id,
@@ -40,9 +41,9 @@ class SurveyTest extends TestCase
 
     public function test_survey_is_rejected_for_ticket_not_finished(): void
     {
-        Ticket::factory()->create(['ticket_no' => 'TKT-501', 'status' => TicketStatus::Diproses]);
+        $ticket = Ticket::factory()->create(['ticket_no' => 'TKT-501', 'status' => TicketStatus::Diproses]);
 
-        $this->post('/lacak/survei', ['ticket' => 'TKT-501', 'rating' => 4])->assertStatus(422);
+        $this->post('/lacak/survei', ['ticket' => 'TKT-501', 'kode' => $ticket->lookup_token, 'rating' => 4])->assertSessionHasErrors('ticket');
 
         $this->assertDatabaseCount('surveys', 0);
     }
@@ -64,9 +65,9 @@ class SurveyTest extends TestCase
 
     public function test_rating_must_be_between_one_and_five(): void
     {
-        Ticket::factory()->create(['ticket_no' => 'TKT-503', 'status' => TicketStatus::Selesai]);
+        $ticket = Ticket::factory()->create(['ticket_no' => 'TKT-503', 'status' => TicketStatus::Selesai]);
 
-        $this->post('/lacak/survei', ['ticket' => 'TKT-503', 'rating' => 9])
+        $this->post('/lacak/survei', ['ticket' => 'TKT-503', 'kode' => $ticket->lookup_token, 'rating' => 9])
             ->assertSessionHasErrors('rating');
     }
 
@@ -75,7 +76,7 @@ class SurveyTest extends TestCase
         $ticket = Ticket::factory()->create(['ticket_no' => 'TKT-504', 'status' => TicketStatus::Selesai]);
         $ticket->survey()->create(['rating' => 4]);
 
-        $this->get('/lacak/TKT-504')
+        $this->get('/lacak/TKT-504?kode='.$ticket->lookup_token)
             ->assertOk()
             ->assertInertia(fn ($page) => $page->where('ticket.sudah_disurvei', true));
     }

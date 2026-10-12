@@ -10,6 +10,9 @@ interface Row {
     nomor: string;
     nama: string | null;
     kontak: string | null;
+    nip: string | null;
+    unit: string | null;
+    lokasi: string | null;
     kategori: string | null;
     urgensi: string | null;
     status: string;
@@ -46,6 +49,24 @@ export default function Internal({ tickets, stats, filters, statuses }: Props) {
                     </span>
                 </div>
             ),
+        },
+        {
+            accessorKey: 'nip',
+            header: 'NIP',
+            cell: ({ getValue }) => <span className="font-mono text-xs">{getValue<string | null>() ?? '—'}</span>,
+            meta: { disableSorting: true },
+        },
+        {
+            accessorKey: 'unit',
+            header: 'Unit Kerja',
+            cell: ({ getValue }) => getValue<string | null>() ?? '—',
+            meta: { disableSorting: true },
+        },
+        {
+            accessorKey: 'lokasi',
+            header: 'Lokasi',
+            cell: ({ getValue }) => getValue<string | null>() ?? '—',
+            meta: { disableSorting: true },
         },
         {
             accessorKey: 'kategori',

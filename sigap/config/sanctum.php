@@ -50,7 +50,13 @@ return [
     |
     */
 
-    'expiration' => null,
+    // N-15: token API (Bearer) kedaluwarsa default 7 hari. Nilai kosong,
+    // 0, negatif atau bukan angka jatuh ke default — token tidak pernah abadi.
+    'expiration' => (static function (): int {
+        $minutes = filter_var(env('SANCTUM_EXPIRATION'), FILTER_VALIDATE_INT);
+
+        return is_int($minutes) && $minutes > 0 ? $minutes : 60 * 24 * 7;
+    })(),
 
     /*
     |--------------------------------------------------------------------------

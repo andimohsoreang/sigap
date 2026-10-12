@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout, { ImpactBadge, StatusBadge } from '@/layouts/admin-layout';
 import { Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, Clock, Download, History, MapPin, Send, Tag, User2 } from 'lucide-react';
+import { ArrowLeft, Building2, Clock, Download, Eye, History, Link2, MapPin, Send, Tag, User2 } from 'lucide-react';
 import { type FormEvent } from 'react';
 import { formatDate, formatDateTime } from './matriks';
 
@@ -31,6 +31,17 @@ interface Detail {
     tenggat_sla: string | null;
     overdue: boolean;
     has_attachment: boolean;
+    /** Status tujuan yang diizinkan dari status saat ini (A-20). */
+    transisi: string[];
+    /** Kode akses pelacakan publik (diberikan kepada pelapor bila diminta). */
+    kode_akses?: string | null;
+    visibility?: string | null;
+    nip?: string | null;
+    unit?: string | null;
+    lokasi?: string | null;
+    sumber_laporan?: string | null;
+    tautan?: string | null;
+    admin_penerima?: string | null;
     riwayat: { dari: string | null; ke: string; catatan: string | null; oleh: string | null; pada: string | null }[];
     tanggapan: { id: number; penulis: string; body: string; is_public: boolean; pada: string | null }[];
 }
@@ -40,13 +51,25 @@ interface Props {
     statuses: Record<string, string>;
 }
 
+const VISIBILITY_LABEL: Record<string, string> = {
+    publik: 'Publik',
+    anonim: 'Anonim',
+    rahasia: 'Rahasia',
+};
+
+/** Tautan sumber hanya dirender sebagai link bila skema http(s). */
+function isHttpUrl(value: string): boolean {
+    return /^https?:\/\//i.test(value);
+}
+
 export default function TiketDetail({ ticket, statuses }: Props) {
-    const statusForm = useForm({ status: ticket.status, note: '' });
-    const replyForm = useForm({ body: '', is_public: true });
+    const transisi = ticket.transisi ?? [];
+    const statusForm = useForm({ status: '', note: '' });
+    const replyForm = useForm({ body: '', is_public: true as boolean });
 
     const submitStatus = (e: FormEvent) => {
         e.preventDefault();
-        statusForm.post(`/admin/tiket/${ticket.nomor}/status`, { preserveScroll: true, onSuccess: () => statusForm.reset('note') });
+        statusForm.post(`/admin/tiket/${ticket.nomor}/status`, { preserveScroll: true, onSuccess: () => statusForm.reset('status', 'note') });
     };
 
     const submitReply = (e: FormEvent) => {
@@ -92,7 +115,38 @@ export default function TiketDetail({ ticket, statuses }: Props) {
                                 <Info icon={User2} label="Pelapor" value={ticket.pelapor} />
                                 <Info icon={User2} label="NIK" value={ticket.nik} />
                                 <Info icon={Send} label="Kontak" value={[ticket.telepon, ticket.email].filter(Boolean).join(' · ') || null} />
+                                {ticket.kode_akses && <Info icon={Tag} label="Kode Akses Lacak" value={ticket.kode_akses} />}
                                 <Info icon={Clock} label="Tenggat SLA" value={ticket.tenggat_sla ? formatDateTime(ticket.tenggat_sla) : '—'} />
+                                {ticket.visibility && (
+                                    <Info icon={Eye} label="Visibilitas" value={VISIBILITY_LABEL[ticket.visibility] ?? ticket.visibility} />
+                                )}
+                                {ticket.nip && <Info icon={User2} label="NIP" value={ticket.nip} />}
+                                {ticket.unit && <Info icon={Building2} label="Unit Kerja" value={ticket.unit} />}
+                                {ticket.lokasi && <Info icon={MapPin} label="Lokasi" value={ticket.lokasi} />}
+                                {ticket.sumber_laporan && <Info icon={Send} label="Sumber Laporan" value={ticket.sumber_laporan} />}
+                                {ticket.admin_penerima && <Info icon={User2} label="Admin Penerima" value={ticket.admin_penerima} />}
+                                {ticket.tautan && (
+                                    <div className="flex items-start gap-2 sm:col-span-2">
+                                        <Link2 className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+                                        <div className="min-w-0">
+                                            <dt className="text-[10px] font-bold text-gray-400 uppercase">Tautan Sumber</dt>
+                                            <dd className="text-sm break-all text-gray-700 dark:text-gray-200">
+                                                {isHttpUrl(ticket.tautan) ? (
+                                                    <a
+                                                        href={ticket.tautan}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer nofollow"
+                                                        className="text-brand-light hover:underline"
+                                                    >
+                                                        {ticket.tautan}
+                                                    </a>
+                                                ) : (
+                                                    ticket.tautan
+                                                )}
+                                            </dd>
+                                        </div>
+                                    </div>
+                                )}
                             </dl>
 
                             {ticket.has_attachment && (
@@ -162,36 +216,44 @@ export default function TiketDetail({ ticket, statuses }: Props) {
                             <CardTitle className="text-base text-gray-800 dark:text-white">Ubah Status</CardTitle>
                         </CardHeader>
                         <CardContent className="p-6">
-                            <form onSubmit={submitStatus} className="space-y-4">
-                                <div className="space-y-1.5">
-                                    <Label>Status Baru</Label>
-                                    <Select value={statusForm.data.status} onValueChange={(v) => statusForm.setData('status', v)}>
-                                        <SelectTrigger aria-label="Status Baru">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {Object.entries(statuses).map(([value, label]) => (
-                                                <SelectItem key={value} value={value}>
-                                                    {label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="catatan-status">Catatan (opsional)</Label>
-                                    <Textarea
-                                        id="catatan-status"
-                                        name="note"
-                                        value={statusForm.data.note}
-                                        onChange={(e) => statusForm.setData('note', e.target.value)}
-                                        rows={2}
-                                    />
-                                </div>
-                                <Button type="submit" disabled={statusForm.processing} className="w-full">
-                                    Simpan Status
-                                </Button>
-                            </form>
+                            {transisi.length === 0 ? (
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    Tidak ada perubahan status yang diizinkan dari status saat ini.
+                                </p>
+                            ) : (
+                                <form onSubmit={submitStatus} className="space-y-4">
+                                    <div className="space-y-1.5">
+                                        <Label>Status Baru</Label>
+                                        <Select value={statusForm.data.status} onValueChange={(v) => statusForm.setData('status', v)}>
+                                            <SelectTrigger aria-label="Status Baru" aria-invalid={Boolean(statusForm.errors.status)}>
+                                                <SelectValue placeholder="Pilih status tujuan" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {transisi.map((value) => (
+                                                    <SelectItem key={value} value={value}>
+                                                        {statuses[value] ?? value}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {statusForm.errors.status && <p className="text-xs text-rose-500">{statusForm.errors.status}</p>}
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="catatan-status">Catatan (opsional)</Label>
+                                        <Textarea
+                                            id="catatan-status"
+                                            name="note"
+                                            value={statusForm.data.note}
+                                            onChange={(e) => statusForm.setData('note', e.target.value)}
+                                            rows={2}
+                                        />
+                                        {statusForm.errors.note && <p className="text-xs text-rose-500">{statusForm.errors.note}</p>}
+                                    </div>
+                                    <Button type="submit" disabled={statusForm.processing || !statusForm.data.status} className="w-full">
+                                        Simpan Status
+                                    </Button>
+                                </form>
+                            )}
                         </CardContent>
                     </Card>
 

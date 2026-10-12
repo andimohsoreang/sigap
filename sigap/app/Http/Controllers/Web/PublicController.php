@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Web;
 
 use App\Enums\TicketStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreSurveyRequest;
 use App\Http\Resources\V1\TicketResource;
 use App\Models\Category;
 use App\Models\Channel;
 use App\Models\Region;
 use App\Models\Ticket;
 use App\Services\StatsService;
+use App\Services\SurveyService;
+use App\Services\TicketService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,7 +25,11 @@ use Inertia\Response;
  */
 class PublicController extends Controller
 {
-    public function __construct(private readonly StatsService $stats) {}
+    public function __construct(
+        private readonly StatsService $stats,
+        private readonly TicketService $tickets,
+        private readonly SurveyService $surveys,
+    ) {}
 
     /** Beranda. */
     public function home(): Response
@@ -84,20 +92,23 @@ class PublicController extends Controller
     }
 
     /**
-     * Lacak tiket publik — melayani `/lacak?ticket=TKT-1` (query) sekaligus
-     * `/lacak/TKT-1` (path, PRD §5.1 `/lacak/:nomor`).
+     * Lacak tiket publik — melayani `/lacak?ticket=TKT-...` (query) sekaligus
+     * `/lacak/TKT-...` (path, PRD §5.1 `/lacak/:nomor`). Nomor huruf kecil
+     * diterima; format lama `TKT-<n>` tetap valid.
      */
     public function track(Request $request, ?string $ticket = null): Response
     {
-        $ticketNo = trim($ticket ?? $request->string('ticket')->toString());
+        $ticketNo = Ticket::normalizeNo($ticket ?? $request->string('ticket')->toString());
+        $kode = mb_substr($request->string('kode')->trim()->upper()->toString(), 0, 16);
         $ticket = null;
 
-        if ($ticketNo !== '' && preg_match('/^TKT-\d+$/i', $ticketNo)) {
-            $model = Ticket::query()
-                ->public()
-                ->with(['category', 'region', 'channel', 'assignee', 'histories', 'replies.author'])
-                ->where('ticket_no', strtoupper($ticketNo))
-                ->first();
+        if ($ticketNo !== '' && Ticket::isValidNo($ticketNo)) {
+            $model = $this->tickets->findForPublicLookup(
+                $ticketNo,
+                $request->user(),
+                ['category', 'region', 'channel', 'histories', 'replies'],
+                $kode,
+            );
 
             $ticket = $model ? (new TicketResource($model))->resolve() : false;
 
@@ -107,7 +118,10 @@ class PublicController extends Controller
         }
 
         return Inertia::render('public/lacak', [
-            'query' => strtoupper($ticketNo),
+            'query' => $ticketNo,
+            // Nomor format lama butuh kode akses bagi tamu (anti-enumerasi).
+            'kode' => $kode,
+            'butuh_kode' => Ticket::isLegacyNo($ticketNo),
             'ticket' => $ticket,
             'statuses' => collect(TicketStatus::cases())->mapWithKeys(
                 fn ($s) => [$s->value => $s->label()]
@@ -115,33 +129,32 @@ class PublicController extends Controller
         ]);
     }
 
-    /** Simpan survei kepuasan dari halaman lacak (publik). */
-    public function storeSurvey(Request $request): RedirectResponse
+    /** Simpan survei kepuasan dari halaman lacak (publik) — aturan A-07. */
+    public function storeSurvey(StoreSurveyRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'ticket' => ['required', 'string', 'regex:/^TKT-\d+$/i'],
-            'rating' => ['required', 'integer', 'between:1,5'],
-            'comment' => ['nullable', 'string', 'max:1000'],
-        ]);
-
-        $ticket = Ticket::query()
-            ->public()
-            ->where('ticket_no', strtoupper($data['ticket']))
-            ->first();
+        $ticket = $this->tickets->findForPublicLookup($request->ticketNo(), $request->user(), [], $request->accessCode());
 
         if ($ticket === null) {
             return back()->with('error', 'Tiket tidak ditemukan atau bukan tiket publik.');
         }
 
-        abort_unless($ticket->status === TicketStatus::Selesai, 422, 'Survei hanya untuk tiket yang telah selesai.');
+        try {
+            $this->surveys->submit($ticket, $request->user(), $request->validated());
+        } catch (AuthorizationException $e) {
+            // Klien non-Inertia tetap menerima 403; form Inertia menampilkan
+            // pesan pada field `ticket` alih-alih modal galat HTML.
+            if (! $request->header('X-Inertia')) {
+                throw $e;
+            }
 
-        $ticket->survey()->updateOrCreate([], [
-            'rating' => $data['rating'],
-            'comment' => $data['comment'] ?? null,
-        ]);
+            return back()->withErrors(['ticket' => $e->getMessage()]);
+        }
 
         return redirect()
-            ->route('lacak.show', $ticket->ticket_no)
+            ->route('lacak.show', array_filter([
+                'ticket' => $ticket->ticket_no,
+                'kode' => Ticket::isLegacyNo($ticket->ticket_no) ? $request->accessCode() : null,
+            ]))
             ->with('success', 'Terima kasih! Penilaian Anda telah kami terima.');
     }
 

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Api;
 
-use App\Enums\TicketImpact;
 use App\Enums\UserRole;
 use App\Models\Region;
 use App\Models\Ticket;
@@ -29,9 +28,10 @@ class AdminApiTest extends TestCase
     {
         $warga = User::factory()->warga()->create();
 
+        // A-19: sudah login tetapi peran salah -> 403 (bukan 401).
         $this->actingAs($warga, 'sanctum')
             ->getJson('/api/v1/admin/tickets')
-            ->assertUnauthorized();
+            ->assertForbidden();
     }
 
     public function test_admin_can_list_tickets(): void
@@ -108,7 +108,7 @@ class AdminApiTest extends TestCase
 
         $this->actingAs($kawasan, 'sanctum')
             ->getJson('/api/v1/admin/admins')
-            ->assertUnauthorized();
+            ->assertForbidden();
     }
 
     public function test_integration_sync_runs_stub_adapters(): void

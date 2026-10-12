@@ -19,20 +19,25 @@ use Illuminate\Support\Str;
  * di-generate acak. Kredensial tidak pernah ditulis di source (SEC-01) dan
  * disimpan ke `storage/app/e2e/credentials.json` untuk dibaca Playwright.
  *
- * Perintah ini menolak jalan bila APP_ENV=production.
+ * S-03: perintah ini MENGHAPUS seluruh isi database, sehingga menolak jalan
+ * tanpa syarat (tidak ada opsi --force) kecuali:
+ *   - APP_ENV adalah `local` atau `testing`, DAN
+ *   - database adalah SQLite, atau host database berada di mesin ini
+ *     (127.0.0.1 / localhost / ::1 / socket) — tidak pernah host DB remote/produksi.
  */
 class E2eSetupCommand extends Command
 {
-    protected $signature = 'sigap:e2e-setup {--force : Jalankan meski APP_ENV bukan testing/local}';
+    protected $signature = 'sigap:e2e-setup';
+
+    /** Host database yang dianggap lokal (aman untuk migrate:fresh). */
+    private const LOCAL_DB_HOSTS = ['', '127.0.0.1', 'localhost', '::1'];
 
     protected $description = 'Siapkan database & akun uji untuk E2E Playwright (dev/test saja)';
 
     public function handle(): int
     {
-        $env = (string) config('app.env');
-
-        if ($env === 'production' && ! $this->option('force')) {
-            $this->error('sigap:e2e-setup tidak boleh jalan di APP_ENV=production.');
+        if (($reason = $this->refusalReason()) !== null) {
+            $this->error("sigap:e2e-setup ditolak: {$reason}");
 
             return self::FAILURE;
         }
@@ -88,5 +93,33 @@ class E2eSetupCommand extends Command
         $this->line('Tiket awal: '.implode(', ', $credentials['tiket_awal']));
 
         return self::SUCCESS;
+    }
+
+    /** Alasan penolakan, atau null bila lingkungan aman untuk dihapus. */
+    private function refusalReason(): ?string
+    {
+        if (! $this->laravel->environment(['local', 'testing'])) {
+            return 'APP_ENV harus local atau testing (sekarang: '.$this->laravel->environment().').';
+        }
+
+        $connection = (string) config('database.default');
+        $driver = (string) config("database.connections.{$connection}.driver");
+
+        if ($driver === 'sqlite') {
+            return null;
+        }
+
+        $host = strtolower(trim((string) config("database.connections.{$connection}.host")));
+        $url = (string) config("database.connections.{$connection}.url");
+
+        if ($url !== '') {
+            $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+        }
+
+        if (! in_array($host, self::LOCAL_DB_HOSTS, true) && ! str_starts_with($host, '/')) {
+            return "host database '{$host}' bukan host lokal — tidak akan menghapus database remote/produksi.";
+        }
+
+        return null;
     }
 }

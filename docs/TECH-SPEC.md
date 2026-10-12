@@ -199,7 +199,8 @@ CREATE TABLE channels (
 -- tickets
 CREATE TABLE tickets (
   id              BIGSERIAL PRIMARY KEY,
-  ticket_no       VARCHAR(20) NOT NULL UNIQUE,     -- TKT-1 (nomor tampil)
+  ticket_no       VARCHAR(20) NOT NULL UNIQUE,     -- TKT-YYMMDD-XXXXXX (baru) / TKT-<n> (lama)
+  lookup_token    VARCHAR(16),                     -- kode akses pelacakan (wajib bagi tamu utk nomor lama)
   title           VARCHAR(255) NOT NULL,
   description     TEXT NOT NULL,
   status          ticket_status NOT NULL DEFAULT 'baru',
@@ -342,8 +343,8 @@ Base: `https://<domain>/api/v1`. Auth: Sanctum. Untuk SPA (Inertia) memakai cook
 | GET | `/auth/session` | any | → `{authenticated, role, nama}` |
 | POST | `/pengaduan` | — | FormRequest `StorePengaduanRequest` |
 | POST | `/pengaduan/internal` | — | `StorePengaduanInternalRequest` |
-| GET | `/tiket/{ticket_no}` | — | publik (tanpa tiket internal) |
-| POST | `/survei/{ticket_no}` | — | `{rating, comment?}` |
+| GET | `/tiket/{ticket_no}` | — | publik (tanpa tiket internal/rahasia → 404); `pelapor` tersamar, `nik`/`petugas` null; throttle `lookup` |
+| POST | `/survei/{ticket_no}` | — | `{rating, comment?, recaptcha_token?}`; throttle `lookup` + `pengaduan` |
 | GET | `/katalog/kanal` | — | daftar kanal publik |
 | GET | `/warga/session` | warga | |
 | GET | `/warga/profile` | warga | |
@@ -366,7 +367,23 @@ Base: `https://<domain>/api/v1`. Auth: Sanctum. Untuk SPA (Inertia) memakai cook
 | GET | `/admin/chat` | admin | daftar percakapan |
 | GET | `/chat/{conversation}/messages` | any | riwayat pesan |
 | POST | `/chat/{conversation}/messages` | any | kirim pesan (+ broadcast Reverb) |
-| GET | `/health` | — | `{ok, service, tickets, time}` |
+| GET | `/health` | — | `{ok, service, database, time}` — ping DB, tanpa statistik; throttle 60/menit/IP; 503 bila DB mati |
+
+**Nomor tiket**: format baru `TKT-YYMMDD-XXXXXX` — tanggal dibuat + 6 karakter acak dari
+alfabet `23456789ABCDEFGHJKMNPQRSTUVWXYZ` (tanpa 0/O/1/I/L), mis. `TKT-261012-7KQ4MZ`.
+Nomor lama `TKT-<angka>` tetap valid. Pencarian tidak peka huruf besar/kecil
+(regex frontend: `resources/js/lib/sigap.ts` → `TICKET_NO_PATTERN`).
+
+**Kode akses (`tickets.lookup_token`)**: 8 karakter acak (alfabet yang sama), dibuat saat
+tiket dibuat & di-backfill untuk tiket lama. Karena nomor lama berurutan (mudah di-enumerasi),
+**tamu** yang melacak/mengisi survei nomor format lama wajib mengirim `kode` (`?kode=` pada
+`GET /tiket/{no}` & `/lacak/{no}`, field `kode` pada survei); salah/tanpa kode = 404/"tidak
+ditemukan". Pelapor login & admin berwenang tidak perlu kode; nomor format baru tidak perlu kode.
+Kode ditampilkan di portal warga (`kode_akses`) & detail tiket admin.
+
+**reCAPTCHA v3**: `POST /pengaduan`, `/pengaduan/internal`, `/survei/{ticket_no}` (dan
+padanan web) menerima `recaptcha_token` (aksi `pengaduan`, `pengaduan_internal`, `survei`).
+Bila `RECAPTCHA_SECRET_KEY` kosong (lokal) verifikasi dilewati.
 
 **Konvensi error** (pertahankan pesan Bahasa Indonesia yang sudah ada):
 ```json
@@ -473,9 +490,10 @@ pages/
 
 - `php artisan install:broadcasting` + Reverb.
 - Channel privat: `chat.{conversationId}` (otorisasi di `routes/channels.php`).
-- Channel admin: `admin.notifications` (EWS & tiket baru).
-- Event: `ChatMessageSent`, `TicketStatusChanged`, `TicketCreated`.
-- Klien: `lib/echo.ts` (Laravel Echo + pusher-js, host Reverb, auth via `/broadcasting/auth` dengan sesi Sanctum).
+- Channel per pengguna: `user.{id}` (hanya pemilik akun). Notifikasi panel (tiket baru/perubahan status, EWS) dikirim ke admin yang berwenang atas kawasan tiket — tidak ada lagi kanal admin bersama.
+- Event: `ChatMessageSent` (`.chat.message`), `TicketChanged` (`.ticket.changed`), `NotificationBroadcast` (`.notification.incoming`).
+- Klien: `configureEcho` di `resources/js/app.tsx` dengan opsi dari `lib/reverb.ts` (`VITE_REVERB_*`, ditanam saat build). Key kosong → realtime dilewati tanpa crash; skema `https` → `wss` port 443.
+- Server vs klien dipisah: `REVERB_HOST/PORT/SCHEME` = alamat yang dipakai PHP untuk publikasi (produksi `127.0.0.1:8080` http); `VITE_REVERB_*` = alamat browser (`wss://app1.andimohamad.my.id`). `REVERB_ALLOWED_ORIGINS` membatasi origin WebSocket (default host `APP_URL`), rate limit & `max_connections` aktif.
 - Fallback: bila WebSocket gagal, widget chat menampilkan pesan "koneksi terputus" (bukan balas palsu).
 
 ---
@@ -517,9 +535,9 @@ final class WbsStubAdapter implements PengaduanChannelAdapter { /* agregat conto
 |---|---|
 | SEC-01 | Tidak ada seeder kredensial default; `php artisan sigap:admin {username}` interaktif |
 | SEC-02 | Sanctum stateful, cookie `HttpOnly; Secure; SameSite=Lax/Strict`; CSRF aktif |
-| SEC-03 | Middleware `SecurityHeaders`: CSP, HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy |
+| SEC-03 | Middleware `SecurityHeaders`: CSP (ketat di semua lingkungan selain `local`/`testing`, termasuk staging: `script-src 'self' 'nonce-…'` per request lewat `Vite::useCspNonce()`, dipakai `@vite`/`@routes`; `connect-src` hanya `'self'` + origin WSS Reverb; domain reCAPTCHA hanya bila key diisi), HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy. Ziggy hanya mengekspos grup rute sesuai peran (`config/ziggy.php`) |
 | SEC-04 | Blade/React escape + `Resource` output; sanitasi rich text bila ada |
-| SEC-05 | `RateLimiter`: `login` per NIK+IP (mis. 5/menit), `pengaduan` per IP (mis. 10/10 menit), `survei` |
+| SEC-05 | `RateLimiter` (AppServiceProvider): `login` 5/menit per identifier+IP, 20/menit per IP & 30/jam per identifier (web `POST /masuk` dan API), `pengaduan` 10/10 menit per IP, `lookup` 30/menit per IP (lacak & survei publik), `health` 60/menit. IP = IP asli (nginx real_ip dari `CF-Connecting-IP`, `TRUSTED_PROXIES=127.0.0.1`) |
 | SEC-06 | FormRequest + `$fillable`/`$guarded`; whitelist field |
 | SEC-07 | `TicketPolicy` (warga hanya miliknya; admin kawasan hanya region-nya) |
 | SEC-08 | `ticket_histories` + log admin (`activity` sederhana) |
@@ -554,13 +572,15 @@ final class WbsStubAdapter implements PengaduanChannelAdapter { /* agregat conto
 - Cloudflare: subdomain staging dengan **Access/WAF** opsional agar tidak terindeks.
 
 ### 11.2 Umum
-- nginx + PHP-FPM + PostgreSQL + Reverb (`supervisor` untuk `php artisan reverb:start`).
-- `php artisan optimize`, `config:cache`, `route:cache`.
-- Queue worker (supervisor) untuk notifikasi email/in-app.
-- `npm run build` → `public/build`.
-- Scheduler (`schedule:run`) untuk sinkron kanal (stub) harian & EWS.
-- Di belakang Cloudflare (WebSocket didukung untuk Reverb, port 443/wss).
-- Health check `/api/v1/health`.
+- Cloudflare (proxied, Full strict + Authenticated Origin Pulls) → nginx → PHP-FPM 8.4 + Reverb (127.0.0.1:8080).
+- **Database produksi: PostgreSQL 16** di host yang sama (`listen_addresses=localhost`, `DB_SSLMODE=prefer`; bila DB remote wajib `verify-full`). SQLite hanya untuk dev/test lokal & E2E.
+- Cache/sesi/queue: driver `database` (default) atau **Redis** opsional (bind 127.0.0.1, `requirepass`).
+- Queue worker + scheduler (systemd/supervisor) **wajib** — surel & broadcast di-queue.
+- `.env` final **sebelum** `npm run build` (variabel `VITE_*`), lalu `php artisan optimize`.
+- Lampiran di disk privat (`serve => false`), tanpa `storage:link`.
+- Log harian (`LOG_STACK=daily`, `LOG_LEVEL=warning`, simpan 14 hari).
+- Health check `/api/v1/health` (ping DB).
+- Detail langkah, nginx, firewall, backup, dan rollback: `docs/DEPLOY.md`.
 
 ---
 

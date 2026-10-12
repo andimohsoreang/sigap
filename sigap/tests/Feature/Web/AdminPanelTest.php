@@ -211,8 +211,8 @@ class AdminPanelTest extends TestCase
             'nip' => 'NIP-999',
             'role' => UserRole::AdminKawasan->value,
             'region_id' => $region->id,
-            'password' => 'rahasia123',
-        ])->assertRedirect();
+            'password' => 'RahasiaKuat2026',
+        ])->assertRedirect()->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('users', ['username' => 'NIP-999', 'role' => 'admin_kawasan']);
     }

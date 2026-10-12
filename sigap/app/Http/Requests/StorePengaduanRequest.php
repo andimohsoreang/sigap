@@ -4,32 +4,42 @@ namespace App\Http\Requests;
 
 use App\Enums\TicketImpact;
 use App\Enums\TicketVisibility;
+use App\Enums\UserRole;
+use App\Http\Requests\Concerns\VerifiesRecaptcha;
+use App\Models\User;
 use App\Services\RecaptchaService;
-use Illuminate\Contracts\Validation\Validator;
+use App\Support\Coordinates;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StorePengaduanRequest extends FormRequest
 {
+    use VerifiesRecaptcha;
+
     public function authorize(): bool
     {
         return true; // laporan publik boleh tanpa login
     }
 
-    /**
-     * Verifikasi reCAPTCHA server-side (PRD SEC-10).
-     *
-     * Diverifikasi sebagai bagian dari validasi sehingga pesan error konsisten
-     * untuk jalur Web (Inertia) maupun API. Otomatis dilewati bila kunci
-     * reCAPTCHA belum dikonfigurasi.
-     */
-    public function withValidator(Validator $validator): void
+    protected function recaptchaAction(): string
     {
-        $validator->after(function (Validator $validator): void {
-            if (! app(RecaptchaService::class)->verify($this->input('recaptcha_token'), $this->ip())) {
-                $validator->errors()->add('recaptcha_token', 'Verifikasi reCAPTCHA gagal. Silakan coba lagi.');
-            }
-        });
+        return RecaptchaService::ACTION_PENGADUAN;
+    }
+
+    /** Id akun warga yang sedang login (hanya peran warga), atau null. */
+    public function reporterId(?User $user): ?int
+    {
+        return $user !== null && $user->role === UserRole::Warga ? $user->id : null;
+    }
+
+    /**
+     * Koordinat "lat, lng" yang sudah tervalidasi (A-15).
+     *
+     * @return array{0: float|null, 1: float|null}
+     */
+    public function coordinates(): array
+    {
+        return Coordinates::parse($this->validated('koordinat'));
     }
 
     /** @return array<string, mixed> */
@@ -42,13 +52,13 @@ class StorePengaduanRequest extends FormRequest
             'telepon' => ['nullable', 'string', 'max:30'],
             'judul' => ['required', 'string', 'max:255'],
             'uraian' => ['required', 'string', 'min:10'],
-            'koordinat' => ['nullable', 'string', 'max:100'],
+            'koordinat' => ['nullable', 'string', 'max:100', Coordinates::rule()],
             'region_id' => ['nullable', 'integer', 'exists:regions,id'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'impact' => ['required', Rule::enum(TicketImpact::class)],
             'visibility' => ['nullable', Rule::enum(TicketVisibility::class)],
             'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
-            'recaptcha_token' => ['nullable', 'string'],
+            ...$this->recaptchaRules(),
         ];
     }
 

@@ -58,6 +58,15 @@ class TicketPolicy
         return $this->update($user, $ticket);
     }
 
+    /**
+     * Daftar & statistik tiket internal pegawai (A-05): super admin saja,
+     * karena tiket internal tidak terikat kawasan mana pun.
+     */
+    public function viewInternal(User $user): bool
+    {
+        return $user->isSuperAdmin();
+    }
+
     /** Kelola master data (kawasan, kanal, admin, pengaturan). */
     public function manageMaster(User $user): bool
     {

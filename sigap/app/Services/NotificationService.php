@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Contracts\NotificationChannel;
 use App\Enums\TicketStatus;
+use App\Enums\UserRole;
 use App\Models\Setting;
 use App\Models\Ticket;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -16,6 +18,10 @@ use Illuminate\Support\Facades\Log;
  * aktif pada `config('notifications.channels')`. Kegagalan satu driver tidak
  * boleh menggagalkan proses bisnis — dicatat sebagai warning dan dilanjutkan.
  *
+ * A-06: penerima notifikasi tiket dibatasi sesuai wewenang (SEC-07):
+ * super admin aktif + admin kawasan aktif pada kawasan tiket. Tiket internal
+ * (tanpa kawasan) hanya ke super admin.
+ *
  * WhatsApp tidak pernah dipanggil karena tidak ada driver-nya.
  */
 class NotificationService
@@ -23,16 +29,19 @@ class NotificationService
     /** @var array<string, NotificationChannel>|null */
     private ?array $channels = null;
 
-    /** @param array<string, mixed>|null $payload */
-    public function notify(?array $payload, ?User $recipient = null): void
+    /**
+     * Kirim payload ke penerima tertentu (satu user atau koleksi user).
+     *
+     * @param  array<string, mixed>|null  $payload
+     * @param  User|iterable<User>  $recipients
+     */
+    public function notify(?array $payload, User|iterable $recipients): void
     {
         if ($payload === null) {
             return;
         }
 
-        $recipients = $recipient !== null
-            ? collect([$recipient])
-            : $this->defaultRecipients();
+        $recipients = $recipients instanceof User ? [$recipients] : $recipients;
 
         foreach ($recipients as $user) {
             foreach ($this->channels() as $channel) {
@@ -47,6 +56,35 @@ class NotificationService
                 }
             }
         }
+    }
+
+    /** Notifikasi perubahan tiket ke penerima yang berwenang atas tiket itu. */
+    public function notifyTicket(Ticket $ticket, string $event, string $message = ''): void
+    {
+        $this->notify($this->ticketPayload($ticket, $event, $message), $this->recipientsFor($ticket));
+    }
+
+    /**
+     * Penerima notifikasi untuk sebuah tiket: super admin aktif + admin
+     * kawasan aktif di kawasan tiket (tiket internal: super admin saja).
+     *
+     * @return Collection<int, User>
+     */
+    public function recipientsFor(Ticket $ticket): Collection
+    {
+        return User::query()
+            ->where('is_active', true)
+            ->where(function ($q) use ($ticket) {
+                $q->where('role', UserRole::SuperAdmin->value);
+
+                if (! $ticket->is_internal && $ticket->region_id !== null) {
+                    $q->orWhere(fn ($q) => $q
+                        ->where('role', UserRole::AdminKawasan->value)
+                        ->where('region_id', $ticket->region_id));
+                }
+            })
+            ->orderBy('id')
+            ->get();
     }
 
     /** Payload untuk tiket baru / status berubah / EWS. */
@@ -73,17 +111,6 @@ class NotificationService
                 'Dampak' => $ticket->impact?->label() ?? '-',
             ],
         ];
-    }
-
-    /** Penerima default: PIC pengaturan + admin aktif + pelapor tiket. */
-    private function defaultRecipients()
-    {
-        $users = User::query()
-            ->where('is_active', true)
-            ->whereIn('role', ['admin_kawasan', 'super_admin'])
-            ->get();
-
-        return $users;
     }
 
     /** @return array<string, NotificationChannel> */

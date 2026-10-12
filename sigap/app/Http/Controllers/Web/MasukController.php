@@ -48,7 +48,7 @@ class MasukController extends Controller
 
     public function destroy(Request $request): RedirectResponse
     {
-        $this->auth->logout();
+        $this->auth->logout($request->user());
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

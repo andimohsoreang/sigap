@@ -56,4 +56,28 @@ export function formatDateTime(value?: string | null): string {
     return date.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+/**
+ * Nomor tiket. Format baru `TKT-YYMMDD-XXXXXX` (6 karakter dari alfabet tanpa
+ * huruf/angka ambigu: 0/O, 1/I/L), format lama `TKT-<angka>` tetap berlaku.
+ * Tidak peka huruf besar/kecil — input dinormalisasi ke huruf besar.
+ */
+export const TICKET_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+export const TICKET_NO_PATTERN = /^TKT-(?:\d{6}-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}|\d{1,10})$/i;
+export const TICKET_NO_EXAMPLE = 'TKT-261012-7KQ4MZ';
+
+export function normalizeTicketNo(value?: string | null): string {
+    return (value ?? '').trim().toUpperCase();
+}
+
+/** Format lama `TKT-<n>`: tamu wajib menyertakan kode akses saat melacak. */
+export const LEGACY_TICKET_NO_PATTERN = /^TKT-\d{1,10}$/i;
+
+export function isLegacyTicketNo(value?: string | null): boolean {
+    return LEGACY_TICKET_NO_PATTERN.test(normalizeTicketNo(value));
+}
+
+export function isValidTicketNo(value?: string | null): boolean {
+    return TICKET_NO_PATTERN.test(normalizeTicketNo(value));
+}
+
 export { cn };

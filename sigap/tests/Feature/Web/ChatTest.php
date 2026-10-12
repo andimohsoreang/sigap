@@ -5,8 +5,6 @@ namespace Tests\Feature\Web;
 use App\Events\ChatMessageSent;
 use App\Events\TicketChanged;
 use App\Models\ChatConversation;
-use App\Models\ChatMessage;
-use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Broadcast;
@@ -127,10 +125,11 @@ class ChatTest extends TestCase
 
         $channels = Broadcast::getChannels();
         $chatCallback = $channels->get('chat.{conversationId}');
-        $adminCallback = $channels->get('admin.notifications');
+        // A-06: notifikasi admin kini lewat kanal privat per pengguna.
+        $userCallback = $channels->get('user.{id}');
 
         $this->assertIsCallable($chatCallback);
-        $this->assertIsCallable($adminCallback);
+        $this->assertIsCallable($userCallback);
 
         // Pemilik percakapan & admin diizinkan.
         $this->assertTrue((bool) $chatCallback($warga, $conversation->id));
@@ -139,9 +138,9 @@ class ChatTest extends TestCase
         // Warga lain ditolak.
         $this->assertFalse((bool) $chatCallback($other, $conversation->id));
 
-        // Kanal notifikasi admin.
-        $this->assertTrue((bool) $adminCallback($admin));
-        $this->assertFalse((bool) $adminCallback($warga));
+        // Kanal notifikasi per pengguna: hanya pemiliknya.
+        $this->assertTrue((bool) $userCallback($admin, $admin->id));
+        $this->assertFalse((bool) $userCallback($warga, $admin->id));
     }
 
     public function test_guest_conversation_is_not_open_to_other_users(): void

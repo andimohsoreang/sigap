@@ -8,16 +8,16 @@ export default function SyaratKetentuan() {
 
             <Section title="1. Ketentuan Umum">
                 <p>
-                    SIGAP ("Suara Masyarakat, Inisiatif Gerak Aksi, Penyelesaian Tuntas") adalah sistem elektronik pengelolaan pengaduan masyarakat milik Kementerian
-                    Transmigrasi Republik Indonesia. Dengan mengakses dan menggunakan SIGAP, pengguna dianggap telah membaca, memahami, dan menyetujui seluruh ketentuan
-                    dalam dokumen ini.
+                    SIGAP ("Suara Masyarakat, Inisiatif Gerak Aksi, Penyelesaian Tuntas") adalah sistem elektronik pengelolaan pengaduan masyarakat
+                    milik Kementerian Transmigrasi Republik Indonesia. Dengan mengakses dan menggunakan SIGAP, pengguna dianggap telah membaca,
+                    memahami, dan menyetujui seluruh ketentuan dalam dokumen ini.
                 </p>
             </Section>
 
             <Section title="2. Kewajiban Pengguna">
                 <p>
-                    Pengguna wajib memberikan data dan informasi yang benar, akurat, dan dapat dipertanggungjawabkan saat mengajukan aduan atau mendaftarkan akun.
-                    Pengguna bertanggung jawab penuh atas kerahasiaan kredensial akunnya sendiri.
+                    Pengguna wajib memberikan data dan informasi yang benar, akurat, dan dapat dipertanggungjawabkan saat mengajukan aduan atau
+                    mendaftarkan akun. Pengguna bertanggung jawab penuh atas kerahasiaan kredensial akunnya sendiri.
                 </p>
             </Section>
 
@@ -33,31 +33,31 @@ export default function SyaratKetentuan() {
 
             <Section title="4. Hak Pengelola">
                 <p>
-                    Kementerian Transmigrasi berhak memverifikasi, menunda, atau menutup laporan yang terbukti tidak valid, di luar kewenangan Kementerian, atau melanggar
-                    ketentuan ini. Target waktu penyelesaian sebagaimana diatur dalam Pedoman Layanan bersifat estimasi terbaik (best-effort), bukan jaminan mutlak,
-                    terutama untuk kasus yang memerlukan koordinasi lintas instansi. Laporan yang terindikasi memuat unsur pidana dapat diteruskan kepada aparat penegak
-                    hukum yang berwenang.
+                    Kementerian Transmigrasi berhak memverifikasi, menunda, atau menutup laporan yang terbukti tidak valid, di luar kewenangan
+                    Kementerian, atau melanggar ketentuan ini. Target waktu penyelesaian sebagaimana diatur dalam Pedoman Layanan bersifat estimasi
+                    terbaik (best-effort), bukan jaminan mutlak, terutama untuk kasus yang memerlukan koordinasi lintas instansi. Laporan yang
+                    terindikasi memuat unsur pidana dapat diteruskan kepada aparat penegak hukum yang berwenang.
                 </p>
             </Section>
 
             <Section title="5. Kekayaan Intelektual">
                 <p>
-                    Seluruh elemen tampilan, logo, dan konten pada situs SIGAP merupakan hak milik Kementerian Transmigrasi, kecuali dinyatakan lain, dan tidak boleh
-                    digandakan untuk kepentingan komersial tanpa izin tertulis.
+                    Seluruh elemen tampilan, logo, dan konten pada situs SIGAP merupakan hak milik Kementerian Transmigrasi, kecuali dinyatakan lain,
+                    dan tidak boleh digandakan untuk kepentingan komersial tanpa izin tertulis.
                 </p>
             </Section>
 
             <Section title="6. Perubahan Ketentuan">
                 <p>
-                    Ketentuan ini dapat diperbarui sewaktu-waktu untuk menyesuaikan dengan kebijakan atau peraturan perundang-undangan terbaru. Perubahan akan
-                    diinformasikan melalui halaman ini.
+                    Ketentuan ini dapat diperbarui sewaktu-waktu untuk menyesuaikan dengan kebijakan atau peraturan perundang-undangan terbaru.
+                    Perubahan akan diinformasikan melalui halaman ini.
                 </p>
             </Section>
 
             <Section title="7. Hukum yang Berlaku">
                 <p>
-                    Ketentuan ini tunduk pada dan ditafsirkan sesuai dengan hukum Negara Republik Indonesia, termasuk namun tidak terbatas pada Undang-Undang Nomor 25
-                    Tahun 2009 tentang Pelayanan Publik.
+                    Ketentuan ini tunduk pada dan ditafsirkan sesuai dengan hukum Negara Republik Indonesia, termasuk namun tidak terbatas pada
+                    Undang-Undang Nomor 25 Tahun 2009 tentang Pelayanan Publik.
                 </p>
             </Section>
         </StaticShell>

@@ -5,17 +5,25 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Enums\TicketStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateTicketStatusRequest;
+use App\Http\Resources\V1\TicketAdminDetailResource;
 use App\Http\Resources\V1\TicketAdminResource;
-use App\Http\Resources\V1\TicketResource;
 use App\Models\Ticket;
+use App\Services\AuditService;
+use App\Services\StatsService;
 use App\Services\TicketService;
+use App\Support\Search;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TicketsController extends Controller
 {
-    public function __construct(private readonly TicketService $tickets) {}
+    public function __construct(
+        private readonly TicketService $tickets,
+        private readonly StatsService $stats,
+        private readonly AuditService $audit,
+    ) {}
 
     /** GET /api/v1/admin/tickets */
     public function index(Request $request): JsonResponse
@@ -37,8 +45,7 @@ class TicketsController extends Controller
             $query->where('impact', $request->string('impact'));
         }
         if ($request->filled('q')) {
-            $term = '%'.$request->string('q').'%';
-            $query->where(fn ($q) => $q->where('title', 'like', $term)->orWhere('description', 'like', $term));
+            Search::apply($query, ['title', 'description', 'ticket_no'], $request->string('q')->toString());
         }
         if ($request->filled('internal')) {
             $query->where('is_internal', $request->boolean('internal'));
@@ -59,7 +66,7 @@ class TicketsController extends Controller
     }
 
     /** GET /api/v1/admin/tickets/{ticket_no} */
-    public function show(string $ticketNo): TicketResource|JsonResponse
+    public function show(string $ticketNo): TicketAdminDetailResource|JsonResponse
     {
         $ticket = $this->findScoped($ticketNo);
 
@@ -71,11 +78,11 @@ class TicketsController extends Controller
 
         $ticket->load(['category', 'region', 'channel', 'assignee', 'histories.actor', 'replies.author']);
 
-        return new TicketResource($ticket);
+        return new TicketAdminDetailResource($ticket);
     }
 
     /** POST /api/v1/admin/tickets/{ticket_no}/status */
-    public function updateStatus(UpdateTicketStatusRequest $request, string $ticketNo): TicketResource|JsonResponse
+    public function updateStatus(UpdateTicketStatusRequest $request, string $ticketNo): TicketAdminDetailResource|JsonResponse
     {
         $ticket = $this->findScoped($ticketNo);
 
@@ -92,9 +99,13 @@ class TicketsController extends Controller
             $request->validated('note'),
         );
 
-        $ticket->load(['category', 'region', 'assignee', 'histories', 'replies.author']);
+        $this->audit->safe('ticket.status_changed', $ticket, "Status tiket {$ticket->ticket_no} diubah (API).", [
+            'status' => $request->validated('status'),
+        ]);
 
-        return new TicketResource($ticket);
+        $ticket->load(['category', 'region', 'channel', 'assignee', 'histories.actor', 'replies.author']);
+
+        return new TicketAdminDetailResource($ticket);
     }
 
     /** POST /api/v1/admin/tickets/{ticket_no}/tanggapan */
@@ -115,39 +126,46 @@ class TicketsController extends Controller
 
         $reply = $this->tickets->reply($ticket, $data['body'], Auth::user(), $data['is_public'] ?? true);
 
+        $this->audit->safe('ticket.replied', $ticket, "Tanggapan pada tiket {$ticket->ticket_no} (API).");
+
         return response()->json($reply, 201);
     }
 
-    /** GET /api/v1/admin/tiket-internal */
+    /** GET /api/v1/admin/tiket-internal — super admin saja (A-05). */
     public function internal(Request $request): JsonResponse
     {
-        $this->authorize('viewAny', Ticket::class);
+        $this->authorize('viewInternal', Ticket::class);
 
         $perPage = min(max($request->integer('per_page', 15), 1), 100);
-        $paginator = Ticket::query()->internal()->latest()->paginate($perPage);
+        $paginator = Ticket::query()->internal()->with('category')->latest()->paginate($perPage);
 
-        $resolved = Ticket::query()->internal()->where('status', TicketStatus::Selesai);
-        $avgHours = $resolved->clone()
-            ->whereNotNull('resolved_at')
-            ->get()
-            ->avg(fn ($t) => $t->created_at->diffInHours($t->resolved_at));
+        $base = Ticket::query()->internal();
+
+        $topCategory = (clone $base)
+            ->select('category_id', DB::raw('count(*) as total'))
+            ->whereNotNull('category_id')
+            ->groupBy('category_id')
+            ->orderByDesc('total')
+            ->with('category')
+            ->first();
 
         return response()->json([
             'data' => $paginator->getCollection()->map(fn (Ticket $t) => [
                 'id' => $t->ticket_no,
                 'nama' => $t->reporter_name,
-                'unit' => null,
+                'nip' => $t->reporter_nip,
+                'unit' => $t->reporter_unit,
                 'kategori' => $t->category?->name,
-                'lokasi' => null,
+                'lokasi' => $t->location,
                 'urgensi' => $t->impact?->label(),
                 'status' => $t->status?->value,
                 'created_at' => $t->created_at?->toIso8601String(),
             ])->values(),
             'stats' => [
-                'today' => Ticket::query()->internal()->whereDate('created_at', today())->count(),
-                'this_month' => Ticket::query()->internal()->whereMonth('created_at', now()->month)->count(),
-                'top_category' => 'Internet / Jaringan',
-                'avg_resolution_hours' => round((float) $avgHours, 1),
+                'today' => $this->stats->todayCount($base),
+                'this_month' => $this->stats->thisMonthCount($base),
+                'top_category' => $topCategory?->category?->name ?? '—',
+                'avg_resolution_hours' => $this->stats->averageResolutionHours($base),
             ],
             'meta' => [
                 'total' => $paginator->total(),
@@ -158,20 +176,14 @@ class TicketsController extends Controller
         ]);
     }
 
-    /** Batasi query sesuai peran (SEC-07). */
+    /** Batasi query sesuai peran (SEC-07) — aturan sama dengan panel web. */
     private function scoped($query)
     {
-        $user = Auth::user();
-
-        if ($user->isAdmin() && ! $user->isSuperAdmin()) {
-            $query->where('region_id', $user->region_id);
-        }
-
-        return $query;
+        return $query->visibleTo(Auth::user());
     }
 
     private function findScoped(string $ticketNo): ?Ticket
     {
-        return $this->scoped(Ticket::query())->where('ticket_no', strtoupper($ticketNo))->first();
+        return $this->scoped(Ticket::query())->where('ticket_no', Ticket::normalizeNo($ticketNo))->first();
     }
 }

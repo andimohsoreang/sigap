@@ -94,7 +94,10 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => 'prefer',
+            // N-10: 'prefer' untuk DB lokal (127.0.0.1). Bila DB berada di host
+            // lain, set DB_SSLMODE=verify-full + DB_SSLROOTCERT (CA server).
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
+            'sslrootcert' => env('DB_SSLROOTCERT'),
         ],
 
         'sqlsrv' => [

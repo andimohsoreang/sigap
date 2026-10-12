@@ -3,9 +3,7 @@
 namespace Tests\Feature\Api;
 
 use App\Enums\TicketImpact;
-use App\Enums\UserRole;
 use App\Models\Ticket;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -63,16 +61,19 @@ class PengaduanApiTest extends TestCase
         $this->getJson("/api/v1/tiket/{$ticket->ticket_no}")->assertNotFound();
     }
 
-    public function test_public_tracking_masks_reporter_nik(): void
+    public function test_public_tracking_never_exposes_reporter_nik(): void
     {
         $ticket = Ticket::factory()->create([
             'reporter_nik' => '3171010101010001',
+            'reporter_name' => 'Budi Santoso',
             'is_internal' => false,
         ]);
 
+        // A-02: NIK tidak pernah tampil publik & nama disamarkan.
         $this->getJson("/api/v1/tiket/{$ticket->ticket_no}")
             ->assertOk()
-            ->assertJsonPath('data.nik', '3171********0001');
+            ->assertJsonPath('data.nik', null)
+            ->assertJsonPath('data.pelapor', 'B*** S***');
     }
 
     public function test_public_tracking_rejects_invalid_ticket_format(): void

@@ -6,6 +6,7 @@ use App\Enums\TicketStatus;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -59,6 +60,7 @@ class WargaPortalTest extends TestCase
         $this->actingAs($warga)->patch('/portal-warga/profil', [
             'email' => 'baru@example.com',
             'telp' => '0812000111',
+            'current_password' => 'password',
             'password' => 'rahasia123',
             'password_confirmation' => 'rahasia123',
         ])->assertRedirect();
@@ -66,7 +68,7 @@ class WargaPortalTest extends TestCase
         $warga->refresh();
         $this->assertSame('baru@example.com', $warga->email);
         $this->assertSame('0812000111', $warga->phone);
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('rahasia123', $warga->password));
+        $this->assertTrue(Hash::check('rahasia123', $warga->password));
     }
 
     public function test_warga_can_delete_own_new_ticket(): void
@@ -76,7 +78,8 @@ class WargaPortalTest extends TestCase
 
         $this->actingAs($warga)->delete("/portal-warga/tiket/{$ticket->ticket_no}")->assertRedirect();
 
-        $this->assertDatabaseMissing('tickets', ['id' => $ticket->id]);
+        // A-03: soft delete — nomor tiket tidak dipakai ulang.
+        $this->assertSoftDeleted('tickets', ['id' => $ticket->id]);
     }
 
     public function test_warga_cannot_delete_ticket_in_progress(): void

@@ -6,13 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Channel;
 use App\Models\ChannelSyncLog;
 use App\Models\User;
+use App\Services\AuditService;
 use App\Services\Channels\ChannelAdapterManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
 class IntegrasiController extends Controller
 {
-    public function __construct(private readonly ChannelAdapterManager $adapters) {}
+    public function __construct(
+        private readonly ChannelAdapterManager $adapters,
+        private readonly AuditService $audit,
+    ) {}
 
     /**
      * POST /api/v1/admin/integrasi/{sp4n|wbs} — jalankan sinkronisasi (STUB, D7).
@@ -33,6 +37,8 @@ class IntegrasiController extends Controller
             ->update(['last_synced_at' => now()]);
 
         Log::info('Sinkronisasi kanal (stub)', $result->toArray());
+
+        $this->audit->safe('channel.synced', null, "Sinkronisasi kanal {$channel} ({$result->pulledCount} data) (API).");
 
         return response()->json($result->toArray());
     }

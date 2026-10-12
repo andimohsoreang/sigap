@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -44,7 +46,15 @@ class AuthController extends Controller
     /** POST /api/v1/auth/logout */
     public function logout(Request $request): JsonResponse
     {
-        $this->auth->logout();
+        $user = $request->user();
+
+        // Klien Bearer token: cabut token yang sedang dipakai.
+        $token = $user?->currentAccessToken();
+        if ($token instanceof PersonalAccessToken) {
+            $token->delete();
+        }
+
+        $this->auth->logout($user);
 
         if ($request->hasSession()) {
             $request->session()->invalidate();
@@ -74,7 +84,7 @@ class AuthController extends Controller
      * Resolusi user untuk endpoint sesi yang tidak memakai middleware auth:
      * cek Bearer token (guard sanctum) lalu sesi cookie (guard web).
      */
-    private function resolveUser(Request $request): ?\App\Models\User
+    private function resolveUser(Request $request): ?User
     {
         return $request->user('sanctum') ?? $request->user('web');
     }

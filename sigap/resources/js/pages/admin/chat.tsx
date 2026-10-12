@@ -1,12 +1,11 @@
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import AdminLayout from '@/layouts/admin-layout';
+import { cn } from '@/lib/utils';
 import { router, useForm } from '@inertiajs/react';
 import { echo, echoIsConfigured } from '@laravel/echo-react';
-import { Send, Search } from 'lucide-react';
+import { Search, Send } from 'lucide-react';
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
-import AdminLayout from '@/layouts/admin-layout';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
 
 interface Conversation {
     id: number;
@@ -49,15 +48,16 @@ export default function Chat({ conversations, active }: Props) {
     }, [conversations, search]);
 
     // Reverb (PRD D5): pesan baru pada percakapan aktif & notifikasi tiket.
+    const activeId = active?.id;
     useEffect(() => {
         const echo = echoInstance();
-        if (!echo || !active) return;
+        if (!echo || !activeId) return;
 
-        const channel = echo.private(`chat.${active.id}`);
+        const channel = echo.private(`chat.${activeId}`);
         channel.listen('.chat.message', () => router.reload({ only: ['active', 'conversations'] }));
 
-        return () => echo.leave(`chat.${active.id}`);
-    }, [active?.id]);
+        return () => echo.leave(`chat.${activeId}`);
+    }, [activeId]);
 
     const open = (id: number) => router.get('/admin/chat', { conversation: id }, { preserveState: true, preserveScroll: true });
 
@@ -69,7 +69,7 @@ export default function Chat({ conversations, active }: Props) {
 
     return (
         <AdminLayout title="Pesan Masuk (Live Chat)" subtitle="Percakapan real-time via Laravel Reverb.">
-            <div className="flex h-[600px] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm lg:flex-row dark:border-gray-700 dark:bg-dark-card">
+            <div className="dark:bg-dark-card flex h-[600px] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm lg:flex-row dark:border-gray-700">
                 {/* Daftar percakapan */}
                 <div className="flex w-full flex-col border-r border-gray-200 bg-gray-50 lg:w-1/3 dark:border-gray-700 dark:bg-gray-800">
                     <div className="border-b border-gray-200 p-4 dark:border-gray-700">
@@ -88,7 +88,9 @@ export default function Chat({ conversations, active }: Props) {
                                     onClick={() => open(c.id)}
                                     className={cn(
                                         'w-full border-b border-l-4 border-gray-100 p-4 text-left transition-colors dark:border-gray-700',
-                                        active?.id === c.id ? 'border-l-brand-light bg-white dark:bg-gray-700' : 'border-l-transparent hover:bg-white dark:hover:bg-gray-700/50',
+                                        active?.id === c.id
+                                            ? 'border-l-brand-light bg-white dark:bg-gray-700'
+                                            : 'border-l-transparent hover:bg-white dark:hover:bg-gray-700/50',
                                     )}
                                 >
                                     <div className="mb-1 flex items-start justify-between">
@@ -96,7 +98,11 @@ export default function Chat({ conversations, active }: Props) {
                                         <span className="text-[10px] text-gray-500 dark:text-gray-400">{formatRelative(c.last_message_at)}</span>
                                     </div>
                                     <p className="truncate text-xs text-gray-600 dark:text-gray-300">{c.cuplikan ?? c.subjek ?? '—'}</p>
-                                    {c.unread > 0 && <span className="mt-1 inline-block rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">{c.unread}</span>}
+                                    {c.unread > 0 && (
+                                        <span className="mt-1 inline-block rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                                            {c.unread}
+                                        </span>
+                                    )}
                                 </button>
                             ))
                         )}
@@ -104,14 +110,16 @@ export default function Chat({ conversations, active }: Props) {
                 </div>
 
                 {/* Thread */}
-                <div className="flex flex-grow flex-col bg-white dark:bg-dark-card">
+                <div className="dark:bg-dark-card flex flex-grow flex-col bg-white">
                     {!active ? (
                         <div className="flex flex-grow items-center justify-center text-sm text-gray-400">Pilih percakapan untuk membalas.</div>
                     ) : (
                         <>
                             <div className="flex items-center justify-between border-b border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
                                 <div className="flex items-center gap-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-light/20 font-bold text-brand-light">{active.inisial}</div>
+                                    <div className="bg-brand-light/20 text-brand-light flex h-10 w-10 items-center justify-center rounded-full font-bold">
+                                        {active.inisial}
+                                    </div>
                                     <div>
                                         <h4 className="text-sm font-bold text-gray-800 dark:text-white">{active.nama}</h4>
                                         <span className="text-[10px] font-bold text-green-500">● Online</span>
@@ -123,13 +131,15 @@ export default function Chat({ conversations, active }: Props) {
                                 {active.messages.map((m) => (
                                     <div key={m.id} className={cn('flex gap-2', m.sender_type === 'admin' && 'justify-end')}>
                                         {m.sender_type !== 'admin' && (
-                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-light/20 text-xs font-bold text-brand-light">{active.inisial}</div>
+                                            <div className="bg-brand-light/20 text-brand-light flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
+                                                {active.inisial}
+                                            </div>
                                         )}
                                         <div
                                             className={cn(
                                                 'max-w-[80%] rounded-lg p-3 text-sm shadow-sm',
                                                 m.sender_type === 'admin'
-                                                    ? 'rounded-tr-none bg-brand-light text-white'
+                                                    ? 'bg-brand-light rounded-tr-none text-white'
                                                     : 'rounded-tl-none border border-gray-100 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200',
                                             )}
                                         >
@@ -139,8 +149,16 @@ export default function Chat({ conversations, active }: Props) {
                                 ))}
                             </div>
 
-                            <form onSubmit={submit} className="flex items-center gap-2 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-                                <Input value={reply.data.body} onChange={(e) => reply.setData('body', e.target.value)} placeholder="Ketik balasan Anda..." className="flex-grow rounded-full" />
+                            <form
+                                onSubmit={submit}
+                                className="flex items-center gap-2 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+                            >
+                                <Input
+                                    value={reply.data.body}
+                                    onChange={(e) => reply.setData('body', e.target.value)}
+                                    placeholder="Ketik balasan Anda..."
+                                    className="flex-grow rounded-full"
+                                />
                                 <Button type="submit" disabled={reply.processing} className="h-10 w-10 rounded-full p-0">
                                     <Send className="h-4 w-4" />
                                 </Button>

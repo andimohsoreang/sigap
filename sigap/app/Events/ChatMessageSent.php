@@ -5,7 +5,8 @@ namespace App\Events;
 use App\Models\ChatMessage;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
@@ -13,11 +14,12 @@ use Illuminate\Queue\SerializesModels;
  * Pesan chat baru (PRD D5 — Reverb).
  *
  * Kelas ini disiarkan oleh Reverb melalui channel privat `chat.{id}` baik ke
- * warga pemilik percakapan maupun ke panel admin. `ShouldBroadcastNow`
- * dipakai agar pesan langsung terkirim tanpa menunggu queue worker pada fase
- * ini (mudah ditukar menjadi ShouldBroadcast + worker saat produksi).
+ * warga pemilik percakapan maupun ke panel admin.
+ *
+ * A-06: disiarkan lewat queue (ShouldBroadcast) setelah transaksi commit —
+ * produksi wajib menjalankan queue worker.
  */
-class ChatMessageSent implements ShouldBroadcastNow
+class ChatMessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 

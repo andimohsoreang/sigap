@@ -19,8 +19,9 @@ import {
     Sun,
     Ticket,
     Users,
+    type LucideIcon,
 } from 'lucide-react';
-import { type LucideIcon, type ReactNode, useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -40,7 +41,7 @@ interface NavEntry {
 const NAV: NavEntry[] = [
     { label: 'Matriks Rekapan', href: '/admin/matriks', icon: LayoutList, match: '/admin/matriks' },
     { label: 'Manajemen Tiket', href: '/admin/tiket', icon: Ticket, match: '/admin/tiket' },
-    { label: 'Tiket Internal', href: '/admin/tiket-internal', icon: Gauge, match: '/admin/tiket-internal' },
+    { label: 'Tiket Internal', href: '/admin/tiket-internal', icon: Gauge, match: '/admin/tiket-internal', superAdminOnly: true },
     { label: 'Input Manual', href: '/admin/input-manual', icon: FilePen, match: '/admin/input-manual' },
     { label: 'Pesan Masuk', href: '/admin/chat', icon: MessageSquare, match: '/admin/chat' },
     { label: 'Daftar Admin', href: '/admin/petugas', icon: Users, match: '/admin/petugas', superAdminOnly: true },
@@ -52,7 +53,7 @@ const NAV: NavEntry[] = [
 ];
 
 export default function AdminLayout({ children, title, subtitle, actions }: AdminLayoutProps) {
-    const { auth, app } = usePage<SharedData>().props;
+    const { auth, app, flash } = usePage<SharedData>().props;
     const { appearance, updateAppearance } = useAppearance();
     const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -180,6 +181,19 @@ export default function AdminLayout({ children, title, subtitle, actions }: Admi
                         </div>
                         {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
                     </div>
+                    {(flash?.success || flash?.error) && (
+                        <div
+                            role={flash.error ? 'alert' : 'status'}
+                            className={cn(
+                                'mb-6 rounded-lg border p-4 text-sm',
+                                flash.success
+                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300'
+                                    : 'border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900/40 dark:bg-rose-900/20 dark:text-rose-300',
+                            )}
+                        >
+                            {flash.success ?? flash.error}
+                        </div>
+                    )}
                     {children}
                 </main>
             </div>

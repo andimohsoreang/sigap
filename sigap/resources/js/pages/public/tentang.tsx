@@ -1,7 +1,7 @@
+import { Card, CardContent } from '@/components/ui/card';
+import PublicLayout from '@/layouts/public-layout';
 import { Head } from '@inertiajs/react';
 import { Building2, Download, Users } from 'lucide-react';
-import PublicLayout from '@/layouts/public-layout';
-import { Card, CardContent } from '@/components/ui/card';
 
 interface Props {
     stats: {
@@ -40,9 +40,9 @@ export default function Tentang({ stats, regions }: Props) {
 
             <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
                 <div className="mb-10 text-center">
-                    <h1 className="mb-2 text-3xl font-bold text-primary dark:text-brand-light">Data Terbuka SIGAP</h1>
+                    <h1 className="text-primary dark:text-brand-light mb-2 text-3xl font-bold">Data Terbuka SIGAP</h1>
                     <p className="text-gray-500 dark:text-gray-400">Transparansi Informasi Pelayanan Publik Kementerian Transmigrasi</p>
-                    <p className="mt-2 text-sm font-bold text-secondary italic">"Komitmen Melayani, Menuntaskan Tanpa Henti"</p>
+                    <p className="text-secondary mt-2 text-sm font-bold italic">"Komitmen Melayani, Menuntaskan Tanpa Henti"</p>
                 </div>
 
                 {/* SEC-HARIAN */}
@@ -55,7 +55,7 @@ export default function Tentang({ stats, regions }: Props) {
                             ['Selesai Ditangani', stats.by_status?.selesai ?? 0, 'text-emerald-600 dark:text-emerald-400'],
                             ['Total Publik', stats.total, 'text-secondary'],
                         ].map(([label, value, color]) => (
-                            <Card key={label as string} className="border-gray-100 dark:border-gray-800 dark:bg-dark-card">
+                            <Card key={label as string} className="dark:bg-dark-card border-gray-100 dark:border-gray-800">
                                 <CardContent className="p-6">
                                     <p className="mb-1 text-xs font-bold tracking-wide text-gray-400 uppercase">{label as string}</p>
                                     <p className={`text-3xl font-black ${color as string}`}>{value as number}</p>
@@ -67,17 +67,20 @@ export default function Tentang({ stats, regions }: Props) {
 
                 {/* Top kategori harian */}
                 <section className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    <Card className="border-gray-100 dark:border-gray-800 dark:bg-dark-card">
+                    <Card className="dark:bg-dark-card border-gray-100 dark:border-gray-800">
                         <CardContent className="p-6">
                             <h3 className="mb-4 font-bold text-gray-800 dark:text-white">Top Kategori Keluhan</h3>
                             <ol className="space-y-3">
                                 {stats.by_category.map((cat, idx) => (
-                                    <li key={cat.name} className="flex items-center justify-between border-b border-gray-50 pb-2 dark:border-gray-700">
+                                    <li
+                                        key={cat.name}
+                                        className="flex items-center justify-between border-b border-gray-50 pb-2 dark:border-gray-700"
+                                    >
                                         <span className="text-sm text-gray-600 dark:text-gray-300">
-                                            <span className="mr-2 font-bold text-secondary">{idx + 1}.</span>
+                                            <span className="text-secondary mr-2 font-bold">{idx + 1}.</span>
                                             {cat.name}
                                         </span>
-                                        <span className="text-sm font-bold text-primary dark:text-brand-light">{cat.total} Laporan</span>
+                                        <span className="text-primary dark:text-brand-light text-sm font-bold">{cat.total} Laporan</span>
                                     </li>
                                 ))}
                                 {stats.by_category.length === 0 && <li className="text-sm text-gray-400 italic">Belum ada data kategori.</li>}
@@ -86,15 +89,15 @@ export default function Tentang({ stats, regions }: Props) {
                     </Card>
 
                     {/* SEC-BULANAN */}
-                    <Card id="sec-bulanan" className="scroll-mt-24 border-gray-100 dark:border-gray-800 dark:bg-dark-card">
+                    <Card id="sec-bulanan" className="dark:bg-dark-card scroll-mt-24 border-gray-100 dark:border-gray-800">
                         <CardContent className="p-6">
                             <h3 className="mb-4 font-bold text-gray-800 dark:text-white">Matriks Laporan Bulanan</h3>
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="rounded-xl bg-brand-soft/60 p-4 text-center dark:bg-gray-800">
+                                <div className="bg-brand-soft/60 rounded-xl p-4 text-center dark:bg-gray-800">
                                     <p className="text-xs font-bold text-gray-400 uppercase">Total Bulan Ini</p>
-                                    <p className="text-3xl font-black text-primary dark:text-brand-light">{stats.this_month}</p>
+                                    <p className="text-primary dark:text-brand-light text-3xl font-black">{stats.this_month}</p>
                                 </div>
-                                <div className="rounded-xl bg-brand-soft/60 p-4 text-center dark:bg-gray-800">
+                                <div className="bg-brand-soft/60 rounded-xl p-4 text-center dark:bg-gray-800">
                                     <p className="text-xs font-bold text-gray-400 uppercase">SLA Tepat Waktu</p>
                                     <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{stats.sla_pct}%</p>
                                 </div>
@@ -106,7 +109,7 @@ export default function Tentang({ stats, regions }: Props) {
                 {/* Distribusi kanal */}
                 <section className="mb-12">
                     <h3 className="mb-4 font-bold text-gray-800 dark:text-white">Distribusi Kanal Pengaduan</h3>
-                    <Card className="border-gray-100 dark:border-gray-800 dark:bg-dark-card">
+                    <Card className="dark:bg-dark-card border-gray-100 dark:border-gray-800">
                         <CardContent className="overflow-x-auto p-0">
                             <table className="w-full text-sm">
                                 <thead className="bg-gray-50 dark:bg-gray-800">
@@ -121,7 +124,9 @@ export default function Tentang({ stats, regions }: Props) {
                                         <tr key={ch.name} className="border-t border-gray-50 dark:border-gray-700">
                                             <td className="px-5 py-3 text-gray-700 dark:text-gray-300">{ch.name}</td>
                                             <td className="px-5 py-3 text-right font-bold text-gray-800 dark:text-white">{ch.total}</td>
-                                            <td className="px-5 py-3 text-right text-gray-500 dark:text-gray-400">{((ch.total / channelTotal) * 100).toFixed(1)}%</td>
+                                            <td className="px-5 py-3 text-right text-gray-500 dark:text-gray-400">
+                                                {((ch.total / channelTotal) * 100).toFixed(1)}%
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -133,17 +138,17 @@ export default function Tentang({ stats, regions }: Props) {
                 {/* SEC-PETUGAS */}
                 <section id="sec-petugas" className="mb-12 scroll-mt-24">
                     <h3 className="mb-4 flex items-center gap-2 font-bold text-gray-800 dark:text-white">
-                        <Building2 className="h-5 w-5 text-primary dark:text-brand-light" /> Kawasan Transmigrasi
+                        <Building2 className="text-primary dark:text-brand-light h-5 w-5" /> Kawasan Transmigrasi
                     </h3>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {regions.map((r) => (
-                            <Card key={r.id} className="border-gray-100 dark:border-gray-800 dark:bg-dark-card">
+                            <Card key={r.id} className="dark:bg-dark-card border-gray-100 dark:border-gray-800">
                                 <CardContent className="p-5">
-                                    <p className="text-xs font-bold text-secondary">{r.code}</p>
+                                    <p className="text-secondary text-xs font-bold">{r.code}</p>
                                     <h4 className="mb-1 font-bold text-gray-800 dark:text-white">{r.name}</h4>
                                     <p className="text-xs text-gray-500 dark:text-gray-400">{r.province}</p>
                                     <div className="mt-3 flex items-center justify-between text-xs">
-                                        <span className="rounded bg-brand-soft px-2 py-1 font-semibold text-primary dark:bg-gray-800 dark:text-brand-light">
+                                        <span className="bg-brand-soft text-primary dark:text-brand-light rounded px-2 py-1 font-semibold dark:bg-gray-800">
                                             {r.infrastructure_status ?? '-'}
                                         </span>
                                         <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
@@ -159,11 +164,14 @@ export default function Tentang({ stats, regions }: Props) {
                 {/* SEC-DASAR-HUKUM */}
                 <section id="sec-dasar-hukum" className="scroll-mt-24">
                     <h3 className="mb-4 flex items-center gap-2 font-bold text-gray-800 dark:text-white">
-                        <Download className="h-5 w-5 text-primary dark:text-brand-light" /> Landasan Hukum Layanan
+                        <Download className="text-primary dark:text-brand-light h-5 w-5" /> Landasan Hukum Layanan
                     </h3>
                     <ul className="space-y-2">
                         {DASAR_HUKUM.map((h) => (
-                            <li key={h} className="rounded-lg border border-gray-100 bg-white px-5 py-3 text-sm text-gray-700 dark:border-gray-800 dark:bg-dark-card dark:text-gray-300">
+                            <li
+                                key={h}
+                                className="dark:bg-dark-card rounded-lg border border-gray-100 bg-white px-5 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-300"
+                            >
                                 {h}
                             </li>
                         ))}

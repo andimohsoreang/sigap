@@ -37,8 +37,12 @@ interface Props {
 }
 
 export default function Kanal({ channels, integrations, logs, is_super_admin }: Props) {
-    const medsos = useForm({ platform: '', account: '', url: '' });
-    const kantor = useForm({ instansi: '', pic: '', url: '' });
+    // Nama field mengikuti validasi backend (AdminController::storeChannel):
+    // name, account_name, url — agar pesan galat tampil di field yang benar.
+    // Medsos: name = username akun, account_name = platform.
+    // Kantor: name = nama instansi, account_name = PIC.
+    const medsos = useForm({ account_name: '', name: '', url: '' });
+    const kantor = useForm({ name: '', account_name: '', url: '' });
 
     const channelColumns: DataTableColumn<Channel>[] = [
         {
@@ -104,98 +108,110 @@ export default function Kanal({ channels, integrations, logs, is_super_admin }: 
 
     const submitMedsos = (e: FormEvent) => {
         e.preventDefault();
-        medsos.transform((d) => ({ type: 'sosmed', name: d.account, account_name: d.platform, url: d.url }));
+        medsos.transform((d) => ({ ...d, type: 'sosmed' }));
         medsos.post('/admin/kanal', { preserveScroll: true, onSuccess: () => medsos.reset() });
     };
 
     const submitKantor = (e: FormEvent) => {
         e.preventDefault();
-        kantor.transform((d) => ({ type: 'kantor', name: d.instansi, account_name: d.pic, url: d.url || null }));
+        kantor.transform((d) => ({ ...d, type: 'kantor', url: d.url || null }));
         kantor.post('/admin/kanal', { preserveScroll: true, onSuccess: () => kantor.reset() });
     };
 
     return (
         <AdminLayout title="Manajemen Kanal Pengaduan" subtitle="Kanal medsos, kantor, dan integrasi nasional.">
-            <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
-                    <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                        <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
-                            <Hash className="text-brand-light h-5 w-5" /> Tambah Media Sosial
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <form onSubmit={submitMedsos} className="space-y-4">
-                            <Field label="Platform" required error={medsos.errors.account_name}>
-                                <Select value={medsos.data.platform} onValueChange={(v) => medsos.setData('platform', v)}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Pilih Platform" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {['Instagram', 'Facebook', 'X / Twitter', 'TikTok'].map((p) => (
-                                            <SelectItem key={p} value={p}>
-                                                {p}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </Field>
-                            <Field label="Nama Akun / Username" required error={medsos.errors.name}>
-                                <Input
-                                    value={medsos.data.account}
-                                    onChange={(e) => medsos.setData('account', e.target.value)}
-                                    placeholder="Cth: @KemenTransRI"
-                                />
-                            </Field>
-                            <Field label="Tautan / URL Akun" required error={medsos.errors.url}>
-                                <Input
-                                    value={medsos.data.url}
-                                    onChange={(e) => medsos.setData('url', e.target.value)}
-                                    placeholder="https://instagram.com/..."
-                                />
-                            </Field>
-                            <div className="flex justify-end">
-                                <Button type="submit" disabled={medsos.processing} className="w-full lg:w-auto">
-                                    Simpan Medsos
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+            {/* A-05: penambahan kanal hanya untuk Super Admin. */}
+            {!is_super_admin && (
+                <p className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/10 dark:text-blue-300">
+                    Penambahan kanal dan sinkronisasi integrasi nasional hanya dapat dilakukan Super Admin.
+                </p>
+            )}
+            {is_super_admin && (
+                <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
+                        <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
+                            <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
+                                <Hash className="text-brand-light h-5 w-5" /> Tambah Media Sosial
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6">
+                            <form onSubmit={submitMedsos} className="space-y-4">
+                                <Field label="Platform" required error={medsos.errors.account_name}>
+                                    <Select value={medsos.data.account_name} onValueChange={(v) => medsos.setData('account_name', v)}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Pilih Platform" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {['Instagram', 'Facebook', 'X / Twitter', 'TikTok'].map((p) => (
+                                                <SelectItem key={p} value={p}>
+                                                    {p}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </Field>
+                                <Field label="Nama Akun / Username" required error={medsos.errors.name}>
+                                    <Input
+                                        value={medsos.data.name}
+                                        onChange={(e) => medsos.setData('name', e.target.value)}
+                                        placeholder="Cth: @KemenTransRI"
+                                    />
+                                </Field>
+                                <Field label="Tautan / URL Akun" required error={medsos.errors.url}>
+                                    <Input
+                                        value={medsos.data.url}
+                                        onChange={(e) => medsos.setData('url', e.target.value)}
+                                        placeholder="https://instagram.com/..."
+                                    />
+                                </Field>
+                                <div className="flex justify-end">
+                                    <Button type="submit" disabled={medsos.processing} className="w-full lg:w-auto">
+                                        Simpan Medsos
+                                    </Button>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
 
-                <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
-                    <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                        <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
-                            <Building2 className="text-brand-light h-5 w-5" /> Tambah Kantor Pengaduan
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <form onSubmit={submitKantor} className="space-y-4">
-                            <Field label="Nama Instansi / Kantor" required error={kantor.errors.name}>
-                                <Input
-                                    value={kantor.data.instansi}
-                                    onChange={(e) => kantor.setData('instansi', e.target.value)}
-                                    placeholder="Cth: Dinas Transmigrasi Prov. Papua"
-                                />
-                            </Field>
-                            <Field label="Nama Admin (PIC)" required error={kantor.errors.account_name}>
-                                <Input
-                                    value={kantor.data.pic}
-                                    onChange={(e) => kantor.setData('pic', e.target.value)}
-                                    placeholder="Nama Penanggung Jawab"
-                                />
-                            </Field>
-                            <Field label="Tautan / URL (Opsional)" error={kantor.errors.url}>
-                                <Input value={kantor.data.url} onChange={(e) => kantor.setData('url', e.target.value)} placeholder="https://..." />
-                            </Field>
-                            <div className="flex justify-end">
-                                <Button type="submit" disabled={kantor.processing} className="w-full lg:w-auto">
-                                    Simpan Kantor
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
-            </div>
+                    <Card className="dark:bg-dark-card border-gray-200 dark:border-gray-700">
+                        <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
+                            <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
+                                <Building2 className="text-brand-light h-5 w-5" /> Tambah Kantor Pengaduan
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6">
+                            <form onSubmit={submitKantor} className="space-y-4">
+                                <Field label="Nama Instansi / Kantor" required error={kantor.errors.name}>
+                                    <Input
+                                        value={kantor.data.name}
+                                        onChange={(e) => kantor.setData('name', e.target.value)}
+                                        placeholder="Cth: Dinas Transmigrasi Prov. Papua"
+                                    />
+                                </Field>
+                                <Field label="Nama Admin (PIC)" required error={kantor.errors.account_name}>
+                                    <Input
+                                        value={kantor.data.account_name}
+                                        onChange={(e) => kantor.setData('account_name', e.target.value)}
+                                        placeholder="Nama Penanggung Jawab"
+                                    />
+                                </Field>
+                                <Field label="Tautan / URL (Opsional)" error={kantor.errors.url}>
+                                    <Input
+                                        value={kantor.data.url}
+                                        onChange={(e) => kantor.setData('url', e.target.value)}
+                                        placeholder="https://..."
+                                    />
+                                </Field>
+                                <div className="flex justify-end">
+                                    <Button type="submit" disabled={kantor.processing} className="w-full lg:w-auto">
+                                        Simpan Kantor
+                                    </Button>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
 
             <DataTable<Channel>
                 columns={channelColumns}

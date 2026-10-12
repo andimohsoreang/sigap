@@ -4,14 +4,15 @@ namespace App\Http\Controllers\Web;
 
 use App\Enums\TicketStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateWargaProfileRequest;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Services\AccountService;
 use App\Services\AttachmentService;
+use App\Services\AuditService;
+use App\Services\TicketService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -21,7 +22,12 @@ use Inertia\Response;
  */
 class WargaPortalController extends Controller
 {
-    public function __construct(private readonly AttachmentService $attachments) {}
+    public function __construct(
+        private readonly AttachmentService $attachments,
+        private readonly AccountService $accounts,
+        private readonly TicketService $tickets,
+        private readonly AuditService $audit,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -34,6 +40,7 @@ class WargaPortalController extends Controller
             ->get()
             ->map(fn (Ticket $t) => [
                 'nomor' => $t->ticket_no,
+                'kode_akses' => $t->lookup_token,
                 'tanggal' => $t->created_at?->toIso8601String(),
                 'judul' => $t->title,
                 'status' => $t->status?->value,
@@ -48,10 +55,9 @@ class WargaPortalController extends Controller
         return Inertia::render('warga/portal', [
             'profile' => [
                 'nama' => $user->name,
-                'nik' => $user->nik,
-                'nik_masked' => $user->nik
-                    ? substr($user->nik, 0, 4).str_repeat('*', 8).substr($user->nik, -4)
-                    : null,
+                // A-21: NIK lengkap tidak pernah dikirim ke browser.
+                'nik' => $user->maskedNik(),
+                'nik_masked' => $user->maskedNik(),
                 'email' => $user->email,
                 'telp' => $user->phone,
                 'inisial' => $this->initials($user->name),
@@ -63,27 +69,14 @@ class WargaPortalController extends Controller
         ]);
     }
 
-    public function updateProfile(Request $request): RedirectResponse
+    /** Ubah profil & kata sandi (A-09/A-10) — aturan sama dengan API. */
+    public function updateProfile(UpdateWargaProfileRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'email' => ['nullable', 'email', 'max:150'],
-            'telp' => ['nullable', 'string', 'max:30'],
-            'password' => ['nullable', 'string', 'confirmed', Password::min(8)],
-        ]);
-
-        /** @var User $user */
-        $user = $request->user();
-
-        if ($request->filled('email')) {
-            $user->email = $validated['email'];
-        }
-        if ($request->filled('telp')) {
-            $user->phone = $validated['telp'];
-        }
-        if ($request->filled('password')) {
-            $user->password = $validated['password'];
-        }
-        $user->save();
+        $this->accounts->updateProfile(
+            $request->user(),
+            $request->validated(),
+            $request->session()->getId(),
+        );
 
         return back()->with('success', 'Profil dan kata sandi berhasil diperbarui.');
     }
@@ -96,23 +89,25 @@ class WargaPortalController extends Controller
         $file = $this->attachments->file($ticket->attachment_path);
         abort_if($file === null, 404);
 
+        $this->audit->safe('ticket.attachment_downloaded', $ticket, "Lampiran tiket {$ticket->ticket_no} diunduh pelapor.");
+
         return response()->download($file->getPathname(), basename($ticket->attachment_path));
     }
 
     /**
      * Warga dapat menghapus laporan yang belum ditindak (status "baru").
-     * Ini menutup celah "tidak ada endpoint DELETE" pada aplikasi lama.
+     *
+     * A-03: soft delete — nomor tiket tidak pernah dipakai ulang — dan file
+     * lampiran dihapus dari disk.
      */
     public function destroyTicket(Request $request, Ticket $ticket): RedirectResponse
     {
         abort_unless($ticket->reporter_id === $request->user()->id, 403);
         abort_unless($ticket->status === TicketStatus::Baru, 422);
 
-        DB::transaction(function () use ($ticket) {
-            $ticket->histories()->delete();
-            $ticket->replies()->delete();
-            $ticket->delete();
-        });
+        $this->tickets->deleteByReporter($ticket, $request->user());
+
+        $this->audit->safe('ticket.deleted_by_reporter', $ticket, "Tiket {$ticket->ticket_no} dihapus oleh pelapor.");
 
         return back()->with('success', "Tiket {$ticket->ticket_no} berhasil dihapus.");
     }

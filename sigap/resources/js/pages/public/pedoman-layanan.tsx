@@ -1,6 +1,6 @@
+import { Card, CardContent } from '@/components/ui/card';
 import { Head } from '@inertiajs/react';
 import { CheckCircle2 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import StaticShell, { Section } from './static-shell';
 
 const ALUR = [
@@ -28,7 +28,9 @@ export default function PedomanLayanan() {
                 <ol className="space-y-4">
                     {ALUR.map(([step, desc], idx) => (
                         <li key={step} className="flex gap-4">
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white">{idx + 1}</span>
+                            <span className="bg-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold text-white">
+                                {idx + 1}
+                            </span>
                             <div>
                                 <p className="font-bold text-gray-800 dark:text-white">{step}</p>
                                 <p className="text-sm">{desc}</p>
@@ -42,7 +44,10 @@ export default function PedomanLayanan() {
                 <p>SIGAP menyediakan 5 kanal resmi berikut. Laporan di luar kanal ini tidak dapat dijamin diproses.</p>
                 <div className="flex flex-wrap gap-3">
                     {KANAL.map((k) => (
-                        <span key={k} className="rounded-full border border-secondary/60 bg-white px-4 py-2 text-sm font-medium text-primary dark:bg-dark-card dark:text-brand-light">
+                        <span
+                            key={k}
+                            className="border-secondary/60 text-primary dark:bg-dark-card dark:text-brand-light rounded-full border bg-white px-4 py-2 text-sm font-medium"
+                        >
                             {k}
                         </span>
                     ))}
@@ -50,7 +55,7 @@ export default function PedomanLayanan() {
             </Section>
 
             <Section title="Standar Waktu Layanan (SLA)">
-                <Card className="overflow-hidden border-gray-100 dark:border-gray-800 dark:bg-dark-card">
+                <Card className="dark:bg-dark-card overflow-hidden border-gray-100 dark:border-gray-800">
                     <CardContent className="overflow-x-auto p-0">
                         <table className="w-full text-sm">
                             <thead className="bg-gray-50 dark:bg-gray-800">
@@ -73,8 +78,8 @@ export default function PedomanLayanan() {
                     </CardContent>
                 </Card>
                 <p className="text-sm">
-                    Target waktu bersifat estimasi terbaik (best-effort) dan dapat berubah untuk kasus yang memerlukan koordinasi lintas instansi. Jika SLA terlewati,
-                    laporan dapat dieskalasi melalui Call Center.
+                    Target waktu bersifat estimasi terbaik (best-effort) dan dapat berubah untuk kasus yang memerlukan koordinasi lintas instansi.
+                    Jika SLA terlewati, laporan dapat dieskalasi melalui Call Center.
                 </p>
             </Section>
 
@@ -102,7 +107,7 @@ export default function PedomanLayanan() {
                             'Menjaga kerahasiaan nomor tiket miliknya.',
                         ].map((h) => (
                             <li key={h} className="flex gap-2 text-sm">
-                                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand-light" /> {h}
+                                <CheckCircle2 className="text-brand-light mt-0.5 h-4 w-4 shrink-0" /> {h}
                             </li>
                         ))}
                     </ul>

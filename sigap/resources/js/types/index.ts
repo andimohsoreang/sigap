@@ -30,6 +30,10 @@ export interface SharedData {
         tagline: string;
         ministry: string;
     };
+    /** reCAPTCHA v3 — site_key null = nonaktif (lokal). */
+    recaptcha?: {
+        site_key: string | null;
+    };
     flash?: {
         status?: string | null;
         success?: string | null;

@@ -1,0 +1,132 @@
+name: tests
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+# N-12: hanya-baca; aksi dipin ke SHA commit penuh (versi di komentar).
+permissions:
+  contents: read
+
+# Root repo = folder induk berisi docs/ dan sigap/; aplikasi Laravel ada di sigap/.
+defaults:
+  run:
+    working-directory: sigap
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend (vitest, tsc, eslint, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: sigap/package-lock.json
+
+      - run: npm ci
+      - run: npx vitest run
+      - run: npx tsc --noEmit
+      - run: npx eslint resources/js --max-warnings=0
+      - run: npm run build
+
+  pest:
+    name: Pest (${{ matrix.db }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        db: [sqlite, pgsql]
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: sigap
+          POSTGRES_PASSWORD: sigap
+          POSTGRES_DB: sigap_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sigap -d sigap_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_CONNECTION: ${{ matrix.db }}
+      DB_HOST: ${{ matrix.db == 'pgsql' && '127.0.0.1' || '' }}
+      DB_PORT: ${{ matrix.db == 'pgsql' && '5432' || '' }}
+      DB_DATABASE: ${{ matrix.db == 'pgsql' && 'sigap_test' || ':memory:' }}
+      DB_USERNAME: ${{ matrix.db == 'pgsql' && 'sigap' || '' }}
+      DB_PASSWORD: ${{ matrix.db == 'pgsql' && 'sigap' || '' }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          extensions: pdo_pgsql, pdo_sqlite
+          coverage: none
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: sigap/package-lock.json
+
+      # Halaman Inertia butuh manifest Vite.
+      - run: npm ci
+      - run: npm run build
+
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: cp .env.example .env
+      - run: php artisan key:generate
+
+      - name: Pest
+        run: php artisan test
+
+  audit:
+    name: Audit dependensi
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+
+      - name: npm audit (dependensi produksi)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: composer audit
+        run: composer audit --locked --no-interaction

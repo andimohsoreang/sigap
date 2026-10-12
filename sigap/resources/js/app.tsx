@@ -1,23 +1,25 @@
 import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/react';
+import { configureEcho } from '@laravel/echo-react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { route as routeFn } from 'ziggy-js';
 import { initializeTheme } from './hooks/use-appearance';
-import { configureEcho } from '@laravel/echo-react';
+import { reverbClientOptions } from './lib/reverb';
 
-// Reverb (PRD D5). Nilai diambil dari VITE_REVERB_* sehingga satu build
-// dapat dipakai di lokal maupun staging/produksi tanpa mengubah kode.
-configureEcho({
-    broadcaster: 'reverb',
-    key: import.meta.env.VITE_REVERB_APP_KEY,
-    wsHost: import.meta.env.VITE_REVERB_HOST,
-    wsPort: Number(import.meta.env.VITE_REVERB_PORT ?? 80),
-    wssPort: Number(import.meta.env.VITE_REVERB_PORT ?? 443),
-    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
-    enabledTransports: ['ws', 'wss'],
-});
+// Reverb (PRD D5). Nilai VITE_REVERB_* DITANAM saat `npm run build`, jadi
+// .env harus sudah benar SEBELUM build (lihat docs/DEPLOY.md). Bila key
+// kosong, realtime dilewati: komponen memeriksa echoIsConfigured() dan
+// kembali ke polling — halaman tidak boleh crash karena Echo.
+const reverb = reverbClientOptions(import.meta.env);
+if (reverb) {
+    try {
+        configureEcho({ broadcaster: 'reverb', ...reverb });
+    } catch (error) {
+        console.warn('[SIGAP] Realtime (Reverb) dinonaktifkan:', error);
+    }
+}
 
 declare global {
     const route: typeof routeFn;

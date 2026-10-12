@@ -33,7 +33,9 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // D-10: lampiran pengaduan bersifat privat — hanya dilayani lewat
+            // controller berotorisasi, tidak lewat rute signed /storage.
+            'serve' => false,
             'throw' => false,
         ],
 

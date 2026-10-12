@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Web\AdminController;
 use App\Http\Resources\V1\ChannelResource;
 use App\Http\Resources\V1\RegionResource;
 use App\Models\Category;
@@ -11,13 +12,23 @@ use App\Models\Channel;
 use App\Models\Region;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\Rule;
 
+/**
+ * Master data via API — otorisasi & audit SAMA dengan panel web (A-05, D-02):
+ * - kawasan: lihat (admin), ubah (super admin / admin kawasan miliknya),
+ *   tambah & hapus (super admin);
+ * - kanal: tambah (super admin);
+ * - admin & pengaturan: super admin.
+ */
 class MasterController extends Controller
 {
+    public function __construct(private readonly AuditService $audit) {}
+
     /* ----------------------------- Kawasan ----------------------------- */
 
     public function regions(): AnonymousResourceCollection
@@ -29,7 +40,7 @@ class MasterController extends Controller
 
     public function storeRegion(Request $request): JsonResponse
     {
-        $this->authorize('manageMaster', User::class);
+        $this->authorize('manageAdmins', User::class);
 
         $data = $request->validate([
             'code' => ['required', 'string', 'max:30', 'unique:regions,code'],
@@ -41,12 +52,16 @@ class MasterController extends Controller
             'kk_count' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        return (new RegionResource(Region::create($data)))->response()->setStatusCode(201);
+        $region = Region::create($data);
+
+        $this->audit->safe('region.created', $region, "Kawasan {$region->name} ditambahkan (API).");
+
+        return (new RegionResource($region))->response()->setStatusCode(201);
     }
 
     public function updateRegion(Request $request, Region $region): RegionResource
     {
-        $this->authorize('manageMaster', User::class);
+        $this->authorize('updateRegion', [User::class, $region]);
 
         $data = $request->validate([
             'code' => ['sometimes', 'string', 'max:30', Rule::unique('regions', 'code')->ignore($region->id)],
@@ -60,13 +75,17 @@ class MasterController extends Controller
 
         $region->update($data);
 
+        $this->audit->safe('region.updated', $region, "Kawasan {$region->name} diperbarui (API).");
+
         return new RegionResource($region);
     }
 
     public function destroyRegion(Region $region): JsonResponse
     {
-        $this->authorize('manageMaster', User::class);
+        $this->authorize('manageAdmins', User::class);
         $region->delete();
+
+        $this->audit->safe('region.deleted', null, "Kawasan {$region->name} dihapus (API).", ['id' => $region->id]);
 
         return response()->json(null, 204);
     }
@@ -82,17 +101,21 @@ class MasterController extends Controller
 
     public function storeChannel(Request $request): JsonResponse
     {
-        $this->authorize('manageMaster', User::class);
+        $this->authorize('manageAdmins', User::class);
 
         $data = $request->validate([
             'type' => ['required', Rule::in(['sosmed', 'kantor', 'nasional', 'internal'])],
             'name' => ['required', 'string', 'max:120'],
             'account_name' => ['nullable', 'string', 'max:120'],
-            'url' => ['nullable', 'url', 'max:500'],
+            'url' => ['nullable', 'url:http,https', 'max:500'],
             'status' => ['nullable', 'string', 'max:30'],
         ]);
 
-        return (new ChannelResource(Channel::create($data)))->response()->setStatusCode(201);
+        $channel = Channel::create($data);
+
+        $this->audit->safe('channel.created', $channel, "Kanal {$channel->name} ditambahkan (API).");
+
+        return (new ChannelResource($channel))->response()->setStatusCode(201);
     }
 
     /* ------------------------------ Admin ------------------------------ */
@@ -122,13 +145,8 @@ class MasterController extends Controller
     {
         $this->authorize('manageAdmins', User::class);
 
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:150'],
-            'nip' => ['required', 'string', 'max:50', 'unique:users,username'],
-            'role' => ['required', Rule::in(UserRole::adminValues())],
-            'region_id' => ['nullable', 'integer', 'exists:regions,id'],
-            'password' => ['required', 'string', 'min:8'],
-        ]);
+        // A-05/A-18: aturan sama dengan panel web.
+        $data = $request->validate(AdminController::adminRules($request), AdminController::adminMessages());
 
         $user = User::create([
             'name' => $data['name'],
@@ -137,6 +155,10 @@ class MasterController extends Controller
             'region_id' => $data['region_id'] ?? null,
             'password' => $data['password'],
             'is_active' => true,
+        ]);
+
+        $this->audit->safe('admin.created', $user, "Akun admin {$data['name']} ({$data['nip']}) dibuat (API).", [
+            'role' => $data['role'],
         ]);
 
         return response()->json(['id' => $user->id, 'name' => $user->name], 201);
@@ -172,6 +194,8 @@ class MasterController extends Controller
             'notification.pic_phone' => ['nullable', 'string', 'max:30'],
         ]);
 
+        $keys = array_keys($data);
+
         // PRD D10: WhatsApp selalu nonaktif pada fase ini.
         if (isset($data['notification'])) {
             $data['notification']['whatsapp_enabled'] = false;
@@ -182,6 +206,10 @@ class MasterController extends Controller
         foreach ($data as $key => $value) {
             Setting::put($key, $value);
         }
+
+        $this->audit->safe('settings.updated', null, 'Pengaturan sistem diperbarui (API).', [
+            'keys' => $keys,
+        ]);
 
         return $this->settings();
     }

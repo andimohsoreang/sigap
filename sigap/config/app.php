@@ -107,6 +107,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Kunci Blind Index NIK (D-01)
+    |--------------------------------------------------------------------------
+    |
+    | Kunci HMAC untuk `nik_hash` / `reporter_nik_hash` (login & pencarian NIK).
+    | SENGAJA terpisah dari APP_KEY agar rotasi APP_KEY (lewat
+    | APP_PREVIOUS_KEYS) tidak merusak login NIK & keunikan. Wajib diisi di
+    | produksi; lokal/testing jatuh ke APP_KEY bila kosong. Jangan pernah
+    | mengganti nilai ini tanpa menjalankan `php artisan sigap:rehash-nik`.
+    |
+    */
+
+    'nik_hash_key' => env('NIK_HASH_KEY'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Maintenance Mode Driver
     |--------------------------------------------------------------------------
     |

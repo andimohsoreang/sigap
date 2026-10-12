@@ -4,13 +4,19 @@ namespace App\Services;
 
 use App\Enums\TicketImpact;
 use App\Enums\TicketStatus;
+use App\Enums\TicketVisibility;
 use App\Events\TicketChanged;
+use App\Models\Category;
 use App\Models\Ticket;
 use App\Models\TicketHistory;
 use App\Models\TicketReply;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Logika bisnis tiket. Dipakai BERSAMA oleh controller Web (Inertia) dan
@@ -18,69 +24,45 @@ use Illuminate\Support\Facades\DB;
  */
 class TicketService
 {
+    /** Batas percobaan ulang bila nomor tiket acak bertabrakan. */
+    private const NUMBER_ATTEMPTS = 5;
+
     public function __construct(
         private readonly SlaCalculator $sla,
         private readonly NotificationService $notifications,
+        private readonly AttachmentService $attachments,
     ) {}
 
     /**
-     * Buat tiket baru. Menghitung prioritas & SLA dari dampak, mencatat
-     * riwayat awal, dan mengembalikan model.
+     * Buat tiket baru. Menghitung prioritas & SLA dari dampak (dan kategori),
+     * mencatat riwayat awal, dan mengembalikan model.
+     *
+     * Lampiran dapat dikirim sebagai `attachment` (UploadedFile): file
+     * disimpan lalu DIHAPUS kembali bila penyimpanan tiket gagal (A-16).
      *
      * @param  array<string, mixed>  $data
      */
     public function create(array $data): Ticket
     {
-        $ticket = DB::transaction(function () use ($data) {
-            $impact = $data['impact'] instanceof TicketImpact
-                ? $data['impact']
-                : TicketImpact::from((string) $data['impact']);
+        $attachmentPath = $data['attachment_path'] ?? null;
+        $storedHere = false;
 
-            $now = Carbon::now();
-            $isInternal = (bool) ($data['is_internal'] ?? false);
+        if (($data['attachment'] ?? null) instanceof UploadedFile) {
+            $attachmentPath = $this->attachments->store($data['attachment']);
+            $storedHere = true;
+        }
 
-            $ticket = new Ticket;
+        try {
+            $ticket = $this->withUniqueNumber(
+                fn (string $number) => DB::transaction(fn () => $this->insert($data, $number, $attachmentPath))
+            );
+        } catch (\Throwable $e) {
+            if ($storedHere) {
+                $this->attachments->delete($attachmentPath);
+            }
 
-            $ticket->fill([
-                'ticket_no' => $this->nextTicketNo(),
-                'title' => $data['title'],
-                'description' => $data['description'],
-                'status' => TicketStatus::Baru,
-                'priority' => $this->sla->priorityFor($impact),
-                'impact' => $impact,
-                'visibility' => $data['visibility'] ?? 'publik',
-                'latitude' => $data['latitude'] ?? null,
-                'longitude' => $data['longitude'] ?? null,
-                'attachment_path' => $data['attachment_path'] ?? null,
-                'is_internal' => $isInternal,
-                'category_id' => $data['category_id'] ?? null,
-                'region_id' => $isInternal ? null : ($data['region_id'] ?? null),
-                'channel_id' => $data['channel_id'] ?? null,
-                'assignee_id' => $data['assignee_id'] ?? null,
-                'reporter_id' => $data['reporter_id'] ?? null,
-                'reporter_name' => $data['reporter_name'] ?? null,
-                'reporter_nik' => $data['reporter_nik'] ?? null,
-                'reporter_email' => $data['reporter_email'] ?? null,
-                'reporter_phone' => $data['reporter_phone'] ?? null,
-                // SLA: tiket internal mengikuti kebijakan tersendiri (bisa null),
-                // tiket publik memakai tenggat dari dampak.
-                'sla_due_at' => $isInternal ? null : $this->sla->dueAt($impact, $now),
-            ]);
-
-            $ticket->created_at = $now;
-            $ticket->updated_at = $now;
-            $ticket->save();
-
-            TicketHistory::create([
-                'ticket_id' => $ticket->id,
-                'from_status' => null,
-                'to_status' => TicketStatus::Baru->value,
-                'actor_id' => $data['actor_id'] ?? null,
-                'note' => $isInternal ? 'Laporan internal dibuat.' : 'Tiket dibuat oleh pelapor.',
-            ]);
-
-            return $ticket;
-        });
+            throw $e;
+        }
 
         // Real-time bersifat best-effort: kegagalan Reverb tidak boleh
         // membatalkan tiket yang sudah tersimpan (PRD D5).
@@ -89,73 +71,118 @@ class TicketService
         return $ticket;
     }
 
-    /** Ubah status tiket dan catat riwayat. Idempoten jika status sama. */
+    /**
+     * Ubah status tiket dan catat riwayat. Idempoten jika status sama.
+     *
+     * A-20: hanya transisi yang diizinkan {@see TicketStatus::allowedTransitions()};
+     * baris tiket dikunci (SELECT ... FOR UPDATE) selama transaksi sehingga
+     * dua admin yang mengubah bersamaan tidak saling menimpa. `resolved_at`
+     * dikosongkan saat tiket keluar dari status Selesai.
+     *
+     * @throws ValidationException bila transisi tidak diizinkan
+     */
     public function changeStatus(Ticket $ticket, TicketStatus $status, ?User $actor = null, ?string $note = null): Ticket
     {
         $changed = DB::transaction(function () use ($ticket, $status, $actor, $note) {
-            $from = $ticket->status;
+            /** @var Ticket $locked */
+            $locked = Ticket::query()->whereKey($ticket->getKey())->lockForUpdate()->firstOrFail();
+            $from = $locked->status;
 
             if ($from === $status) {
-                return $ticket;
+                $ticket->setRawAttributes($locked->getAttributes(), true);
+
+                return false;
             }
 
-            $ticket->status = $status;
-
-            if ($status !== TicketStatus::Baru && $ticket->responded_at === null) {
-                $ticket->responded_at = Carbon::now();
+            if ($from instanceof TicketStatus && ! $from->canTransitionTo($status)) {
+                throw ValidationException::withMessages([
+                    'status' => "Perubahan status dari \"{$from->label()}\" ke \"{$status->label()}\" tidak diizinkan.",
+                ]);
             }
 
-            if ($status === TicketStatus::Selesai && $ticket->resolved_at === null) {
-                $ticket->resolved_at = Carbon::now();
+            $now = Carbon::now();
+            $locked->status = $status;
+
+            if ($status !== TicketStatus::Baru && $locked->responded_at === null) {
+                $locked->responded_at = $now;
             }
 
-            if ($actor !== null && $ticket->assignee_id === null) {
-                $ticket->assignee_id = $actor->id;
+            if ($status === TicketStatus::Selesai) {
+                $locked->resolved_at = $now;
+            } elseif ($from === TicketStatus::Selesai) {
+                $locked->resolved_at = null;
             }
 
-            $ticket->save();
+            // Tiket dibuka kembali: pelanggaran SLA berikutnya diberi EWS lagi.
+            if ($from instanceof TicketStatus && ! $from->isOpen() && $status->isOpen()) {
+                $locked->ews_notified_at = null;
+            }
+
+            if ($actor !== null && $locked->assignee_id === null) {
+                $locked->assignee_id = $actor->id;
+            }
+
+            $locked->save();
 
             TicketHistory::create([
-                'ticket_id' => $ticket->id,
+                'ticket_id' => $locked->id,
                 'from_status' => $from instanceof TicketStatus ? $from->value : $from,
                 'to_status' => $status->value,
                 'actor_id' => $actor?->id,
                 'note' => $note,
             ]);
 
-            return $ticket;
+            $ticket->setRawAttributes($locked->getAttributes(), true);
+
+            return true;
         });
 
-        if ($changed->wasChanged()) {
-            $this->broadcastTicket($changed, 'status', $note);
+        if ($changed) {
+            $this->broadcastTicket($ticket, 'status', $note);
         }
 
-        return $changed;
+        return $ticket;
     }
 
     /**
-     * Siarkan perubahan tiket & kirim notifikasi (best-effort).
+     * Cari tiket untuk pelacakan publik (A-02/A-03).
      *
-     * Reverb (in-app, PRD D5) dan email (D10) tidak boleh membatalkan transaksi
-     * yang sudah tersimpan, jadi kegagalan keduanya hanya dicatat.
+     * Nomor dinormalisasi (trim + huruf besar). Tiket internal tidak pernah
+     * dikembalikan; tiket `rahasia` hanya untuk pelapor yang login atau admin
+     * yang berwenang (Policy `view`). Nomor format lama `TKT-<n>` untuk tamu
+     * wajib disertai `$accessCode` (kode akses tiket).
      */
-    private function broadcastTicket(Ticket $ticket, string $event, ?string $message = null): void
+    public function findForPublicLookup(?string $ticketNo, ?User $viewer, array $with = [], ?string $accessCode = null): ?Ticket
     {
-        try {
-            TicketChanged::dispatch($ticket, $event);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Broadcast tiket gagal: '.$e->getMessage());
+        $ticketNo = Ticket::normalizeNo($ticketNo);
+
+        if (! Ticket::isValidNo($ticketNo)) {
+            return null;
         }
 
-        if (in_array($event, ['created', 'status', 'ews'], true)) {
-            try {
-                $this->notifications->notify(
-                    $this->notifications->ticketPayload($ticket, $event, (string) $message)
-                );
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Notifikasi tiket gagal: '.$e->getMessage());
-            }
+        $ticket = Ticket::query()
+            ->public()
+            ->with($with)
+            ->where('ticket_no', $ticketNo)
+            ->first();
+
+        if ($ticket === null) {
+            return null;
         }
+
+        $canView = $viewer !== null && $viewer->can('view', $ticket);
+
+        if ($ticket->visibility === TicketVisibility::Rahasia && ! $canView) {
+            return null;
+        }
+
+        // Nomor format lama mudah ditebak: tamu/pihak lain wajib menyertakan
+        // kode akses. Hasil sama dengan "tidak ditemukan" agar tidak bocor.
+        if (Ticket::isLegacyNo($ticketNo) && ! $canView && ! $ticket->matchesLookupToken($accessCode)) {
+            return null;
+        }
+
+        return $ticket;
     }
 
     /** Tambah tanggapan admin/petugas. */
@@ -176,13 +203,171 @@ class TicketService
     }
 
     /**
-     * Nomor tiket berurutan dengan format TKT-<n>. Memakai MAX(id)+1 efektif
-     * di dalam transaksi; unik dijaga oleh constraint DB.
+     * Hapus tiket oleh pelapor (A-03): soft delete sehingga nomor tiket
+     * tidak pernah dipakai ulang; file lampiran dihapus dari disk.
      */
-    private function nextTicketNo(): string
+    public function deleteByReporter(Ticket $ticket, User $actor): void
     {
-        $last = Ticket::query()->lockForUpdate()->max('id') ?? 0;
+        $path = $ticket->attachment_path;
 
-        return 'TKT-'.($last + 1);
+        DB::transaction(function () use ($ticket, $actor) {
+            TicketHistory::create([
+                'ticket_id' => $ticket->id,
+                'from_status' => $ticket->status?->value,
+                'to_status' => $ticket->status?->value ?? TicketStatus::Baru->value,
+                'actor_id' => $actor->id,
+                'note' => 'Tiket dihapus oleh pelapor.',
+            ]);
+
+            $ticket->attachment_path = null;
+            $ticket->save();
+            $ticket->delete();
+        });
+
+        $this->attachments->delete($path);
+    }
+
+    /**
+     * Siarkan perubahan tiket & kirim notifikasi (best-effort) ke admin yang
+     * berwenang atas tiket (A-06).
+     *
+     * Reverb (in-app, PRD D5) dan email (D10) tidak boleh membatalkan transaksi
+     * yang sudah tersimpan, jadi kegagalan keduanya hanya dicatat.
+     */
+    private function broadcastTicket(Ticket $ticket, string $event, ?string $message = null): void
+    {
+        try {
+            $recipients = $this->notifications->recipientsFor($ticket);
+        } catch (\Throwable $e) {
+            Log::warning('Penerima notifikasi tiket gagal ditentukan: '.$e->getMessage());
+
+            return;
+        }
+
+        try {
+            TicketChanged::dispatch($ticket, $event, $recipients->pluck('id')->all());
+        } catch (\Throwable $e) {
+            Log::warning('Broadcast tiket gagal: '.$e->getMessage());
+        }
+
+        try {
+            $this->notifications->notify(
+                $this->notifications->ticketPayload($ticket, $event, (string) $message),
+                $recipients,
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Notifikasi tiket gagal: '.$e->getMessage());
+        }
+    }
+
+    /** @param array<string, mixed> $data */
+    private function insert(array $data, string $number, ?string $attachmentPath): Ticket
+    {
+        $impact = $data['impact'] instanceof TicketImpact
+            ? $data['impact']
+            : TicketImpact::from((string) $data['impact']);
+
+        $now = Carbon::now();
+        $isInternal = (bool) ($data['is_internal'] ?? false);
+        $categoryId = $data['category_id'] ?? null;
+        $categoryDays = $categoryId !== null
+            ? Category::query()->whereKey($categoryId)->value('sla_days')
+            : null;
+
+        $ticket = new Ticket;
+
+        $ticket->fill([
+            'ticket_no' => $number,
+            'title' => $data['title'],
+            'description' => $data['description'],
+            'status' => TicketStatus::Baru,
+            'priority' => $this->sla->priorityFor($impact),
+            'impact' => $impact,
+            'visibility' => $data['visibility'] ?? 'publik',
+            'latitude' => $data['latitude'] ?? null,
+            'longitude' => $data['longitude'] ?? null,
+            'attachment_path' => $attachmentPath,
+            'is_internal' => $isInternal,
+            'category_id' => $categoryId,
+            'region_id' => $isInternal ? null : ($data['region_id'] ?? null),
+            'channel_id' => $data['channel_id'] ?? null,
+            'assignee_id' => $data['assignee_id'] ?? null,
+            'reporter_id' => $data['reporter_id'] ?? null,
+            'reporter_name' => $data['reporter_name'] ?? null,
+            'reporter_nik' => $data['reporter_nik'] ?? null,
+            'reporter_email' => $data['reporter_email'] ?? null,
+            'reporter_phone' => $data['reporter_phone'] ?? null,
+            'reporter_nip' => $data['reporter_nip'] ?? null,
+            'reporter_unit' => $data['reporter_unit'] ?? null,
+            'location' => $data['location'] ?? null,
+            'source' => $data['source'] ?? null,
+            'source_url' => $data['source_url'] ?? null,
+            'received_by' => $data['received_by'] ?? null,
+            // D-06: SLA berlaku untuk tiket publik MAUPUN internal; tenggat
+            // memakai nilai yang lebih ketat antara dampak & kategori.
+            'sla_due_at' => $this->sla->dueAt($impact, $now, $categoryDays !== null ? (int) $categoryDays : null),
+        ]);
+
+        $ticket->created_at = $now;
+        $ticket->updated_at = $now;
+        $ticket->save();
+
+        TicketHistory::create([
+            'ticket_id' => $ticket->id,
+            'from_status' => null,
+            'to_status' => TicketStatus::Baru->value,
+            'actor_id' => $data['actor_id'] ?? null,
+            'note' => $isInternal ? 'Laporan internal dibuat.' : 'Tiket dibuat oleh pelapor.',
+        ]);
+
+        return $ticket;
+    }
+
+    /**
+     * Jalankan $callback dengan nomor tiket baru; ulangi dengan nomor lain
+     * bila terjadi tabrakan constraint unik.
+     *
+     * @template T
+     *
+     * @param  callable(string): T  $callback
+     * @return T
+     */
+    private function withUniqueNumber(callable $callback): mixed
+    {
+        for ($attempt = 1; ; $attempt++) {
+            $number = $this->nextTicketNo();
+
+            if ($attempt < self::NUMBER_ATTEMPTS
+                && Ticket::withTrashed()->where('ticket_no', $number)->exists()) {
+                continue;
+            }
+
+            try {
+                return $callback($number);
+            } catch (UniqueConstraintViolationException $e) {
+                if ($attempt >= self::NUMBER_ATTEMPTS) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    /**
+     * Nomor tiket A-03: `TKT-YYMMDD-XXXXXX` — tanggal pembuatan (WIB) + 6
+     * karakter acak kriptografis dari alfabet tanpa karakter ambigu. Tidak
+     * berurutan sehingga tidak dapat ditebak/di-enumerasi, dan tidak lagi
+     * memakai MAX(id)+1 (rawan balapan & gagal di PostgreSQL).
+     */
+    public function nextTicketNo(): string
+    {
+        $alphabet = Ticket::NUMBER_ALPHABET;
+        $max = strlen($alphabet) - 1;
+        $suffix = '';
+
+        for ($i = 0; $i < 6; $i++) {
+            $suffix .= $alphabet[random_int(0, $max)];
+        }
+
+        return 'TKT-'.Carbon::now('Asia/Jakarta')->format('ymd').'-'.$suffix;
     }
 }

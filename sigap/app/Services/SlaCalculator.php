@@ -18,6 +18,9 @@ use Illuminate\Support\Carbon;
  *   Tinggi  -> Prioritas : respons 3x24 jam, selesai 7 hari kerja
  *   Sedang  -> Umum      : respons 5 hari,  selesai 14 hari kerja
  *   Rendah  -> Umum      : respons 5 hari,  selesai 14 hari kerja
+ *
+ * TECH-SPEC §3.3 (D-06): bila kategori memiliki `sla_days` khusus, dipakai
+ * nilai yang LEBIH KETAT (minimum) antara dampak dan kategori.
  */
 class SlaCalculator
 {
@@ -25,11 +28,23 @@ class SlaCalculator
      * Tenggat penyelesaian: N hari KERJA setelah waktu acuan.
      * Sabtu & Minggu dilewati; hari libur nasional dapat ditambahkan kemudian.
      */
-    public function dueAt(TicketImpact $impact, ?CarbonInterface $from = null): CarbonInterface
+    public function dueAt(TicketImpact $impact, ?CarbonInterface $from = null, ?int $categoryDays = null): CarbonInterface
     {
         $from = $from ? Carbon::parse($from) : Carbon::now();
 
-        return $this->addWorkingDays($from->copy(), $impact->resolveDays());
+        return $this->addWorkingDays($from->copy(), $this->resolveDays($impact, $categoryDays));
+    }
+
+    /** Jumlah hari kerja efektif: min(dampak, kategori bila diisi). */
+    public function resolveDays(TicketImpact $impact, ?int $categoryDays = null): int
+    {
+        $days = $impact->resolveDays();
+
+        if ($categoryDays !== null && $categoryDays > 0) {
+            $days = min($days, $categoryDays);
+        }
+
+        return $days;
     }
 
     /** Batas respons awal: N jam setelah waktu acuan. */
@@ -47,18 +62,25 @@ class SlaCalculator
 
     /**
      * Status SLA sebuah tiket: 'terpenuhi' | 'berjalan' | 'terlambat'.
+     *
+     * Tiket yang sudah ditutup hanya 'terpenuhi' bila diselesaikan paling
+     * lambat pada tenggat (resolved_at <= sla_due_at).
      */
-    public function status(bool $isOpen, ?CarbonInterface $due, CarbonInterface $now): string
+    public function status(bool $isOpen, ?CarbonInterface $due, CarbonInterface $now, ?CarbonInterface $resolvedAt = null): string
     {
         if ($due === null) {
             return 'berjalan';
         }
 
         if ($isOpen) {
-            return $due->isPast() ? 'terlambat' : 'berjalan';
+            return $now->greaterThan($due) ? 'terlambat' : 'berjalan';
         }
 
-        return 'terpenuhi';
+        if ($resolvedAt === null) {
+            return 'terlambat';
+        }
+
+        return $resolvedAt->lessThanOrEqualTo($due) ? 'terpenuhi' : 'terlambat';
     }
 
     /** Tambah N hari kerja, melewati Sabtu & Minggu. */

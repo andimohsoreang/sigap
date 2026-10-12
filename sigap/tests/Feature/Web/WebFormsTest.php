@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Web;
 
+use App\Models\Category;
+use App\Models\Region;
 use App\Models\Ticket;
 use App\Models\User;
 use Database\Seeders\MasterSeeder;
@@ -26,10 +28,11 @@ class WebFormsTest extends TestCase
             'judul' => 'Jalan berlubang',
             'uraian' => 'Jalan berlubang di depan balai desa minimal sepuluh',
             'impact' => 'tinggi',
-            'region_id' => 1,
-            'category_id' => 1,
+            // Id diambil dari data seed (sekuens PostgreSQL tidak di-reset antar-tes).
+            'region_id' => Region::query()->value('id'),
+            'category_id' => Category::query()->value('id'),
             'visibility' => 'publik',
-        ])->assertRedirect();
+        ])->assertRedirect()->assertSessionHasNoErrors();
 
         $ticket = Ticket::latest('id')->first();
         $this->assertNotNull($ticket);

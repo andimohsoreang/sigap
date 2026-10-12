@@ -2,10 +2,9 @@
 
 namespace Tests\Feature\Web;
 
-use App\Models\ActivityLog;
+use App\Enums\UserRole;
 use App\Models\Ticket;
 use App\Models\User;
-use App\Services\RecaptchaService;
 use Database\Seeders\MasterSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -160,7 +159,7 @@ class SecurityHardeningTest extends TestCase
 
     public function test_plain_admin_cannot_view_activity_log(): void
     {
-        $admin = User::factory()->admin(\App\Enums\UserRole::AdminKawasan)->create();
+        $admin = User::factory()->admin(UserRole::AdminKawasan)->create();
 
         $this->actingAs($admin)->get('/admin/log-aktivitas')->assertForbidden();
     }

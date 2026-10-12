@@ -1,18 +1,18 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { LoaderCircle, Lock, LogIn, User } from 'lucide-react';
-import { type FormEvent } from 'react';
-import PublicLayout from '@/layouts/public-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import PublicLayout from '@/layouts/public-layout';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { LoaderCircle, Lock, LogIn, User } from 'lucide-react';
+import { type FormEvent } from 'react';
 
 export default function Masuk() {
     const { data, setData, post, processing, errors, reset } = useForm({
         identifier: '',
         password: '',
-        remember: false,
+        remember: false as boolean,
     });
 
     const submit = (e: FormEvent) => {
@@ -25,10 +25,10 @@ export default function Masuk() {
             <Head title="Masuk — SIGAP" />
 
             <div className="mx-auto flex max-w-md flex-col px-4 py-12 sm:px-6">
-                <Card className="border-gray-100 shadow-lg dark:border-gray-800 dark:bg-dark-card">
+                <Card className="dark:bg-dark-card border-gray-100 shadow-lg dark:border-gray-800">
                     <CardContent className="p-8">
                         <div className="mb-6 text-center">
-                            <h1 className="text-2xl font-bold text-primary dark:text-brand-light">Masuk ke SIGAP</h1>
+                            <h1 className="text-primary dark:text-brand-light text-2xl font-bold">Masuk ke SIGAP</h1>
                             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Untuk warga (NIK) maupun petugas/admin (username)</p>
                         </div>
 
@@ -46,7 +46,7 @@ export default function Masuk() {
                                         required
                                     />
                                 </div>
-                                {errors.identifier && <p className="text-sm text-destructive">{errors.identifier}</p>}
+                                {errors.identifier && <p className="text-destructive text-sm">{errors.identifier}</p>}
                             </div>
 
                             <div className="space-y-2">
@@ -63,7 +63,7 @@ export default function Masuk() {
                                         required
                                     />
                                 </div>
-                                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                                {errors.password && <p className="text-destructive text-sm">{errors.password}</p>}
                             </div>
 
                             <div className="flex items-center gap-2">
@@ -81,7 +81,7 @@ export default function Masuk() {
 
                         <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
                             Anda tetap bisa{' '}
-                            <Link href="/katalog" className="font-bold text-brand-light hover:underline">
+                            <Link href="/katalog" className="text-brand-light font-bold hover:underline">
                                 mengajukan pengaduan tanpa login
                             </Link>
                             .

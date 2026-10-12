@@ -1,0 +1,67 @@
+name: linter
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+# N-12: token GITHUB_TOKEN hanya-baca (tidak ada auto-commit).
+permissions:
+  contents: read
+
+# Root repo = folder induk berisi docs/ dan sigap/; aplikasi Laravel ada di sigap/.
+defaults:
+  run:
+    working-directory: sigap
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Aksi dipin ke SHA commit penuh (tag di komentar) agar tag yang
+      # dipindahkan tidak bisa menyuntikkan kode ke pipeline.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: sigap/package-lock.json
+
+      - name: Install Dependencies
+        run: |
+          composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+          npm ci
+
+      - name: Pint (cek saja)
+        run: vendor/bin/pint --test
+
+      - name: Prettier (cek saja)
+        run: npm run format:check
+
+      - name: ESLint
+        run: npx eslint resources/js --max-warnings=0
+
+      - name: TypeScript
+        run: npx tsc --noEmit

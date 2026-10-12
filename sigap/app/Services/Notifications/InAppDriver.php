@@ -9,9 +9,9 @@ use App\Models\User;
 /**
  * Driver IN-APP (TECH-SPEC §7b — D10).
  *
- * Menyiar perubahan lewat Reverb ke lonceng notifikasi panel admin
- * (`admin.notifications`) dan ke kanal privat per pengguna (`user.{id}`).
- * Bila Reverb mati, broadcast gagal diam-diam tanpa membatalkan request.
+ * Menyiar notifikasi lewat Reverb ke kanal privat per pengguna (`user.{id}`)
+ * — hanya penerima yang berwenang (A-06). Broadcast diantrikan setelah
+ * commit; bila Reverb mati, kegagalan tidak membatalkan request.
  */
 class InAppDriver implements NotificationChannel
 {

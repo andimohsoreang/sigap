@@ -137,8 +137,9 @@ const FITUR_WARGA: Feature[] = [
         title: 'Nomor Tiket & Lacak Status',
         desc: (
             <>
-                Setelah terkirim Anda mendapat <strong>nomor tiket</strong> (contoh: TKT-15) dan diarahkan ke halaman lacak. Masukkan nomor itu kapan
-                saja untuk melihat status terkini, detail laporan, lampiran, serta <strong>riwayat penanganan</strong> dan tanggapan petugas.
+                Setelah terkirim Anda mendapat <strong>nomor tiket</strong> (format <code>TKT-YYMMDD-XXXXXX</code>, contoh: TKT-261012-7KQ4MZ; nomor
+                lama seperti TKT-15 tetap berlaku) dan diarahkan ke halaman lacak. Masukkan nomor itu kapan saja untuk melihat status terkini, detail
+                laporan, lampiran, serta <strong>riwayat penanganan</strong> dan tanggapan petugas.
             </>
         ),
         tips: ['Simpan/screenshot nomor tiket segera setelah laporan terkirim.', 'Tanggapan berlabel publik juga muncul di riwayat ini.'],
@@ -376,7 +377,7 @@ const FITUR_ADMIN: Feature[] = [
 const ALUR_SINGKAT = [
     { icon: FilePen, label: 'Isi formulir', desc: 'Data pelapor + detail laporan' },
     { icon: FileImage, label: 'Unggah bukti', desc: 'JPG/PNG/PDF maks. 5 MB' },
-    { icon: Zap, label: 'Tiket terbit', desc: 'Nomor TKT-xxxx tersimpan' },
+    { icon: Zap, label: 'Tiket terbit', desc: 'Nomor TKT-YYMMDD-XXXXXX tersimpan' },
     { icon: ShieldCheck, label: 'Verifikasi admin', desc: 'Status & tanggapan diperbarui' },
     { icon: Search, label: 'Lacak & survei', desc: 'Pelapor memantau + menilai' },
 ];
@@ -544,12 +545,7 @@ export default function Panduan() {
                                                 className="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800"
                                                 aria-label={`Perbesar gambar: ${shot.caption}`}
                                             >
-                                                <img
-                                                    src={shot.src}
-                                                    alt={shot.alt}
-                                                    loading="lazy"
-                                                    className="w-full"
-                                                />
+                                                <img src={shot.src} alt={shot.alt} loading="lazy" className="w-full" />
                                             </button>
                                             <figcaption className="mt-2 flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
                                                 <FileImage className="mt-0.5 h-3.5 w-3.5 shrink-0" />

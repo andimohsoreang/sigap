@@ -20,11 +20,19 @@ interface Region {
     infrastructure_status: string | null;
     kk_count: number | null;
     is_active: boolean;
+    /** A-05: admin kawasan hanya boleh mengubah kawasannya sendiri. */
+    can_edit: boolean;
+}
+
+interface Props {
+    regions: Region[];
+    is_super_admin: boolean;
+    own_region_id: number | null;
 }
 
 const INFRA = ['Memadai', 'Berkembang', 'Tertinggal'];
 
-export default function Kawasan({ regions }: { regions: Region[] }) {
+export default function Kawasan({ regions, is_super_admin: isSuper, own_region_id: ownRegionId }: Props) {
     const [editing, setEditing] = useState<Region | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<Region | null>(null);
 
@@ -39,6 +47,7 @@ export default function Kawasan({ regions }: { regions: Region[] }) {
     });
 
     const startEdit = (r: Region) => {
+        if (!r.can_edit) return;
         setEditing(r);
         form.setData({
             code: r.code,
@@ -73,7 +82,12 @@ export default function Kawasan({ regions }: { regions: Region[] }) {
             header: 'Kode / Kawasan',
             cell: ({ row }) => (
                 <div>
-                    <div className="text-brand-light font-bold">{row.original.code}</div>
+                    <div className="text-brand-light font-bold">
+                        {row.original.code}
+                        {row.original.id === ownRegionId && (
+                            <span className="bg-brand-soft text-primary ml-2 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase">Kawasan Anda</span>
+                        )}
+                    </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">{row.original.name}</div>
                 </div>
             ),
@@ -111,19 +125,28 @@ export default function Kawasan({ regions }: { regions: Region[] }) {
             meta: { label: 'Aksi', disableToggle: true, disableSorting: true, className: 'text-center' },
             cell: ({ row }) => (
                 <div className="flex items-center justify-center gap-2">
-                    <Button size="sm" variant="outline" className="h-7 w-7 p-0" onClick={() => startEdit(row.original)} title="Edit">
-                        <Pencil className="h-3.5 w-3.5" />
-                    </Button>
                     <Button
                         size="sm"
                         variant="outline"
-                        className="h-7 w-7 p-0 text-rose-500"
-                        onClick={() => setConfirmDelete((prev) => (prev?.id === row.original.id ? null : row.original))}
-                        title="Hapus"
+                        className="h-7 w-7 p-0"
+                        onClick={() => startEdit(row.original)}
+                        disabled={!row.original.can_edit}
+                        title={row.original.can_edit ? 'Edit' : 'Anda tidak berwenang mengubah kawasan ini'}
                     >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    {confirmDelete?.id === row.original.id && (
+                    {isSuper && (
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 w-7 p-0 text-rose-500"
+                            onClick={() => setConfirmDelete((prev) => (prev?.id === row.original.id ? null : row.original))}
+                            title="Hapus"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                    )}
+                    {isSuper && confirmDelete?.id === row.original.id && (
                         <span className="flex items-center gap-2 text-xs">
                             <button
                                 className="font-bold text-rose-600 hover:underline"
@@ -156,64 +179,76 @@ export default function Kawasan({ regions }: { regions: Region[] }) {
                 ) : undefined
             }
         >
-            <Card className="dark:bg-dark-card mb-6 border-gray-200 dark:border-gray-700">
-                <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
-                    <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
-                        {editing ? <Pencil className="text-brand-light h-5 w-5" /> : <Plus className="text-brand-light h-5 w-5" />}
-                        {editing ? `Edit Kawasan ${editing.code}` : 'Tambah Kawasan Baru'}
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                    <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <Field label="Kode Kawasan" required error={form.errors.code}>
-                            <Input value={form.data.code} onChange={(e) => form.setData('code', e.target.value)} placeholder="KWS-001" />
-                        </Field>
-                        <Field label="Nama Kawasan" required error={form.errors.name}>
-                            <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} placeholder="SP1 Merauke" />
-                        </Field>
-                        <Field label="Provinsi" error={form.errors.province}>
-                            <Input
-                                value={form.data.province}
-                                onChange={(e) => form.setData('province', e.target.value)}
-                                placeholder="Papua Selatan"
-                            />
-                        </Field>
-                        <Field label="Latitude" error={form.errors.latitude}>
-                            <Input value={form.data.latitude} onChange={(e) => form.setData('latitude', e.target.value)} placeholder="-8.4991" />
-                        </Field>
-                        <Field label="Longitude" error={form.errors.longitude}>
-                            <Input value={form.data.longitude} onChange={(e) => form.setData('longitude', e.target.value)} placeholder="140.4011" />
-                        </Field>
-                        <Field label="Status Infrastruktur" error={form.errors.infrastructure_status}>
-                            <Select value={form.data.infrastructure_status} onValueChange={(v) => form.setData('infrastructure_status', v)}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Pilih Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {INFRA.map((s) => (
-                                        <SelectItem key={s} value={s}>
-                                            {s}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </Field>
-                        <Field label="Jumlah KK" error={form.errors.kk_count}>
-                            <Input
-                                value={form.data.kk_count}
-                                onChange={(e) => form.setData('kk_count', e.target.value)}
-                                inputMode="numeric"
-                                placeholder="0"
-                            />
-                        </Field>
-                        <div className="flex items-end md:col-span-3 md:justify-end">
-                            <Button type="submit" disabled={form.processing} className="w-full md:w-auto">
-                                {editing ? 'Simpan Perubahan' : 'Tambah Kawasan'}
-                            </Button>
-                        </div>
-                    </form>
-                </CardContent>
-            </Card>
+            {!isSuper && !editing && (
+                <p className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/10 dark:text-blue-300">
+                    Penambahan dan penghapusan kawasan hanya dapat dilakukan Super Admin. Anda dapat mengubah data kawasan Anda sendiri melalui tombol
+                    Edit.
+                </p>
+            )}
+            {(isSuper || editing) && (
+                <Card className="dark:bg-dark-card mb-6 border-gray-200 dark:border-gray-700">
+                    <CardHeader className="border-b border-gray-100 pb-3 dark:border-gray-700">
+                        <CardTitle className="flex items-center gap-2 text-base text-gray-800 dark:text-white">
+                            {editing ? <Pencil className="text-brand-light h-5 w-5" /> : <Plus className="text-brand-light h-5 w-5" />}
+                            {editing ? `Edit Kawasan ${editing.code}` : 'Tambah Kawasan Baru'}
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <Field label="Kode Kawasan" required error={form.errors.code}>
+                                <Input value={form.data.code} onChange={(e) => form.setData('code', e.target.value)} placeholder="KWS-001" />
+                            </Field>
+                            <Field label="Nama Kawasan" required error={form.errors.name}>
+                                <Input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} placeholder="SP1 Merauke" />
+                            </Field>
+                            <Field label="Provinsi" error={form.errors.province}>
+                                <Input
+                                    value={form.data.province}
+                                    onChange={(e) => form.setData('province', e.target.value)}
+                                    placeholder="Papua Selatan"
+                                />
+                            </Field>
+                            <Field label="Latitude" error={form.errors.latitude}>
+                                <Input value={form.data.latitude} onChange={(e) => form.setData('latitude', e.target.value)} placeholder="-8.4991" />
+                            </Field>
+                            <Field label="Longitude" error={form.errors.longitude}>
+                                <Input
+                                    value={form.data.longitude}
+                                    onChange={(e) => form.setData('longitude', e.target.value)}
+                                    placeholder="140.4011"
+                                />
+                            </Field>
+                            <Field label="Status Infrastruktur" error={form.errors.infrastructure_status}>
+                                <Select value={form.data.infrastructure_status} onValueChange={(v) => form.setData('infrastructure_status', v)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {INFRA.map((s) => (
+                                            <SelectItem key={s} value={s}>
+                                                {s}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </Field>
+                            <Field label="Jumlah KK" error={form.errors.kk_count}>
+                                <Input
+                                    value={form.data.kk_count}
+                                    onChange={(e) => form.setData('kk_count', e.target.value)}
+                                    inputMode="numeric"
+                                    placeholder="0"
+                                />
+                            </Field>
+                            <div className="flex items-end md:col-span-3 md:justify-end">
+                                <Button type="submit" disabled={form.processing} className="w-full md:w-auto">
+                                    {editing ? 'Simpan Perubahan' : 'Tambah Kawasan'}
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+            )}
 
             <DataTable<Region>
                 columns={columns}

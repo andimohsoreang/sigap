@@ -27,7 +27,7 @@ interface Props {
 }
 
 export default function Admins({ admins, regions, roles }: Props) {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset, transform } = useForm({
         name: '',
         nip: '',
         role: '',
@@ -35,8 +35,16 @@ export default function Admins({ admins, regions, roles }: Props) {
         password: '',
     });
 
+    // A-05: admin kawasan WAJIB memiliki kawasan tugas; super admin = Pusat.
+    const isKawasan = data.role === 'admin_kawasan';
+    const regionMissing = isKawasan && (data.region_id === '' || data.region_id === 'pusat');
+
     const submit = (e: FormEvent) => {
         e.preventDefault();
+        transform((d) => ({
+            ...d,
+            region_id: d.region_id === '' || d.region_id === 'pusat' ? null : Number(d.region_id),
+        }));
         post('/admin/petugas', { preserveScroll: true, onSuccess: () => reset() });
     };
 
@@ -99,9 +107,14 @@ export default function Admins({ admins, regions, roles }: Props) {
                         <Field label="NIP / ID Pegawai" required error={errors.nip}>
                             <Input value={data.nip} onChange={(e) => setData('nip', e.target.value)} placeholder="NIP Pegawai" />
                         </Field>
-                        <Field label="Wilayah Tugas (Kawasan)" error={errors.region_id}>
+                        <Field
+                            label="Wilayah Tugas (Kawasan)"
+                            required={isKawasan}
+                            error={errors.region_id}
+                            hint={regionMissing ? 'Admin kawasan wajib memilih kawasan tugas.' : undefined}
+                        >
                             <Select value={data.region_id} onValueChange={(v) => setData('region_id', v)}>
-                                <SelectTrigger>
+                                <SelectTrigger aria-label="Wilayah Tugas (Kawasan)" aria-invalid={Boolean(errors.region_id) || regionMissing}>
                                     <SelectValue placeholder="Pilih Kawasan" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -110,12 +123,21 @@ export default function Admins({ admins, regions, roles }: Props) {
                                             {r.name}
                                         </SelectItem>
                                     ))}
-                                    <SelectItem value="pusat">Pusat (Kementerian)</SelectItem>
+                                    {!isKawasan && <SelectItem value="pusat">Pusat (Kementerian)</SelectItem>}
                                 </SelectContent>
                             </Select>
                         </Field>
                         <Field label="Peran (Role)" required error={errors.role}>
-                            <Select value={data.role} onValueChange={(v) => setData('role', v)}>
+                            <Select
+                                value={data.role}
+                                onValueChange={(v) => {
+                                    setData((prev) => ({
+                                        ...prev,
+                                        role: v,
+                                        region_id: v === 'admin_kawasan' && prev.region_id === 'pusat' ? '' : prev.region_id,
+                                    }));
+                                }}
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih Peran" />
                                 </SelectTrigger>
@@ -128,12 +150,13 @@ export default function Admins({ admins, regions, roles }: Props) {
                                 </SelectContent>
                             </Select>
                         </Field>
-                        <Field label="Kata Sandi Awal" required error={errors.password}>
+                        <Field label="Kata Sandi Awal" required error={errors.password} hint="Min. 12 karakter, huruf besar, huruf kecil, angka.">
                             <Input
                                 type="password"
+                                autoComplete="new-password"
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
-                                placeholder="Minimal 8 karakter"
+                                placeholder="Min. 12 karakter"
                             />
                         </Field>
                         <div className="flex items-end justify-end md:col-span-2">
@@ -172,13 +195,26 @@ export default function Admins({ admins, regions, roles }: Props) {
     );
 }
 
-function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
+function Field({
+    label,
+    required,
+    error,
+    hint,
+    children,
+}: {
+    label: string;
+    required?: boolean;
+    error?: string;
+    hint?: string;
+    children: React.ReactNode;
+}) {
     return (
         <div className="space-y-1.5">
             <Label className="text-xs font-bold text-gray-600 dark:text-gray-400">
                 {label} {required && <span className="text-red-500">*</span>}
             </Label>
             {children}
+            {hint && !error && <p className="text-[11px] text-gray-400">{hint}</p>}
             {error && <p className="text-xs font-semibold text-rose-500">{error}</p>}
         </div>
     );

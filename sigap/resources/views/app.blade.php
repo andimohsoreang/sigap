@@ -9,7 +9,18 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800" rel="stylesheet" />
 
-        @routes
+        @php
+            // A-14: rute Ziggy dibatasi per peran (lihat config/ziggy.php).
+            $sigapUser = auth()->user();
+            $ziggyGroups = match (true) {
+                $sigapUser?->isAdmin() === true => ['public', 'admin'],
+                $sigapUser?->role?->value === 'warga' => ['public', 'warga'],
+                default => ['public'],
+            };
+        @endphp
+
+        {{-- N-01: semua <script> inline membawa nonce CSP per-request (SecurityHeaders). --}}
+        @routes($ziggyGroups, nonce: \Illuminate\Support\Facades\Vite::cspNonce())
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         @inertiaHead

@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Enums\TicketImpact;
-use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Enums\TicketVisibility;
 use App\Models\Ticket;
@@ -23,7 +22,8 @@ class TicketFactory extends Factory
         $impact = fake()->randomElement(TicketImpact::cases());
 
         return [
-            'ticket_no' => 'TKT-'.fake()->unique()->numberBetween(1, 99999),
+            // Format baru TKT-YYMMDD-XXXXXX (format lama butuh kode akses bagi tamu).
+            'ticket_no' => 'TKT-'.now()->format('ymd').'-'.fake()->unique()->regexify('['.Ticket::NUMBER_ALPHABET.']{6}'),
             'title' => fake()->sentence(4),
             'description' => fake()->paragraph(),
             'status' => TicketStatus::Baru,

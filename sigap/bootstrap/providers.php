@@ -1,6 +1,9 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\ChannelsServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\ChannelsServiceProvider::class,
+    AppServiceProvider::class,
+    ChannelsServiceProvider::class,
 ];

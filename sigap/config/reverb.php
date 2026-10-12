@@ -1,5 +1,21 @@
 <?php
 
+/*
+| N-06/N-08: dua sisi konfigurasi Reverb yang SENGAJA dipisah:
+| - REVERB_HOST/PORT/SCHEME  → alamat yang dipakai PHP untuk MEMPUBLIKASIKAN
+|   event ke server Reverb (produksi: 127.0.0.1:8080 http, tidak lewat internet).
+| - VITE_REVERB_HOST/PORT/SCHEME → alamat yang dipakai BROWSER (produksi:
+|   app1.andimohamad.my.id:443 https/wss lewat nginx). Ditanam saat `npm run build`
+|   dan dipakai SecurityHeaders untuk connect-src CSP (kunci 'client' di bawah).
+*/
+
+$appHost = parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST) ?: 'localhost';
+
+$allowedOrigins = array_values(array_filter(array_map(
+    'trim',
+    explode(',', (string) env('REVERB_ALLOWED_ORIGINS', $appHost)),
+)));
+
 return [
 
     /*
@@ -67,6 +83,16 @@ return [
     |
     */
 
+    /*
+    | Alamat Reverb dari sisi browser (VITE_REVERB_*) — dibaca SecurityHeaders
+    | untuk menyusun connect-src CSP yang persis (tanpa `ws: wss:` telanjang).
+    */
+    'client' => [
+        'host' => env('VITE_REVERB_HOST'),
+        'port' => env('VITE_REVERB_PORT'),
+        'scheme' => env('VITE_REVERB_SCHEME', 'https'),
+    ],
+
     'apps' => [
 
         'provider' => 'config',
@@ -82,17 +108,19 @@ return [
                     'scheme' => env('REVERB_SCHEME', 'https'),
                     'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
                 ],
-                'allowed_origins' => ['*'],
+                // Hanya host halaman SIGAP sendiri (bukan '*'): cegah situs lain
+                // membuka koneksi WebSocket atas nama pengunjung.
+                'allowed_origins' => $allowedOrigins,
                 'ping_interval' => env('REVERB_APP_PING_INTERVAL', 60),
                 'activity_timeout' => env('REVERB_APP_ACTIVITY_TIMEOUT', 30),
-                'max_connections' => env('REVERB_APP_MAX_CONNECTIONS'),
+                'max_connections' => (int) env('REVERB_APP_MAX_CONNECTIONS', 1000),
                 'max_message_size' => env('REVERB_APP_MAX_MESSAGE_SIZE', 10_000),
                 'accept_client_events_from' => env('REVERB_APP_ACCEPT_CLIENT_EVENTS_FROM', 'members'),
                 'rate_limiting' => [
-                    'enabled' => env('REVERB_APP_RATE_LIMITING_ENABLED', false),
+                    'enabled' => (bool) env('REVERB_APP_RATE_LIMITING_ENABLED', true),
                     'max_attempts' => env('REVERB_APP_RATE_LIMIT_MAX_ATTEMPTS', 60),
                     'decay_seconds' => env('REVERB_APP_RATE_LIMIT_DECAY_SECONDS', 60),
-                    'terminate_on_limit' => env('REVERB_APP_RATE_LIMIT_TERMINATE', false),
+                    'terminate_on_limit' => (bool) env('REVERB_APP_RATE_LIMIT_TERMINATE', false),
                 ],
             ],
         ],

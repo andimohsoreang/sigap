@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ActivityLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Pencatat jejak audit admin (PRD SEC-08).
@@ -53,7 +54,7 @@ class AuditService
         try {
             $this->record($action, $subject, $description, $properties);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Audit log gagal: '.$e->getMessage());
+            Log::warning('Audit log gagal: '.$e->getMessage());
         }
     }
 }

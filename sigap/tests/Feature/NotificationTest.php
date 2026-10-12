@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\TicketStatus;
+use App\Enums\UserRole;
 use App\Events\NotificationBroadcast;
 use App\Events\TicketChanged;
 use App\Mail\TicketNotificationMail;
@@ -27,7 +28,7 @@ class NotificationTest extends TestCase
     private function adminWithEmail(string $email = 'admin@example.test'): User
     {
         return User::factory()->create([
-            'role' => \App\Enums\UserRole::SuperAdmin,
+            'role' => UserRole::SuperAdmin,
             'email' => $email,
             'is_active' => true,
         ]);
@@ -42,7 +43,8 @@ class NotificationTest extends TestCase
 
         app(TicketService::class)->changeStatus($ticket, TicketStatus::Diproses, $admin, 'Ditindaklanjuti');
 
-        Mail::assertSent(TicketNotificationMail::class, function (TicketNotificationMail $mail) use ($admin, $ticket) {
+        // A-06: surel dikirim lewat queue.
+        Mail::assertQueued(TicketNotificationMail::class, function (TicketNotificationMail $mail) use ($admin, $ticket) {
             return $mail->hasTo($admin->email)
                 && ($mail->payload['nomor'] ?? null) === $ticket->ticket_no;
         });
@@ -59,7 +61,7 @@ class NotificationTest extends TestCase
 
         app(TicketService::class)->changeStatus($ticket, TicketStatus::Diproses, $admin);
 
-        Mail::assertNothingSent();
+        Mail::assertNothingOutgoing();
     }
 
     public function test_in_app_driver_broadcasts_to_admin_panel(): void
@@ -68,7 +70,7 @@ class NotificationTest extends TestCase
         Mail::fake();
 
         $admin = $this->adminWithEmail();
-        $ticket = Ticket::factory()->create(['status' => TicketStatus::Baru]);
+        $ticket = Ticket::factory()->create(['status' => TicketStatus::Diproses]);
 
         app(TicketService::class)->changeStatus($ticket, TicketStatus::Selesai, $admin);
 
@@ -111,16 +113,10 @@ class NotificationTest extends TestCase
         Event::assertDispatched(NotificationBroadcast::class, fn (NotificationBroadcast $e) => $e->payload['event'] === 'ews');
     }
 
-    public function test_ews_ignores_internal_and_finished_tickets(): void
+    public function test_ews_ignores_finished_tickets(): void
     {
         Setting::put('ews_enabled', true);
         Event::fake([TicketChanged::class, NotificationBroadcast::class]);
-
-        Ticket::factory()->create([
-            'is_internal' => true,
-            'status' => TicketStatus::Diproses,
-            'sla_due_at' => now()->subDay(),
-        ]);
 
         Ticket::factory()->create([
             'status' => TicketStatus::Selesai,

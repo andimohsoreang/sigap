@@ -23,11 +23,13 @@ Route::get('/panduan', [PublicController::class, 'guide'])->name('panduan');
 Route::get('/tentang', [PublicController::class, 'about'])->name('tentang');
 Route::get('/katalog', [PublicController::class, 'catalog'])->name('katalog');
 Route::get('/peta', [PublicController::class, 'map'])->name('peta');
-Route::get('/lacak', [PublicController::class, 'track'])->name('lacak');
+// Lacak tiket publik dibatasi limiter 'lookup' (anti-enumerasi nomor tiket).
+Route::get('/lacak', [PublicController::class, 'track'])->middleware('throttle:lookup')->name('lacak');
 Route::get('/lacak/{ticket}', [PublicController::class, 'track'])
     ->where('ticket', '[A-Za-z0-9-]{1,32}')
+    ->middleware('throttle:lookup')
     ->name('lacak.show');
-Route::post('/lacak/survei', [PublicController::class, 'storeSurvey'])->middleware('throttle:pengaduan')->name('lacak.survei');
+Route::post('/lacak/survei', [PublicController::class, 'storeSurvey'])->middleware(['throttle:lookup', 'throttle:pengaduan'])->name('lacak.survei');
 Route::get('/pedoman-layanan', [PublicController::class, 'guidelines'])->name('pedoman');
 Route::get('/syarat-ketentuan', [PublicController::class, 'terms'])->name('syarat');
 Route::get('/kebijakan-privasi', [PublicController::class, 'privacy'])->name('privasi');
@@ -39,14 +41,15 @@ Route::post('/pengaduan/internal', [PengaduanFormController::class, 'storeIntern
 
 // Alias path lama (04 Okt 2026) — jangan sampai tautan lama 404.
 Route::redirect('/lacak-tiket', '/lacak', 301);
-Route::post('/lacak-tiket/survei', [PublicController::class, 'storeSurvey'])->middleware('throttle:pengaduan')->name('lacak.survei.legacy');
+Route::post('/lacak-tiket/survei', [PublicController::class, 'storeSurvey'])->middleware(['throttle:lookup', 'throttle:pengaduan'])->name('lacak.survei.legacy');
 Route::redirect('/pengaduan', '/pengaduan/baru', 301);
 Route::post('/pengaduan', [PengaduanFormController::class, 'store'])->middleware('throttle:pengaduan')->name('pengaduan.store.legacy');
 
 // Login/keluar (NIK/username + kata sandi).
 Route::middleware('guest')->group(function () {
     Route::get('/masuk', [MasukController::class, 'create'])->name('masuk');
-    Route::post('/masuk', [MasukController::class, 'store']);
+    // A-01: login web dibatasi limiter 'login' (identifier+IP & per IP).
+    Route::post('/masuk', [MasukController::class, 'store'])->middleware('throttle:login')->name('masuk.store');
 });
 Route::post('/keluar', [MasukController::class, 'destroy'])->middleware('auth')->name('keluar');
 
@@ -86,6 +89,7 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
 
     Route::get('/pengaturan', [AdminController::class, 'pengaturan'])->name('admin.pengaturan');
     Route::put('/pengaturan', [AdminController::class, 'updatePengaturan'])->name('admin.pengaturan.update');
+    Route::put('/profil', [AdminController::class, 'updateOwnProfile'])->name('admin.profil.update');
     Route::post('/kategori', [AdminController::class, 'storeCategory'])->name('admin.kategori.store');
     Route::delete('/kategori/{category}', [AdminController::class, 'destroyCategory'])->name('admin.kategori.destroy');
 

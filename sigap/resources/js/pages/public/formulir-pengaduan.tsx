@@ -1,3 +1,4 @@
+import { RecaptchaNotice } from '@/components/sigap/recaptcha-notice';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -5,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useRecaptcha } from '@/hooks/use-recaptcha';
 import PublicLayout from '@/layouts/public-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { AlertTriangle, Crosshair, LoaderCircle, Send, Upload } from 'lucide-react';
@@ -35,7 +37,7 @@ const VISIBILITIES = [
 ];
 
 export default function FormulirPengaduan({ regions, categories }: Props) {
-    const { data, setData, post, processing, errors, progress } = useForm({
+    const { data, setData, post, transform, processing, errors, progress } = useForm({
         nik: '',
         nama: '',
         email: '',
@@ -48,13 +50,19 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
         impact: '',
         visibility: 'publik',
         attachment: null as File | null,
-        agree: false,
+        agree: false as boolean,
+        recaptcha_token: '',
     });
+    const recaptcha = useRecaptcha('pengaduan');
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        post('/pengaduan/baru', { forceFormData: true });
+        void recaptcha.withToken((token) => {
+            transform((form) => ({ ...form, recaptcha_token: token }));
+            post('/pengaduan/baru', { forceFormData: true });
+        });
     };
+    const busy = processing || recaptcha.verifying;
 
     const useGeolocation = () => {
         if (!navigator.geolocation) return;
@@ -151,11 +159,16 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
                                             value={data.koordinat}
                                             onChange={(e) => setData('koordinat', e.target.value)}
                                             placeholder="-8.4991,140.4011"
+                                            aria-invalid={errors.koordinat ? true : undefined}
+                                            aria-describedby="koordinat-hint"
                                         />
                                         <Button type="button" variant="outline" onClick={useGeolocation}>
                                             <Crosshair className="h-4 w-4" /> GPS
                                         </Button>
                                     </div>
+                                    <p id="koordinat-hint" className="text-xs text-gray-400">
+                                        Format: lintang,bujur dalam derajat desimal (lintang -90 s.d. 90, bujur -180 s.d. 180).
+                                    </p>
                                 </Field>
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <Field label="Lokasi Kawasan" htmlFor="region_id" error={errors.region_id}>
@@ -226,6 +239,7 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
                                         </button>
                                     ))}
                                 </div>
+                                {errors.visibility && <p className="text-xs font-semibold text-rose-500">{errors.visibility}</p>}
                                 <Field label="Lampiran Bukti (Opsional)" error={errors.attachment}>
                                     <label className="hover:border-brand-light flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-8 text-center transition dark:border-gray-600 dark:bg-gray-800">
                                         <Upload className="mb-2 h-6 w-6 text-gray-400" />
@@ -243,14 +257,8 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
                                 </Field>
                             </fieldset>
 
-                            {/* RECAPTCHA (placeholder, belum diaktifkan) */}
-                            <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                                <div className="flex h-6 w-6 items-center justify-center rounded border border-gray-300">
-                                    <Checkbox disabled />
-                                </div>
-                                I'm not a robot — <span className="font-bold">reCAPTCHA</span>
-                                <span className="ml-auto text-xs italic">(belum diaktifkan)</span>
-                            </div>
+                            {/* reCAPTCHA v3 berjalan tak terlihat; teks wajib dari Google. */}
+                            <RecaptchaNotice enabled={recaptcha.enabled} error={recaptcha.error ?? errors.recaptcha_token} />
 
                             <label className="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
                                 <Checkbox
@@ -272,8 +280,8 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
                                 </span>
                             </label>
 
-                            <Button type="submit" disabled={processing || !data.agree} className="w-full md:w-auto">
-                                {processing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Kirim Pengaduan
+                            <Button type="submit" disabled={busy || !data.agree} className="w-full md:w-auto">
+                                {busy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Kirim Pengaduan
                             </Button>
                         </form>
                     </CardContent>

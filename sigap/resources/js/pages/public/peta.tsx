@@ -1,14 +1,14 @@
-import { Head } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
-import L from 'leaflet';
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-import PublicLayout from '@/layouts/public-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import PublicLayout from '@/layouts/public-layout';
+import { Head } from '@inertiajs/react';
+import L from 'leaflet';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import 'leaflet/dist/leaflet.css';
+import { useEffect, useState } from 'react';
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 
 L.Icon.Default.mergeOptions({ iconUrl: markerIcon, iconRetinaUrl: markerIcon2x, shadowUrl: markerShadow });
 
@@ -70,7 +70,7 @@ export default function Peta({ regions, points }: Props) {
                     </div>
                 </div>
 
-                <Card className="overflow-hidden border-gray-100 dark:border-gray-800 dark:bg-dark-card">
+                <Card className="dark:bg-dark-card overflow-hidden border-gray-100 dark:border-gray-800">
                     <CardContent className="p-0">
                         {mounted ? (
                             <MapContainer center={center} zoom={5} scrollWheelZoom className="h-[520px] w-full">
@@ -98,9 +98,9 @@ export default function Peta({ regions, points }: Props) {
 
                 <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {filtered.map((p) => (
-                        <Card key={p.id} className="border-gray-100 dark:border-gray-800 dark:bg-dark-card">
+                        <Card key={p.id} className="dark:bg-dark-card border-gray-100 dark:border-gray-800">
                             <CardContent className="p-4">
-                                <p className="text-xs font-bold text-secondary">{p.code}</p>
+                                <p className="text-secondary text-xs font-bold">{p.code}</p>
                                 <p className="font-bold text-gray-800 dark:text-white">{p.name}</p>
                                 <p className="text-xs text-gray-500 dark:text-gray-400">
                                     {p.province} · {p.kk_count} KK

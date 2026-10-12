@@ -255,3 +255,9 @@
 .absol-admin textarea {
     border-radius: 12px;
 }
+
+/* reCAPTCHA v3: badge melayang disembunyikan; atribusi teks ditampilkan di
+   formulir (RecaptchaNotice) sesuai ketentuan Google. */
+.grecaptcha-badge {
+    visibility: hidden;
+}

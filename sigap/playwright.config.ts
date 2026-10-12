@@ -36,12 +36,13 @@ export default defineConfig({
     ],
     webServer: {
         command: [
-            `DB_DATABASE=${DB_FILE} php artisan sigap:e2e-setup --force`,
-            `DB_DATABASE=${DB_FILE} APP_URL=${BASE_URL} php artisan serve --host=127.0.0.1 --port=${PORT}`,
+            // Selalu SQLite terpisah — sigap:e2e-setup menolak DB non-lokal & APP_ENV selain local/testing.
+            `DB_CONNECTION=sqlite DB_DATABASE=${DB_FILE} php artisan sigap:e2e-setup`,
+            `DB_CONNECTION=sqlite DB_DATABASE=${DB_FILE} APP_URL=${BASE_URL} php artisan serve --host=127.0.0.1 --port=${PORT}`,
         ].join(' && '),
         url: `${BASE_URL}/api/v1/health`,
         reuseExistingServer: false,
         timeout: 120_000,
-        env: { DB_DATABASE: DB_FILE, APP_URL: BASE_URL },
+        env: { DB_CONNECTION: 'sqlite', DB_DATABASE: DB_FILE, APP_URL: BASE_URL },
     },
 });

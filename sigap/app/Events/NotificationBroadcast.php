@@ -4,15 +4,18 @@ namespace App\Events;
 
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
  * Notifikasi in-app privat untuk satu pengguna (`user.{id}`) — D10.
  * Terpisah dari `TicketChanged` (lonceng admin) dan `ChatMessageSent`.
+ *
+ * A-06: disiarkan lewat queue setelah transaksi commit.
  */
-class NotificationBroadcast implements ShouldBroadcastNow
+class NotificationBroadcast implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
