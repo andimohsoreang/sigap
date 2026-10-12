@@ -1,67 +1,107 @@
 #!/usr/bin/env bash
-# Deploy SIGAP ke server (struktur rilis atomik, lihat docs/DEPLOY.md §4).
-# Jalankan DI SERVER sebagai pengguna `deploy`:
-#   REPO=git@github.com:<akun>/<repo>.git bash scripts/deploy.sh            # rilis biasa
-#   REPO=... bash scripts/deploy.sh --pertama                               # instalasi pertama
-# Prasyarat: server sudah disiapkan sesuai DEPLOY.md §1–3 (PHP 8.4, PostgreSQL,
-# Redis, nginx, Node 22) dan /var/www/sigap/shared/.env sudah final.
+# Deploy SIGAP dengan Docker Compose (lihat docs/DEPLOY.md).
+# Jalankan DI SERVER, dari clone repo ini, sebagai user yang boleh menjalankan docker:
+#   bash scripts/deploy.sh --pertama     # instalasi pertama (migrate + seed + buat super_admin)
+#   bash scripts/deploy.sh               # rilis biasa (git pull → build → backup DB → migrate → up)
+#   bash scripts/deploy.sh --no-pull     # pakai kode yang sudah ada di folder (tanpa git pull)
+#   bash scripts/deploy.sh --rollback    # kembali ke image rilis sebelumnya (tag :prev)
 set -euo pipefail
 
-REPO="${REPO:?Isi REPO, contoh: REPO=git@github.com:akun/sigap.git}"
-BRANCH="${BRANCH:-main}"
-BASE="${BASE:-/var/www/sigap}"
-KEEP="${KEEP:-5}"
-PERTAMA=0
-[[ "${1:-}" == "--pertama" ]] && PERTAMA=1
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+DIR="$ROOT/deploy/docker"
+cd "$DIR"
 
-[[ -f "$BASE/shared/.env" ]] || { echo "Tidak ada $BASE/shared/.env, siapkan dulu (DEPLOY.md §3)"; exit 1; }
-grep -q '^NIK_HASH_KEY=base64:' "$BASE/shared/.env" || { echo "NIK_HASH_KEY belum diisi di .env (DEPLOY.md §3)"; exit 1; }
+PERTAMA=0; PULL=1; ROLLBACK=0
+for a in "$@"; do
+  case "$a" in
+    --pertama) PERTAMA=1 ;;
+    --no-pull) PULL=0 ;;
+    --rollback) ROLLBACK=1 ;;
+    *) echo "Opsi tidak dikenal: $a"; exit 2 ;;
+  esac
+done
 
-R="$BASE/releases/$(date +%Y%m%d-%H%M%S)"
-echo "==> Clone $REPO ($BRANCH) ke $R"
-git clone --depth 1 --branch "$BRANCH" "$REPO" "$R"
-APP="$R/sigap"
-cd "$APP"
-ln -s "$BASE/shared/.env" .env
-rm -rf storage && ln -s "$BASE/shared/storage" storage
+die() { echo "GAGAL: $*" >&2; exit 1; }
+val() { grep -E "^$1=" .env | tail -n1 | cut -d= -f2- | sed -E 's/[[:space:]]+#.*$//; s/^"(.*)"$/\1/'; }
 
-echo "==> Dependensi & build aset"
-composer install --no-dev --optimize-autoloader --no-interaction
-npm ci && npm run build && rm -rf node_modules
+[[ -f .env ]] || die "deploy/docker/.env belum ada. Salin dari .env.example lalu isi (docs/DEPLOY.md §3)."
+for k in APP_KEY NIK_HASH_KEY DB_PASSWORD REVERB_APP_KEY REVERB_APP_SECRET APP_URL; do
+  [[ -n "$(val "$k")" ]] || die "$k kosong di .env"
+done
+[[ "$(val REVERB_APP_KEY)" == "$(val VITE_REVERB_APP_KEY)" ]] || die "VITE_REVERB_APP_KEY harus sama dengan REVERB_APP_KEY"
+[[ "$(val APP_DEBUG)" == "false" ]] || die "APP_DEBUG harus false"
+chmod 600 .env
 
-echo "==> Izin berkas"
-sudo chown -R deploy:www-data "$R"
-sudo chmod -R u=rwX,g=rX,o= "$R"
-sudo chown -R www-data:www-data "$BASE/shared/storage" "$APP/bootstrap/cache"
-sudo chmod -R ug=rwX,o= "$BASE/shared/storage" "$APP/bootstrap/cache"
-sudo find "$BASE/shared/storage" "$APP/bootstrap/cache" -type d -exec chmod g+s {} +
-sudo chown root:www-data "$BASE/shared/.env" && sudo chmod 640 "$BASE/shared/.env"
+WEB_PORT="$(val WEB_PORT)"; WEB_PORT="${WEB_PORT:-8092}"
+DB_USER="$(val DB_USERNAME)"; DB_NAME="$(val DB_DATABASE)"
+IMG_APP="$(val SIGAP_IMAGE)"; IMG_APP="${IMG_APP:-sigap-app}"
+IMG_WEB="$(val SIGAP_WEB_IMAGE)"; IMG_WEB="${IMG_WEB:-sigap-web}"
+DC=(docker compose)
+
+health() {
+  echo "==> Cek kesehatan http://127.0.0.1:$WEB_PORT/up"
+  for i in $(seq 1 30); do
+    if curl -fsS -o /dev/null "http://127.0.0.1:$WEB_PORT/up"; then echo "OK"; return 0; fi
+    sleep 2
+  done
+  "${DC[@]}" ps; "${DC[@]}" logs --tail=50 app web
+  die "aplikasi tidak sehat"
+}
+
+if [[ $ROLLBACK -eq 1 ]]; then
+  docker image inspect "$IMG_APP:prev" >/dev/null 2>&1 || die "tidak ada image $IMG_APP:prev"
+  echo "==> Rollback ke image :prev (migrasi database TIDAK dibatalkan — lihat DEPLOY.md §8)"
+  docker tag "$IMG_APP:prev" "$IMG_APP:latest"
+  docker tag "$IMG_WEB:prev" "$IMG_WEB:latest"
+  "${DC[@]}" up -d --no-build --remove-orphans
+  health
+  exit 0
+fi
+
+if [[ $PULL -eq 1 ]]; then
+  echo "==> git pull"
+  git -C "$ROOT" pull --ff-only
+fi
+echo "==> Versi: $(git -C "$ROOT" log -1 --format='%h %s' 2>/dev/null || echo '-')"
+
+echo "==> Simpan image lama sebagai :prev (untuk rollback)"
+for img in "$IMG_APP" "$IMG_WEB"; do
+  docker image inspect "$img:latest" >/dev/null 2>&1 && docker tag "$img:latest" "$img:prev" || true
+done
+
+echo "==> Build image"
+"${DC[@]}" build --pull
+
+echo "==> Database"
+"${DC[@]}" up -d --wait db
+
+if [[ $PERTAMA -eq 0 ]]; then
+  mkdir -p "$DIR/backups" && chmod 700 "$DIR/backups"
+  DUMP="$DIR/backups/pre-migrate-$(date +%F-%H%M%S).dump"
+  echo "==> Backup sebelum migrasi: $DUMP"
+  "${DC[@]}" exec -T db pg_dump -U "$DB_USER" -Fc "$DB_NAME" > "$DUMP"
+  chmod 600 "$DUMP"
+  [[ -s "$DUMP" ]] || die "backup kosong"
+fi
 
 echo "==> Migrasi"
 if [[ $PERTAMA -eq 1 ]]; then
-  grep -q '^APP_KEY=base64:' "$BASE/shared/.env" || {
-    echo "APP_KEY kosong. Jalankan: sudo -u www-data php $APP/artisan key:generate --show"
-    echo "lalu tempel ke $BASE/shared/.env sebagai root, dan ulangi skrip ini."; exit 1; }
-  sudo -u www-data php artisan migrate --force --seed
+  "${DC[@]}" run --rm --no-deps app php artisan migrate --force --seed
 else
-  sudo -u www-data php artisan migrate --force
+  "${DC[@]}" run --rm --no-deps app php artisan migrate --force
 fi
-sudo -u www-data php artisan optimize
 
-echo "==> Aktifkan rilis"
-ln -sfn "$APP" "$BASE/current"
-sudo systemctl reload php8.4-fpm
-for s in sigap-queue sigap-reverb; do
-  systemctl list-unit-files "$s.service" >/dev/null 2>&1 && sudo systemctl restart "$s" || true
-done
+echo "==> Jalankan stack"
+"${DC[@]}" up -d --remove-orphans --wait
+health
 
 if [[ $PERTAMA -eq 1 ]]; then
   echo "==> Buat akun super_admin (tidak ada akun bawaan)"
-  sudo -u www-data php artisan sigap:admin
+  "${DC[@]}" exec app php artisan sigap:admin
 fi
 
-echo "==> Bersihkan rilis lama (simpan $KEEP terakhir)"
-ls -1dt "$BASE"/releases/*/ | tail -n +"$((KEEP + 1))" | xargs -r sudo rm -rf
+echo "==> Bersihkan image & backup lama"
+docker image prune -f >/dev/null
+ls -1t "$DIR"/backups/pre-migrate-*.dump 2>/dev/null | tail -n +11 | xargs -r rm -f
 
-echo "Selesai: $(readlink "$BASE/current")"
-echo "Rollback: ln -sfn $BASE/releases/<rilis-lama>/sigap $BASE/current && sudo systemctl reload php8.4-fpm"
+echo "Selesai. Rollback bila perlu: bash scripts/deploy.sh --rollback"
