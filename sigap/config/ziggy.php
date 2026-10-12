@@ -18,7 +18,7 @@ return [
     'groups' => [
         'public' => [
             'home',
-            'beranda.absol',
+            'beranda.standar',
             'panduan',
             'tentang',
             'tentang-kami',

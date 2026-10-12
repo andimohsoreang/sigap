@@ -10,9 +10,21 @@ class PublicPagesTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_beranda_renders_with_stats_and_channels(): void
+    public function test_beranda_utama_uses_absol_design(): void
     {
         $this->get('/')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('public/beranda-absol')
+                ->has('stats')
+                ->has('channels')
+                ->has('faqs')
+            );
+    }
+
+    public function test_beranda_standar_still_available_with_same_data(): void
+    {
+        $this->get('/beranda-standar')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('public/beranda')
@@ -22,21 +34,9 @@ class PublicPagesTest extends TestCase
             );
     }
 
-    public function test_beranda_absol_comparison_page_uses_same_data_as_home(): void
+    public function test_old_absol_url_redirects_to_home(): void
     {
-        $home = $this->get('/')->assertOk();
-
-        $this->get('/beranda-absol')
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('public/beranda-absol')
-                ->has('stats')
-                ->has('channels')
-                ->has('faqs')
-            );
-
-        // Halaman asli tetap utuh (tidak tertimpa versi pembanding).
-        $home->assertInertia(fn (Assert $page) => $page->component('public/beranda'));
+        $this->get('/beranda-absol')->assertRedirect('/')->assertStatus(301);
     }
 
     public function test_public_static_pages_render(): void

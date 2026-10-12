@@ -31,27 +31,29 @@ class PublicController extends Controller
         private readonly SurveyService $surveys,
     ) {}
 
-    /** Beranda. */
+    /** Beranda utama (tampilan gaya absol.id). */
     public function home(): Response
     {
-        return Inertia::render('public/beranda', [
-            'stats' => $this->stats->publicOverview(),
-            'channels' => $this->channelList(),
-            'faqs' => $this->faqs(),
-        ]);
+        return Inertia::render('public/beranda-absol', $this->homeProps());
     }
 
     /**
-     * Beranda pembanding bergaya absol.id — data SAMA dengan {@see home()},
-     * hanya komponen tampilannya yang berbeda (lihat `public/beranda-absol`).
+     * Beranda tampilan standar (lama) sebagai pembanding — data SAMA dengan
+     * {@see home()}, hanya komponen tampilannya yang berbeda.
      */
-    public function homeAbsol(): Response
+    public function homeStandard(): Response
     {
-        return Inertia::render('public/beranda-absol', [
+        return Inertia::render('public/beranda', $this->homeProps());
+    }
+
+    /** @return array<string, mixed> */
+    private function homeProps(): array
+    {
+        return [
             'stats' => $this->stats->publicOverview(),
             'channels' => $this->channelList(),
             'faqs' => $this->faqs(),
-        ]);
+        ];
     }
 
     /** Panduan lengkap pengaduan (masyarakat) & penanganan tiket (admin). */

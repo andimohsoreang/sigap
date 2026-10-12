@@ -15,9 +15,12 @@ use Illuminate\Support\Facades\Route;
 | Tampilan lama dipertahankan; data dilayani Service yang sama dengan API.
 */
 
+// Beranda utama memakai tampilan gaya absol.id (keputusan 12 Okt 2026).
 Route::get('/', [PublicController::class, 'home'])->name('home');
-// Halaman pembanding tampilan (gaya absol.id) — halaman asli tidak diubah.
-Route::get('/beranda-absol', [PublicController::class, 'homeAbsol'])->name('beranda.absol');
+// Tampilan beranda lama tetap tersedia sebagai pembanding.
+Route::get('/beranda-standar', [PublicController::class, 'homeStandard'])->name('beranda.standar');
+// Alamat lama versi absol diarahkan ke beranda utama agar tautan lama tidak 404.
+Route::redirect('/beranda-absol', '/', 301);
 // Panduan lengkap pengaduan & penanganan tiket.
 Route::get('/panduan', [PublicController::class, 'guide'])->name('panduan');
 Route::get('/tentang', [PublicController::class, 'about'])->name('tentang');
