@@ -57,8 +57,10 @@ Route::middleware('guest')->group(function () {
 Route::post('/keluar', [MasukController::class, 'destroy'])->middleware('auth')->name('keluar');
 
 // Live chat publik & warga (PRD D5 — Reverb, fallback polling).
-Route::get('/chat/pesan', [ChatController::class, 'index'])->name('chat.index');
-Route::post('/chat/pesan', [ChatController::class, 'store'])->middleware('throttle:pengaduan')->name('chat.store');
+// Tamu wajib mengisi nama dulu (POST /chat/mulai); warga login memakai akunnya.
+Route::get('/chat/pesan', [ChatController::class, 'index'])->middleware('throttle:chat-baca')->name('chat.index');
+Route::post('/chat/mulai', [ChatController::class, 'start'])->middleware('throttle:chat-mulai')->name('chat.start');
+Route::post('/chat/pesan', [ChatController::class, 'store'])->middleware('throttle:chat')->name('chat.store');
 
 // Panel Admin — khusus peran admin_kawasan & super_admin.
 Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->group(function () {
@@ -80,6 +82,8 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
 
     Route::get('/chat', [AdminController::class, 'chat'])->name('admin.chat');
     Route::post('/chat/{conversation}/balas', [AdminController::class, 'sendChat'])->name('admin.chat.reply');
+    Route::post('/chat/{conversation}/baca', [AdminController::class, 'readChat'])->name('admin.chat.read');
+    Route::get('/chat/belum-dibaca', [AdminController::class, 'chatUnread'])->name('admin.chat.unread');
 
     Route::get('/kawasan', [AdminController::class, 'kawasan'])->name('admin.kawasan');
     Route::post('/kawasan', [AdminController::class, 'storeRegion'])->name('admin.kawasan.store');

@@ -34,6 +34,8 @@ export interface SharedData {
     recaptcha?: {
         site_key: string | null;
     };
+    /** Total pesan chat belum dibaca petugas (hanya admin; null untuk lainnya). */
+    chat_unread?: number | null;
     flash?: {
         status?: string | null;
         success?: string | null;

@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\ChatMessage;
+use App\Services\ChatService;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -36,16 +37,16 @@ class ChatMessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
         return 'chat.message';
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Bentuk sama dengan GET /chat/pesan (ChatService::present) agar klien tidak
+     * perlu menormalkan; `mine` dilihat dari sisi warga/tamu.
+     *
+     * @return array<string, mixed>
+     */
     public function broadcastWith(): array
     {
-        return [
-            'id' => $this->message->id,
-            'conversation_id' => $this->message->conversation_id,
-            'body' => $this->message->body,
-            'sender_type' => $this->message->sender_type,
-            'sender_id' => $this->message->sender_id,
-            'created_at' => $this->message->created_at?->toIso8601String(),
-        ];
+        $this->message->loadMissing('sender');
+
+        return ChatService::present($this->message);
     }
 }

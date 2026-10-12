@@ -52,7 +52,20 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
-        // 'pengaduan' membatasi spam tiket publik, chat & survei (per IP asli).
+        // Live chat punya limiter sendiri (tidak berbagi kuota dengan pengaduan).
+        // Kunci per sesi + per IP: satu pengguna tidak menghabiskan kuota NAT kantor.
+        $chatKey = fn (Request $request) => $request->user()?->id ?? $request->session()->getId();
+        RateLimiter::for('chat', fn (Request $request) => [
+            Limit::perMinute(20)->by('chat:s:'.$chatKey($request)),
+            Limit::perMinute(60)->by('chat:ip:'.$request->ip()),
+        ]);
+        RateLimiter::for('chat-mulai', fn (Request $request) => Limit::perMinutes(10, 5)->by('chat-mulai:'.$request->ip()));
+        RateLimiter::for('chat-baca', fn (Request $request) => [
+            Limit::perMinute(30)->by('chat-baca:s:'.$chatKey($request)),
+            Limit::perMinute(240)->by('chat-baca:ip:'.$request->ip()),
+        ]);
+
+        // 'pengaduan' membatasi spam tiket publik & survei (per IP asli).
         RateLimiter::for('pengaduan', fn (Request $request) => Limit::perMinutes(10, 10)->by('pengaduan:'.$request->ip()));
 
         // 'lookup' membatasi pencarian nomor tiket publik (anti-enumerasi):

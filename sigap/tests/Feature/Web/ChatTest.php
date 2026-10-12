@@ -15,10 +15,17 @@ class ChatTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Tamu wajib mengisi nama dulu sebelum mengirim pesan. */
+    private function startGuest(string $nama = 'Budi Santoso'): void
+    {
+        $this->postJson('/chat/mulai', ['nama' => $nama])->assertCreated();
+    }
+
     public function test_guest_can_send_chat_message_and_it_is_stored(): void
     {
         Event::fake([ChatMessageSent::class]);
 
+        $this->startGuest();
         $this->postJson('/chat/pesan', ['body' => 'Halo admin, saya butuh bantuan'])
             ->assertCreated()
             ->assertJsonPath('message.body', 'Halo admin, saya butuh bantuan');
@@ -31,6 +38,7 @@ class ChatTest extends TestCase
 
     public function test_guest_conversation_persists_across_requests_via_session(): void
     {
+        $this->startGuest();
         $this->postJson('/chat/pesan', ['body' => 'Pesan pertama'])->assertCreated();
         $this->postJson('/chat/pesan', ['body' => 'Pesan kedua'])->assertCreated();
 
@@ -42,6 +50,7 @@ class ChatTest extends TestCase
     {
         $this->getJson('/chat/pesan')->assertOk()->assertJsonPath('messages', []);
 
+        $this->startGuest();
         $this->postJson('/chat/pesan', ['body' => 'Pertanyaan'])->assertCreated();
 
         $this->getJson('/chat/pesan')
@@ -62,6 +71,7 @@ class ChatTest extends TestCase
 
     public function test_chat_message_body_is_required(): void
     {
+        $this->startGuest();
         $this->postJson('/chat/pesan', ['body' => ''])->assertStatus(422)->assertJsonValidationErrors('body');
     }
 
@@ -146,6 +156,7 @@ class ChatTest extends TestCase
     public function test_guest_conversation_is_not_open_to_other_users(): void
     {
         // Tamu mengirim pesan -> percakapan milik tamu (user_id null).
+        $this->startGuest();
         $this->postJson('/chat/pesan', ['body' => 'Halo dari tamu'])->assertCreated();
         $conversation = ChatConversation::firstOrFail();
         $this->assertNull($conversation->user_id);

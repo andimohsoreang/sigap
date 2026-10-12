@@ -38,6 +38,7 @@ return [
             'masuk.store',
             'keluar',
             'chat.index',
+            'chat.start',
             'chat.store',
         ],
         'warga' => ['warga.*'],

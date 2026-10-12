@@ -21,7 +21,7 @@ const SCRIPT_ID = 'sigap-recaptcha-v3';
 let loading: Promise<Grecaptcha> | null = null;
 
 /** Aksi yang diharapkan backend (App\Services\RecaptchaService::ACTION_*). */
-export type RecaptchaAction = 'pengaduan' | 'pengaduan_internal' | 'survei';
+export type RecaptchaAction = 'pengaduan' | 'pengaduan_internal' | 'survei' | 'chat';
 
 export function recaptchaScriptUrl(siteKey: string): string {
     return `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(siteKey)}`;

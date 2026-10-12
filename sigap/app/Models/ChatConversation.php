@@ -21,6 +21,7 @@ class ChatConversation extends Model
     protected $fillable = [
         'user_id',
         'guest_token',
+        'guest_name',
         'subject',
         'last_message_at',
         'unread_admin',
@@ -44,6 +45,18 @@ class ChatConversation extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(ChatMessage::class, 'conversation_id')->orderBy('created_at');
+    }
+
+    /** Nama penanya untuk ditampilkan ke petugas. */
+    public function participantName(): string
+    {
+        return $this->user?->name ?? $this->guest_name ?? 'Tamu';
+    }
+
+    /** Jumlah pesan belum dibaca petugas di seluruh percakapan (badge sidebar). */
+    public static function unreadForAdmins(): int
+    {
+        return (int) static::query()->sum('unread_admin');
     }
 
     public function prunable(): Builder

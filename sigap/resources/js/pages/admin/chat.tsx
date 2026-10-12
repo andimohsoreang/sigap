@@ -1,16 +1,18 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CHAT_UNREAD_EVENT, type ChatUnreadPayload } from '@/hooks/use-chat-unread';
 import AdminLayout from '@/layouts/admin-layout';
 import { cn } from '@/lib/utils';
 import { router, useForm } from '@inertiajs/react';
 import { echo, echoIsConfigured } from '@laravel/echo-react';
-import { Search, Send } from 'lucide-react';
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { BadgeCheck, Search, Send, UserRound } from 'lucide-react';
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 interface Conversation {
     id: number;
     nama: string;
     inisial: string;
+    tipe: 'warga' | 'tamu';
     subjek: string | null;
     cuplikan: string | null;
     unread: number;
@@ -23,18 +25,28 @@ interface Message {
     sender_type: string;
     penulis: string;
     pada: string | null;
+    dibaca?: boolean;
 }
 
 interface Active {
     id: number;
     nama: string;
     inisial: string;
+    tipe: 'warga' | 'tamu';
+    username: string | null;
+    jumlah_tiket: number | null;
+    mulai: string | null;
     messages: Message[];
 }
 
 interface Props {
     conversations: Conversation[];
     active: Active | null;
+}
+
+/** Muat ulang daftar (dan utas aktif) tanpa kehilangan posisi gulir. */
+function refresh(includeActive: boolean) {
+    router.reload({ only: includeActive ? ['active', 'conversations', 'chat_unread'] : ['conversations', 'chat_unread'] });
 }
 
 export default function Chat({ conversations, active }: Props) {
@@ -47,16 +59,54 @@ export default function Chat({ conversations, active }: Props) {
         return conversations.filter((c) => c.nama.toLowerCase().includes(q) || (c.cuplikan ?? '').toLowerCase().includes(q));
     }, [conversations, search]);
 
-    // Reverb (PRD D5): pesan baru pada percakapan aktif & notifikasi tiket.
     const activeId = active?.id;
+    // Pembaruan yang datang saat tab tersembunyi ditunda sampai tab terlihat lagi.
+    const pending = useRef(false);
+    const refreshWhenVisible = (includeActive: boolean) => {
+        if (document.visibilityState === 'visible') refresh(includeActive);
+        else pending.current = true;
+    };
+
+    // Pastikan URL memuat ?conversation=… agar reload berikutnya tetap di utas yang sama
+    // (dan hanya utas yang benar-benar dibuka yang ditandai dibaca).
+    useEffect(() => {
+        if (!activeId) return;
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('conversation') !== String(activeId)) {
+            router.get('/admin/chat', { conversation: activeId }, { replace: true, preserveState: true, preserveScroll: true });
+        }
+    }, [activeId]);
+
+    // Pesan baru di utas aktif (termasuk balasan petugas lain) via kanal chat.{id}.
     useEffect(() => {
         const echo = echoInstance();
         if (!echo || !activeId) return;
 
         const channel = echo.private(`chat.${activeId}`);
-        channel.listen('.chat.message', () => router.reload({ only: ['active', 'conversations'] }));
+        channel.listen('.chat.message', () => refreshWhenVisible(true));
 
         return () => echo.leave(`chat.${activeId}`);
+    }, [activeId]);
+
+    // Pesan masuk di percakapan mana pun (event dari layout, kanal admin.chat).
+    // Bila tab tersembunyi, tunda sampai terlihat agar pesan tidak "terbaca" diam-diam.
+    useEffect(() => {
+        const onUnread = (e: Event) => {
+            const detail = (e as CustomEvent<ChatUnreadPayload>).detail;
+            refreshWhenVisible(detail?.conversation_id === activeId);
+        };
+        const onVisible = () => {
+            if (pending.current && document.visibilityState === 'visible') {
+                pending.current = false;
+                refresh(true);
+            }
+        };
+        window.addEventListener(CHAT_UNREAD_EVENT, onUnread);
+        document.addEventListener('visibilitychange', onVisible);
+        return () => {
+            window.removeEventListener(CHAT_UNREAD_EVENT, onUnread);
+            document.removeEventListener('visibilitychange', onVisible);
+        };
     }, [activeId]);
 
     const open = (id: number) => router.get('/admin/chat', { conversation: id }, { preserveState: true, preserveScroll: true });
@@ -94,7 +144,16 @@ export default function Chat({ conversations, active }: Props) {
                                     )}
                                 >
                                     <div className="mb-1 flex items-start justify-between">
-                                        <h4 className="text-sm font-bold text-gray-800 dark:text-white">{c.nama}</h4>
+                                        <h4 className="flex items-center gap-1 text-sm font-bold text-gray-800 dark:text-white">
+                                            {c.nama}
+                                            {c.tipe === 'warga' ? (
+                                                <BadgeCheck className="h-3.5 w-3.5 text-emerald-500" aria-label="Warga terdaftar" />
+                                            ) : (
+                                                <span className="rounded bg-gray-200 px-1 text-[9px] font-semibold text-gray-600 uppercase dark:bg-gray-600 dark:text-gray-200">
+                                                    Tamu
+                                                </span>
+                                            )}
+                                        </h4>
                                         <span className="text-[10px] text-gray-500 dark:text-gray-400">{formatRelative(c.last_message_at)}</span>
                                     </div>
                                     <p className="truncate text-xs text-gray-600 dark:text-gray-300">{c.cuplikan ?? c.subjek ?? '—'}</p>
@@ -122,7 +181,17 @@ export default function Chat({ conversations, active }: Props) {
                                     </div>
                                     <div>
                                         <h4 className="text-sm font-bold text-gray-800 dark:text-white">{active.nama}</h4>
-                                        <span className="text-[10px] font-bold text-green-500">● Online</span>
+                                        {active.tipe === 'warga' ? (
+                                            <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                                <BadgeCheck className="h-3.5 w-3.5" /> Warga terdaftar
+                                                {active.username ? ` · ${active.username}` : ''}
+                                                {active.jumlah_tiket !== null ? ` · ${active.jumlah_tiket} tiket` : ''}
+                                            </span>
+                                        ) : (
+                                            <span className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                                <UserRound className="h-3.5 w-3.5" /> Tamu · nama diisi sendiri, belum terverifikasi
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>

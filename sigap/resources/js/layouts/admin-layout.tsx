@@ -1,5 +1,6 @@
 import NotificationBell from '@/components/sigap/notification-bell';
 import { useAppearance } from '@/hooks/use-appearance';
+import { useChatUnread } from '@/hooks/use-chat-unread';
 import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -56,6 +57,7 @@ export default function AdminLayout({ children, title, subtitle, actions }: Admi
     const { auth, app, flash } = usePage<SharedData>().props;
     const { appearance, updateAppearance } = useAppearance();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const chatUnread = useChatUnread();
 
     const url = usePage().url;
     const isSuper = Boolean(auth?.user?.is_admin && auth?.user?.role === 'super_admin');
@@ -94,7 +96,19 @@ export default function AdminLayout({ children, title, subtitle, actions }: Admi
                             )}
                         >
                             <Icon className="h-5 w-5 shrink-0" />
-                            {item.label}
+                            <span className="flex-1">{item.label}</span>
+                            {item.href === '/admin/chat' && chatUnread > 0 && (
+                                <span
+                                    className="relative flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[10px] leading-none font-bold text-white"
+                                    aria-label={`${chatUnread} pesan belum dibaca`}
+                                >
+                                    <span
+                                        className="absolute inset-0 animate-ping rounded-full bg-red-500 opacity-60 motion-reduce:hidden"
+                                        aria-hidden="true"
+                                    />
+                                    <span className="relative">{chatUnread > 99 ? '99+' : chatUnread}</span>
+                                </span>
+                            )}
                         </Link>
                     );
                 })}

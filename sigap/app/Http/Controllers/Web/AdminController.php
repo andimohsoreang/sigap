@@ -25,6 +25,7 @@ use App\Services\ChatService;
 use App\Services\StatsService;
 use App\Services\TicketService;
 use App\Support\Search;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -283,42 +284,66 @@ class AdminController extends Controller
     {
         $this->authorize('viewAny', Ticket::class);
 
+        $activeId = $request->integer('conversation') ?: ChatConversation::query()->orderByDesc('last_message_at')->value('id');
+
+        // Tandai dibaca DULU, baru susun daftar — agar badge percakapan aktif
+        // langsung hilang pada respons yang sama (bukan menunggu reload).
+        if ($activeId && ($conversation = ChatConversation::query()->find($activeId))) {
+            $this->chat->markReadByAdmin($conversation);
+        } else {
+            $activeId = null;
+        }
+
         $conversations = ChatConversation::query()
             ->with(['user', 'messages' => fn ($q) => $q->latest()->limit(1)])
             ->orderByDesc('last_message_at')
-            ->limit(50)
+            ->limit(100)
             ->get()
             ->map(fn (ChatConversation $c) => [
                 'id' => $c->id,
-                'nama' => $c->user?->name ?? 'Tamu',
-                'inisial' => mb_strtoupper(mb_substr($c->user?->name ?? 'T', 0, 1)),
+                'nama' => $c->participantName(),
+                'inisial' => mb_strtoupper(mb_substr($c->participantName(), 0, 1)),
+                'tipe' => $c->user_id ? 'warga' : 'tamu',
                 'subjek' => $c->subject,
                 'cuplikan' => $c->messages->first()?->body,
                 'unread' => $c->unread_admin,
                 'last_message_at' => $c->last_message_at?->toIso8601String(),
             ]);
 
-        $activeId = $request->integer('conversation') ?: ($conversations->first()['id'] ?? null);
-        $active = $activeId ? $this->conversationThread((int) $activeId) : null;
-
-        // Tandai sudah dibaca saat admin membuka percakapan.
-        if ($active) {
-            ChatConversation::query()->whereKey($active['id'])->update(['unread_admin' => 0]);
-        }
-
         return Inertia::render('admin/chat', [
             'conversations' => $conversations,
-            'active' => $active,
+            'active' => $activeId ? $this->conversationThread((int) $activeId) : null,
         ]);
+    }
+
+    /** POST /admin/chat/{id}/baca — dipanggil saat pesan baru masuk ke utas yang sedang dibuka. */
+    public function readChat(ChatConversation $conversation): JsonResponse
+    {
+        $this->authorize('viewAny', Ticket::class);
+
+        $this->chat->markReadByAdmin($conversation);
+
+        return response()->json(['total' => ChatConversation::unreadForAdmins()]);
+    }
+
+    /** GET /admin/chat/belum-dibaca — fallback polling badge sidebar bila WebSocket mati. */
+    public function chatUnread(): JsonResponse
+    {
+        $this->authorize('viewAny', Ticket::class);
+
+        return response()->json(['total' => ChatConversation::unreadForAdmins()]);
     }
 
     public function sendChat(Request $request, ChatConversation $conversation): RedirectResponse
     {
         $this->authorize('viewAny', Ticket::class);
 
+        $request->merge(['body' => trim((string) $request->input('body'))]);
         $data = $request->validate(['body' => ['required', 'string', 'max:2000']]);
 
         $this->chat->send($conversation, $data['body'], 'admin', $request->user()->id);
+        // Membalas berarti sudah membaca.
+        $this->chat->markReadByAdmin($conversation);
 
         return back()->with('success', 'Balasan terkirim.');
     }
@@ -873,17 +898,25 @@ class AdminController extends Controller
     private function conversationThread(int $id): array
     {
         $conversation = ChatConversation::query()->with('user')->findOrFail($id);
+        $nama = $conversation->participantName();
+        $user = $conversation->user;
 
         return [
             'id' => $conversation->id,
-            'nama' => $conversation->user?->name ?? 'Tamu',
-            'inisial' => mb_strtoupper(mb_substr($conversation->user?->name ?? 'T', 0, 1)),
+            'nama' => $nama,
+            'inisial' => mb_strtoupper(mb_substr($nama, 0, 1)),
+            // Warga = akun login (identitas terverifikasi NIK); tamu = nama isian sendiri.
+            'tipe' => $user ? 'warga' : 'tamu',
+            'username' => $user?->username,
+            'jumlah_tiket' => $user ? Ticket::query()->where('reporter_id', $user->id)->count() : null,
+            'mulai' => $conversation->created_at?->toIso8601String(),
             'messages' => $conversation->messages()->with('sender')->get()->map(fn (ChatMessage $m) => [
                 'id' => $m->id,
                 'body' => $m->body,
                 'sender_type' => $m->sender_type,
-                'penulis' => $m->sender_type === 'admin' ? ($m->sender?->name ?? 'Admin') : ($conversation->user?->name ?? 'Tamu'),
+                'penulis' => $m->sender_type === 'admin' ? ($m->sender?->name ?? 'Petugas') : $nama,
                 'pada' => $m->created_at?->toIso8601String(),
+                'dibaca' => $m->read_at !== null,
             ]),
         ];
     }

@@ -26,6 +26,8 @@ class RecaptchaService
 
     public const ACTION_SURVEI = 'survei';
 
+    public const ACTION_CHAT = 'chat';
+
     public function enabled(): bool
     {
         return ! empty(config('services.recaptcha.secret'));

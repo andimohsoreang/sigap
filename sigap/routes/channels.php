@@ -29,6 +29,10 @@ Broadcast::channel('chat.{conversationId}', function (User $user, int $conversat
         ->exists();
 });
 
+// Kotak masuk chat petugas: badge "Pesan Masuk" & daftar percakapan realtime
+// (ChatUnreadChanged `.chat.unread`). Hanya admin.
+Broadcast::channel('admin.chat', fn (User $user) => $user->isAdmin());
+
 // Notifikasi in-app per pengguna (D10): hanya ke diri sendiri. Dipakai oleh
 // TicketChanged (`.ticket.changed`) dan NotificationBroadcast
 // (`.notification.incoming`) — keduanya menyiarkan ke `private-user.{id}`.
