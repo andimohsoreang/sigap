@@ -116,7 +116,7 @@ openssl rand -hex 32                        # REVERB_APP_SECRET, lalu sekali lag
 | `REVERB_APP_KEY` = `VITE_REVERB_APP_KEY`, `REVERB_APP_SECRET` | acak |
 | `REVERB_ALLOWED_ORIGINS`, `SANCTUM_STATEFUL_DOMAINS`, `VITE_REVERB_HOST` | `app2.andimohamad.my.id` |
 | `MAIL_*` | SMTP kementerian (wajib agar notifikasi surel terkirim) |
-| `RECAPTCHA_*` | kunci reCAPTCHA v3 (kosong = nonaktif) |
+| `RECAPTCHA_SITE_KEY`, `RECAPTCHA_SECRET_KEY` | kunci reCAPTCHA v3 untuk domain ini — **wajib di production**. Bila kosong, verifikasi *fail closed*: pengaduan publik, survei, dan chat tamu ditolak (422). Kosong hanya boleh di `local`/`testing` |
 
 Aturan penting:
 

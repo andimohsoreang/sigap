@@ -22,7 +22,8 @@ for a in "$@"; do
 done
 
 die() { echo "GAGAL: $*" >&2; exit 1; }
-val() { grep -E "^$1=" .env | tail -n1 | cut -d= -f2- | sed -E 's/[[:space:]]+#.*$//; s/^"(.*)"$/\1/'; }
+# Kunci yang tidak ada di .env menghasilkan string kosong (grep exit 1 + pipefail tidak boleh mematikan skrip).
+val() { { grep -E "^$1=" .env || true; } | tail -n1 | cut -d= -f2- | sed -E 's/[[:space:]]+#.*$//; s/^"(.*)"$/\1/'; }
 
 [[ -f .env ]] || die "deploy/docker/.env belum ada. Salin dari .env.example lalu isi (docs/DEPLOY.md §3)."
 for k in APP_KEY NIK_HASH_KEY DB_PASSWORD REVERB_APP_KEY REVERB_APP_SECRET APP_URL; do
@@ -31,6 +32,10 @@ done
 [[ "$(val REVERB_APP_KEY)" == "$(val VITE_REVERB_APP_KEY)" ]] || die "VITE_REVERB_APP_KEY harus sama dengan REVERB_APP_KEY"
 [[ "$(val APP_DEBUG)" == "false" ]] || die "APP_DEBUG harus false"
 chmod 600 .env
+if [[ -z "$(val RECAPTCHA_SECRET_KEY)" || -z "$(val RECAPTCHA_SITE_KEY)" ]]; then
+  echo "PERINGATAN: RECAPTCHA_SITE_KEY/RECAPTCHA_SECRET_KEY kosong — di production pengaduan publik," >&2
+  echo "            survei, dan chat tamu akan DITOLAK (fail closed). Lihat docs/DEPLOY.md §3." >&2
+fi
 
 WEB_PORT="$(val WEB_PORT)"; WEB_PORT="${WEB_PORT:-8092}"
 DB_USER="$(val DB_USERNAME)"; DB_NAME="$(val DB_DATABASE)"
