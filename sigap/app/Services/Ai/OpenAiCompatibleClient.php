@@ -3,6 +3,7 @@
 namespace App\Services\Ai;
 
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -53,7 +54,7 @@ class OpenAiCompatibleClient implements LlmClient
         return $content;
     }
 
-    private function send(array $payload): ?\Illuminate\Http\Client\Response
+    private function send(array $payload): ?Response
     {
         try {
             return Http::acceptJson()

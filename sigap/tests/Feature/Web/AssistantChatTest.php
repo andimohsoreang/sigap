@@ -15,6 +15,7 @@ use Database\Seeders\MasterSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -53,7 +54,7 @@ class AssistantChatTest extends TestCase
         return ChatConversation::query()->latest('id')->firstOrFail();
     }
 
-    private function ask(string $body): \Illuminate\Testing\TestResponse
+    private function ask(string $body): TestResponse
     {
         return $this->postJson('/chat/pesan', ['body' => $body])->assertCreated();
     }

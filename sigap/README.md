@@ -75,6 +75,21 @@ php artisan schedule:work               # scheduler (opsional di dev)
 Atau satu perintah untuk dev: `composer dev` (server + queue + log + Vite HMR di
 `http://127.0.0.1:5173` + Reverb). CSP lokal otomatis mengizinkan server Vite & Reverb lokal.
 
+## Asisten AI (contact center)
+
+Nonaktif bawaan. Untuk mencoba lokal **tanpa API key**:
+
+```bash
+# .env
+AI_ENABLED=true
+AI_DRIVER=fake          # jawaban tiruan dari Basis Pengetahuan
+php artisan db:seed --class=KnowledgeSeeder
+php artisan queue:work  # untuk fitur "Buat dari dokumen resmi"
+```
+
+Untuk model sungguhan (OpenCode Zen, Ollama, vLLM) set `AI_DRIVER=openai`, `AI_BASE_URL`, `AI_API_KEY`,
+`AI_MODEL` — lihat `../docs/DEPLOY.md` §13. Tes selalu memakai `AI_ENABLED=false` (diatur di `phpunit.xml`).
+
 ## Akun
 
 **Tidak ada kredensial default** (SEC-01). Akun dibuat eksplisit:

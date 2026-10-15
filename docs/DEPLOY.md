@@ -373,3 +373,52 @@ Rollback cutover: kembalikan ingress `app1` ke stack lama dan nyalakan lagi `app
 | Surel tidak terkirim | `queue` mati / SMTP salah | `docker compose logs queue`, `php artisan queue:failed` |
 | `password authentication failed` | `DB_PASSWORD` diganti setelah volume dibuat | samakan password di PostgreSQL atau kembalikan nilainya |
 | Port bentrok saat `up` | `WEB_PORT` dipakai stack lain | ganti `WEB_PORT`, sesuaikan ingress cloudflared |
+| Asisten selalu meneruskan ke petugas | `AI_*` salah / kuota habis / belum ada artikel terbit | `docker compose logs app \| grep AI:`; cek `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`; terbitkan artikel |
+| Dokumen PDF "Sedang diproses" terus | `queue` mati | `docker compose ps queue`, `docker compose restart queue` |
+
+---
+
+## 13. Asisten AI contact center
+
+Asisten AI menjawab pertanyaan warga **hanya dari artikel Basis Pengetahuan yang berstatus Terbit**,
+menyebut sumbernya, dan meneruskan ke petugas (beserta ringkasan) untuk aduan, pertanyaan hak pribadi,
+permintaan warga, atau bila tidak menemukan sumber. AI tidak menerbitkan tiket dan tidak memutuskan hak
+warga. NIK, nomor HP, surel, dan deret angka panjang disamarkan sebelum teks dikirim ke model.
+
+**Nonaktif secara bawaan** (`AI_ENABLED=false`): live chat bekerja seperti sebelumnya (langsung ke petugas).
+
+### Menyalakan
+
+1. Isi Basis Pengetahuan dulu (panel admin → Basis Pengetahuan). Tanpa artikel terbit, AI hanya bisa
+   menjawab "belum menemukan informasi resmi" dan meneruskan ke petugas.
+   `php artisan db:seed --class=KnowledgeSeeder --force` menambahkan 8 artikel cara memakai SIGAP
+   (hanya bila tabel masih kosong).
+2. Atur `deploy/docker/.env`:
+
+   | Variabel | Nilai |
+   |---|---|
+   | `AI_ENABLED` | `true` |
+   | `AI_DRIVER` | `openai` (endpoint kompatibel OpenAI). `fake` = jawaban tiruan tanpa model, hanya untuk uji |
+   | `AI_BASE_URL` | OpenCode Zen: `https://opencode.ai/inference/openai/v1` · Ollama: `http://<host>:11434/v1` · vLLM: `http://<host>:8000/v1` |
+   | `AI_API_KEY` | kunci penyedia (kosongkan untuk Ollama lokal) |
+   | `AI_MODEL` | mis. `deepseek-v4.1-flash` (Zen) atau nama model Ollama/vLLM |
+   | `AI_SERVICE_DAYS`, `AI_SERVICE_START`, `AI_SERVICE_END`, `AI_SERVICE_LABEL` | jam layanan petugas (WIB) |
+
+3. `bash scripts/deploy.sh --no-pull` (container dibuat ulang dengan `.env` baru).
+
+> **Data warga asli:** jangan memakai model berakhiran `-free` di OpenCode Zen (sebagian boleh dipakai
+> melatih model). Server Zen berada di AS/UE — untuk produksi instansi publik, konfirmasi dulu ke
+> Pusdatin/biro hukum (PP 71/2019, UU 27/2022), atau gunakan model di server Kementerian.
+
+### Yang perlu berjalan
+
+- `queue` — memproses PDF di menu **Basis Pengetahuan → Buat dari dokumen resmi**.
+- Server SIGAP saat ini (tanpa GPU, CPU tanpa AVX) **tidak** dapat menjalankan model lokal; pakai
+  penyedia API atau server GPU terpisah.
+
+### Mematikan / rollback
+
+- Cepat, tanpa rilis: `AI_ENABLED=false` lalu `bash scripts/deploy.sh --no-pull`. Percakapan yang sedang
+  dijawab AI akan dilayani petugas seperti live chat biasa; data (artikel, ringkasan) tetap tersimpan.
+- Kode: kembali ke image sebelumnya (`bash scripts/deploy.sh --rollback`). Migrasi fitur ini hanya
+  **menambah** tabel/kolom, sehingga versi lama tetap berjalan tanpa `migrate:rollback`.
