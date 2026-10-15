@@ -6,6 +6,9 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Policies\TicketPolicy;
 use App\Policies\UserPolicy;
+use App\Services\Ai\FakeLlmClient;
+use App\Services\Ai\LlmClient;
+use App\Services\Ai\OpenAiCompatibleClient;
 use App\Support\Nik;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -17,7 +20,13 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->bind(LlmClient::class, function () {
+            $ai = config('services.ai');
+
+            return $ai['driver'] === 'openai'
+                ? new OpenAiCompatibleClient($ai['base_url'], $ai['api_key'], $ai['model'], $ai['timeout'], $ai['max_tokens'])
+                : new FakeLlmClient;
+        });
     }
 
     public function boot(): void
