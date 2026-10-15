@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Web\AdminController;
 use App\Http\Controllers\Web\ChatController;
+use App\Http\Controllers\Web\KnowledgeController;
 use App\Http\Controllers\Web\MasukController;
 use App\Http\Controllers\Web\PengaduanFormController;
 use App\Http\Controllers\Web\PublicController;
@@ -84,6 +85,12 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
     Route::post('/chat/{conversation}/balas', [AdminController::class, 'sendChat'])->name('admin.chat.reply');
     Route::post('/chat/{conversation}/baca', [AdminController::class, 'readChat'])->name('admin.chat.read');
     Route::get('/chat/belum-dibaca', [AdminController::class, 'chatUnread'])->name('admin.chat.unread');
+
+    // Basis Pengetahuan — sumber jawaban asisten AI.
+    Route::get('/pengetahuan', [KnowledgeController::class, 'index'])->name('admin.pengetahuan');
+    Route::post('/pengetahuan', [KnowledgeController::class, 'store'])->name('admin.pengetahuan.store');
+    Route::put('/pengetahuan/{article}', [KnowledgeController::class, 'update'])->name('admin.pengetahuan.update');
+    Route::delete('/pengetahuan/{article}', [KnowledgeController::class, 'destroy'])->name('admin.pengetahuan.destroy');
 
     Route::get('/kawasan', [AdminController::class, 'kawasan'])->name('admin.kawasan');
     Route::post('/kawasan', [AdminController::class, 'storeRegion'])->name('admin.kawasan.store');

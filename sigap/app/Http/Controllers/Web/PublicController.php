@@ -8,6 +8,7 @@ use App\Http\Requests\StoreSurveyRequest;
 use App\Http\Resources\V1\TicketResource;
 use App\Models\Category;
 use App\Models\Channel;
+use App\Models\KnowledgeArticle;
 use App\Models\Region;
 use App\Models\Ticket;
 use App\Services\StatsService;
@@ -200,9 +201,25 @@ class PublicController extends Controller
             ->all();
     }
 
-    /** @return array<int, array{question: string, answer: string}> */
+    /**
+     * FAQ beranda dari Basis Pengetahuan (artikel terbit yang paling sering
+     * dipakai). Daftar bawaan dipakai hanya bila belum ada artikel terbit.
+     *
+     * @return array<int, array{question: string, answer: string}>
+     */
     private function faqs(): array
     {
+        $articles = KnowledgeArticle::query()
+            ->published()
+            ->orderByDesc('used_count')
+            ->orderBy('id')
+            ->limit(8)
+            ->get(['title', 'body']);
+
+        if ($articles->isNotEmpty()) {
+            return $articles->map(fn (KnowledgeArticle $a) => ['question' => $a->title, 'answer' => $a->body])->all();
+        }
+
         return [
             ['question' => 'Bagaimana cara mengadukan layanan?', 'answer' => 'Anda dapat membuat tiket aduan melalui menu "Katalog Pengaduan" memilih SIGAP di portal ini, mengisi formulir dengan detail lokasi, lalu menyimpannya.'],
             ['question' => 'Bagaimana caranya mendapatkan Hak Akses log in ke SIGAP?', 'answer' => 'Masyarakat umum dapat login lewat Portal Warga. Hak akses Admin dikhususkan bagi Pegawai terdaftar.'],

@@ -281,7 +281,9 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                                         {faq.question}
                                     </h3>
                                 </summary>
-                                <div className="border-t border-gray-50 px-5 pt-4 pb-5 pl-[72px] text-sm text-gray-500">{faq.answer}</div>
+                                <div className="border-t border-gray-50 px-5 pt-4 pb-5 pl-[72px] text-sm whitespace-pre-line text-gray-500">
+                                    {faq.answer}
+                                </div>
                             </details>
                         ))}
                     </div>
