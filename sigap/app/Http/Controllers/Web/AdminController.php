@@ -19,9 +19,11 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Services\AccountService;
 use App\Services\AttachmentService;
+use App\Services\Ai\AssistantService;
 use App\Services\AuditService;
 use App\Services\Channels\ChannelAdapterManager;
 use App\Services\ChatService;
+use App\Services\ContactCenterStats;
 use App\Services\StatsService;
 use App\Services\TicketService;
 use App\Support\Search;
@@ -49,6 +51,7 @@ class AdminController extends Controller
         private readonly AuditService $audit,
         private readonly StatsService $stats,
         private readonly AccountService $accounts,
+        private readonly ContactCenterStats $contactCenterStats,
     ) {}
 
     /* --------------------------- Matriks Rekap --------------------------- */
@@ -241,17 +244,22 @@ class AdminController extends Controller
 
     /* --------------------------- Input Manual ---------------------------- */
 
-    public function inputManualForm(): Response
+    public function inputManualForm(Request $request): Response
     {
         $this->authorize('create', Ticket::class);
 
-        $user = request()->user();
+        $user = $request->user();
+        $conversation = $request->integer('percakapan')
+            ? ChatConversation::query()->with('user')->whereNull('ticket_id')->find($request->integer('percakapan'))
+            : null;
 
         return Inertia::render('admin/input-manual', [
             'options' => $this->formOptions(),
             // A-11: admin kawasan selalu menerbitkan tiket ke kawasannya sendiri.
             'region_locked' => $user->role === UserRole::AdminKawasan,
             'own_region' => $user->region ? ['id' => $user->region->id, 'name' => $user->region->name] : null,
+            // Tiket dari percakapan contact center: formulir diisi dari ringkasan AI.
+            'prefill' => $conversation ? $this->ticketPrefill($conversation) : null,
         ]);
     }
 
@@ -264,9 +272,48 @@ class AdminController extends Controller
 
         $this->audit->safe('ticket.created_manual', $ticket, "Tiket {$ticket->ticket_no} dibuat lewat input manual.");
 
+        $conversation = $request->validated('percakapan_id')
+            ? ChatConversation::query()->whereNull('ticket_id')->find($request->validated('percakapan_id'))
+            : null;
+
+        if ($conversation) {
+            // Nomor tiket dikirim ke percakapan yang sama; percakapan ditutup "jadi tiket".
+            $this->chat->send($conversation, "Tiket {$ticket->ticket_no} telah diterbitkan untuk laporan Anda. Perkembangannya dapat dipantau di halaman Lacak Tiket.", 'system', null, [
+                'kind' => 'tiket_terbit',
+                'tiket' => ['nomor' => $ticket->ticket_no, 'url' => '/lacak/'.$ticket->ticket_no],
+            ]);
+            $this->chat->close($conversation, 'tiket', $request->user()->id, $ticket);
+
+            return redirect()
+                ->route('admin.chat', ['conversation' => $conversation->id])
+                ->with('success', "Tiket {$ticket->ticket_no} diterbitkan dan dikirim ke percakapan.");
+        }
+
         return redirect()
             ->route('admin.matriks')
             ->with('success', "Tiket {$ticket->ticket_no} berhasil diterbitkan dari input manual.");
+    }
+
+    /** @return array<string, mixed> */
+    private function ticketPrefill(ChatConversation $conversation): array
+    {
+        $summary = trim((string) $conversation->ai_summary);
+        $wargaMessages = $conversation->messages()->getQuery()
+            ->whereIn('sender_type', ['user', 'guest'])
+            ->reorder('id')
+            ->limit(10)
+            ->pluck('body')
+            ->implode("\n- ");
+        $contact = (string) $conversation->contact;
+
+        return [
+            'percakapan_id' => $conversation->id,
+            'referensi' => $conversation->reference,
+            'nama' => $conversation->participantName(),
+            'telepon' => preg_match('/^[\d\s.+-]+$/', $contact) ? $contact : '',
+            'judul' => Str::limit($summary !== '' ? Str::before($summary, '.') : 'Aduan dari live chat', 120, ''),
+            'uraian' => trim(($summary !== '' ? "Ringkasan asisten: {$summary}\n\n" : '')."Pesan warga di live chat:\n- {$wargaMessages}"),
+        ];
     }
 
     /* ------------------------------ Chat --------------------------------- */
@@ -284,7 +331,20 @@ class AdminController extends Controller
     {
         $this->authorize('viewAny', Ticket::class);
 
-        $activeId = $request->integer('conversation') ?: ChatConversation::query()->orderByDesc('last_message_at')->value('id');
+        // Tab Kotak Masuk. Tanpa asisten AI, bawaannya "semua" (live chat lama).
+        $tabs = [
+            'menunggu' => fn ($q) => $q->whereNull('closed_at')->where('handled_by', ChatConversation::HANDLED_STAFF),
+            'ai' => fn ($q) => $q->whereNull('closed_at')->where('handled_by', ChatConversation::HANDLED_AI),
+            'selesai' => fn ($q) => $q->whereNotNull('closed_at'),
+            'semua' => fn ($q) => $q,
+        ];
+        $tab = $request->string('tab')->toString();
+        if (! array_key_exists($tab, $tabs)) {
+            $tab = AssistantService::enabled() ? 'menunggu' : 'semua';
+        }
+        $scoped = fn () => $tabs[$tab](ChatConversation::query());
+
+        $activeId = $request->integer('conversation') ?: $scoped()->orderByDesc('last_message_at')->value('id');
 
         // Tandai dibaca DULU, baru susun daftar — agar badge percakapan aktif
         // langsung hilang pada respons yang sama (bukan menunggu reload).
@@ -294,8 +354,8 @@ class AdminController extends Controller
             $activeId = null;
         }
 
-        $conversations = ChatConversation::query()
-            ->with(['user', 'messages' => fn ($q) => $q->latest()->limit(1)])
+        $conversations = $scoped()
+            ->with(['user', 'assignee:id,name', 'messages' => fn ($q) => $q->latest()->limit(1)])
             ->orderByDesc('last_message_at')
             ->limit(100)
             ->get()
@@ -305,16 +365,37 @@ class AdminController extends Controller
                 'inisial' => mb_strtoupper(mb_substr($c->participantName(), 0, 1)),
                 'tipe' => $c->user_id ? 'warga' : 'tamu',
                 'subjek' => $c->subject,
-                'cuplikan' => $c->messages->first()?->body,
+                'cuplikan' => $c->ai_summary ?? $c->messages->first()?->body,
                 'unread' => $c->unread_admin,
                 'last_message_at' => $c->last_message_at?->toIso8601String(),
+                'mode' => $c->handled_by,
+                'alasan' => self::HANDOFF_REASONS[$c->handoff_reason] ?? null,
+                'diteruskan_at' => $c->handoff_at?->toIso8601String(),
+                'hasil' => $c->outcome ? ChatConversation::OUTCOMES[$c->outcome] ?? $c->outcome : null,
+                'referensi' => $c->reference,
+                'butuh_dihubungi' => $c->contact !== null && $c->closed_at === null,
+                'petugas' => $c->assignee?->name,
             ]);
 
         return Inertia::render('admin/chat', [
             'conversations' => $conversations,
             'active' => $activeId ? $this->conversationThread((int) $activeId) : null,
+            'tab' => $tab,
+            'tab_counts' => collect($tabs)->map(fn ($scope) => $scope(ChatConversation::query())->count()),
+            'ai_enabled' => AssistantService::enabled(),
+            'kpi' => AssistantService::enabled() ? $this->contactCenterStats->overview() : null,
+            'outcomes' => collect(ChatConversation::OUTCOMES)->only(['terjawab_petugas', 'lapor', 'wbs', 'tidak_selesai']),
         ]);
     }
+
+    /** Label alasan percakapan diteruskan ke petugas. */
+    private const HANDOFF_REASONS = [
+        'aduan' => 'Aduan',
+        'pribadi' => 'Hak pribadi',
+        'diminta' => 'Diminta warga',
+        'ai_gagal' => 'AI gagal menjawab',
+        'diambil_petugas' => 'Diambil petugas',
+    ];
 
     /** POST /admin/chat/{id}/baca — dipanggil saat pesan baru masuk ke utas yang sedang dibuka. */
     public function readChat(ChatConversation $conversation): JsonResponse
@@ -340,6 +421,11 @@ class AdminController extends Controller
 
         $request->merge(['body' => trim((string) $request->input('body'))]);
         $data = $request->validate(['body' => ['required', 'string', 'max:2000']]);
+
+        // Membalas percakapan yang masih dijawab AI = mengambil alih (AI berhenti).
+        if ($conversation->isWithAssistant() || $conversation->assigned_to === null) {
+            $this->chat->takeOver($conversation, $request->user()->id);
+        }
 
         $this->chat->send($conversation, $data['body'], 'admin', $request->user()->id);
         // Membalas berarti sudah membaca.
@@ -897,7 +983,7 @@ class AdminController extends Controller
     /** @return array<string, mixed> */
     private function conversationThread(int $id): array
     {
-        $conversation = ChatConversation::query()->with('user')->findOrFail($id);
+        $conversation = ChatConversation::query()->with(['user', 'assignee:id,name', 'ticket:id,ticket_no'])->findOrFail($id);
         $nama = $conversation->participantName();
         $user = $conversation->user;
 
@@ -910,13 +996,32 @@ class AdminController extends Controller
             'username' => $user?->username,
             'jumlah_tiket' => $user ? Ticket::query()->where('reporter_id', $user->id)->count() : null,
             'mulai' => $conversation->created_at?->toIso8601String(),
+            'mode' => $conversation->handled_by,
+            'ringkasan' => $conversation->ai_summary,
+            'alasan' => self::HANDOFF_REASONS[$conversation->handoff_reason] ?? null,
+            'diteruskan_at' => $conversation->handoff_at?->toIso8601String(),
+            'referensi' => $conversation->reference,
+            'kontak' => $conversation->contact,
+            'petugas' => $conversation->assignee?->name,
+            'milik_saya' => $conversation->assigned_to === request()->user()->id,
+            'hasil' => $conversation->outcome ? ChatConversation::OUTCOMES[$conversation->outcome] ?? $conversation->outcome : null,
+            'ditutup_at' => $conversation->closed_at?->toIso8601String(),
+            'tiket' => $conversation->ticket ? ['nomor' => $conversation->ticket->ticket_no, 'url' => '/admin/tiket/'.$conversation->ticket->ticket_no] : null,
             'messages' => $conversation->messages()->with('sender')->get()->map(fn (ChatMessage $m) => [
                 'id' => $m->id,
                 'body' => $m->body,
                 'sender_type' => $m->sender_type,
-                'penulis' => $m->sender_type === 'admin' ? ($m->sender?->name ?? 'Petugas') : $nama,
+                'penulis' => match ($m->sender_type) {
+                    'admin' => $m->sender?->name ?? 'Petugas',
+                    'ai' => 'Asisten AI',
+                    'system' => 'Sistem',
+                    default => $nama,
+                },
                 'pada' => $m->created_at?->toIso8601String(),
                 'dibaca' => $m->read_at !== null,
+                'jenis' => $m->kind(),
+                'sumber' => $m->meta['sumber'] ?? [],
+                'nilai' => $m->feedback,
             ]),
         ];
     }

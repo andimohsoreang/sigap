@@ -188,7 +188,7 @@ const FITUR_WARGA: Feature[] = [
                 klarifikasi laporan yang sedang berjalan.
             </>
         ),
-        tips: ['Balasan petugas masuk ke halaman Pesan Masuk panel admin.', 'Untuk laporan resmi tetap gunakan formulir pengaduan.'],
+        tips: ['Balasan petugas masuk ke halaman Kotak Masuk panel admin.', 'Untuk laporan resmi tetap gunakan formulir pengaduan.'],
         shots: [s('m11-livechat.jpeg', 'Widget live chat', 'Widget live chat: kirim pertanyaan dan terima balasan petugas.')],
     },
 ];
@@ -299,7 +299,7 @@ const FITUR_ADMIN: Feature[] = [
     {
         id: 'a-chat',
         icon: Inbox,
-        title: 'Pesan Masuk (Live Chat)',
+        title: 'Kotak Masuk (Live Chat)',
         desc: (
             <>
                 Seluruh percakapan live chat warga terkumpul di sini. Pilih percakapan pada daftar kiri, baca riwayatnya, lalu balas melalui kolom di

@@ -18,6 +18,8 @@ interface Props {
     /** A-11: admin kawasan tidak dapat memilih kawasan (dipaksa server). */
     region_locked?: boolean;
     own_region?: { id: number; name: string } | null;
+    /** Tiket dari percakapan contact center: isian awal dari ringkasan AI. */
+    prefill?: { percakapan_id: number; referensi: string | null; nama: string; telepon: string; judul: string; uraian: string } | null;
 }
 
 const SUMBER = [
@@ -30,6 +32,10 @@ const SUMBER = [
         ],
     },
     {
+        group: 'Daring',
+        items: [{ value: 'live_chat', label: 'Live Chat SIGAP' }],
+    },
+    {
         group: 'Media Sosial',
         items: [
             { value: 'instagram', label: 'Instagram' },
@@ -40,16 +46,17 @@ const SUMBER = [
     },
 ];
 
-export default function InputManual({ options, region_locked: regionLocked = false, own_region: ownRegion = null }: Props) {
+export default function InputManual({ options, region_locked: regionLocked = false, own_region: ownRegion = null, prefill = null }: Props) {
     const { auth } = usePage<SharedData>().props;
     const { data, setData, post, processing, errors, progress } = useForm({
-        sumber_laporan: '',
+        sumber_laporan: prefill ? 'live_chat' : '',
         nik: '',
-        nama: '',
-        telepon: '',
+        nama: prefill?.nama ?? '',
+        telepon: prefill?.telepon ?? '',
         tautan: '',
-        judul: '',
-        uraian: '',
+        judul: prefill?.judul ?? '',
+        uraian: prefill?.uraian ?? '',
+        percakapan_id: prefill ? String(prefill.percakapan_id) : '',
         region_id: regionLocked && ownRegion ? String(ownRegion.id) : '',
         category_id: '',
         impact: '',
@@ -63,6 +70,12 @@ export default function InputManual({ options, region_locked: regionLocked = fal
 
     return (
         <AdminLayout title="Input Pengaduan Manual" subtitle="Penerimaan laporan offline & media sosial.">
+            {prefill && (
+                <p className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
+                    Tiket dari percakapan live chat{prefill.referensi ? ` (${prefill.referensi})` : ''}. Isian diambil dari ringkasan asisten; periksa
+                    dan lengkapi sebelum diterbitkan. Nomor tiket akan dikirim otomatis ke percakapan warga.
+                </p>
+            )}
             <Card className="border-gray-200">
                 <CardContent className="p-6 md:p-8">
                     <form onSubmit={submit} className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2">

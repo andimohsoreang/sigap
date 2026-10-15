@@ -13,7 +13,7 @@ export interface ChatUnreadPayload {
 }
 
 /**
- * Jumlah pesan live chat yang belum dibaca petugas (badge merah "Pesan Masuk").
+ * Jumlah pesan live chat yang belum dibaca petugas (badge merah "Kotak Masuk").
  *
  * - Nilai awal dari shared prop `chat_unread` (ikut diperbarui tiap navigasi Inertia).
  * - Realtime: kanal privat `admin.chat`, event `.chat.unread` → { total }.
@@ -42,7 +42,7 @@ export function useChatUnread(): number {
                     .listen('.chat.unread', (p: ChatUnreadPayload) => {
                         lastTotal.current = Math.max(0, Number(p.total) || 0);
                         setCount(lastTotal.current);
-                        // Halaman Pesan Masuk mendengarkan event ini untuk menyegarkan daftar
+                        // Halaman Kotak Masuk mendengarkan event ini untuk menyegarkan daftar
                         // (satu langganan kanal saja, dikelola layout).
                         window.dispatchEvent(new CustomEvent<ChatUnreadPayload>(CHAT_UNREAD_EVENT, { detail: p }));
                     });
@@ -61,7 +61,7 @@ export function useChatUnread(): number {
                     const res = await fetch('/admin/chat/belum-dibaca', { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
                     if (!res.ok) return;
                     const total = ((await res.json()) as { total: number }).total ?? 0;
-                    // Tanpa WebSocket: beri tahu halaman Pesan Masuk bila ada perubahan.
+                    // Tanpa WebSocket: beri tahu halaman Kotak Masuk bila ada perubahan.
                     if (lastTotal.current !== total) {
                         window.dispatchEvent(new CustomEvent<ChatUnreadPayload>(CHAT_UNREAD_EVENT, { detail: { conversation_id: 0, total } }));
                     }

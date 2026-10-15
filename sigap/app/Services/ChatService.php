@@ -6,6 +6,7 @@ use App\Events\ChatMessageSent;
 use App\Events\ChatUnreadChanged;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
+use App\Models\Ticket;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -72,6 +73,35 @@ class ChatService
         $conversation->refresh();
 
         $this->broadcast(new ChatUnreadChanged($conversation->id));
+    }
+
+    /**
+     * Petugas menangani percakapan. Bila masih dijawab AI, AI berhenti dan
+     * percakapan tercatat "diambil petugas".
+     */
+    public function takeOver(ChatConversation $conversation, int $userId): void
+    {
+        $fromAi = $conversation->isWithAssistant();
+
+        $conversation->forceFill([
+            'assigned_to' => $userId,
+            'handled_by' => ChatConversation::HANDLED_STAFF,
+            'handoff_at' => $fromAi ? ($conversation->handoff_at ?? now()) : $conversation->handoff_at,
+            'handoff_reason' => $fromAi ? ($conversation->handoff_reason ?? 'diambil_petugas') : $conversation->handoff_reason,
+        ])->save();
+    }
+
+    /** Tutup percakapan dengan satu hasil (lihat ChatConversation::OUTCOMES). */
+    public function close(ChatConversation $conversation, string $outcome, int $userId, ?Ticket $ticket = null): void
+    {
+        $conversation->forceFill([
+            'handled_by' => ChatConversation::HANDLED_STAFF,
+            'outcome' => $outcome,
+            'closed_at' => now(),
+            'closed_by' => $userId,
+            'ticket_id' => $ticket?->id ?? $conversation->ticket_id,
+            'assigned_to' => $conversation->assigned_to ?? $userId,
+        ])->save();
     }
 
     /** Petugas membuka percakapan: nolkan penghitung & tandai pesan warga/tamu dibaca. */

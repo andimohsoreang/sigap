@@ -36,8 +36,10 @@ class StoreInputManualRequest extends FormRequest
     {
         return [
             'sumber_laporan' => ['required', Rule::in([
-                'tatap_muka', 'call_center', 'surat', 'instagram', 'x', 'facebook', 'tiktok',
+                'tatap_muka', 'call_center', 'surat', 'instagram', 'x', 'facebook', 'tiktok', 'live_chat',
             ])],
+            // Tiket dari percakapan contact center (nomor tiket dikirim balik ke chat).
+            'percakapan_id' => ['nullable', 'integer', 'exists:chat_conversations,id'],
             'nik' => ['nullable', 'digits:16'],
             'nama' => ['required', 'string', 'max:150'],
             'telepon' => ['nullable', 'string', 'max:30'],

@@ -48,7 +48,7 @@ test.describe('Live chat: identitas tamu & badge belum dibaca', () => {
         await expect(badge.first()).toBeVisible();
         await admin.screenshot({ path: 'test-results/chat-admin-badge.png' });
 
-        await admin.getByRole('link', { name: /Pesan Masuk/ }).first().click();
+        await admin.getByRole('link', { name: /Kotak Masuk/ }).first().click();
         await admin.waitForURL(/\/admin\/chat/);
         await expect(admin.getByRole('heading', { name: /Budi Tamu Ujicoba/ }).first()).toBeVisible();
         await expect(admin.getByText(/Tamu · nama diisi sendiri/)).toBeVisible();

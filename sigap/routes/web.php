@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Web\AdminController;
 use App\Http\Controllers\Web\ChatController;
+use App\Http\Controllers\Web\ContactCenterController;
 use App\Http\Controllers\Web\KnowledgeController;
 use App\Http\Controllers\Web\MasukController;
 use App\Http\Controllers\Web\PengaduanFormController;
@@ -89,6 +90,8 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
     Route::post('/chat/{conversation}/balas', [AdminController::class, 'sendChat'])->name('admin.chat.reply');
     Route::post('/chat/{conversation}/baca', [AdminController::class, 'readChat'])->name('admin.chat.read');
     Route::get('/chat/belum-dibaca', [AdminController::class, 'chatUnread'])->name('admin.chat.unread');
+    Route::post('/chat/{conversation}/ambil', [ContactCenterController::class, 'take'])->name('admin.chat.take');
+    Route::post('/chat/{conversation}/tutup', [ContactCenterController::class, 'close'])->name('admin.chat.close');
 
     // Basis Pengetahuan — sumber jawaban asisten AI.
     Route::get('/pengetahuan', [KnowledgeController::class, 'index'])->name('admin.pengetahuan');
