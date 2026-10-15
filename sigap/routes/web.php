@@ -4,6 +4,7 @@ use App\Http\Controllers\Web\AdminController;
 use App\Http\Controllers\Web\ChatController;
 use App\Http\Controllers\Web\ContactCenterController;
 use App\Http\Controllers\Web\KnowledgeController;
+use App\Http\Controllers\Web\KnowledgeDocumentController;
 use App\Http\Controllers\Web\MasukController;
 use App\Http\Controllers\Web\PengaduanFormController;
 use App\Http\Controllers\Web\PublicController;
@@ -95,6 +96,12 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
 
     // Basis Pengetahuan — sumber jawaban asisten AI.
     Route::get('/pengetahuan', [KnowledgeController::class, 'index'])->name('admin.pengetahuan');
+    Route::get('/pengetahuan/dokumen', [KnowledgeDocumentController::class, 'index'])->name('admin.pengetahuan.dokumen');
+    Route::post('/pengetahuan/dokumen', [KnowledgeDocumentController::class, 'store'])->name('admin.pengetahuan.dokumen.store');
+    Route::post('/pengetahuan/dokumen/{document}/simpan', [KnowledgeDocumentController::class, 'saveDrafts'])->name('admin.pengetahuan.dokumen.simpan');
+    Route::post('/pengetahuan/dokumen/{document}/ulang', [KnowledgeDocumentController::class, 'retry'])->name('admin.pengetahuan.dokumen.ulang');
+    Route::get('/pengetahuan/dokumen/{document}/berkas', [KnowledgeDocumentController::class, 'file'])->name('admin.pengetahuan.dokumen.berkas');
+    Route::delete('/pengetahuan/dokumen/{document}', [KnowledgeDocumentController::class, 'destroy'])->name('admin.pengetahuan.dokumen.destroy');
     Route::post('/pengetahuan', [KnowledgeController::class, 'store'])->name('admin.pengetahuan.store');
     Route::put('/pengetahuan/{article}', [KnowledgeController::class, 'update'])->name('admin.pengetahuan.update');
     Route::delete('/pengetahuan/{article}', [KnowledgeController::class, 'destroy'])->name('admin.pengetahuan.destroy');

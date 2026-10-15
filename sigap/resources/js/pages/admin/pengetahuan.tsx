@@ -1,5 +1,5 @@
-import { router, useForm } from '@inertiajs/react';
-import { BookOpen, CalendarClock, CircleHelp, Clock, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { Link, router, useForm } from '@inertiajs/react';
+import { BookOpen, CalendarClock, CircleHelp, Clock, FileUp, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { type FormEvent, type ReactNode, useState } from 'react';
 
 import { DataTable, type DataTableColumn } from '@/components/sigap/data-table';
@@ -193,9 +193,16 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, c
                         <X className="h-4 w-4" /> Tutup formulir
                     </Button>
                 ) : (
-                    <Button size="sm" onClick={() => openNew()}>
-                        <Plus className="h-4 w-4" /> Artikel baru
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                        <Button size="sm" variant="outline" asChild>
+                            <Link href="/admin/pengetahuan/dokumen">
+                                <FileUp className="h-4 w-4" /> Buat dari dokumen resmi
+                            </Link>
+                        </Button>
+                        <Button size="sm" onClick={() => openNew()}>
+                            <Plus className="h-4 w-4" /> Artikel baru
+                        </Button>
+                    </div>
                 )
             }
         >
