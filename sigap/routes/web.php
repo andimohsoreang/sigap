@@ -62,6 +62,10 @@ Route::post('/keluar', [MasukController::class, 'destroy'])->middleware('auth')-
 Route::get('/chat/pesan', [ChatController::class, 'index'])->middleware('throttle:chat-baca')->name('chat.index');
 Route::post('/chat/mulai', [ChatController::class, 'start'])->middleware('throttle:chat-mulai')->name('chat.start');
 Route::post('/chat/pesan', [ChatController::class, 'store'])->middleware('throttle:chat')->name('chat.store');
+// Contact center (asisten AI): minta petugas, tinggalkan kontak, nilai jawaban.
+Route::post('/chat/petugas', [ChatController::class, 'handoff'])->middleware('throttle:chat')->name('chat.handoff');
+Route::post('/chat/kontak', [ChatController::class, 'contact'])->middleware('throttle:chat')->name('chat.contact');
+Route::post('/chat/pesan/{message}/nilai', [ChatController::class, 'feedback'])->whereNumber('message')->middleware('throttle:chat')->name('chat.feedback');
 
 // Panel Admin — khusus peran admin_kawasan & super_admin.
 Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->group(function () {

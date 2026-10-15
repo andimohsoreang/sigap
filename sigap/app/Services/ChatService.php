@@ -15,37 +15,63 @@ use Illuminate\Support\Facades\Log;
  */
 class ChatService
 {
-    /** Simpan pesan dan siarkan ke channel privat percakapan. */
+    /**
+     * Simpan pesan dan siarkan ke channel privat percakapan.
+     *
+     * Pengirim: `user`/`guest` (penanya), `admin` (petugas), `ai` (asisten),
+     * `system` (pemberitahuan otomatis, mis. diteruskan / tiket terbit).
+     */
     public function send(
         ChatConversation $conversation,
         string $body,
         string $senderType,
         ?int $senderId = null,
+        ?array $meta = null,
     ): ChatMessage {
         $message = ChatMessage::create([
             'conversation_id' => $conversation->id,
             'sender_id' => $senderId,
             'sender_type' => $senderType,
             'body' => $body,
+            'meta' => $meta,
         ]);
+
+        // Siapa yang perlu diberi tanda belum-dibaca:
+        // - pesan petugas/sistem → penanya;
+        // - pesan penanya → petugas, KECUALI percakapan sedang dijawab AI
+        //   (petugas baru diberi tahu saat percakapan diteruskan);
+        // - jawaban AI langsung tampil di layar penanya → tidak ada.
+        $column = match (true) {
+            in_array($senderType, ['admin', 'system'], true) => 'unread_user',
+            $senderType === 'ai', $conversation->isWithAssistant() => null,
+            default => 'unread_admin',
+        };
 
         // D-09: penambahan penghitung belum-dibaca secara atomik di SQL
         // (UPDATE ... SET unread = unread + 1) agar pesan bersamaan tidak hilang.
-        ChatConversation::query()
-            ->whereKey($conversation->getKey())
-            ->increment($senderType === 'admin' ? 'unread_user' : 'unread_admin', 1, [
-                'last_message_at' => now(),
-            ]);
+        $query = ChatConversation::query()->whereKey($conversation->getKey());
+        $column !== null
+            ? $query->increment($column, 1, ['last_message_at' => now()])
+            : $query->update(['last_message_at' => now()]);
 
         $conversation->refresh();
 
         // Best-effort: pesan sudah tersimpan meski Reverb sedang mati (PRD D5).
         $this->broadcast(new ChatMessageSent($message));
-        if ($senderType !== 'admin') {
+        if ($column === 'unread_admin') {
             $this->broadcast(new ChatUnreadChanged($conversation->id));
         }
 
         return $message;
+    }
+
+    /** Beri tahu petugas (badge + siaran) bahwa percakapan menunggu ditangani. */
+    public function notifyStaff(ChatConversation $conversation): void
+    {
+        ChatConversation::query()->whereKey($conversation->getKey())->increment('unread_admin', 1, ['last_message_at' => now()]);
+        $conversation->refresh();
+
+        $this->broadcast(new ChatUnreadChanged($conversation->id));
     }
 
     /** Petugas membuka percakapan: nolkan penghitung & tandai pesan warga/tamu dibaca. */
@@ -85,7 +111,7 @@ class ChatService
     {
         return ChatConversation::query()->firstOrCreate(
             ['user_id' => $userId],
-            ['subject' => 'Live Chat', 'last_message_at' => now()],
+            ['subject' => 'Live Chat', 'last_message_at' => now(), 'handled_by' => self::initialHandler()],
         );
     }
 
@@ -108,6 +134,9 @@ class ChatService
             'subject' => 'Live Chat (Tamu)',
         ]);
         $conversation->last_message_at ??= now();
+        if (! $conversation->exists) {
+            $conversation->handled_by = self::initialHandler();
+        }
         $conversation->save();
 
         return $conversation;
@@ -155,19 +184,37 @@ class ChatService
             ->all();
     }
 
+    /** Percakapan baru: dijawab asisten AI bila aktif, selain itu langsung petugas. */
+    public static function initialHandler(): string
+    {
+        return config('services.ai.enabled') ? ChatConversation::HANDLED_AI : ChatConversation::HANDLED_STAFF;
+    }
+
     /** Bentuk pesan yang sama untuk respons HTTP & payload broadcast. */
     public static function present(ChatMessage $m): array
     {
-        $fromStaff = in_array($m->sender_type, ['admin', 'system'], true);
+        $mine = in_array($m->sender_type, ['user', 'guest'], true);
+        $meta = $m->meta ?? [];
 
         return [
             'id' => $m->id,
             'conversation_id' => $m->conversation_id,
             'body' => $m->body,
             'sender_type' => $m->sender_type,
-            'mine' => ! $fromStaff,
-            'penulis' => $m->sender_type === 'admin' ? ($m->sender?->name ?? 'Petugas SIGAP') : 'Anda',
+            'mine' => $mine,
+            'penulis' => match ($m->sender_type) {
+                'admin' => $m->sender?->name ?? 'Petugas SIGAP',
+                'ai' => 'Asisten SIGAP',
+                'system' => 'SIGAP',
+                default => 'Anda',
+            },
             'pada' => $m->created_at?->toIso8601String(),
+            // Hanya kunci yang aman untuk penanya (bukan `pertanyaan` internal).
+            'jenis' => $meta['kind'] ?? null,
+            'sumber' => $meta['sumber'] ?? [],
+            'tiket' => $meta['tiket'] ?? null,
+            'referensi' => $meta['referensi'] ?? null,
+            'nilai' => $m->feedback,
         ];
     }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\ChatMessage;
 use App\Models\KnowledgeArticle;
 use App\Models\User;
 use App\Services\AuditService;
@@ -54,7 +55,7 @@ class KnowledgeController extends Controller
                 'lewat_tinjau' => $articles->filter(fn (KnowledgeArticle $a) => $a->status === KnowledgeArticle::STATUS_PUBLISHED && $a->isOverdueForReview())->count(),
             ],
             'categories' => $articles->pluck('category')->filter()->unique()->sort()->values(),
-            'unanswered' => [],
+            'unanswered' => $this->unanswered(),
             'can_publish' => $request->user()->isSuperAdmin(),
         ]);
     }
@@ -127,6 +128,33 @@ class KnowledgeController extends Controller
         return $saved !== $requested
             ? 'Artikel disimpan dan menunggu persetujuan Super Admin sebelum dipakai AI.'
             : ($saved === KnowledgeArticle::STATUS_PUBLISHED ? 'Artikel terbit dan langsung dipakai asisten AI.' : 'Artikel disimpan.');
+    }
+
+    /**
+     * Pertanyaan warga 30 hari terakhir yang tidak menemukan sumber (sudah
+     * disamarkan saat disimpan), dikelompokkan & diurutkan dari yang tersering.
+     *
+     * @return list<array{question: string, count: int, last_at: string|null}>
+     */
+    private function unanswered(): array
+    {
+        return ChatMessage::query()
+            ->where('sender_type', 'ai')
+            ->where('created_at', '>=', now()->subDays(30))
+            ->latest('id')
+            ->limit(500)
+            ->get(['meta', 'created_at'])
+            ->filter(fn (ChatMessage $m) => $m->kind() === 'tidak_tahu' && filled($m->meta['pertanyaan'] ?? null))
+            ->groupBy(fn (ChatMessage $m) => mb_strtolower(trim($m->meta['pertanyaan'])))
+            ->map(fn ($group) => [
+                'question' => $group->first()->meta['pertanyaan'],
+                'count' => $group->count(),
+                'last_at' => $group->first()->created_at?->toIso8601String(),
+            ])
+            ->sortByDesc('count')
+            ->take(10)
+            ->values()
+            ->all();
     }
 
     private function helpfulRate(KnowledgeArticle $a): ?int

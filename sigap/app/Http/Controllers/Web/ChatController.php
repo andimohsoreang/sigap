@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StartChatRequest;
 use App\Models\ChatConversation;
+use App\Models\ChatMessage;
+use App\Services\Ai\AssistantService;
+use App\Services\Ai\ServiceHours;
 use App\Services\ChatService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,12 +20,18 @@ use Illuminate\Support\Str;
  * - Tamu WAJIB mengisi nama lebih dulu (POST /chat/mulai); percakapannya
  *   diikat ke guest_token di sesi. Tanpa identitas, kirim pesan ditolak 422.
  * - Tamu yang lalu login: riwayatnya digabung ke percakapan akunnya.
+ * - Bila asisten AI aktif (`services.ai.enabled`), percakapan baru dijawab
+ *   AI lebih dulu dan diteruskan ke petugas bila perlu.
  */
 class ChatController extends Controller
 {
     private const SESSION_KEY = 'chat_guest_token';
 
-    public function __construct(private readonly ChatService $chat) {}
+    public function __construct(
+        private readonly ChatService $chat,
+        private readonly AssistantService $assistant,
+        private readonly ServiceHours $hours,
+    ) {}
 
     /**
      * GET /chat/pesan — status identitas + pesan (juga dipakai polling).
@@ -41,6 +50,7 @@ class ChatController extends Controller
             'identitas' => $this->identity($request, $conversation),
             'belum_dibaca' => (int) ($conversation?->unread_user ?? 0),
             'messages' => $conversation ? $this->chat->messages($conversation) : [],
+            'asisten' => $this->assistantState($conversation),
         ]);
     }
 
@@ -80,6 +90,8 @@ class ChatController extends Controller
             ], 422);
         }
 
+        $this->assistant->reopenIfClosed($conversation);
+
         $message = $this->chat->send(
             $conversation,
             $data['body'],
@@ -87,11 +99,97 @@ class ChatController extends Controller
             $request->user()?->id,
         );
 
+        $replies = $this->assistant->respond($conversation, $message, $request->user());
+
         return response()->json([
             'ok' => true,
             'conversation_id' => $conversation->id,
             'message' => ChatService::present($message),
+            'balasan' => array_map(ChatService::present(...), $replies),
+            'asisten' => $this->assistantState($conversation->refresh()),
         ], 201);
+    }
+
+    /** POST /chat/petugas — warga meminta berbicara dengan petugas. */
+    public function handoff(Request $request): JsonResponse
+    {
+        $conversation = $this->current($request, createForUser: true);
+
+        if (! $conversation || (! $request->user() && ! $conversation->guest_name)) {
+            return response()->json(['message' => 'Isi nama Anda terlebih dahulu untuk memulai chat.', 'code' => 'identity_required'], 422);
+        }
+
+        $replies = $this->assistant->handoff($conversation, 'diminta');
+
+        return response()->json([
+            'balasan' => array_map(ChatService::present(...), $replies),
+            'asisten' => $this->assistantState($conversation->refresh()),
+        ]);
+    }
+
+    /** POST /chat/kontak — kontak WhatsApp/surel untuk dihubungi petugas di luar jam layanan. */
+    public function contact(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'kontak' => ['required', 'string', 'max:100', function (string $attribute, mixed $value, \Closure $fail): void {
+                $value = trim((string) $value);
+                $phone = preg_match('/^(\+?62|0)8[\d\s.-]{7,15}$/', $value) === 1;
+                if (! $phone && filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
+                    $fail('Masukkan nomor WhatsApp (08…) atau alamat surel yang valid.');
+                }
+            }],
+        ]);
+
+        $conversation = $this->current($request, createForUser: false);
+        if (! $conversation || $conversation->handoff_at === null) {
+            return response()->json(['message' => 'Tidak ada percakapan yang menunggu petugas.'], 422);
+        }
+
+        $conversation->forceFill(['contact' => trim($data['kontak'])])->save();
+
+        $message = $this->chat->send($conversation, 'Terima kasih. Petugas akan menghubungi Anda melalui kontak tersebut pada hari kerja berikutnya.', 'system', null, [
+            'kind' => 'kontak_tersimpan',
+            'referensi' => $conversation->reference,
+        ]);
+        $this->chat->notifyStaff($conversation);
+
+        return response()->json([
+            'balasan' => [ChatService::present($message)],
+            'asisten' => $this->assistantState($conversation->refresh()),
+        ]);
+    }
+
+    /** POST /chat/pesan/{message}/nilai — warga menilai jawaban asisten. */
+    public function feedback(Request $request, ChatMessage $message): JsonResponse
+    {
+        $data = $request->validate(['membantu' => ['required', 'boolean']]);
+
+        $conversation = $this->current($request, createForUser: false);
+        abort_unless(
+            $conversation && $message->conversation_id === $conversation->id
+                && $message->sender_type === 'ai' && $message->kind() === 'jawaban',
+            404,
+        );
+
+        $this->assistant->recordFeedback($message, (bool) $data['membantu']);
+
+        return response()->json(['message' => ChatService::present($message->refresh())]);
+    }
+
+    /** @return array<string, mixed> */
+    private function assistantState(?ChatConversation $conversation): array
+    {
+        $withStaff = $conversation !== null && ! $conversation->isWithAssistant();
+
+        return [
+            'aktif' => AssistantService::enabled(),
+            'mode' => $conversation === null ? ChatService::initialHandler() : $conversation->handled_by,
+            'jam_layanan' => $this->hours->label(),
+            'petugas_tersedia' => $this->hours->isOpen(),
+            'referensi' => $conversation?->reference,
+            // Diteruskan di luar jam layanan dan belum meninggalkan kontak.
+            'butuh_kontak' => $withStaff && $conversation->handoff_at !== null && $conversation->contact === null && ! $this->hours->isOpen(),
+        ];
     }
 
     private function current(Request $request, bool $createForUser): ?ChatConversation

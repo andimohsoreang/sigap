@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
  */
 class FakeLlmClient implements LlmClient
 {
-    private const COMPLAINT_WORDS = ['rusak', 'mengadu', 'aduan', 'lapor', 'keluhan', 'tidak berfungsi', 'mati', 'banjir', 'longsor', 'pungli'];
+    private const COMPLAINT_WORDS = ['rusak', 'mengadu', 'aduan', 'lapor', 'melapor', 'keluhan', 'tidak berfungsi', 'mati', 'banjir', 'longsor', 'pungli'];
 
     private const PERSONAL_WORDS = ['nama saya', 'saya belum', 'saya tidak', 'bantuan saya', 'sertifikat saya', 'lahan saya', 'hak saya', 'saya berhak'];
 
@@ -38,13 +38,13 @@ class FakeLlmClient implements LlmClient
         $question = Str::lower((string) ($input['pertanyaan'] ?? ''));
         $sources = $input['sumber'] ?? [];
 
+        $needsStaff = $this->mentions($question, self::STAFF_WORDS);
         $type = match (true) {
-            Str::contains($question, self::STAFF_WORDS) => 'informasi',
-            Str::contains($question, self::COMPLAINT_WORDS) => 'aduan',
-            Str::contains($question, self::PERSONAL_WORDS) => 'pribadi',
+            $needsStaff => 'informasi',
+            $this->mentions($question, self::COMPLAINT_WORDS) => 'aduan',
+            $this->mentions($question, self::PERSONAL_WORDS) => 'pribadi',
             default => 'informasi',
         };
-        $needsStaff = Str::contains($question, self::STAFF_WORDS);
 
         if ($type !== 'informasi' || $needsStaff || $sources === []) {
             return [
@@ -65,6 +65,18 @@ class FakeLlmClient implements LlmClient
             'perlu_petugas' => false,
             'ringkasan' => '',
         ];
+    }
+
+    /** Cocokkan kata/frasa utuh ("aduan" tidak cocok di dalam "pengaduan"). */
+    private function mentions(string $text, array $phrases): bool
+    {
+        foreach ($phrases as $phrase) {
+            if (preg_match('/(?<!\p{L})'.preg_quote($phrase, '/').'(?!\p{L})/u', $text) === 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** @return array<string, mixed> */

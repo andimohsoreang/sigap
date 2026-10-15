@@ -12,6 +12,8 @@ class ChatMessage extends Model
         'sender_id',
         'sender_type',
         'body',
+        'meta',
+        'feedback',
         'read_at',
     ];
 
@@ -19,7 +21,15 @@ class ChatMessage extends Model
     {
         return [
             'read_at' => 'datetime',
+            'meta' => 'array',
+            'feedback' => 'integer',
         ];
+    }
+
+    /** Jenis pesan asisten/sistem (jawaban, tidak_tahu, status_tiket, diteruskan, …). */
+    public function kind(): ?string
+    {
+        return $this->meta['kind'] ?? null;
     }
 
     public function conversation(): BelongsTo

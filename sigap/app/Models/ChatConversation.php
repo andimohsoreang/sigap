@@ -18,6 +18,22 @@ class ChatConversation extends Model
 {
     use Prunable;
 
+    /** Ditangani asisten AI (contact center). */
+    public const HANDLED_AI = 'ai';
+
+    /** Ditangani petugas (live chat lama, atau setelah diteruskan AI). */
+    public const HANDLED_STAFF = 'petugas';
+
+    /** Hasil akhir percakapan → label untuk panel petugas & dashboard. */
+    public const OUTCOMES = [
+        'terjawab_ai' => 'Terjawab AI',
+        'terjawab_petugas' => 'Terjawab petugas',
+        'tiket' => 'Jadi tiket',
+        'lapor' => 'Diarahkan ke SP4N-LAPOR!',
+        'wbs' => 'Diarahkan ke WBS',
+        'tidak_selesai' => 'Tidak selesai',
+    ];
+
     protected $fillable = [
         'user_id',
         'guest_token',
@@ -26,6 +42,17 @@ class ChatConversation extends Model
         'last_message_at',
         'unread_admin',
         'unread_user',
+        'handled_by',
+        'handoff_at',
+        'handoff_reason',
+        'ai_summary',
+        'reference',
+        'contact',
+        'assigned_to',
+        'outcome',
+        'closed_at',
+        'closed_by',
+        'ticket_id',
     ];
 
     protected function casts(): array
@@ -34,7 +61,31 @@ class ChatConversation extends Model
             'last_message_at' => 'datetime',
             'unread_admin' => 'integer',
             'unread_user' => 'integer',
+            'handoff_at' => 'datetime',
+            'closed_at' => 'datetime',
+            // Kontak warga (WhatsApp/surel) = data pribadi: disimpan terenkripsi.
+            'contact' => 'encrypted',
         ];
+    }
+
+    public function isWithAssistant(): bool
+    {
+        return $this->handled_by === self::HANDLED_AI;
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->closed_at !== null;
+    }
+
+    public function ticket(): BelongsTo
+    {
+        return $this->belongsTo(Ticket::class);
+    }
+
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     public function user(): BelongsTo
