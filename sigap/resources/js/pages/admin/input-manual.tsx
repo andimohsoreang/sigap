@@ -88,7 +88,7 @@ export default function InputManual({ options, region_locked: regionLocked = fal
                                 <SelectContent>
                                     {SUMBER.map((g) => (
                                         <div key={g.group}>
-                                            <p className="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase">{g.group}</p>
+                                            <p className="px-3 py-1.5 text-xs text-gray-500">{g.group}</p>
                                             {g.items.map((it) => (
                                                 <SelectItem key={it.value} value={it.value}>
                                                     {it.label}

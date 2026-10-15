@@ -995,6 +995,10 @@ class AdminController extends Controller
             'tipe' => $user ? 'warga' : 'tamu',
             'username' => $user?->username,
             'jumlah_tiket' => $user ? Ticket::query()->where('reporter_id', $user->id)->count() : null,
+            // Riwayat tiket warga terdaftar (tamu belum dapat dikenali).
+            'riwayat_tiket' => $user ? Ticket::query()->where('reporter_id', $user->id)->latest('id')->limit(3)->get(['ticket_no', 'title', 'status'])
+                ->map(fn (Ticket $t) => ['nomor' => $t->ticket_no, 'judul' => $t->title, 'status' => $t->status?->label(), 'url' => '/admin/tiket/'.$t->ticket_no])
+                ->all() : [],
             'mulai' => $conversation->created_at?->toIso8601String(),
             'mode' => $conversation->handled_by,
             'ringkasan' => $conversation->ai_summary,

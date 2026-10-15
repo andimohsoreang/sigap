@@ -54,7 +54,7 @@ export default function Kanal({ channels, integrations, logs, is_super_admin }: 
             accessorKey: 'type',
             header: 'Jenis Kanal',
             cell: ({ row }) => (
-                <span className="text-primary rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase">
+                <span className="text-primary rounded bg-blue-100 px-2 py-0.5 text-xs font-medium">
                     {row.original.type_label ?? row.original.type}
                 </span>
             ),

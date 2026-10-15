@@ -316,7 +316,7 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, c
 
                 <Card className="h-fit border-gray-200">
                     <CardHeader className="border-b border-gray-100 pb-3">
-                        <CardTitle className="flex items-center gap-2 text-sm font-bold tracking-wider text-gray-800 uppercase">
+                        <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900">
                             <CircleHelp className="text-brand-light h-4 w-4" /> Belum bisa dijawab AI
                         </CardTitle>
                         <p className="text-xs text-gray-500">
@@ -353,11 +353,11 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, c
 
 function StatusPill({ status }: { status: Status }) {
     const styles: Record<Status, string> = {
-        terbit: 'bg-green-100 text-green-800',
-        ditinjau: 'bg-amber-100 text-amber-800',
-        draf: 'bg-gray-100 text-gray-700',
+        terbit: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
+        ditinjau: 'bg-amber-50 text-amber-800 ring-amber-200',
+        draf: 'bg-gray-50 text-gray-700 ring-gray-200',
     };
-    return <span className={cn('rounded-full px-2.5 py-1 text-[10px] font-bold uppercase', styles[status])}>{STATUS_LABEL[status]}</span>;
+    return <span className={cn('rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset', styles[status])}>{STATUS_LABEL[status]}</span>;
 }
 
 function Field({

@@ -51,6 +51,8 @@ class HandleInertiaRequests extends Middleware
             ],
             // Badge merah "Kotak Masuk" di sidebar admin (diperbarui live via Reverb).
             'chat_unread' => fn () => $user?->isAdmin() ? ChatConversation::unreadForAdmins() : null,
+            // Daftar "Menunggu petugas" di sidebar admin (paling lama menunggu dulu).
+            'chat_waiting' => fn () => $user?->isAdmin() ? ChatConversation::waitingForStaff() : null,
             // reCAPTCHA v3 (SEC-10): hanya site key publik; kosong = lewati (lokal).
             'recaptcha' => [
                 'site_key' => config('services.recaptcha.site_key') ?: null,

@@ -188,10 +188,10 @@
 }
 
 /* --------------------------------------------------------------------------
-   Scope gaya absol.id untuk panel admin (tidak memengaruhi halaman publik).
+   Scope gaya panel admin (tidak memengaruhi halaman publik).
    Tipografi: Inter untuk semua teks (x-height tinggi, terbaca di tabel padat
-   dan ukuran kecil) + JetBrains Mono untuk kode tiket/IP; tombol pill;
-   input/select membulat 12px seperti .form-control milik absol.id.
+   dan ukuran kecil) + JetBrains Mono untuk kode tiket/IP. Bentuk tombol &
+   kolom isian mengikuti komponen (sudut 6–8px), tanpa pengecualian global.
    -------------------------------------------------------------------------- */
 .absol-admin {
     /* Utilitas font-heading/font-body/font-mono di dalam admin ikut Inter/Mono. */
@@ -220,14 +220,9 @@
     font-variant-numeric: tabular-nums;
 }
 
-.absol-admin button:not([role='combobox']) {
-    border-radius: 9999px;
-}
-
-.absol-admin button[role='combobox'],
-.absol-admin input,
-.absol-admin textarea {
-    border-radius: 12px;
+.absol-admin ::selection {
+    background: var(--color-brand-soft);
+    color: var(--color-brand);
 }
 
 /* reCAPTCHA v3: badge melayang disembunyikan; atribusi teks ditampilkan di

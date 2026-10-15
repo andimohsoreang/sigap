@@ -165,6 +165,21 @@ class ContactCenterTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_sidebar_lists_waiting_conversations_and_thread_shows_citizen_tickets(): void
+    {
+        $warga = User::factory()->warga()->create();
+        $ticket = Ticket::factory()->forReporter($warga)->create();
+        $waiting = $this->handedOff(['guest_token' => null, 'guest_name' => null, 'user_id' => $warga->id]);
+        $this->conversation(); // masih dijawab AI → tidak masuk daftar tunggu
+
+        $this->actingAs($this->admin)->get("/admin/chat?conversation={$waiting->id}")->assertInertia(fn (Assert $page) => $page
+            ->has('chat_waiting', 1)
+            ->where('chat_waiting.0.id', $waiting->id)
+            ->where('active.riwayat_tiket.0.nomor', $ticket->ticket_no));
+
+        $this->actingAs($warga)->get('/portal-warga')->assertInertia(fn (Assert $page) => $page->where('chat_waiting', null));
+    }
+
     public function test_warga_cannot_use_inbox_actions(): void
     {
         $conversation = $this->conversation();

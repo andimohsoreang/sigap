@@ -101,9 +101,7 @@ export default function TiketDetail({ ticket, statuses }: Props) {
                                 <StatusBadge value={ticket.status} label={ticket.status_label} />
                                 <ImpactBadge value={ticket.impact} label={ticket.impact_label} />
                                 {ticket.overdue && (
-                                    <span className="rounded-full bg-red-100 px-2.5 py-1 text-[10px] font-bold text-red-700 uppercase">
-                                        EWS · Melewati SLA
-                                    </span>
+                                    <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700">EWS · Melewati SLA</span>
                                 )}
                             </div>
 
@@ -129,7 +127,7 @@ export default function TiketDetail({ ticket, statuses }: Props) {
                                     <div className="flex items-start gap-2 sm:col-span-2">
                                         <Link2 className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
                                         <div className="min-w-0">
-                                            <dt className="text-[10px] font-bold text-gray-400 uppercase">Tautan Sumber</dt>
+                                            <dt className="text-xs text-gray-500">Tautan Sumber</dt>
                                             <dd className="text-sm break-all text-gray-700">
                                                 {isHttpUrl(ticket.tautan) ? (
                                                     <a
@@ -289,7 +287,7 @@ function Info({ icon: Icon, label, value }: { icon: typeof Tag; label: string; v
         <div className="flex items-start gap-2">
             <Icon className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
             <div>
-                <dt className="text-[10px] font-bold text-gray-400 uppercase">{label}</dt>
+                <dt className="text-xs text-gray-500">{label}</dt>
                 <dd className="text-sm text-gray-700">{value || '—'}</dd>
             </div>
         </div>

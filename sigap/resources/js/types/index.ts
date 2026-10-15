@@ -34,6 +34,8 @@ export interface SharedData {
     recaptcha?: {
         site_key: string | null;
     };
+    /** Percakapan yang menunggu petugas (sidebar admin; null untuk non-admin). */
+    chat_waiting?: { id: number; nama: string; cuplikan: string | null; sejak: string | null }[] | null;
     /** Asisten AI contact center (kotak tanya beranda & widget chat). */
     assistant?: {
         enabled: boolean;

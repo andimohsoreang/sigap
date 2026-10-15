@@ -178,15 +178,10 @@ export function DataTable<T extends object>({
     };
 
     return (
-        <Card className="overflow-hidden rounded-xl border-gray-200 shadow-md">
+        <Card className="overflow-hidden rounded-xl border-gray-200 shadow-none">
             {/* Toolbar */}
             <div className="flex flex-col gap-3 border-b border-gray-100 p-4 lg:flex-row lg:items-center">
-                {toolbarTitle && (
-                    <h3 className="text-brand-light flex items-center gap-2 text-sm font-bold tracking-[2px] whitespace-nowrap">
-                        <span className="bg-brand-light h-[2px] w-5 rounded-full" />
-                        {toolbarTitle}
-                    </h3>
-                )}
+                {toolbarTitle && <h3 className="text-base font-semibold whitespace-nowrap text-gray-900">{toolbarTitle}</h3>}
 
                 {isServer && serverSide ? (
                     <div className="relative w-full max-w-xs lg:max-w-sm lg:flex-grow">

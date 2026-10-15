@@ -85,7 +85,7 @@ export default function Kawasan({ regions, is_super_admin: isSuper, own_region_i
                     <div className="text-brand-light font-bold">
                         {row.original.code}
                         {row.original.id === ownRegionId && (
-                            <span className="bg-brand-soft text-primary ml-2 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase">Kawasan Anda</span>
+                            <span className="bg-brand-soft text-primary ml-2 rounded px-1.5 py-0.5 text-xs font-medium">Kawasan Anda</span>
                         )}
                     </div>
                     <div className="text-xs text-gray-500">{row.original.name}</div>
@@ -276,7 +276,7 @@ function InfraBadge({ value }: { value: string | null }) {
         Tertinggal: 'bg-red-100 text-red-700',
     };
     if (!value) return <span className="text-gray-400">—</span>;
-    return <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${styles[value] ?? 'bg-gray-100 text-gray-600'}`}>{value}</span>;
+    return <span className={`rounded px-2 py-0.5 text-xs font-medium ${styles[value] ?? 'bg-gray-100 text-gray-600'}`}>{value}</span>;
 }
 
 function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {

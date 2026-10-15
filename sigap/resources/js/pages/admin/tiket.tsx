@@ -59,9 +59,7 @@ export default function ManajemenTiket({ tickets, filters, statuses }: Props) {
             accessorKey: 'prioritas',
             header: 'Prioritas',
             cell: ({ getValue }) => (
-                <span className="bg-brand-soft text-primary rounded px-2 py-0.5 text-[10px] font-bold uppercase">
-                    {getValue<string | null>() ?? 'umum'}
-                </span>
+                <span className="bg-brand-soft text-primary rounded px-2 py-0.5 text-xs font-medium">{getValue<string | null>() ?? 'umum'}</span>
             ),
         },
         {

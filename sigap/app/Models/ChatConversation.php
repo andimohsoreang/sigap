@@ -104,6 +104,30 @@ class ChatConversation extends Model
         return $this->user?->name ?? $this->guest_name ?? 'Tamu';
     }
 
+    /**
+     * Percakapan terbuka yang menunggu petugas, paling lama menunggu dulu.
+     *
+     * @return list<array{id: int, nama: string, cuplikan: string|null, sejak: string|null}>
+     */
+    public static function waitingForStaff(int $limit = 5): array
+    {
+        return static::query()
+            ->with('user:id,name')
+            ->whereNull('closed_at')
+            ->where('handled_by', self::HANDLED_STAFF)
+            ->where(fn ($q) => $q->whereNotNull('handoff_at')->orWhere('unread_admin', '>', 0))
+            ->orderByRaw('COALESCE(handoff_at, last_message_at) asc')
+            ->limit($limit)
+            ->get()
+            ->map(fn (self $c) => [
+                'id' => $c->id,
+                'nama' => $c->participantName(),
+                'cuplikan' => $c->ai_summary,
+                'sejak' => ($c->handoff_at ?? $c->last_message_at)?->toIso8601String(),
+            ])
+            ->all();
+    }
+
     /** Jumlah pesan belum dibaca petugas di seluruh percakapan (badge sidebar). */
     public static function unreadForAdmins(): int
     {

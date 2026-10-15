@@ -53,7 +53,7 @@ function safeInternalUrl(url: string | null | undefined): string | null {
     }
 }
 
-export default function NotificationBell() {
+export default function NotificationBell({ buttonClassName }: { buttonClassName?: string } = {}) {
     const { auth } = usePage<SharedData>().props;
     const userId = auth?.user?.id ?? null;
     const [items, setItems] = useState<BellItem[]>([]);
@@ -104,7 +104,7 @@ export default function NotificationBell() {
             <button
                 type="button"
                 onClick={() => setOpen((v) => !v)}
-                className="hover:text-primary relative text-gray-400"
+                className={buttonClassName ?? 'hover:text-primary relative text-gray-400'}
                 aria-label={`Notifikasi${unread ? ` (${unread} baru)` : ''}`}
                 aria-expanded={open}
             >
