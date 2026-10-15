@@ -1,10 +1,27 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { Building2, ChevronDown, Clock, Database, FileSignature, Hash, Headset, MapPin, Search, ShieldAlert, Ticket, Volume2 } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import {
+    Building2,
+    ChevronDown,
+    Clock,
+    Database,
+    FileSignature,
+    Hash,
+    Headset,
+    MapPin,
+    MessageSquare,
+    Search,
+    Send,
+    ShieldAlert,
+    Ticket,
+    Volume2,
+} from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 
+import { askSigap } from '@/components/sigap/live-chat-widget';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import PublicLayout from '@/layouts/public-layout';
+import { type SharedData } from '@/types';
 
 /**
  * PEMBANDING TAMPILAN — versi gaya absol.id dari halaman beranda.
@@ -43,8 +60,21 @@ const CHANNEL_ICONS: Record<string, typeof Building2> = {
     internal: ShieldAlert,
 };
 
+/** Pertanyaan cepat di kotak tanya (dikirim ke Asisten SIGAP). */
+const QUICK_QUESTIONS = ['Bagaimana cara membuat pengaduan?', 'Berapa lama pengaduan ditangani?', 'Kapan melapor ke SP4N-LAPOR! atau WBS?'];
+
 export default function BerandaAbsol({ stats, channels, faqs }: Props) {
+    const { assistant } = usePage<SharedData>().props;
+    const aiEnabled = Boolean(assistant?.enabled);
     const [query, setQuery] = useState('');
+    const [question, setQuestion] = useState('');
+
+    const submitAsk = (e: FormEvent) => {
+        e.preventDefault();
+        if (!question.trim()) return;
+        askSigap(question.trim());
+        setQuestion('');
+    };
     const [faqSearch, setFaqSearch] = useState('');
 
     const submitTrack = (e: FormEvent) => {
@@ -93,19 +123,26 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                     <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center px-4 sm:px-6 lg:px-8">
                         <span className="text-secondary mb-4 inline-flex items-center gap-3 text-xs font-bold tracking-[3px] uppercase">
                             <span className="bg-secondary hidden h-[2px] w-6 sm:block" />
-                            Pusat Bantuan SIGAP
+                            {aiEnabled ? 'Contact Center Kementerian Transmigrasi' : 'Pusat Bantuan SIGAP'}
                             <span className="bg-secondary hidden h-[2px] w-6 sm:block" />
                         </span>
 
                         <h2 className="font-heading mb-5 max-w-3xl text-center text-3xl leading-tight font-extrabold tracking-tight text-white uppercase md:text-5xl">
-                            Selamat Datang di Pusat Bantuan SIGAP
+                            {aiEnabled ? 'Ada yang bisa kami bantu?' : 'Selamat Datang di Pusat Bantuan SIGAP'}
                         </h2>
 
                         <div className="bg-secondary mb-6 h-[3px] w-20 rounded-full" />
 
-                        <p className="mb-8 max-w-2xl text-center text-base font-medium text-white/85 italic md:text-lg">
-                            "Komitmen Melayani, Menuntaskan Tanpa Henti"
-                        </p>
+                        {aiEnabled ? (
+                            <p className="mb-8 max-w-2xl text-center text-base font-medium text-white/90 md:text-lg">
+                                Tanyakan syarat, prosedur, atau status tiket Anda. Asisten SIGAP menjawab dari sumber resmi, dan petugas siap
+                                melanjutkan bila diperlukan.
+                            </p>
+                        ) : (
+                            <p className="mb-8 max-w-2xl text-center text-base font-medium text-white/85 italic md:text-lg">
+                                "Komitmen Melayani, Menuntaskan Tanpa Henti"
+                            </p>
+                        )}
 
                         <div className="mb-10 flex flex-wrap items-center justify-center gap-3 rounded-full border border-white/20 bg-white/10 px-5 py-2 shadow-sm backdrop-blur-md md:gap-4 md:px-6 md:py-2.5">
                             <div className="flex items-center gap-2">
@@ -113,35 +150,94 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
                                     <span className="relative inline-flex h-3 w-3 rounded-full bg-green-500" />
                                 </span>
-                                <span className="text-xs font-bold tracking-wide text-white sm:text-sm">Layanan Aktif</span>
+                                <span className="text-xs font-bold tracking-wide text-white sm:text-sm">
+                                    {aiEnabled ? 'Asisten aktif 24 jam' : 'Layanan Aktif'}
+                                </span>
                             </div>
                             <span className="hidden text-white/30 sm:inline">|</span>
                             <div className="flex items-center gap-2 text-white/90">
                                 <Clock className="text-secondary h-4 w-4" />
-                                <span className="text-xs font-medium sm:text-sm">Senin - Jumat (08:00 - 16:00 WIB)</span>
+                                <span className="text-xs font-medium sm:text-sm">
+                                    {aiEnabled ? `Petugas: ${assistant?.service_hours}` : 'Senin - Jumat (08:00 - 16:00 WIB)'}
+                                </span>
                             </div>
                         </div>
 
-                        <form
-                            onSubmit={submitTrack}
-                            className="mb-12 flex w-full max-w-4xl flex-col items-center rounded-3xl border border-white/25 bg-white p-2.5 shadow-2xl md:flex-row md:rounded-full"
-                        >
-                            <div className="flex w-full flex-grow items-center py-2 pl-4">
-                                <Search className="mr-3 hidden h-4 w-4 text-gray-400 md:block" />
-                                <Input
-                                    value={query}
-                                    onChange={(e) => setQuery(e.target.value)}
-                                    placeholder="Masukkan Nomor Tiket (Cth: TKT-261012-7KQ4MZ)…"
-                                    className="border-0 bg-transparent font-medium text-gray-700 shadow-none focus-visible:ring-0 md:text-lg"
-                                />
+                        {aiEnabled ? (
+                            <div className="mb-12 w-full max-w-4xl">
+                                <form onSubmit={submitAsk} className="rounded-3xl border border-white/25 bg-white p-2.5 shadow-2xl">
+                                    <div className="flex flex-col items-center gap-2 md:flex-row">
+                                        <div className="flex w-full flex-grow items-center py-2 pl-4">
+                                            <MessageSquare className="text-brand-light mr-3 hidden h-5 w-5 md:block" aria-hidden="true" />
+                                            <label htmlFor="tanya-sigap" className="sr-only">
+                                                Tulis pertanyaan Anda
+                                            </label>
+                                            <Input
+                                                id="tanya-sigap"
+                                                value={question}
+                                                onChange={(e) => setQuestion(e.target.value)}
+                                                maxLength={2000}
+                                                placeholder="Contoh: Bagaimana cara melacak tiket pengaduan?"
+                                                className="border-0 bg-transparent font-medium text-gray-700 shadow-none focus-visible:ring-0 md:text-lg"
+                                            />
+                                        </div>
+                                        <Button
+                                            type="submit"
+                                            className="font-heading w-full rounded-2xl font-bold tracking-wider uppercase md:w-auto md:rounded-full"
+                                        >
+                                            Tanya <Send className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 border-t border-gray-100 px-3 pt-3 pb-1.5">
+                                        {QUICK_QUESTIONS.map((q) => (
+                                            <button
+                                                key={q}
+                                                type="button"
+                                                onClick={() => askSigap(q)}
+                                                className="border-brand-light/30 bg-brand-soft text-primary rounded-full border px-3.5 py-2 text-sm font-medium hover:bg-white"
+                                            >
+                                                {q}
+                                            </button>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            onClick={() => askSigap('Saya ingin bicara dengan petugas.')}
+                                            className="border-primary text-primary flex items-center gap-1.5 rounded-full border bg-white px-3.5 py-2 text-sm font-semibold hover:bg-gray-50"
+                                        >
+                                            <Headset className="h-4 w-4" aria-hidden="true" /> Bicara dengan petugas
+                                        </button>
+                                    </div>
+                                </form>
+                                <p className="mt-3 text-center text-sm text-white/80">
+                                    Sudah punya nomor tiket?{' '}
+                                    <Link href="/lacak" className="font-semibold text-white underline">
+                                        Lacak tiket
+                                    </Link>
+                                    . Jangan menulis NIK atau nomor rekening di kolom tanya.
+                                </p>
                             </div>
-                            <Button
-                                type="submit"
-                                className="font-heading mt-2 w-full rounded-2xl font-bold tracking-wider uppercase md:mt-0 md:w-auto md:rounded-full"
+                        ) : (
+                            <form
+                                onSubmit={submitTrack}
+                                className="mb-12 flex w-full max-w-4xl flex-col items-center rounded-3xl border border-white/25 bg-white p-2.5 shadow-2xl md:flex-row md:rounded-full"
                             >
-                                <Search className="h-4 w-4" /> Cari
-                            </Button>
-                        </form>
+                                <div className="flex w-full flex-grow items-center py-2 pl-4">
+                                    <Search className="mr-3 hidden h-4 w-4 text-gray-400 md:block" />
+                                    <Input
+                                        value={query}
+                                        onChange={(e) => setQuery(e.target.value)}
+                                        placeholder="Masukkan Nomor Tiket (Cth: TKT-261012-7KQ4MZ)…"
+                                        className="border-0 bg-transparent font-medium text-gray-700 shadow-none focus-visible:ring-0 md:text-lg"
+                                    />
+                                </div>
+                                <Button
+                                    type="submit"
+                                    className="font-heading mt-2 w-full rounded-2xl font-bold tracking-wider uppercase md:mt-0 md:w-auto md:rounded-full"
+                                >
+                                    <Search className="h-4 w-4" /> Cari
+                                </Button>
+                            </form>
+                        )}
 
                         <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                             {quickActions.map(({ page, label, sub, icon: Icon }) => (
@@ -161,7 +257,11 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                                     </h3>
                                 </Link>
                             ))}
-                            <div className="group border-border/70 relative flex cursor-pointer flex-col items-start overflow-hidden rounded-xl border bg-white/95 p-6 shadow-md backdrop-blur transition-all duration-300 hover:-translate-y-2 hover:border-white hover:shadow-2xl">
+                            <button
+                                type="button"
+                                onClick={() => askSigap('')}
+                                className="group border-border/70 relative flex cursor-pointer flex-col items-start overflow-hidden rounded-xl border bg-white/95 p-6 text-left shadow-md backdrop-blur transition-all duration-300 hover:-translate-y-2 hover:border-white hover:shadow-2xl"
+                            >
                                 <Headset className="text-brand absolute -right-4 -bottom-4 h-24 w-24 opacity-5 transition duration-500 group-hover:scale-110" />
                                 <div className="bg-brand-light/10 text-brand-light group-hover:bg-brand-light mb-8 flex h-16 w-16 items-center justify-center rounded-full transition-colors duration-300 group-hover:text-white">
                                     <Headset className="h-7 w-7" />
@@ -171,7 +271,7 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                                     <br />
                                     SIGAP
                                 </h3>
-                            </div>
+                            </button>
                         </div>
                     </div>
                 </section>

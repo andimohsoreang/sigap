@@ -34,6 +34,11 @@ export interface SharedData {
     recaptcha?: {
         site_key: string | null;
     };
+    /** Asisten AI contact center (kotak tanya beranda & widget chat). */
+    assistant?: {
+        enabled: boolean;
+        service_hours: string;
+    };
     /** Total pesan chat belum dibaca petugas (hanya admin; null untuk lainnya). */
     chat_unread?: number | null;
     flash?: {

@@ -49,11 +49,16 @@ class HandleInertiaRequests extends Middleware
                     'is_admin' => $user->isAdmin(),
                 ] : null,
             ],
-            // Badge merah "Pesan Masuk" di sidebar admin (diperbarui live via Reverb).
+            // Badge merah "Kotak Masuk" di sidebar admin (diperbarui live via Reverb).
             'chat_unread' => fn () => $user?->isAdmin() ? ChatConversation::unreadForAdmins() : null,
             // reCAPTCHA v3 (SEC-10): hanya site key publik; kosong = lewati (lokal).
             'recaptcha' => [
                 'site_key' => config('services.recaptcha.site_key') ?: null,
+            ],
+            // Asisten AI contact center: beranda menampilkan kotak tanya bila aktif.
+            'assistant' => [
+                'enabled' => (bool) config('services.ai.enabled'),
+                'service_hours' => (string) config('services.ai.service_hours.label'),
             ],
             'flash' => [
                 'status' => fn () => $request->session()->get('status'),
