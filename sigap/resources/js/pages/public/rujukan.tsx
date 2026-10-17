@@ -265,7 +265,7 @@ function ProofForm({ token, label, portal, highlight }: { token: string; label: 
         <section className={cn('mt-6 rounded-xl border p-5', highlight ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white')}>
             <h2 className="text-sm font-semibold text-gray-900">Sudah mengirim aduan di {portal}?</h2>
             <p className="mt-1 text-sm text-gray-600">
-                Masukkan {label.toLowerCase()} yang Anda terima. Dengan begitu petugas tahu aduan Anda sudah tercatat.
+                Masukkan {label.charAt(0).toLowerCase() + label.slice(1)} yang Anda terima. Dengan begitu petugas tahu aduan Anda sudah tercatat.
             </p>
             <form onSubmit={submit} className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <label htmlFor="bukti-rujukan" className="sr-only">

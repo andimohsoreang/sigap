@@ -384,7 +384,7 @@ function DetailPanel({ detail: d, admins, onBack }: { detail: Detail; admins: { 
 
                 {d.terbuka && (
                     <div className="space-y-3 border-t border-gray-100 p-4">
-                        <div className="grid grid-cols-2 gap-2 xl:grid-cols-5">
+                        <div className="flex flex-wrap gap-2">
                             <ActionButton
                                 icon={NotebookPen}
                                 active={action === 'catatan'}
@@ -592,7 +592,7 @@ function ActionButton({
             onClick={onClick}
             aria-pressed={active}
             className={cn(
-                'flex h-10 items-center justify-center gap-1.5 rounded-lg border px-2 text-[13px] font-medium transition-colors',
+                'flex h-10 flex-auto items-center justify-center gap-1.5 rounded-lg border px-3 text-[13px] font-medium whitespace-nowrap transition-colors sm:flex-none',
                 primary
                     ? 'bg-primary border-primary hover:bg-primary/90 text-white'
                     : 'hover:border-primary hover:text-primary border-gray-300 bg-white text-gray-800',
@@ -600,7 +600,7 @@ function ActionButton({
             )}
         >
             <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span className="truncate">{children}</span>
+            <span>{children}</span>
         </button>
     );
 }
