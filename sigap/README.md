@@ -90,6 +90,23 @@ php artisan queue:work  # untuk fitur "Buat dari dokumen resmi"
 Untuk model sungguhan (OpenCode Zen, Ollama, vLLM) set `AI_DRIVER=openai`, `AI_BASE_URL`, `AI_API_KEY`,
 `AI_MODEL` — lihat `../docs/DEPLOY.md` §13. Tes selalu memakai `AI_ENABLED=false` (diatur di `phpunit.xml`).
 
+### Basis Pengetahuan & kualitas jawaban
+
+```bash
+php artisan db:seed --class=OfficialKnowledgeSeeder   # ±29 artikel dari PPID, JDIH & UU Ketransmigrasian
+php artisan sigap:uji-asisten --hanya-pencarian       # nilai pencarian saja (cepat, tanpa model)
+php artisan sigap:uji-asisten --rinci                 # alur lengkap dengan model yang dikonfigurasi
+```
+
+- Artikel dari `OfficialKnowledgeSeeder` masuk berstatus **Ditinjau**: Super Admin mencocokkan angka & pasal
+  dengan dokumen asli (tautan tersedia di tiap artikel), lalu klik **Terbitkan** di *Basis Pengetahuan*.
+  Seeder aman dijalankan ulang (judul yang sudah ada tidak ditimpa).
+- Pencarian: BM25 di atas kata dasar Bahasa Indonesia (`app/Services/Knowledge/IndonesianText.php` — imbuhan,
+  sinonim, kata pengisi Jawa/Sunda). Bila artikel tidak ditemukan dengan istilah warga, isi **Kata kunci
+  tambahan** pada artikel, lalu cek dengan kotak **Uji pencarian** di halaman yang sama.
+- Paket uji ada di `database/data/uji-asisten.php`; tambahkan pertanyaan nyata yang gagal. Tes
+  `RetrievalQualityTest` menjaga agar pertanyaan yang sudah terjawab tidak kehilangan sumbernya.
+
 ## Akun
 
 **Tidak ada kredensial default** (SEC-01). Akun dibuat eksplisit:

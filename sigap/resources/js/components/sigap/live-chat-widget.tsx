@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { echo, echoIsConfigured } from '@laravel/echo-react';
-import { BookOpen, Bot, Headset, LogIn, MessagesSquare, Send, Ticket, UserRound, X } from 'lucide-react';
+import { BookOpen, Bot, ExternalLink, Headset, LogIn, MessagesSquare, Send, Ticket, UserRound, X } from 'lucide-react';
 import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 /**
@@ -37,6 +37,7 @@ interface Source {
     id: number;
     judul: string;
     label: string | null;
+    url?: string | null;
 }
 
 interface TicketInfo {
@@ -581,11 +582,25 @@ function AiExtras({
 
             {(message.sumber?.length ?? 0) > 0 && (
                 <div className="mt-2 flex flex-col gap-1 border-t border-dashed border-gray-200 pt-2 whitespace-normal">
-                    {message.sumber!.map((s, i) => (
-                        <span key={s.id} className="text-primary flex items-start gap-1 text-[11px] font-semibold">
-                            <BookOpen className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />[{i + 1}] {s.label ?? s.judul}
-                        </span>
-                    ))}
+                    {message.sumber!.map((s, i) =>
+                        s.url ? (
+                            <a
+                                key={s.id}
+                                href={s.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary flex items-start gap-1 text-[11px] font-semibold hover:underline"
+                            >
+                                <BookOpen className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />[{i + 1}] {s.label ?? s.judul}
+                                <ExternalLink className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+                                <span className="sr-only">(buka dokumen di tab baru)</span>
+                            </a>
+                        ) : (
+                            <span key={s.id} className="text-primary flex items-start gap-1 text-[11px] font-semibold">
+                                <BookOpen className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />[{i + 1}] {s.label ?? s.judul}
+                            </span>
+                        ),
+                    )}
                 </div>
             )}
 

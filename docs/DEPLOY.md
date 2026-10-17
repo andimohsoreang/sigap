@@ -393,6 +393,11 @@ warga. NIK, nomor HP, surel, dan deret angka panjang disamarkan sebelum teks dik
    menjawab "belum menemukan informasi resmi" dan meneruskan ke petugas.
    `php artisan db:seed --class=KnowledgeSeeder --force` menambahkan 8 artikel cara memakai SIGAP
    (hanya bila tabel masih kosong).
+   `php artisan db:seed --class=OfficialKnowledgeSeeder --force` menambahkan ±29 artikel dari portal PPID,
+   JDIH, dan UU 15/1997 jo. UU 29/2009 (layanan informasi publik, jenis transmigrasi, syarat, hak &
+   kewajiban transmigran, pertanahan, Program 5T). Semuanya berstatus **Ditinjau**: Super Admin mencocokkan
+   isi dengan dokumen asli lewat tautan sumber, lalu klik **Terbitkan**. Aman dijalankan ulang.
+   Setelah terbit, cek kualitas: `php artisan sigap:uji-asisten --rinci` (lihat bagian *Menguji kualitas*).
 2. Atur `deploy/docker/.env`:
 
    | Variabel | Nilai |
@@ -415,6 +420,17 @@ warga. NIK, nomor HP, surel, dan deret angka panjang disamarkan sebelum teks dik
 - `queue` — memproses PDF di menu **Basis Pengetahuan → Buat dari dokumen resmi**.
 - Server SIGAP saat ini (tanpa GPU, CPU tanpa AVX) **tidak** dapat menjalankan model lokal; pakai
   penyedia API atau server GPU terpisah.
+
+### Menguji kualitas
+
+`php artisan sigap:uji-asisten` menjalankan ±40 pertanyaan bergaya warga (`database/data/uji-asisten.php`)
+terhadap artikel terbit dan model yang dikonfigurasi, tanpa menyimpan percakapan. Hasilnya: ketepatan
+pencarian sumber, ketepatan klasifikasi (informasi/aduan/pribadi/lainnya), jumlah jawaban tanpa sumber
+(ditolak sistem), dan waktu jawab median. Jalankan setiap kali mengganti `AI_MODEL` atau setelah menambah
+banyak artikel. `--hanya-pencarian` melewati model (tanpa biaya API).
+
+Bila warga bertanya dengan istilah yang tidak ditemukan, isi **Kata kunci tambahan** pada artikel terkait
+dan periksa dengan kotak **Uji pencarian** di halaman Basis Pengetahuan.
 
 ### Mematikan / rollback
 

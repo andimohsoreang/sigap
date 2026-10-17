@@ -207,6 +207,7 @@ class AssistantService
                 'id' => $a->id,
                 'judul' => $a->title,
                 'label' => $a->sourceLabel(),
+                'url' => $a->source_url,
             ])->all(),
         ]);
     }
@@ -234,6 +235,21 @@ class AssistantService
             ->values()
             ->all();
 
+        return $this->consult($question, $history, $articles);
+    }
+
+    /**
+     * Satu panggilan model untuk satu pertanyaan (tanpa menyimpan apa pun).
+     * Dipakai alur chat dan perintah `sigap:uji-asisten`.
+     *
+     * @param  list<array{dari: string, isi: string}>  $history
+     * @param  Collection<int, KnowledgeArticle>  $articles
+     * @return array{jenis: string, jawaban: string, sumber: list<int>, perlu_petugas: bool, ringkasan: string}
+     *
+     * @throws AiException
+     */
+    public function consult(string $question, array $history, Collection $articles): array
+    {
         $input = [
             'pertanyaan' => $this->masker->mask($question),
             'riwayat' => $history,

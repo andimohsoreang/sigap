@@ -37,6 +37,7 @@ class AssistantChatTest extends TestCase
             'category' => 'Program',
             'source' => 'Pedoman Seleksi',
             'source_ref' => 'Hal. 12',
+            'source_url' => 'https://jdih.transmigrasi.go.id/web/regulations',
             'status' => KnowledgeArticle::STATUS_PUBLISHED,
         ]);
     }
@@ -75,7 +76,8 @@ class AssistantChatTest extends TestCase
             ->assertJsonPath('balasan.0.sender_type', 'ai')
             ->assertJsonPath('balasan.0.jenis', 'jawaban')
             ->assertJsonPath('balasan.0.penulis', 'Asisten SIGAP')
-            ->assertJsonPath('balasan.0.sumber.0.label', 'Pedoman Seleksi · Hal. 12');
+            ->assertJsonPath('balasan.0.sumber.0.label', 'Pedoman Seleksi · Hal. 12')
+            ->assertJsonPath('balasan.0.sumber.0.url', 'https://jdih.transmigrasi.go.id/web/regulations');
 
         // Ditangani AI → petugas tidak diberi badge.
         $this->assertSame(0, $conversation->fresh()->unread_admin);

@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\Knowledge\KnowledgeRetriever;
 use Database\Seeders\KnowledgeSeeder;
 use Database\Seeders\MasterSeeder;
+use Database\Seeders\OfficialKnowledgeSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -149,5 +150,68 @@ class KnowledgeTest extends TestCase
 
         $this->seed(KnowledgeSeeder::class);
         $this->assertSame($count, KnowledgeArticle::query()->count());
+    }
+
+    public function test_super_admin_publishes_reviewed_article_in_one_click(): void
+    {
+        $article = $this->article(['status' => KnowledgeArticle::STATUS_REVIEW]);
+        $kawasan = User::factory()->admin(UserRole::AdminKawasan)->create(['region_id' => Region::query()->value('id')]);
+
+        $this->actingAs($kawasan)->post("/admin/pengetahuan/{$article->id}/terbitkan")->assertForbidden();
+        $this->assertSame('ditinjau', $article->fresh()->status);
+
+        $this->actingAs(User::factory()->admin(UserRole::SuperAdmin)->create())
+            ->post("/admin/pengetahuan/{$article->id}/terbitkan")
+            ->assertSessionHas('success');
+        $this->assertSame('terbit', $article->fresh()->status);
+        $this->assertDatabaseHas('activity_logs', ['action' => 'knowledge.published']);
+    }
+
+    public function test_search_probe_shows_which_articles_feed_the_assistant(): void
+    {
+        $article = $this->article();
+        $this->article(['title' => 'Draf syarat', 'status' => KnowledgeArticle::STATUS_DRAFT]);
+
+        $this->actingAs(User::factory()->admin(UserRole::SuperAdmin)->create())
+            ->get('/admin/pengetahuan?uji='.urlencode('syarat ikut transmigrasi apa?'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('probe.question', 'syarat ikut transmigrasi apa?')
+                ->has('probe.results', 1)
+                ->where('probe.results.0.id', $article->id));
+    }
+
+    public function test_keywords_and_source_url_are_saved_and_validated(): void
+    {
+        $admin = User::factory()->admin(UserRole::SuperAdmin)->create();
+
+        $this->actingAs($admin)->post('/admin/pengetahuan', $this->payload(['source_url' => 'bukan tautan']))
+            ->assertSessionHasErrors('source_url');
+
+        $this->actingAs($admin)->post('/admin/pengetahuan', $this->payload([
+            'keywords' => 'SHM, sertipikat',
+            'source_url' => 'https://jdih.transmigrasi.go.id/web/regulations/read/725',
+        ]))->assertSessionHas('success');
+
+        $this->assertDatabaseHas('knowledge_articles', [
+            'keywords' => 'SHM, sertipikat',
+            'source_url' => 'https://jdih.transmigrasi.go.id/web/regulations/read/725',
+        ]);
+    }
+
+    public function test_official_seeder_adds_articles_for_review_without_overwriting_edits(): void
+    {
+        $this->seed(OfficialKnowledgeSeeder::class);
+        $count = KnowledgeArticle::query()->count();
+
+        $this->assertGreaterThan(20, $count);
+        $this->assertSame($count, KnowledgeArticle::query()->where('status', KnowledgeArticle::STATUS_REVIEW)->count());
+        $this->assertSame(0, KnowledgeArticle::query()->whereNull('source_url')->count());
+
+        $edited = KnowledgeArticle::query()->first();
+        $edited->update(['body' => 'Sudah disunting petugas.', 'status' => KnowledgeArticle::STATUS_PUBLISHED]);
+
+        $this->seed(OfficialKnowledgeSeeder::class);
+        $this->assertSame($count, KnowledgeArticle::query()->count());
+        $this->assertSame('Sudah disunting petugas.', $edited->fresh()->body);
     }
 }

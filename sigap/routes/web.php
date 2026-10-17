@@ -104,6 +104,7 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
     Route::delete('/pengetahuan/dokumen/{document}', [KnowledgeDocumentController::class, 'destroy'])->name('admin.pengetahuan.dokumen.destroy');
     Route::post('/pengetahuan', [KnowledgeController::class, 'store'])->name('admin.pengetahuan.store');
     Route::put('/pengetahuan/{article}', [KnowledgeController::class, 'update'])->name('admin.pengetahuan.update');
+    Route::post('/pengetahuan/{article}/terbitkan', [KnowledgeController::class, 'publish'])->name('admin.pengetahuan.terbitkan');
     Route::delete('/pengetahuan/{article}', [KnowledgeController::class, 'destroy'])->name('admin.pengetahuan.destroy');
 
     Route::get('/kawasan', [AdminController::class, 'kawasan'])->name('admin.kawasan');

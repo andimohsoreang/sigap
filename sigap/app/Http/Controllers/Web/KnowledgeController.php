@@ -7,6 +7,7 @@ use App\Models\ChatMessage;
 use App\Models\KnowledgeArticle;
 use App\Models\User;
 use App\Services\AuditService;
+use App\Services\Knowledge\KnowledgeRetriever;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -23,7 +24,10 @@ use Inertia\Response;
  */
 class KnowledgeController extends Controller
 {
-    public function __construct(private readonly AuditService $audit) {}
+    public function __construct(
+        private readonly AuditService $audit,
+        private readonly KnowledgeRetriever $retriever,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -37,8 +41,10 @@ class KnowledgeController extends Controller
                 'title' => $a->title,
                 'body' => $a->body,
                 'category' => $a->category,
+                'keywords' => $a->keywords,
                 'source' => $a->source,
                 'source_ref' => $a->source_ref,
+                'source_url' => $a->source_url,
                 'status' => $a->status,
                 'review_at' => $a->review_at?->toDateString(),
                 'review_overdue' => $a->isOverdueForReview(),
@@ -56,6 +62,7 @@ class KnowledgeController extends Controller
             ],
             'categories' => $articles->pluck('category')->filter()->unique()->sort()->values(),
             'unanswered' => $this->unanswered(),
+            'probe' => $this->probe((string) $request->query('uji', '')),
             'can_publish' => $request->user()->isSuperAdmin(),
         ]);
     }
@@ -90,6 +97,18 @@ class KnowledgeController extends Controller
         return back()->with('success', $this->savedMessage($article->status, $requested));
     }
 
+    /** Persetujuan cepat Super Admin atas artikel yang sudah ditinjau. */
+    public function publish(Request $request, KnowledgeArticle $article): RedirectResponse
+    {
+        $this->authorize('manageAdmins', User::class);
+
+        $article->update(['status' => KnowledgeArticle::STATUS_PUBLISHED, 'updated_by' => $request->user()->id]);
+
+        $this->audit->safe('knowledge.published', $article, "Artikel \"{$article->title}\" diterbitkan.");
+
+        return back()->with('success', 'Artikel terbit dan langsung dipakai asisten AI.');
+    }
+
     public function destroy(KnowledgeArticle $article): RedirectResponse
     {
         $this->authorize('manageAdmins', User::class);
@@ -108,8 +127,10 @@ class KnowledgeController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string', 'min:10', 'max:10000'],
             'category' => ['nullable', 'string', 'max:100'],
+            'keywords' => ['nullable', 'string', 'max:500'],
             'source' => ['nullable', 'string', 'max:255'],
             'source_ref' => ['nullable', 'string', 'max:100'],
+            'source_url' => ['nullable', 'url:https,http', 'max:500'],
             'status' => ['required', Rule::in(KnowledgeArticle::STATUSES)],
             'review_at' => ['nullable', 'date'],
         ]);
@@ -155,6 +176,34 @@ class KnowledgeController extends Controller
             ->take(10)
             ->values()
             ->all();
+    }
+
+    /**
+     * Uji pencarian: artikel terbit mana yang akan dikirim ke AI untuk
+     * pertanyaan ini, beserta skornya. Membantu petugas menilai apakah
+     * artikel perlu kata kunci tambahan.
+     *
+     * @return array{question: string, results: list<array{id: int, title: string, score: float, coverage: int}>}|null
+     */
+    private function probe(string $question): ?array
+    {
+        $question = trim(mb_substr($question, 0, 300));
+        if ($question === '') {
+            return null;
+        }
+
+        return [
+            'question' => $question,
+            'results' => collect($this->retriever->rank($question))
+                ->take(5)
+                ->map(fn (array $hit) => [
+                    'id' => $hit['article']->id,
+                    'title' => $hit['article']->title,
+                    'score' => $hit['score'],
+                    'coverage' => (int) round($hit['coverage'] * 100),
+                ])
+                ->all(),
+        ];
     }
 
     private function helpfulRate(KnowledgeArticle $a): ?int

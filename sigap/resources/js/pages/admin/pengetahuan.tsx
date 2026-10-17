@@ -1,5 +1,5 @@
 import { Link, router, useForm } from '@inertiajs/react';
-import { BookOpen, CalendarClock, CircleHelp, Clock, FileUp, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { BookOpen, CalendarClock, CheckCircle2, CircleHelp, Clock, ExternalLink, FileUp, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { type FormEvent, type ReactNode, useState } from 'react';
 
 import { DataTable, type DataTableColumn } from '@/components/sigap/data-table';
@@ -19,8 +19,10 @@ interface Article {
     title: string;
     body: string;
     category: string | null;
+    keywords: string | null;
     source: string | null;
     source_ref: string | null;
+    source_url: string | null;
     status: Status;
     review_at: string | null;
     review_overdue: boolean;
@@ -37,19 +39,35 @@ interface Unanswered {
     last_at: string | null;
 }
 
+interface Probe {
+    question: string;
+    results: { id: number; title: string; score: number; coverage: number }[];
+}
+
 interface Props {
     articles: Article[];
     stats: { terbit: number; ditinjau: number; draf: number; lewat_tinjau: number };
     categories: string[];
     unanswered: Unanswered[];
+    probe: Probe | null;
     can_publish: boolean;
 }
 
 const STATUS_LABEL: Record<Status, string> = { draf: 'Draf', ditinjau: 'Ditinjau', terbit: 'Terbit' };
 
-const EMPTY = { title: '', body: '', category: '', source: '', source_ref: '', status: 'draf' as Status, review_at: '' };
+const EMPTY = {
+    title: '',
+    body: '',
+    category: '',
+    keywords: '',
+    source: '',
+    source_ref: '',
+    source_url: '',
+    status: 'draf' as Status,
+    review_at: '',
+};
 
-export default function Pengetahuan({ articles, stats, categories, unanswered, can_publish: canPublish }: Props) {
+export default function Pengetahuan({ articles, stats, categories, unanswered, probe, can_publish: canPublish }: Props) {
     const [editing, setEditing] = useState<Article | null>(null);
     const [formOpen, setFormOpen] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -70,8 +88,10 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, c
             title: a.title,
             body: a.body,
             category: a.category ?? '',
+            keywords: a.keywords ?? '',
             source: a.source ?? '',
             source_ref: a.source_ref ?? '',
+            source_url: a.source_url ?? '',
             status: a.status,
             review_at: a.review_at ?? '',
         });
@@ -105,6 +125,16 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, c
                             .filter(Boolean)
                             .join(' · ') || 'Sumber belum diisi'}
                         {row.original.from_document && ' · dari dokumen'}
+                        {row.original.source_url && (
+                            <a
+                                href={row.original.source_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary ml-1 inline-flex items-center gap-0.5 hover:underline"
+                            >
+                                tautan <ExternalLink className="h-3 w-3" />
+                            </a>
+                        )}
                     </div>
                 </div>
             ),
@@ -148,6 +178,17 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, c
             meta: { label: 'Aksi', disableToggle: true, disableSorting: true, className: 'text-center' },
             cell: ({ row }) => (
                 <div className="flex items-center justify-center gap-2">
+                    {canPublish && row.original.status === 'ditinjau' && (
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-xs text-emerald-700"
+                            onClick={() => router.post(`/admin/pengetahuan/${row.original.id}/terbitkan`, {}, { preserveScroll: true })}
+                            title="Setujui dan terbitkan"
+                        >
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Terbitkan
+                        </Button>
+                    )}
                     <Button size="sm" variant="outline" className="h-7 w-7 p-0" onClick={() => openEdit(row.original)} title="Edit">
                         <Pencil className="h-3.5 w-3.5" />
                     </Button>
@@ -272,6 +313,21 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, c
                                     placeholder="Hal. 12 · Pasal 5"
                                 />
                             </Field>
+                            <Field label="Tautan dokumen resmi" error={form.errors.source_url} className="md:col-span-2">
+                                <Input
+                                    type="url"
+                                    value={form.data.source_url}
+                                    onChange={(e) => form.setData('source_url', e.target.value)}
+                                    placeholder="https://jdih.transmigrasi.go.id/…"
+                                />
+                            </Field>
+                            <Field label="Kata kunci tambahan" error={form.errors.keywords}>
+                                <Input
+                                    value={form.data.keywords}
+                                    onChange={(e) => form.setData('keywords', e.target.value)}
+                                    placeholder="Istilah warga, pisahkan dengan koma"
+                                />
+                            </Field>
                             <Field label="Status" required error={form.errors.status}>
                                 <Select value={form.data.status} onValueChange={(v) => form.setData('status', v as Status)}>
                                     <SelectTrigger>
@@ -314,40 +370,100 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, c
                     ]}
                 />
 
-                <Card className="h-fit border-gray-200">
-                    <CardHeader className="border-b border-gray-100 pb-3">
-                        <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                            <CircleHelp className="text-brand-light h-4 w-4" /> Belum bisa dijawab AI
-                        </CardTitle>
-                        <p className="text-xs text-gray-500">
-                            Pertanyaan warga 30 hari terakhir yang tidak menemukan sumber. Bahan artikel berikutnya.
-                        </p>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        {unanswered.length === 0 ? (
-                            <p className="p-4 text-sm text-gray-500">Belum ada pertanyaan yang tidak terjawab.</p>
-                        ) : (
-                            <ul className="divide-y divide-gray-100">
-                                {unanswered.map((q) => (
-                                    <li key={q.question} className="flex items-center gap-3 p-3">
-                                        <span className="flex-1 text-sm text-gray-700">{q.question}</span>
-                                        <span className="text-primary text-xs font-bold tabular-nums">{q.count}×</span>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="h-7 rounded-full px-2.5 text-xs"
-                                            onClick={() => openNew(q.question)}
-                                        >
-                                            Buat artikel
-                                        </Button>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </CardContent>
-                </Card>
+                <div className="flex flex-col gap-6">
+                    <ProbeCard probe={probe} />
+                    <Card className="h-fit border-gray-200">
+                        <CardHeader className="border-b border-gray-100 pb-3">
+                            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                                <CircleHelp className="text-brand-light h-4 w-4" /> Belum bisa dijawab AI
+                            </CardTitle>
+                            <p className="text-xs text-gray-500">
+                                Pertanyaan warga 30 hari terakhir yang tidak menemukan sumber. Bahan artikel berikutnya.
+                            </p>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            {unanswered.length === 0 ? (
+                                <p className="p-4 text-sm text-gray-500">Belum ada pertanyaan yang tidak terjawab.</p>
+                            ) : (
+                                <ul className="divide-y divide-gray-100">
+                                    {unanswered.map((q) => (
+                                        <li key={q.question} className="flex items-center gap-3 p-3">
+                                            <span className="flex-1 text-sm text-gray-700">{q.question}</span>
+                                            <span className="text-primary text-xs font-bold tabular-nums">{q.count}×</span>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-7 rounded-full px-2.5 text-xs"
+                                                onClick={() => openNew(q.question)}
+                                            >
+                                                Buat artikel
+                                            </Button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </AdminLayout>
+    );
+}
+
+/** Coba pertanyaan warga: artikel mana yang akan dikirim ke AI sebagai sumber. */
+function ProbeCard({ probe }: { probe: Probe | null }) {
+    const [question, setQuestion] = useState(probe?.question ?? '');
+
+    const submit = (e: FormEvent) => {
+        e.preventDefault();
+        router.get('/admin/pengetahuan', question.trim() ? { uji: question.trim() } : {}, {
+            only: ['probe'],
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    };
+
+    return (
+        <Card className="h-fit border-gray-200">
+            <CardHeader className="border-b border-gray-100 pb-3">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                    <Search className="text-brand-light h-4 w-4" /> Uji pencarian
+                </CardTitle>
+                <p className="text-xs text-gray-500">Tulis pertanyaan seperti warga. Artikel terbit yang ditemukan menjadi sumber jawaban AI.</p>
+            </CardHeader>
+            <CardContent className="space-y-3 p-4">
+                <form onSubmit={submit} className="flex gap-2">
+                    <Input
+                        value={question}
+                        onChange={(e) => setQuestion(e.target.value)}
+                        placeholder="Mis. syarat ikut transmigrasi apa?"
+                        aria-label="Pertanyaan uji"
+                    />
+                    <Button type="submit" size="sm" variant="outline">
+                        Cari
+                    </Button>
+                </form>
+                {probe &&
+                    (probe.results.length === 0 ? (
+                        <p className="rounded-md bg-amber-50 p-3 text-xs text-amber-800">
+                            Tidak ada artikel yang cocok. AI akan menjawab “belum menemukan informasi resmi” dan menawarkan petugas.
+                        </p>
+                    ) : (
+                        <ol className="space-y-2">
+                            {probe.results.map((r, i) => (
+                                <li key={r.id} className="flex items-start gap-2 text-sm">
+                                    <span className="text-primary mt-0.5 text-xs font-bold tabular-nums">[{i + 1}]</span>
+                                    <span className="flex-1 text-gray-700">{r.title}</span>
+                                    <span className="text-xs whitespace-nowrap text-gray-500 tabular-nums" title="Skor · cakupan kata pertanyaan">
+                                        {r.score.toFixed(1)} · {r.coverage}%
+                                    </span>
+                                </li>
+                            ))}
+                        </ol>
+                    ))}
+            </CardContent>
+        </Card>
     );
 }
 
