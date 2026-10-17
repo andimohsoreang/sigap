@@ -43,6 +43,8 @@ export interface SharedData {
     };
     /** Total pesan chat belum dibaca petugas (hanya admin; null untuk lainnya). */
     chat_unread?: number | null;
+    /** Rujukan portal milik admin ini yang perlu tindakan (badge menu Rujukan). */
+    rujukan_perlu?: number | null;
     flash?: {
         status?: string | null;
         success?: string | null;

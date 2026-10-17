@@ -80,6 +80,12 @@ class User extends Authenticatable
         return $this->belongsTo(Region::class);
     }
 
+    /** Rujukan portal yang menjadi tanggung jawab admin ini. */
+    public function assignedReferrals(): HasMany
+    {
+        return $this->hasMany(Referral::class, 'assigned_to');
+    }
+
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class, 'reporter_id');

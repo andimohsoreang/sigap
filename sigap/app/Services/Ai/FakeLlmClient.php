@@ -9,12 +9,13 @@ use Illuminate\Support\Str;
  *
  * Perilakunya sengaja sederhana dan dapat diramalkan:
  * - JAWAB: kata kunci aduan/pribadi/petugas menentukan jenis; bila ada
- *   sumber, jawaban diambil dari isi sumber pertama.
+ *   sumber, jawaban diambil dari isi sumber pertama; portal yang ditandai
+ *   `disarankan` oleh sistem dipilih apa adanya.
  * - USUL_ARTIKEL: setiap halaman menjadi satu usulan.
  */
 class FakeLlmClient implements LlmClient
 {
-    private const COMPLAINT_WORDS = ['rusak', 'mengadu', 'aduan', 'lapor', 'melapor', 'keluhan', 'tidak berfungsi', 'mati', 'banjir', 'longsor', 'pungli'];
+    private const COMPLAINT_WORDS = ['rusak', 'mengadu', 'aduan', 'lapor', 'melapor', 'keluhan', 'tidak berfungsi', 'mati', 'banjir', 'longsor', 'pungli', 'sengketa', 'diserobot', 'diklaim', 'konflik', 'tumpang tindih', 'digusur'];
 
     private const PERSONAL_WORDS = ['nama saya', 'saya belum', 'saya tidak', 'bantuan saya', 'sertifikat saya', 'lahan saya', 'hak saya', 'saya berhak'];
 
@@ -37,6 +38,7 @@ class FakeLlmClient implements LlmClient
     {
         $question = Str::lower((string) ($input['pertanyaan'] ?? ''));
         $sources = $input['sumber'] ?? [];
+        $portal = collect($input['portal'] ?? [])->firstWhere('disarankan', true)['kode'] ?? null;
 
         $needsStaff = $this->mentions($question, self::STAFF_WORDS);
         $type = match (true) {
@@ -51,6 +53,7 @@ class FakeLlmClient implements LlmClient
                 'jenis' => $type,
                 'jawaban' => '',
                 'sumber' => [],
+                'portal' => $needsStaff ? null : $portal,
                 'perlu_petugas' => $needsStaff,
                 'ringkasan' => $type === 'informasi' && ! $needsStaff ? '' : 'Warga menyampaikan: '.Str::limit((string) $input['pertanyaan'], 200),
             ];
@@ -62,6 +65,7 @@ class FakeLlmClient implements LlmClient
             'jenis' => 'informasi',
             'jawaban' => Str::limit(trim((string) $first['isi']), 400).' ['.$first['no'].']',
             'sumber' => [$first['no']],
+            'portal' => $portal,
             'perlu_petugas' => false,
             'ringkasan' => '',
         ];

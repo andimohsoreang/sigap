@@ -20,6 +20,7 @@ import {
     ShieldAlert,
     Ticket,
     UserRound,
+    Waypoints,
     type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
@@ -76,7 +77,15 @@ interface Active {
     hasil?: string | null;
     ditutup_at?: string | null;
     tiket?: { nomor: string; url: string } | null;
+    rujukan?: { kode: string; portal: string | null; status: string; url: string }[];
     messages: Message[];
+}
+
+interface ReferralPortal {
+    kode: string;
+    nama: string;
+    kegunaan: string;
+    tersedia: boolean;
 }
 
 interface Props {
@@ -88,6 +97,8 @@ interface Props {
     kpi?: { percakapan: number; selesai_tanpa_petugas: number | null; tunggu_median_menit: number | null } | null;
     /** Label hasil dari server (tombol memakai label ringkas sendiri). */
     outcomes?: Record<string, string>;
+    /** Portal tujuan rujukan yang dilacak sampai warga berhasil. */
+    portal_rujukan?: ReferralPortal[];
 }
 
 const TABS: { value: Tab; label: string; icon: LucideIcon; hint: string }[] = [
@@ -106,8 +117,17 @@ function refresh(includeActive: boolean) {
     });
 }
 
-export default function Chat({ conversations, active, tab = 'semua', tab_counts: tabCounts, ai_enabled: aiEnabled = false, kpi }: Props) {
+export default function Chat({
+    conversations,
+    active,
+    tab = 'semua',
+    tab_counts: tabCounts,
+    ai_enabled: aiEnabled = false,
+    kpi,
+    portal_rujukan: referralPortals = [],
+}: Props) {
     const [search, setSearch] = useState('');
+    const [referOpen, setReferOpen] = useState(false);
     // Detail konteks terbuka di layar lebar; di HP ditutup agar pesan langsung terlihat.
     const [detailsOpen, setDetailsOpen] = useState(() => (typeof window === 'undefined' ? true : window.innerWidth >= 1024));
     // Di layar kecil daftar dan percakapan tampil bergantian.
@@ -190,6 +210,8 @@ export default function Chat({ conversations, active, tab = 'semua', tab_counts:
 
     const take = () => active && router.post(`/admin/chat/${active.id}/ambil`, {}, { preserveScroll: true });
     const close = (hasil: string) => active && router.post(`/admin/chat/${active.id}/tutup`, { hasil }, { preserveScroll: true });
+    const refer = (portal: string) =>
+        active && router.post(`/admin/chat/${active.id}/rujuk`, { portal }, { preserveScroll: true, onSuccess: () => setReferOpen(false) });
 
     return (
         <AdminLayout
@@ -427,6 +449,23 @@ export default function Chat({ conversations, active, tab = 'semua', tab_counts:
                                                         </span>
                                                     )}
                                                 </dd>
+                                                {active.rujukan && active.rujukan.length > 0 && (
+                                                    <>
+                                                        <dt className="mt-3 text-xs text-gray-500">Rujukan</dt>
+                                                        <dd className="mt-0.5">
+                                                            <ul className="space-y-1">
+                                                                {active.rujukan.map((r) => (
+                                                                    <li key={r.kode}>
+                                                                        <Link href={r.url} className="text-primary font-medium hover:underline">
+                                                                            {r.portal}
+                                                                        </Link>{' '}
+                                                                        <span className="text-gray-500">· {r.status}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </dd>
+                                                    </>
+                                                )}
                                             </div>
                                         </dl>
 
@@ -448,12 +487,42 @@ export default function Chat({ conversations, active, tab = 'semua', tab_counts:
                                                 <ActionButton icon={CheckCircle2} onClick={() => close('terjawab_petugas')}>
                                                     Sudah terjawab
                                                 </ActionButton>
-                                                <ActionButton icon={SendHorizontal} onClick={() => close('lapor')}>
-                                                    Rujuk ke LAPOR!
-                                                </ActionButton>
+                                                {referralPortals.length > 0 ? (
+                                                    <ActionButton icon={Waypoints} onClick={() => setReferOpen((v) => !v)}>
+                                                        Rujuk ke portal
+                                                    </ActionButton>
+                                                ) : (
+                                                    <ActionButton icon={SendHorizontal} onClick={() => close('lapor')}>
+                                                        Rujuk ke LAPOR!
+                                                    </ActionButton>
+                                                )}
                                                 <ActionButton icon={ShieldAlert} onClick={() => close('wbs')}>
                                                     Rujuk ke WBS
                                                 </ActionButton>
+                                            </div>
+                                        )}
+                                        {!closed && referOpen && (
+                                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                                <p className="mb-2 text-xs text-gray-600">
+                                                    Warga menerima pengantar berisi langkah dan ringkasan. Anda menjadi penanggung jawab sampai warga
+                                                    mengirim bukti dari portal tujuan.
+                                                </p>
+                                                <div className="grid gap-2 sm:grid-cols-2">
+                                                    {referralPortals.map((p) => (
+                                                        <button
+                                                            key={p.kode}
+                                                            type="button"
+                                                            disabled={!p.tersedia}
+                                                            onClick={() => refer(p.kode)}
+                                                            className="hover:border-primary rounded-lg border border-gray-300 bg-white p-3 text-left disabled:cursor-not-allowed disabled:opacity-50"
+                                                        >
+                                                            <span className="text-primary block text-sm font-semibold">{p.nama}</span>
+                                                            <span className="line-clamp-2 text-xs text-gray-600">
+                                                                {p.tersedia ? p.kegunaan : 'Sedang tidak dapat diakses'}
+                                                            </span>
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
                                         )}
                                         {!closed && (

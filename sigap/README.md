@@ -107,6 +107,17 @@ php artisan sigap:uji-asisten --rinci                 # alur lengkap dengan mode
 - Paket uji ada di `database/data/uji-asisten.php`; tambahkan pertanyaan nyata yang gagal. Tes
   `RetrievalQualityTest` menjaga agar pertanyaan yang sudah terjawab tidak kehilangan sumbernya.
 
+### Rujukan portal
+
+```bash
+php artisan db:seed --class=PortalSeeder   # Trans Tuntas, LAPOR!, SIBARDUKTRANS, PPID, SIPUKAT, JDIH, …
+php artisan sigap:cek-portal               # cek tautan (terjadwal per jam)
+php artisan sigap:pantau-rujukan           # ingatkan penanggung jawab (terjadwal 08.00 hari kerja)
+```
+
+Aduan lahan dirujuk ke Trans Tuntas lewat halaman pengantar `/rujukan/{token}`; satu petugas menjadi
+penanggung jawab sampai warga memasukkan kode tracking. Lihat `../docs/DEPLOY.md` §13.
+
 ## Akun
 
 **Tidak ada kredensial default** (SEC-01). Akun dibuat eksplisit:

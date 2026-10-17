@@ -243,6 +243,8 @@ class ChatService
             'jenis' => $meta['kind'] ?? null,
             'sumber' => $meta['sumber'] ?? [],
             'tiket' => $meta['tiket'] ?? null,
+            'portal' => $meta['portal'] ?? null,
+            'rujukan' => $meta['rujukan'] ?? null,
             'referensi' => $meta['referensi'] ?? null,
             'nilai' => $m->feedback,
         ];

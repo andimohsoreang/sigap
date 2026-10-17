@@ -157,19 +157,28 @@ final class IndonesianText
      */
     public static function stems(string $word): array
     {
-        $word = self::stripEnd($word, self::PARTICLES);
-        $word = self::stripEnd($word, self::POSSESSIVES);
+        // Partikel & kata ganti milik bisa bagian dari kata dasar ("nikah",
+        // "masalah", "sekolah"), jadi bentuk utuhnya tetap dipertahankan.
+        $heads = array_unique([
+            $word,
+            self::stripEnd($word, self::PARTICLES),
+            self::stripEnd($word, self::POSSESSIVES),
+            self::stripEnd(self::stripEnd($word, self::PARTICLES), self::POSSESSIVES),
+        ]);
 
-        $bases = [$word];
-        foreach (self::SUFFIXES as $suffix) {
-            if (str_ends_with($word, $suffix) && mb_strlen($word) - mb_strlen($suffix) >= 4) {
-                $bases[] = mb_substr($word, 0, -mb_strlen($suffix));
-                break;
+        $bases = [];
+        foreach ($heads as $head) {
+            $bases[] = $head;
+            foreach (self::SUFFIXES as $suffix) {
+                if (str_ends_with($head, $suffix) && mb_strlen($head) - mb_strlen($suffix) >= 4) {
+                    $bases[] = mb_substr($head, 0, -mb_strlen($suffix));
+                    break;
+                }
             }
         }
 
         $stems = [];
-        foreach ($bases as $base) {
+        foreach (array_unique($bases) as $base) {
             $stems[] = $base;
             foreach (self::stripPrefix($base) as $once) {
                 $stems[] = $once;

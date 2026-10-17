@@ -31,7 +31,10 @@ class SecurityHeaders
 
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');
-        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        // Halaman bertoken (mis. pengantar rujukan) boleh memperketat jadi no-referrer.
+        if (! $response->headers->has('Referrer-Policy')) {
+            $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        }
         $response->headers->set('Permissions-Policy', 'geolocation=(self), camera=(), microphone=()');
         $response->headers->set('Content-Security-Policy', $this->contentSecurityPolicy($nonce));
 

@@ -13,6 +13,8 @@ use App\Models\Channel;
 use App\Models\ChannelSyncLog;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
+use App\Models\Portal;
+use App\Models\Referral;
 use App\Models\Region;
 use App\Models\Setting;
 use App\Models\Ticket;
@@ -385,6 +387,10 @@ class AdminController extends Controller
             'ai_enabled' => AssistantService::enabled(),
             'kpi' => AssistantService::enabled() ? $this->contactCenterStats->overview() : null,
             'outcomes' => collect(ChatConversation::OUTCOMES)->only(['terjawab_petugas', 'lapor', 'wbs', 'tidak_selesai']),
+            // Portal tujuan rujukan yang dilacak sampai warga berhasil (menu "Rujuk ke portal").
+            'portal_rujukan' => Portal::query()->publicActive()->where('track_completion', true)->orderBy('sort')
+                ->get(['code', 'name', 'purpose', 'is_reachable'])
+                ->map(fn (Portal $p) => ['kode' => $p->code, 'nama' => $p->name, 'kegunaan' => $p->purpose, 'tersedia' => $p->is_reachable]),
         ]);
     }
 
@@ -395,6 +401,8 @@ class AdminController extends Controller
         'diminta' => 'Diminta warga',
         'ai_gagal' => 'AI gagal menjawab',
         'diambil_petugas' => 'Diambil petugas',
+        'rujukan' => 'Kendala rujukan',
+        'portal_gangguan' => 'Portal tujuan gangguan',
     ];
 
     /** POST /admin/chat/{id}/baca — dipanggil saat pesan baru masuk ke utas yang sedang dibuka. */
@@ -999,6 +1007,9 @@ class AdminController extends Controller
             'riwayat_tiket' => $user ? Ticket::query()->where('reporter_id', $user->id)->latest('id')->limit(3)->get(['ticket_no', 'title', 'status'])
                 ->map(fn (Ticket $t) => ['nomor' => $t->ticket_no, 'judul' => $t->title, 'status' => $t->status?->label(), 'url' => '/admin/tiket/'.$t->ticket_no])
                 ->all() : [],
+            'rujukan' => Referral::query()->with('portal:id,name')->where('conversation_id', $conversation->id)->latest('id')->limit(3)->get()
+                ->map(fn (Referral $r) => ['kode' => $r->code, 'portal' => $r->portal?->name, 'status' => $r->label(), 'url' => '/admin/rujukan?milik=semua&tab=semua&rujukan='.$r->code])
+                ->all(),
             'mulai' => $conversation->created_at?->toIso8601String(),
             'mode' => $conversation->handled_by,
             'ringkasan' => $conversation->ai_summary,

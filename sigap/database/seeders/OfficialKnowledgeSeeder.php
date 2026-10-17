@@ -7,8 +7,8 @@ use Illuminate\Database\Seeder;
 
 /**
  * Bahan awal Basis Pengetahuan dari sumber resmi yang terbuka untuk umum:
- * portal PPID Kementerian Transmigrasi, JDIH Kementerian Transmigrasi, dan
- * teks UU 15/1997 sebagaimana diubah UU 29/2009. Diambil 17 Oktober 2026.
+ * portal PPID, JDIH, dan SIBARDUKTRANS Kementerian Transmigrasi, serta teks
+ * UU 15/1997 sebagaimana diubah UU 29/2009. Diambil 17 Oktober 2026.
  *
  * Isi disusun ulang (bukan disalin) dalam bahasa warga, dan SEMUA artikel
  * masuk berstatus "ditinjau": Super Admin wajib mencocokkan angka, jangka
@@ -187,6 +187,33 @@ class OfficialKnowledgeSeeder extends Seeder
                 'source' => self::UU,
                 'source_ref' => 'Pasal 10 & Pasal 27',
                 'source_url' => self::URL_UU,
+            ],
+            [
+                'title' => 'Apa saja persyaratan calon transmigran dari daerah asal?',
+                'body' => "Persyaratan calon Transmigran Karya Nusantara (TKN) daerah asal:\n1. Warga negara Indonesia yang memiliki KTP-el.\n2. Berkeluarga, dibuktikan dengan surat nikah dan KK. Boleh belum berkeluarga bila memiliki keahlian tertentu yang dibuktikan sertifikat (mis. tenaga kesehatan, tenaga pendidikan, jasa konstruksi, perbengkelan, las, kerajinan, pengolahan hasil pertanian).\n3. Berusia 19–53 tahun (48–53 tahun bagi purnabakti TNI/Polri).\n4. Diutamakan minimal lulusan SMP/sederajat.\n5. Sehat, dibuktikan surat keterangan dokter.\n6. Menyatakan tekad mengembangkan kehidupan di permukiman transmigrasi dengan surat pernyataan.\n7. Belum pernah bertransmigrasi, dibuktikan surat keterangan perangkat daerah bidang ketransmigrasian.\n8. Mengikuti seleksi dan pelatihan komponen cadangan (Komcad), dan lulus seleksi.",
+                'category' => 'Pendaftaran Transmigran',
+                'keywords' => 'syarat transmigran, persyaratan calon transmigran, usia transmigran, umur, KTP, KK, surat nikah, surat sehat, belum berkeluarga, lajang, TKN, Komcad',
+                'source' => 'SIBARDUKTRANS — Tata Cara Bertransmigrasi',
+                'source_ref' => 'Persyaratan TKN daerah asal',
+                'source_url' => 'https://sibarduktrans.transmigrasi.go.id/tataCaraBertransmigrasi',
+            ],
+            [
+                'title' => 'Apa syarat penduduk setempat untuk menjadi transmigran lokal?',
+                'body' => "Penduduk yang tinggal di Satuan Permukiman (SP) Pugar dapat memperoleh perlakuan sebagai transmigran, baik yang memiliki tanah dan rumah, memiliki tanah tanpa rumah, maupun tidak memiliki keduanya. Syaratnya:\n1. Terdaftar dalam dokumen RTSP-Pugar.\n2. Memiliki KTP di permukiman yang akan dikembangkan menjadi SP-Pugar tersebut.\n3. Berkeluarga.\n4. Sudah tinggal menetap dan memanfaatkan tanah di permukiman itu paling singkat 2 tahun.\n5. Berusia 19–53 tahun, diutamakan minimal lulusan SMP/sederajat, dan sehat (surat keterangan dokter).\n6. Membuat surat pernyataan tekad, belum pernah bertransmigrasi, dan lulus seleksi.",
+                'category' => 'Pendaftaran Transmigran',
+                'keywords' => 'transmigran lokal, penduduk setempat, TPS, SP Pugar, RTSP, warga sekitar kawasan',
+                'source' => 'SIBARDUKTRANS — Tata Cara Bertransmigrasi',
+                'source_ref' => 'Persyaratan transmigran penduduk setempat',
+                'source_url' => 'https://sibarduktrans.transmigrasi.go.id/tataCaraBertransmigrasi',
+            ],
+            [
+                'title' => 'Di mana dan bagaimana cara mendaftar sebagai calon transmigran?',
+                'body' => "Pendaftaran dapat dilakukan di:\n- kantor desa/kelurahan domisili Anda;\n- perangkat daerah kabupaten/kota yang menangani transmigrasi, sesuai penerbit KTP Anda;\n- secara daring melalui SIBARDUKTRANS (buat akun dengan nomor telepon, email, dan kata sandi).\nSetelah terdaftar, perangkat daerah melakukan seleksi administrasi (pencocokan dokumen identitas dengan data kependudukan) lalu seleksi teknis berupa wawancara, tes tertulis, serta pemeriksaan kesehatan fisik dan mental. Pendaftar yang tidak hadir pada seleksi teknis dianggap mengundurkan diri. Calon yang ditetapkan berhak mengikuti pelatihan.",
+                'category' => 'Pendaftaran Transmigran',
+                'keywords' => 'cara daftar transmigrasi, tempat pendaftaran, daftar online, seleksi administrasi, seleksi teknis, wawancara, tes kesehatan, kantor desa, dinas transmigrasi',
+                'source' => 'SIBARDUKTRANS — Tata Cara Bertransmigrasi',
+                'source_ref' => 'Pendaftaran & Seleksi',
+                'source_url' => 'https://sibarduktrans.transmigrasi.go.id/tataCaraBertransmigrasi',
             ],
             [
                 'title' => 'Siapa yang diutamakan menjadi peserta Transmigrasi Umum?',

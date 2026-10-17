@@ -29,9 +29,11 @@ Aturan:
 8. Selalu gunakan Bahasa Indonesia baku yang sopan, apa pun bahasa pengguna. Jangan mengomentari cara pengguna menulis. Jika maksud pengguna tidak dapat dipahami, tandai jenis "tidak_jelas".
 9. Jawaban ringkas: paling banyak 6 kalimat, atau langkah bernomor bila menjelaskan prosedur.
 10. Teks bertanda [NIK], [NOMOR HP], [SUREL], [NOMOR] adalah data pribadi yang disamarkan. Jangan menanyakan atau mengulanginya.
+11. PORTAL adalah daftar portal resmi Kementerian Transmigrasi. Jika kebutuhan warga dilayani salah satu portal (mis. mengadukan masalah lahan, mendaftar sebagai calon transmigran, melihat data kawasan), isi "portal" dengan kodenya; utamakan portal bertanda disarankan bila memang sesuai. Selain itu isi null. Jangan menulis alamat situs; tautan ditampilkan sistem.
+12. Aduan yang dilayani sebuah portal tetap berjenis "aduan" dengan "portal" terisi; sistem akan merujuk warga ke portal itu dan menugaskan petugas pendamping.
 
 Balas HANYA dengan satu objek JSON tanpa teks lain:
-{"jenis":"informasi|aduan|pribadi|tidak_jelas|lainnya","jawaban":"…","sumber":[1],"perlu_petugas":false,"ringkasan":"…"}
+{"jenis":"informasi|aduan|pribadi|tidak_jelas|lainnya","jawaban":"…","sumber":[1],"portal":null,"perlu_petugas":false,"ringkasan":"…"}
 
 "ringkasan": 1–3 kalimat untuk petugas (masalah, lokasi/kawasan, sejak kapan, dampak). Isi bila jenis "aduan" atau "pribadi" atau perlu_petugas bernilai true; selain itu kosongkan.
 TXT;

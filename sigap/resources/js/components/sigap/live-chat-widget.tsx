@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { echo, echoIsConfigured } from '@laravel/echo-react';
-import { BookOpen, Bot, ExternalLink, Headset, LogIn, MessagesSquare, Send, Ticket, UserRound, X } from 'lucide-react';
+import { BookOpen, Bot, ExternalLink, Globe, Headset, LogIn, MessagesSquare, Send, Ticket, UserRound, X } from 'lucide-react';
 import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 /**
@@ -50,6 +50,22 @@ interface TicketInfo {
     url: string;
 }
 
+interface PortalCardInfo {
+    kode: string;
+    nama: string;
+    kegunaan: string;
+    url: string;
+    tombol: string;
+    domain: string;
+    tersedia: boolean;
+}
+
+interface ReferralInfo {
+    kode: string;
+    url: string;
+    pendamping: string | null;
+}
+
 interface ChatMessage {
     id: number;
     body: string;
@@ -61,6 +77,8 @@ interface ChatMessage {
     jenis?: string | null;
     sumber?: Source[];
     tiket?: TicketInfo | null;
+    portal?: PortalCardInfo | null;
+    rujukan?: ReferralInfo | null;
     referensi?: string | null;
     nilai?: number | null;
 }
@@ -580,6 +598,8 @@ function AiExtras({
                 </div>
             )}
 
+            {message.portal && <PortalCard portal={message.portal} referral={message.rujukan ?? null} />}
+
             {(message.sumber?.length ?? 0) > 0 && (
                 <div className="mt-2 flex flex-col gap-1 border-t border-dashed border-gray-200 pt-2 whitespace-normal">
                     {message.sumber!.map((s, i) =>
@@ -655,6 +675,52 @@ function SystemNotice({ message }: { message: ChatMessage }) {
         >
             {message.body}
             {message.referensi && <span className="mt-1 block font-bold">Nomor referensi: {message.referensi}</span>}
+            {message.portal && (
+                <div className="text-left text-gray-800">
+                    <PortalCard portal={message.portal} referral={message.rujukan ?? null} />
+                </div>
+            )}
+        </div>
+    );
+}
+
+/**
+ * Kartu portal tujuan. Dengan rujukan, tombol utama membuka halaman
+ * pengantar SIGAP (langkah, ringkasan, tempat bukti) — bukan portal langsung.
+ */
+function PortalCard({ portal, referral }: { portal: PortalCardInfo; referral: ReferralInfo | null }) {
+    return (
+        <div className="mt-2 overflow-hidden rounded-md border border-gray-200 bg-white whitespace-normal">
+            <div className="px-2.5 py-2">
+                <span className="text-primary flex items-center gap-1 text-[12px] font-bold">
+                    <Globe className="h-3.5 w-3.5" aria-hidden="true" /> {portal.nama}
+                </span>
+                <p className="mt-0.5 text-[11px] text-gray-600">{portal.kegunaan}</p>
+                <p className="mt-0.5 font-mono text-[10px] text-gray-400">{portal.domain}</p>
+                {referral && (
+                    <p className="mt-1 text-[11px] text-gray-600">
+                        Rujukan <span className="font-mono font-semibold">{referral.kode}</span>
+                        {referral.pendamping && <> · pendamping {referral.pendamping}</>}
+                    </p>
+                )}
+            </div>
+            {referral ? (
+                <a href={referral.url} className="bg-primary block px-2.5 py-1.5 text-center text-[12px] font-semibold text-white hover:opacity-90">
+                    Buka pengantar &amp; langkahnya
+                </a>
+            ) : portal.tersedia ? (
+                <a
+                    href={portal.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary flex items-center justify-center gap-1 border-t border-gray-100 px-2.5 py-1.5 text-[12px] font-semibold hover:underline"
+                >
+                    {portal.tombol} <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                    <span className="sr-only">(membuka tab baru)</span>
+                </a>
+            ) : (
+                <p className="border-t border-gray-100 px-2.5 py-1.5 text-center text-[11px] text-amber-700">Portal sedang tidak dapat diakses.</p>
+            )}
         </div>
     );
 }

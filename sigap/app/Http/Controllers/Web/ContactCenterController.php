@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChatConversation;
+use App\Models\Portal;
 use App\Models\Ticket;
 use App\Services\AuditService;
 use App\Services\ChatService;
+use App\Services\ReferralService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
@@ -27,6 +30,7 @@ class ContactCenterController extends Controller
     public function __construct(
         private readonly ChatService $chat,
         private readonly AuditService $audit,
+        private readonly ReferralService $referrals,
     ) {}
 
     /** POST /admin/chat/{conversation}/ambil — petugas mengambil alih (AI berhenti menjawab). */
@@ -65,5 +69,47 @@ class ContactCenterController extends Controller
         $this->audit->safe('chat.closed', $conversation, "Percakapan #{$conversation->id} ditutup: ".ChatConversation::OUTCOMES[$data['hasil']].'.');
 
         return back()->with('success', 'Percakapan ditutup: '.ChatConversation::OUTCOMES[$data['hasil']].'.');
+    }
+
+    /**
+     * POST /admin/chat/{conversation}/rujuk — rujuk warga ke portal lain
+     * (mis. aduan lahan → Trans Tuntas). Petugas yang merujuk menjadi
+     * penanggung jawab sampai warga berhasil.
+     */
+    public function refer(Request $request, ChatConversation $conversation): RedirectResponse
+    {
+        $this->authorize('viewAny', Ticket::class);
+
+        $data = $request->validate([
+            'portal' => ['required', Rule::exists('portals', 'code')->where('is_active', true)->where('audience', Portal::AUDIENCE_PUBLIC)],
+            'ringkasan' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        if ($conversation->isClosed()) {
+            return back()->with('error', 'Percakapan sudah ditutup.');
+        }
+
+        $portal = Portal::query()->where('code', $data['portal'])->firstOrFail();
+        $user = $request->user();
+        $summary = $data['ringkasan'] ?? $conversation->ai_summary;
+
+        $referral = $this->referrals->create($portal, $conversation, $summary, $user);
+
+        $this->chat->send(
+            $conversation,
+            "Petugas merujuk Anda ke {$portal->name}. Buka pengantar di bawah untuk langkah, hal yang perlu disiapkan, dan ringkasan aduan Anda. "
+                .Str::before($user->name, ' ').' mendampingi Anda sampai berhasil.',
+            'system',
+            null,
+            [
+                'kind' => 'rujukan',
+                'portal' => $portal->card(),
+                'rujukan' => ['kode' => $referral->code, 'url' => $referral->publicUrl(), 'pendamping' => Str::before($user->name, ' ')],
+            ],
+        );
+        $this->chat->close($conversation, 'rujuk_portal', $user->id);
+        $this->audit->safe('chat.referred', $conversation, "Percakapan #{$conversation->id} dirujuk ke {$portal->name} ({$referral->code}).");
+
+        return back()->with('success', "Warga dirujuk ke {$portal->name}. Pantau di menu Rujukan sampai berhasil.");
     }
 }

@@ -5,9 +5,12 @@ namespace App\Services\Ai;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\KnowledgeArticle;
+use App\Models\Portal;
 use App\Models\User;
 use App\Services\ChatService;
 use App\Services\Knowledge\KnowledgeRetriever;
+use App\Services\PortalDirectory;
+use App\Services\ReferralService;
 use App\Services\TicketService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -37,6 +40,8 @@ class AssistantService
         private readonly ChatService $chat,
         private readonly TicketService $tickets,
         private readonly ServiceHours $hours,
+        private readonly PortalDirectory $portals,
+        private readonly ReferralService $referrals,
     ) {}
 
     public static function enabled(): bool
@@ -76,6 +81,13 @@ class AssistantService
             return $this->handoff($conversation, 'diminta', $summary);
         }
 
+        // Aduan/urusan pribadi yang dilayani portal lain (mis. lahan → Trans
+        // Tuntas): dirujuk dengan pengantar + petugas pendamping, bukan antre.
+        $portal = $this->portals->find($result['portal']);
+        if ($portal?->track_completion && in_array($result['jenis'], ['aduan', 'pribadi'], true)) {
+            return $this->refer($conversation, $portal, $summary ?? $this->masker->mask(Str::limit($text, 300)));
+        }
+
         return match ($result['jenis']) {
             'aduan' => [
                 $this->say($conversation, 'Terima kasih. Laporan Anda saya ringkas untuk petugas agar bisa langsung ditindaklanjuti.'
@@ -96,7 +108,7 @@ class AssistantService
                 $result['jawaban'] !== '' ? $result['jawaban'] : 'Mohon maaf, saya hanya dapat membantu informasi seputar layanan Kementerian Transmigrasi.',
                 ['kind' => 'lainnya'],
             )],
-            default => [$this->answer($conversation, $text, $result, $articles)],
+            default => [$this->answer($conversation, $text, $result, $articles, $portal)],
         };
     }
 
@@ -179,10 +191,10 @@ class AssistantService
     }
 
     /**
-     * @param  array{jenis: string, jawaban: string, sumber: list<int>, perlu_petugas: bool, ringkasan: string}  $result
+     * @param  array{jenis: string, jawaban: string, sumber: list<int>, portal: string|null, perlu_petugas: bool, ringkasan: string}  $result
      * @param  Collection<int, KnowledgeArticle>  $articles
      */
-    private function answer(ChatConversation $conversation, string $question, array $result, Collection $articles): ChatMessage
+    private function answer(ChatConversation $conversation, string $question, array $result, Collection $articles, ?Portal $portal = null): ChatMessage
     {
         // Tanpa sumber yang sah, tidak ada jawaban: AI tidak boleh menebak.
         $sources = collect($result['sumber'])
@@ -190,6 +202,14 @@ class AssistantService
             ->filter()
             ->unique('id')
             ->values();
+
+        if (($sources->isEmpty() || $result['jawaban'] === '') && $portal !== null) {
+            // Katalog portal dikelola admin = sumber resmi untuk "layanan ini ada di mana".
+            return $this->say($conversation, "Layanan ini tersedia di {$portal->name}: {$portal->purpose}.", [
+                'kind' => 'jawaban',
+                'portal' => $portal->card(),
+            ]);
+        }
 
         if ($sources->isEmpty() || $result['jawaban'] === '') {
             return $this->say(
@@ -209,12 +229,13 @@ class AssistantService
                 'label' => $a->sourceLabel(),
                 'url' => $a->source_url,
             ])->all(),
+            'portal' => $portal?->card(),
         ]);
     }
 
     /**
      * @param  Collection<int, KnowledgeArticle>  $articles
-     * @return array{jenis: string, jawaban: string, sumber: list<int>, perlu_petugas: bool, ringkasan: string}
+     * @return array{jenis: string, jawaban: string, sumber: list<int>, portal: string|null, perlu_petugas: bool, ringkasan: string}
      */
     private function ask(ChatConversation $conversation, string $question, Collection $articles, int $incomingId): array
     {
@@ -244,7 +265,7 @@ class AssistantService
      *
      * @param  list<array{dari: string, isi: string}>  $history
      * @param  Collection<int, KnowledgeArticle>  $articles
-     * @return array{jenis: string, jawaban: string, sumber: list<int>, perlu_petugas: bool, ringkasan: string}
+     * @return array{jenis: string, jawaban: string, sumber: list<int>, portal: string|null, perlu_petugas: bool, ringkasan: string}
      *
      * @throws AiException
      */
@@ -253,6 +274,7 @@ class AssistantService
         $input = [
             'pertanyaan' => $this->masker->mask($question),
             'riwayat' => $history,
+            'portal' => $this->portals->forAssistant($question),
             'sumber' => $articles->values()->map(fn (KnowledgeArticle $a, int $i) => [
                 'no' => $i + 1,
                 'judul' => $a->title,
@@ -272,9 +294,42 @@ class AssistantService
             'jenis' => in_array($data['jenis'] ?? null, self::TYPES, true) ? $data['jenis'] : 'informasi',
             'jawaban' => trim((string) ($data['jawaban'] ?? '')),
             'sumber' => array_values(array_filter(array_map('intval', (array) ($data['sumber'] ?? [])))),
+            'portal' => $this->portals->find(is_string($data['portal'] ?? null) ? $data['portal'] : null)?->code,
             'perlu_petugas' => (bool) ($data['perlu_petugas'] ?? false),
             'ringkasan' => Str::limit(trim((string) ($data['ringkasan'] ?? '')), 600),
         ];
+    }
+
+    /**
+     * Rujuk ke portal dengan pengantar. Bila portal sedang tidak dapat
+     * diakses, warga tidak disuruh ke sana: diteruskan ke petugas.
+     *
+     * @return list<ChatMessage>
+     */
+    private function refer(ChatConversation $conversation, Portal $portal, string $summary): array
+    {
+        if (! $portal->is_reachable) {
+            return $this->handoff($conversation, 'portal_gangguan', $summary, "{$portal->name} sedang tidak dapat diakses. Pesan Anda kami teruskan ke petugas agar tetap dapat dibantu.");
+        }
+
+        $referral = $this->referrals->create($portal, $conversation, $summary);
+        $pendamping = $referral->assignee ? Str::before($referral->assignee->name, ' ') : null;
+
+        return [$this->say(
+            $conversation,
+            "Masalah ini ditangani langsung oleh {$portal->name}".($portal->managed_by ? " ({$portal->managed_by})" : '').'. '
+                .'Saya sudah menyiapkan pengantar berisi langkah, hal yang perlu disiapkan, dan ringkasan aduan Anda.'
+                .($pendamping ? " {$pendamping} dari SIGAP mendampingi Anda sampai aduan tercatat." : ''),
+            [
+                'kind' => 'rujukan',
+                'portal' => $portal->card(),
+                'rujukan' => [
+                    'kode' => $referral->code,
+                    'url' => $referral->publicUrl(),
+                    'pendamping' => $pendamping,
+                ],
+            ],
+        )];
     }
 
     private function ticketStatus(ChatConversation $conversation, string $ticketNo, ?User $viewer): ChatMessage

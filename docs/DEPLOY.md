@@ -421,6 +421,28 @@ warga. NIK, nomor HP, surel, dan deret angka panjang disamarkan sebelum teks dik
 - Server SIGAP saat ini (tanpa GPU, CPU tanpa AVX) **tidak** dapat menjalankan model lokal; pakai
   penyedia API atau server GPU terpisah.
 
+### Rujukan ke portal Kementerian
+
+Contact center menjadi pintu depan portal lain. Aduan yang dilayani portal bertanda **Lacak sampai
+berhasil** (bawaan: Trans Tuntas untuk masalah lahan, SP4N-LAPOR! untuk lintas instansi) tidak diantrekan,
+tetapi dirujuk:
+
+1. Warga menerima halaman **pengantar** (`/rujukan/{token}`): kegunaan portal, yang perlu disiapkan,
+   langkah, ringkasan aduan untuk disalin, lalu tombol ke portal tujuan.
+2. Sistem langsung menetapkan **penanggung jawab**: petugas yang merujuk, atau admin aktif dengan rujukan
+   terbuka paling sedikit bila dirujuk AI.
+3. Rujukan baru **selesai** bila warga memasukkan kode bukti dari portal tujuan (mis. kode tracking Trans
+   Tuntas), atau penanggung jawab menutupnya dengan alasan tertulis.
+4. Tanpa bukti setelah **2 hari kerja**, atau bila warga menekan "Mengalami kendala", rujukan masuk tab
+   **Perlu tindakan** dan penanggung jawab diingatkan setiap pagi hari kerja. Super Admin melihat papan
+   penanggung jawab di menu **Rujukan**.
+
+Persiapan: `php artisan db:seed --class=PortalSeeder --force` (9 portal; portal internal seperti TC-More dan
+TransCloud tidak pernah ditawarkan ke warga), lalu sesuaikan di **Kelola → Katalog Portal**. Pastikan
+scheduler berjalan (`sigap:pantau-rujukan` pukul 08.00 hari kerja, `sigap:cek-portal` setiap jam) dan server
+boleh membuka koneksi HTTPS keluar ke `*.transmigrasi.go.id` dan `sp4n.lapor.go.id` untuk cek tautan.
+Portal yang tidak dapat diakses otomatis tidak ditawarkan; warga diteruskan ke petugas.
+
 ### Menguji kualitas
 
 `php artisan sigap:uji-asisten` menjalankan ±40 pertanyaan bergaya warga (`database/data/uji-asisten.php`)

@@ -71,6 +71,9 @@ class RetrievalQualityTest extends TestCase
         $this->assertContains('mohon', IndonesianText::keys('permohonan'));
         $this->assertContains('syarat', IndonesianText::keys('persyaratannya'));
         $this->assertContains('lahan', IndonesianText::keys('tanah'));
+        // Partikel yang sebenarnya bagian kata dasar tidak merusak kata.
+        $this->assertContains('nikah', IndonesianText::keys('menikah'));
+        $this->assertContains('masalah', IndonesianText::keys('masalah'));
         $this->assertContains('transm', IndonesianText::keys('transmigran'));
         $this->assertContains('transm', IndonesianText::keys('transmigrasi'));
     }

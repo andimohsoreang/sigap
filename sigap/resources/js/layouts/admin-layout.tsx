@@ -10,6 +10,7 @@ import {
     ChevronsRight,
     FilePen,
     Gauge,
+    Globe,
     Headset,
     Inbox,
     LayoutDashboard,
@@ -24,6 +25,7 @@ import {
     Ticket,
     UserRound,
     Users,
+    Waypoints,
     X,
     type LucideIcon,
 } from 'lucide-react';
@@ -51,6 +53,7 @@ const PRIMARY: NavEntry[] = [
     { label: 'Matriks Rekapan', href: '/admin/matriks', icon: LayoutDashboard, match: '/admin/matriks' },
     { label: 'Kotak Masuk', href: '/admin/chat', icon: Inbox, match: '/admin/chat' },
     { label: 'Manajemen Tiket', href: '/admin/tiket', icon: Ticket, match: '/admin/tiket' },
+    { label: 'Rujukan', href: '/admin/rujukan', icon: Waypoints, match: '/admin/rujukan' },
     { label: 'Basis Pengetahuan', href: '/admin/pengetahuan', icon: Library, match: '/admin/pengetahuan' },
 ];
 
@@ -59,6 +62,7 @@ const MANAGE: NavEntry[] = [
     { label: 'Input Manual', href: '/admin/input-manual', icon: FilePen, match: '/admin/input-manual' },
     { label: 'Tiket Internal', href: '/admin/tiket-internal', icon: Gauge, match: '/admin/tiket-internal', superAdminOnly: true },
     { label: 'Data Kawasan', href: '/admin/kawasan', icon: MapPin, match: '/admin/kawasan' },
+    { label: 'Katalog Portal', href: '/admin/portal', icon: Globe, match: '/admin/portal' },
     { label: 'Manajemen Kanal', href: '/admin/kanal', icon: Radio, match: '/admin/kanal' },
     { label: 'Daftar Admin', href: '/admin/petugas', icon: Users, match: '/admin/petugas', superAdminOnly: true },
     { label: 'Log Aktivitas', href: '/admin/log-aktivitas', icon: ScrollText, match: '/admin/log-aktivitas', superAdminOnly: true },
@@ -69,7 +73,7 @@ const MANAGE: NavEntry[] = [
 const COLLAPSE_KEY = 'sigap-admin-sidebar';
 
 export default function AdminLayout({ children, title, subtitle, actions, badge }: AdminLayoutProps) {
-    const { auth, flash, chat_waiting: waiting } = usePage<SharedData>().props;
+    const { auth, flash, chat_waiting: waiting, rujukan_perlu: rujukanPerlu } = usePage<SharedData>().props;
     const url = usePage().url;
     const chatUnread = useChatUnread();
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -130,7 +134,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                                 active={isActive(item.match)}
                                 compact={compact}
                                 onNavigate={onNavigate}
-                                count={item.href === '/admin/chat' ? chatUnread : 0}
+                                count={item.href === '/admin/chat' ? chatUnread : item.href === '/admin/rujukan' ? (rujukanPerlu ?? 0) : 0}
                             />
                         </li>
                     ))}

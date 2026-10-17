@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\ChatConversation;
+use App\Models\Referral;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -53,6 +54,8 @@ class HandleInertiaRequests extends Middleware
             'chat_unread' => fn () => $user?->isAdmin() ? ChatConversation::unreadForAdmins() : null,
             // Daftar "Menunggu petugas" di sidebar admin (paling lama menunggu dulu).
             'chat_waiting' => fn () => $user?->isAdmin() ? ChatConversation::waitingForStaff() : null,
+            // Rujukan milik admin ini yang perlu tindakan (badge menu Rujukan).
+            'rujukan_perlu' => fn () => $user?->isAdmin() ? Referral::query()->needsAction()->where('assigned_to', $user->id)->count() : null,
             // reCAPTCHA v3 (SEC-10): hanya site key publik; kosong = lewati (lokal).
             'recaptcha' => [
                 'site_key' => config('services.recaptcha.site_key') ?: null,

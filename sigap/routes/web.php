@@ -7,7 +7,10 @@ use App\Http\Controllers\Web\KnowledgeController;
 use App\Http\Controllers\Web\KnowledgeDocumentController;
 use App\Http\Controllers\Web\MasukController;
 use App\Http\Controllers\Web\PengaduanFormController;
+use App\Http\Controllers\Web\PortalController;
 use App\Http\Controllers\Web\PublicController;
+use App\Http\Controllers\Web\ReferralController;
+use App\Http\Controllers\Web\ReferralPublicController;
 use App\Http\Controllers\Web\WargaPortalController;
 use Illuminate\Support\Facades\Route;
 
@@ -69,6 +72,12 @@ Route::post('/chat/petugas', [ChatController::class, 'handoff'])->middleware('th
 Route::post('/chat/kontak', [ChatController::class, 'contact'])->middleware('throttle:chat')->name('chat.contact');
 Route::post('/chat/pesan/{message}/nilai', [ChatController::class, 'feedback'])->whereNumber('message')->middleware('throttle:chat')->name('chat.feedback');
 
+// Pengantar rujukan portal (tanpa login; token acak di URL).
+Route::get('/rujukan/{token}', [ReferralPublicController::class, 'show'])->middleware('throttle:lookup')->name('rujukan.show');
+Route::post('/rujukan/{token}/buka', [ReferralPublicController::class, 'open'])->middleware('throttle:lookup')->name('rujukan.open');
+Route::post('/rujukan/{token}/berhasil', [ReferralPublicController::class, 'confirm'])->middleware('throttle:chat')->name('rujukan.confirm');
+Route::post('/rujukan/{token}/bantuan', [ReferralPublicController::class, 'help'])->middleware('throttle:chat')->name('rujukan.help');
+
 // Panel Admin — khusus peran admin_kawasan & super_admin.
 Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->group(function () {
     Route::get('/', [AdminController::class, 'matriks'])->name('admin.dashboard');
@@ -93,6 +102,21 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
     Route::get('/chat/belum-dibaca', [AdminController::class, 'chatUnread'])->name('admin.chat.unread');
     Route::post('/chat/{conversation}/ambil', [ContactCenterController::class, 'take'])->name('admin.chat.take');
     Route::post('/chat/{conversation}/tutup', [ContactCenterController::class, 'close'])->name('admin.chat.close');
+    Route::post('/chat/{conversation}/rujuk', [ContactCenterController::class, 'refer'])->name('admin.chat.refer');
+
+    // Rujukan portal: penanggung jawab mendampingi warga sampai berhasil.
+    Route::get('/rujukan', [ReferralController::class, 'index'])->name('admin.rujukan');
+    Route::post('/rujukan/{referral}/catatan', [ReferralController::class, 'note'])->name('admin.rujukan.catatan');
+    Route::post('/rujukan/{referral}/pesan', [ReferralController::class, 'message'])->name('admin.rujukan.pesan');
+    Route::post('/rujukan/{referral}/berhasil', [ReferralController::class, 'confirm'])->name('admin.rujukan.berhasil');
+    Route::post('/rujukan/{referral}/alihkan', [ReferralController::class, 'reassign'])->name('admin.rujukan.alihkan');
+    Route::post('/rujukan/{referral}/tutup', [ReferralController::class, 'close'])->name('admin.rujukan.tutup');
+
+    // Katalog Portal Kementerian (tujuan rujukan).
+    Route::get('/portal', [PortalController::class, 'index'])->name('admin.portal');
+    Route::post('/portal', [PortalController::class, 'store'])->name('admin.portal.store');
+    Route::put('/portal/{portal}', [PortalController::class, 'update'])->name('admin.portal.update');
+    Route::post('/portal/{portal}/cek', [PortalController::class, 'check'])->name('admin.portal.cek');
 
     // Basis Pengetahuan — sumber jawaban asisten AI.
     Route::get('/pengetahuan', [KnowledgeController::class, 'index'])->name('admin.pengetahuan');
