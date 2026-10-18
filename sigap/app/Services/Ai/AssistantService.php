@@ -312,6 +312,12 @@ class AssistantService
             return $this->handoff($conversation, 'portal_gangguan', $summary, "{$portal->name} sedang tidak dapat diakses. Pesan Anda kami teruskan ke petugas agar tetap dapat dibantu.");
         }
 
+        // Sudah dirujuk ke portal yang sama: pesan baru dianggap kendala dan
+        // diteruskan ke pendamping, bukan rujukan kedua.
+        if ($existing = $this->referrals->openFor($conversation, $portal)) {
+            return $this->referrals->requestHelp($existing, $summary);
+        }
+
         $referral = $this->referrals->create($portal, $conversation, $summary);
         $pendamping = $referral->assignee ? Str::before($referral->assignee->name, ' ') : null;
 

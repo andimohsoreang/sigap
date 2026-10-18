@@ -432,14 +432,15 @@ tetapi dirujuk:
 2. Sistem langsung menetapkan **penanggung jawab**: petugas yang merujuk, atau admin aktif dengan rujukan
    terbuka paling sedikit bila dirujuk AI.
 3. Rujukan baru **selesai** bila warga memasukkan kode bukti dari portal tujuan (mis. kode tracking Trans
-   Tuntas), atau penanggung jawab menutupnya dengan alasan tertulis.
+   Tuntas) di halaman pengantar **atau cukup membalasnya di chat**, atau penanggung jawab menutupnya
+   dengan alasan tertulis.
 4. Tanpa bukti setelah **2 hari kerja**, atau bila warga menekan "Mengalami kendala", rujukan masuk tab
    **Perlu tindakan** dan penanggung jawab diingatkan setiap pagi hari kerja. Super Admin melihat papan
    penanggung jawab di menu **Rujukan**.
 
 Persiapan: `php artisan db:seed --class=PortalSeeder --force` (9 portal; portal internal seperti TC-More dan
 TransCloud tidak pernah ditawarkan ke warga), lalu sesuaikan di **Kelola → Katalog Portal**. Pastikan
-scheduler berjalan (`sigap:pantau-rujukan` pukul 08.00 hari kerja, `sigap:cek-portal` setiap jam) dan server
+scheduler berjalan (`sigap:pantau-rujukan` setiap jam pada 08.00–17.00 hari kerja: mengingatkan warga lewat chat ±1 hari setelah dirujuk dan mengingatkan penanggung jawab sekali sehari; `sigap:cek-portal` setiap jam) dan server
 boleh membuka koneksi HTTPS keluar ke `*.transmigrasi.go.id` dan `sp4n.lapor.go.id` untuk cek tautan.
 Portal yang tidak dapat diakses otomatis tidak ditawarkan; warga diteruskan ke petugas.
 

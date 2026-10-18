@@ -9,6 +9,7 @@ use App\Models\ChatMessage;
 use App\Services\Ai\AssistantService;
 use App\Services\Ai\ServiceHours;
 use App\Services\ChatService;
+use App\Services\ReferralService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -31,6 +32,7 @@ class ChatController extends Controller
         private readonly ChatService $chat,
         private readonly AssistantService $assistant,
         private readonly ServiceHours $hours,
+        private readonly ReferralService $referrals,
     ) {}
 
     /**
@@ -99,7 +101,9 @@ class ChatController extends Controller
             $request->user()?->id,
         );
 
-        $replies = $this->assistant->respond($conversation, $message, $request->user());
+        // Warga membalas kode bukti rujukan (mis. kode tracking Trans Tuntas).
+        $captured = $this->referrals->captureFromChat($conversation, $data['body']);
+        $replies = $captured !== null ? [$captured] : $this->assistant->respond($conversation, $message, $request->user());
 
         return response()->json([
             'ok' => true,

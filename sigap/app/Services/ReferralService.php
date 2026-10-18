@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\UserRole;
 use App\Models\ChatConversation;
+use App\Models\ChatMessage;
 use App\Models\Portal;
 use App\Models\Referral;
 use App\Models\ReferralEvent;
@@ -85,11 +86,15 @@ class ReferralService
         $this->log($referral, 'warga', 'dibuka');
     }
 
-    /** Bukti dari portal tujuan (mis. kode tracking) — oleh warga atau petugas. */
-    public function confirm(Referral $referral, string $externalRef, ?User $by = null): void
+    /**
+     * Bukti dari portal tujuan (mis. kode tracking) — oleh warga atau petugas.
+     *
+     * @return ChatMessage|null pesan konfirmasi di chat warga (bila ada chat)
+     */
+    public function confirm(Referral $referral, string $externalRef, ?User $by = null): ?ChatMessage
     {
         if (! $referral->isOpen()) {
-            return;
+            return null;
         }
 
         $externalRef = Str::upper(trim($externalRef));
@@ -103,22 +108,117 @@ class ReferralService
 
         $this->log($referral, $by ? 'petugas' : 'warga', 'berhasil', "Bukti {$this->proofLabel($referral)}: {$externalRef}", $by);
 
-        $this->tellCitizen($referral, "Terima kasih. {$this->proofLabel($referral)} Anda di {$referral->portal->name} tercatat: {$externalRef}. Simpan kode ini untuk memantau perkembangannya di {$referral->portal->name}.");
+        $reply = $this->tellCitizen($referral, "Terima kasih. {$this->proofLabel($referral)} Anda di {$referral->portal->name} tercatat: {$externalRef}. Simpan kode ini untuk memantau perkembangannya di {$referral->portal->name}.");
 
         if ($by === null && $referral->assignee) {
             $this->notify($referral, $referral->assignee, 'Rujukan berhasil', "{$referral->citizenName()} berhasil di {$referral->portal->name} ({$externalRef}).");
         }
+
+        return $reply;
+    }
+
+    /**
+     * Warga cukup membalas kode bukti di chat: bila percakapan punya rujukan
+     * terbuka dan pesannya berupa kode (bukan kalimat biasa), rujukan
+     * langsung berhasil.
+     *
+     * @return ChatMessage|null balasan konfirmasi; null = bukan kode, lanjut ke asisten
+     */
+    public function captureFromChat(ChatConversation $conversation, string $text): ?ChatMessage
+    {
+        $referral = Referral::query()->open()->with('portal')->where('conversation_id', $conversation->id)->latest('id')->first();
+        if ($referral === null || ($code = $this->extractCode($text)) === null) {
+            return null;
+        }
+
+        return $this->confirm($referral, $code);
+    }
+
+    /**
+     * Ambil kode bukti dari pesan pendek ("TT-2026-00123", "kodenya ABC123").
+     * Nomor HP, NIK, dan nomor tiket SIGAP tidak dianggap kode.
+     */
+    public function extractCode(string $text): ?string
+    {
+        $text = trim($text);
+        if ($text === '' || mb_strlen($text) > 80 || str_word_count($text) > 6) {
+            return null;
+        }
+
+        preg_match_all('/[A-Za-z0-9][A-Za-z0-9\-\/\.#]{3,38}[A-Za-z0-9]/u', $text, $m);
+        foreach ($m[0] as $token) {
+            $isDigits = ctype_digit($token);
+            if (! preg_match('/\d/', $token)
+                || preg_match('/^TKT-/i', $token)
+                || ($isDigits && strlen($token) >= 10)) {
+                continue;
+            }
+            // Selain kode itu sendiri, pesan hanya boleh berisi kata pengantar.
+            $rest = trim(str_ireplace($token, '', $text), " \t\n\r.,:;!-");
+            if ($rest === '' || preg_match('/^(ini\s+)?(kode(nya)?|nomor(nya)?|no|tracking|kode tracking|nomor tracking|ini|sudah|sudah\s+(dikirim|berhasil|kirim)|berhasil)(\s+\S+){0,3}$/iu', $rest)) {
+                return Str::upper($token);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Ingatkan warga lewat chat ±1 hari setelah dirujuk bila belum ada kode
+     * bukti (sekali saja per rujukan).
+     *
+     * @return int jumlah warga yang diingatkan
+     */
+    public function remindCitizens(): int
+    {
+        $due = Referral::query()
+            ->whereIn('status', [Referral::STATUS_REFERRED, Referral::STATUS_OPENED])
+            ->whereNotNull('conversation_id')
+            ->whereNull('citizen_reminded_at')
+            ->where('created_at', '<=', now()->subHours(20))
+            ->with(['portal', 'conversation', 'assignee'])
+            ->get();
+
+        foreach ($due as $referral) {
+            $conversation = $referral->conversation;
+            if ($conversation === null) {
+                continue;
+            }
+            $label = $this->proofLabel($referral);
+            $this->chat->send(
+                $conversation,
+                "Apakah aduan Anda di {$referral->portal->name} sudah terkirim? Balas pesan ini dengan {$this->lcfirst($label)} yang Anda terima. Bila mengalami kendala, tulis kendalanya di sini.",
+                'system',
+                null,
+                [
+                    'kind' => 'minta_bukti',
+                    'portal' => $referral->portal->card(),
+                    'rujukan' => [
+                        'kode' => $referral->code,
+                        'url' => $referral->publicUrl(),
+                        'pendamping' => $referral->assignee ? Str::before($referral->assignee->name, ' ') : null,
+                    ],
+                ],
+            );
+            $referral->forceFill(['citizen_reminded_at' => now()])->save();
+            $this->log($referral, 'sistem', 'pengingat_warga');
+        }
+
+        return $due->count();
     }
 
     /**
      * Warga mengalami kendala. Percakapannya dialihkan ke petugas penanggung
      * jawab agar bisa langsung dibantu lewat chat.
      */
-    public function requestHelp(Referral $referral, string $message, ?string $contact = null): void
+    /** @return list<ChatMessage> pesan sistem yang dikirim ke chat warga */
+    public function requestHelp(Referral $referral, string $message, ?string $contact = null): array
     {
         if (! $referral->isOpen()) {
-            return;
+            return [];
         }
+
+        $sent = [];
 
         $referral->forceFill([
             'status' => Referral::STATUS_HELP,
@@ -137,7 +237,7 @@ class ReferralService
                 'handoff_reason' => 'rujukan',
                 'ai_summary' => "Kendala rujukan {$referral->code} ke {$referral->portal->name}: ".Str::limit($message, 300),
             ])->save();
-            $this->chat->send($conversation, 'Kendala Anda sudah kami terima. Petugas penanggung jawab akan membantu di percakapan ini.', 'system', null, [
+            $sent[] = $this->chat->send($conversation, 'Kendala Anda sudah kami terima. Petugas penanggung jawab akan membantu di percakapan ini.', 'system', null, [
                 'kind' => 'diteruskan',
                 'referensi' => $referral->code,
             ]);
@@ -147,6 +247,14 @@ class ReferralService
         if ($referral->assignee) {
             $this->notify($referral, $referral->assignee, 'Warga butuh bantuan', "{$referral->citizenName()} mengalami kendala di {$referral->portal->name}: ".Str::limit($message, 120));
         }
+
+        return $sent;
+    }
+
+    /** Rujukan terbuka untuk percakapan & portal ini (mencegah rujukan ganda). */
+    public function openFor(ChatConversation $conversation, Portal $portal): ?Referral
+    {
+        return Referral::query()->open()->where('conversation_id', $conversation->id)->where('portal_id', $portal->id)->latest('id')->first();
     }
 
     /** Catatan tindak lanjut petugas (mis. "sudah dihubungi via WA"). Memperpanjang batas. */
@@ -246,11 +354,16 @@ class ReferralService
         return $from->copy()->addWeekdays(self::FOLLOW_UP_WORKDAYS);
     }
 
-    private function tellCitizen(Referral $referral, string $body): void
+    private function tellCitizen(Referral $referral, string $body): ?ChatMessage
     {
-        if ($conversation = $referral->conversation) {
-            $this->chat->send($conversation, $body, 'system', null, ['kind' => 'info', 'referensi' => $referral->code]);
-        }
+        $conversation = $referral->conversation;
+
+        return $conversation ? $this->chat->send($conversation, $body, 'system', null, ['kind' => 'info', 'referensi' => $referral->code]) : null;
+    }
+
+    private function lcfirst(string $text): string
+    {
+        return mb_strtolower(mb_substr($text, 0, 1)).mb_substr($text, 1);
     }
 
     private function log(Referral $referral, string $actor, string $type, ?string $note = null, ?User $by = null): void

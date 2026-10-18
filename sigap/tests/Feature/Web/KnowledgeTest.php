@@ -214,4 +214,40 @@ class KnowledgeTest extends TestCase
         $this->assertSame($count, KnowledgeArticle::query()->count());
         $this->assertSame('Sudah disunting petugas.', $edited->fresh()->body);
     }
+
+    public function test_sequential_review_walks_through_articles_one_by_one(): void
+    {
+        $first = $this->article(['title' => 'Artikel A', 'status' => KnowledgeArticle::STATUS_REVIEW]);
+        $second = $this->article(['title' => 'Artikel B', 'status' => KnowledgeArticle::STATUS_REVIEW]);
+        $this->article(['title' => 'Sudah terbit']);
+        $admin = User::factory()->admin(UserRole::SuperAdmin)->create();
+
+        $this->actingAs($admin)->get('/admin/pengetahuan/tinjau')->assertInertia(fn (Assert $page) => $page
+            ->component('admin/pengetahuan-tinjau')
+            ->where('article.id', $first->id)
+            ->where('remaining', 2));
+
+        // Lewati → artikel berikutnya.
+        $this->actingAs($admin)->get('/admin/pengetahuan/tinjau?lewati='.$first->id)->assertInertia(fn (Assert $page) => $page
+            ->where('article.id', $second->id)
+            ->where('skipped', [$first->id]));
+
+        $this->actingAs($admin)->post("/admin/pengetahuan/{$second->id}/kembalikan", ['catatan' => 'Angka belum cocok'])->assertSessionHas('success');
+        $this->assertSame(KnowledgeArticle::STATUS_DRAFT, $second->fresh()->status);
+        $this->assertDatabaseHas('activity_logs', ['action' => 'knowledge.rejected']);
+
+        $this->actingAs($admin)->post("/admin/pengetahuan/{$first->id}/terbitkan")->assertSessionHas('success');
+        $this->actingAs($admin)->get('/admin/pengetahuan/tinjau')->assertInertia(fn (Assert $page) => $page
+            ->where('article', null)
+            ->where('remaining', 0));
+    }
+
+    public function test_only_super_admin_can_review(): void
+    {
+        $article = $this->article(['status' => KnowledgeArticle::STATUS_REVIEW]);
+        $kawasan = User::factory()->admin(UserRole::AdminKawasan)->create(['region_id' => Region::query()->value('id')]);
+
+        $this->actingAs($kawasan)->get('/admin/pengetahuan/tinjau')->assertForbidden();
+        $this->actingAs($kawasan)->post("/admin/pengetahuan/{$article->id}/kembalikan")->assertForbidden();
+    }
 }

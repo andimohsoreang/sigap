@@ -11,6 +11,7 @@ use App\Models\ReferralEvent;
 use App\Models\Region;
 use App\Models\User;
 use App\Services\PortalDirectory;
+use App\Services\ReferralService;
 use Database\Seeders\MasterSeeder;
 use Database\Seeders\PortalSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -277,5 +278,60 @@ class ReferralTest extends TestCase
         $this->actingAs($kawasan)->post("/admin/portal/{$portal->id}/cek")->assertSessionHas('error');
         $this->assertFalse($portal->fresh()->is_reachable);
         $this->assertSame(503, $portal->fresh()->last_status);
+    }
+
+    public function test_citizen_can_reply_tracking_code_in_chat(): void
+    {
+        $referral = $this->referLandComplaint();
+
+        $this->postJson('/chat/pesan', ['body' => 'kodenya tt-2026-00777'])
+            ->assertCreated()
+            ->assertJsonCount(1, 'balasan')
+            ->assertJsonPath('balasan.0.sender_type', 'system')
+            ->assertJsonPath('balasan.0.referensi', $referral->code);
+
+        $referral->refresh();
+        $this->assertSame(Referral::STATUS_DONE, $referral->status);
+        $this->assertSame('TT-2026-00777', $referral->external_ref);
+        $this->assertSame('warga', $referral->events()->reorder('id', 'desc')->value('actor'));
+    }
+
+    public function test_code_detection_ignores_sentences_phones_and_tickets(): void
+    {
+        $service = app(ReferralService::class);
+
+        $this->assertSame('TT-2026-00123', $service->extractCode('TT-2026-00123'));
+        $this->assertSame('ABC123', $service->extractCode('ini kodenya abc123'));
+        $this->assertSame('TT/26/0099', $service->extractCode('Sudah berhasil, kode tracking TT/26/0099'));
+        $this->assertNull($service->extractCode('jalan di SP3 rusak sejak tahun 2024, mohon dibantu segera ya pak'));
+        $this->assertNull($service->extractCode('081234567890'));
+        $this->assertNull($service->extractCode('TKT-261012-7KQ4MZ'));
+        $this->assertNull($service->extractCode('terima kasih'));
+    }
+
+    public function test_follow_up_message_about_same_problem_goes_to_owner_not_new_referral(): void
+    {
+        $referral = $this->referLandComplaint();
+
+        $this->postJson('/chat/pesan', ['body' => 'Formulir lahan Trans Tuntas error terus, sengketa lahan saya belum bisa dilaporkan'])->assertCreated();
+
+        $this->assertSame(1, Referral::query()->count());
+        $this->assertSame(Referral::STATUS_HELP, $referral->fresh()->status);
+    }
+
+    public function test_citizen_is_reminded_in_chat_once_after_a_day(): void
+    {
+        $referral = $this->referLandComplaint();
+
+        $this->artisan('sigap:pantau-rujukan')->expectsOutput('0 warga diingatkan lewat chat.')->assertSuccessful();
+
+        Carbon::setTestNow(now()->addHours(21));
+        $this->artisan('sigap:pantau-rujukan')->expectsOutput('1 warga diingatkan lewat chat.')->assertSuccessful();
+        $this->artisan('sigap:pantau-rujukan')->expectsOutput('0 warga diingatkan lewat chat.')->assertSuccessful();
+
+        $reminder = ChatMessage::query()->where('conversation_id', $referral->conversation_id)->latest('id')->firstOrFail();
+        $this->assertSame('minta_bukti', $reminder->kind());
+        $this->assertStringContainsString('kode tracking', $reminder->body);
+        $this->assertSame(1, ReferralEvent::query()->where('type', 'pengingat_warga')->count());
     }
 }

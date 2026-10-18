@@ -19,6 +19,7 @@ class ReferralEvent extends Model
         'catatan' => 'Catatan tindak lanjut',
         'pesan' => 'Pesan ke warga',
         'pengingat' => 'Pengingat tindak lanjut',
+        'pengingat_warga' => 'Warga diingatkan lewat chat',
         'berhasil' => 'Warga berhasil',
         'gagal' => 'Ditutup tidak berhasil',
     ];

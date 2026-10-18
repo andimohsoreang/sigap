@@ -112,7 +112,7 @@ php artisan sigap:uji-asisten --rinci                 # alur lengkap dengan mode
 ```bash
 php artisan db:seed --class=PortalSeeder   # Trans Tuntas, LAPOR!, SIBARDUKTRANS, PPID, SIPUKAT, JDIH, …
 php artisan sigap:cek-portal               # cek tautan (terjadwal per jam)
-php artisan sigap:pantau-rujukan           # ingatkan penanggung jawab (terjadwal 08.00 hari kerja)
+php artisan sigap:pantau-rujukan           # ingatkan warga & penanggung jawab (terjadwal per jam, jam kerja)
 ```
 
 Aduan lahan dirujuk ke Trans Tuntas lewat halaman pengantar `/rujukan/{token}`; satu petugas menjadi

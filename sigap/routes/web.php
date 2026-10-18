@@ -103,6 +103,7 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
     Route::post('/chat/{conversation}/ambil', [ContactCenterController::class, 'take'])->name('admin.chat.take');
     Route::post('/chat/{conversation}/tutup', [ContactCenterController::class, 'close'])->name('admin.chat.close');
     Route::post('/chat/{conversation}/rujuk', [ContactCenterController::class, 'refer'])->name('admin.chat.refer');
+    Route::get('/chat/{conversation}/saran-tiket', [AdminController::class, 'ticketSuggestion'])->name('admin.chat.saran-tiket');
 
     // Rujukan portal: penanggung jawab mendampingi warga sampai berhasil.
     Route::get('/rujukan', [ReferralController::class, 'index'])->name('admin.rujukan');
@@ -120,6 +121,7 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
 
     // Basis Pengetahuan — sumber jawaban asisten AI.
     Route::get('/pengetahuan', [KnowledgeController::class, 'index'])->name('admin.pengetahuan');
+    Route::get('/pengetahuan/tinjau', [KnowledgeController::class, 'review'])->name('admin.pengetahuan.tinjau');
     Route::get('/pengetahuan/dokumen', [KnowledgeDocumentController::class, 'index'])->name('admin.pengetahuan.dokumen');
     Route::post('/pengetahuan/dokumen', [KnowledgeDocumentController::class, 'store'])->name('admin.pengetahuan.dokumen.store');
     Route::post('/pengetahuan/dokumen/{document}/simpan', [KnowledgeDocumentController::class, 'saveDrafts'])->name('admin.pengetahuan.dokumen.simpan');
@@ -129,6 +131,7 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
     Route::post('/pengetahuan', [KnowledgeController::class, 'store'])->name('admin.pengetahuan.store');
     Route::put('/pengetahuan/{article}', [KnowledgeController::class, 'update'])->name('admin.pengetahuan.update');
     Route::post('/pengetahuan/{article}/terbitkan', [KnowledgeController::class, 'publish'])->name('admin.pengetahuan.terbitkan');
+    Route::post('/pengetahuan/{article}/kembalikan', [KnowledgeController::class, 'reject'])->name('admin.pengetahuan.kembalikan');
     Route::delete('/pengetahuan/{article}', [KnowledgeController::class, 'destroy'])->name('admin.pengetahuan.destroy');
 
     Route::get('/kawasan', [AdminController::class, 'kawasan'])->name('admin.kawasan');

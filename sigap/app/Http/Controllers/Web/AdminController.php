@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\TicketImpact;
 use App\Enums\TicketStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
@@ -21,6 +22,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Services\AccountService;
 use App\Services\Ai\AssistantService;
+use App\Services\Ai\TicketSuggester;
 use App\Services\AttachmentService;
 use App\Services\AuditService;
 use App\Services\Channels\ChannelAdapterManager;
@@ -387,6 +389,17 @@ class AdminController extends Controller
             'ai_enabled' => AssistantService::enabled(),
             'kpi' => AssistantService::enabled() ? $this->contactCenterStats->overview() : null,
             'outcomes' => collect(ChatConversation::OUTCOMES)->only(['terjawab_petugas', 'lapor', 'wbs', 'tidak_selesai']),
+            // Pilihan untuk "Terbitkan tiket" langsung dari Kotak Masuk.
+            'ticket_options' => [
+                'kawasan' => Region::query()->orderBy('name')->get(['id', 'name']),
+                'kategori' => Category::query()->orderBy('name')->get(['id', 'name']),
+                'dampak' => collect(TicketImpact::cases())->map(fn (TicketImpact $i) => [
+                    'value' => $i->value,
+                    'label' => $i->label(),
+                    'hari' => $i->resolveDays(),
+                ]),
+                'kawasan_tetap' => $request->user()->isSuperAdmin() ? null : $request->user()->region_id,
+            ],
             // Portal tujuan rujukan yang dilacak sampai warga berhasil (menu "Rujuk ke portal").
             'portal_rujukan' => Portal::query()->publicActive()->where('track_completion', true)->orderBy('sort')
                 ->get(['code', 'name', 'purpose', 'is_reachable'])
@@ -404,6 +417,25 @@ class AdminController extends Controller
         'rujukan' => 'Kendala rujukan',
         'portal_gangguan' => 'Portal tujuan gangguan',
     ];
+
+    /**
+     * GET /admin/chat/{id}/saran-tiket — isian tiket yang disarankan dari
+     * percakapan (kawasan, kategori, dampak, judul, uraian). Petugas tetap
+     * memeriksa dan menerbitkan sendiri.
+     */
+    public function ticketSuggestion(Request $request, ChatConversation $conversation, TicketSuggester $suggester): JsonResponse
+    {
+        $this->authorize('viewAny', Ticket::class);
+
+        $user = $request->user();
+        $suggestion = $suggester->suggest($conversation, $user->isSuperAdmin() ? null : $user->region_id);
+        $contact = (string) $conversation->contact;
+
+        return response()->json($suggestion + [
+            'nama' => $conversation->participantName(),
+            'telepon' => preg_match('/^[\d\s.+-]+$/', $contact) ? $contact : '',
+        ]);
+    }
 
     /** POST /admin/chat/{id}/baca — dipanggil saat pesan baru masuk ke utas yang sedang dibuka. */
     public function readChat(ChatConversation $conversation): JsonResponse

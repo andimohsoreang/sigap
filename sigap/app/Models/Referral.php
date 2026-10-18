@@ -60,6 +60,7 @@ class Referral extends Model
         'confirmed_at',
         'follow_up_due_at',
         'reminded_at',
+        'citizen_reminded_at',
         'closed_at',
         'closed_by',
         'close_reason',
@@ -75,6 +76,7 @@ class Referral extends Model
             'confirmed_at' => 'datetime',
             'follow_up_due_at' => 'datetime',
             'reminded_at' => 'datetime',
+            'citizen_reminded_at' => 'datetime',
             'closed_at' => 'datetime',
         ];
     }

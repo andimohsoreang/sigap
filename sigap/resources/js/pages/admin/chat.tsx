@@ -99,6 +99,27 @@ interface Props {
     outcomes?: Record<string, string>;
     /** Portal tujuan rujukan yang dilacak sampai warga berhasil. */
     portal_rujukan?: ReferralPortal[];
+    ticket_options?: TicketOptions;
+}
+
+interface TicketOptions {
+    kawasan: { id: number; name: string }[];
+    kategori: { id: number; name: string }[];
+    dampak: { value: string; label: string; hari: number }[];
+    /** Admin kawasan hanya dapat menerbitkan untuk kawasannya. */
+    kawasan_tetap: number | null;
+}
+
+interface TicketSuggestion {
+    judul: string;
+    uraian: string;
+    region_id: number | null;
+    category_id: number | null;
+    impact: string;
+    alasan: string | null;
+    sumber: 'ai' | 'kata_kunci';
+    nama: string;
+    telepon: string;
 }
 
 const TABS: { value: Tab; label: string; icon: LucideIcon; hint: string }[] = [
@@ -125,9 +146,14 @@ export default function Chat({
     ai_enabled: aiEnabled = false,
     kpi,
     portal_rujukan: referralPortals = [],
+    ticket_options: ticketOptions,
 }: Props) {
     const [search, setSearch] = useState('');
-    const [referOpen, setReferOpen] = useState(false);
+    // Panel aksi yang sedang terbuka di bawah tombol hasil (satu per waktu).
+    const [panel, setPanel] = useState<'tiket' | 'rujuk' | null>(null);
+    const referOpen = panel === 'rujuk';
+    const setReferOpen = (open: boolean | ((v: boolean) => boolean)) =>
+        setPanel((p) => ((typeof open === 'function' ? open(p === 'rujuk') : open) ? 'rujuk' : null));
     // Detail konteks terbuka di layar lebar; di HP ditutup agar pesan langsung terlihat.
     const [detailsOpen, setDetailsOpen] = useState(() => (typeof window === 'undefined' ? true : window.innerWidth >= 1024));
     // Di layar kecil daftar dan percakapan tampil bergantian.
@@ -481,9 +507,19 @@ export default function Chat({
                                             </div>
                                         ) : (
                                             <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
-                                                <ActionButton icon={Ticket} href={`/admin/input-manual?percakapan=${active.id}`} primary>
-                                                    Terbitkan tiket
-                                                </ActionButton>
+                                                {ticketOptions ? (
+                                                    <ActionButton
+                                                        icon={Ticket}
+                                                        onClick={() => setPanel((p) => (p === 'tiket' ? null : 'tiket'))}
+                                                        primary
+                                                    >
+                                                        Terbitkan tiket
+                                                    </ActionButton>
+                                                ) : (
+                                                    <ActionButton icon={Ticket} href={`/admin/input-manual?percakapan=${active.id}`} primary>
+                                                        Terbitkan tiket
+                                                    </ActionButton>
+                                                )}
                                                 <ActionButton icon={CheckCircle2} onClick={() => close('terjawab_petugas')}>
                                                     Sudah terjawab
                                                 </ActionButton>
@@ -500,6 +536,14 @@ export default function Chat({
                                                     Rujuk ke WBS
                                                 </ActionButton>
                                             </div>
+                                        )}
+                                        {!closed && panel === 'tiket' && ticketOptions && (
+                                            <TicketPanel
+                                                key={active.id}
+                                                conversationId={active.id}
+                                                options={ticketOptions}
+                                                onCancel={() => setPanel(null)}
+                                            />
                                         )}
                                         {!closed && referOpen && (
                                             <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -586,6 +630,194 @@ export default function Chat({
                 </section>
             </div>
         </AdminLayout>
+    );
+}
+
+/**
+ * Terbitkan tiket tanpa meninggalkan Kotak Masuk. Isian disarankan asisten
+ * (kawasan, kategori, dampak, judul, uraian); petugas memeriksa lalu
+ * menerbitkan. Nomor tiket otomatis dikirim ke chat warga.
+ */
+function TicketPanel({ conversationId, options, onCancel }: { conversationId: number; options: TicketOptions; onCancel: () => void }) {
+    const [loading, setLoading] = useState(true);
+    const [suggestion, setSuggestion] = useState<TicketSuggestion | null>(null);
+    const [showText, setShowText] = useState(false);
+    const form = useForm({
+        sumber_laporan: 'live_chat',
+        percakapan_id: conversationId,
+        nama: '',
+        telepon: '',
+        judul: '',
+        uraian: '',
+        region_id: options.kawasan_tetap ? String(options.kawasan_tetap) : '',
+        category_id: '',
+        impact: 'sedang',
+    });
+
+    useEffect(() => {
+        let alive = true;
+        fetch(`/admin/chat/${conversationId}/saran-tiket`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+            .then((r) => (r.ok ? (r.json() as Promise<TicketSuggestion>) : null))
+            .then((s) => {
+                if (!alive || !s) return;
+                setSuggestion(s);
+                form.setData((d) => ({
+                    ...d,
+                    nama: s.nama,
+                    telepon: s.telepon,
+                    judul: s.judul,
+                    uraian: s.uraian,
+                    region_id: options.kawasan_tetap ? String(options.kawasan_tetap) : s.region_id ? String(s.region_id) : '',
+                    category_id: s.category_id ? String(s.category_id) : '',
+                    impact: s.impact,
+                }));
+            })
+            .finally(() => alive && setLoading(false));
+        return () => {
+            alive = false;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [conversationId]);
+
+    const submit = (e: FormEvent) => {
+        e.preventDefault();
+        form.post('/admin/input-manual', { preserveScroll: true, onSuccess: onCancel });
+    };
+
+    const suggested = (field: 'region_id' | 'category_id', id: string) =>
+        suggestion && id !== '' && String(suggestion[field] ?? '') === id ? (
+            <span className="ml-1.5 rounded bg-violet-50 px-1.5 py-0.5 text-[11px] font-medium text-violet-800">Saran</span>
+        ) : null;
+    const selectClass = 'focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none';
+
+    if (loading) {
+        return <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">Asisten menyiapkan isian tiket…</div>;
+    }
+
+    return (
+        <form onSubmit={submit} className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <p className="text-sm text-gray-700">
+                Periksa isian di bawah, lalu terbitkan. Nomor tiket otomatis dikirim ke chat warga.
+                {suggestion?.alasan && <span className="mt-1 block text-xs text-gray-500">Alasan saran: {suggestion.alasan}</span>}
+            </p>
+
+            <div>
+                <label htmlFor="tiket-judul" className="mb-1 block text-xs font-semibold text-gray-700">
+                    Judul
+                </label>
+                <input id="tiket-judul" value={form.data.judul} onChange={(e) => form.setData('judul', e.target.value)} className={selectClass} />
+                {form.errors.judul && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.judul}</p>}
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                    <label htmlFor="tiket-kawasan" className="mb-1 flex items-center text-xs font-semibold text-gray-700">
+                        Kawasan {suggested('region_id', form.data.region_id)}
+                    </label>
+                    <select
+                        id="tiket-kawasan"
+                        value={form.data.region_id}
+                        disabled={options.kawasan_tetap !== null}
+                        onChange={(e) => form.setData('region_id', e.target.value)}
+                        className={cn(selectClass, form.data.region_id === '' && 'border-amber-400')}
+                    >
+                        <option value="">Pilih kawasan…</option>
+                        {options.kawasan.map((k) => (
+                            <option key={k.id} value={k.id}>
+                                {k.name}
+                            </option>
+                        ))}
+                    </select>
+                    {form.errors.region_id && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.region_id}</p>}
+                </div>
+                <div>
+                    <label htmlFor="tiket-kategori" className="mb-1 flex items-center text-xs font-semibold text-gray-700">
+                        Kategori {suggested('category_id', form.data.category_id)}
+                    </label>
+                    <select
+                        id="tiket-kategori"
+                        value={form.data.category_id}
+                        onChange={(e) => form.setData('category_id', e.target.value)}
+                        className={cn(selectClass, form.data.category_id === '' && 'border-amber-400')}
+                    >
+                        <option value="">Pilih kategori…</option>
+                        {options.kategori.map((k) => (
+                            <option key={k.id} value={k.id}>
+                                {k.name}
+                            </option>
+                        ))}
+                    </select>
+                    {form.errors.category_id && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.category_id}</p>}
+                </div>
+            </div>
+
+            <fieldset>
+                <legend className="mb-1 flex items-center text-xs font-semibold text-gray-700">
+                    Dampak{' '}
+                    {suggestion && form.data.impact === suggestion.impact && (
+                        <span className="ml-1.5 rounded bg-violet-50 px-1.5 py-0.5 text-[11px] font-medium text-violet-800">Saran</span>
+                    )}
+                </legend>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {options.dampak.map((d) => (
+                        <button
+                            key={d.value}
+                            type="button"
+                            aria-pressed={form.data.impact === d.value}
+                            onClick={() => form.setData('impact', d.value)}
+                            className={cn(
+                                'rounded-lg border px-2 py-1.5 text-left text-sm',
+                                form.data.impact === d.value
+                                    ? 'border-primary bg-primary/5 text-primary'
+                                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400',
+                            )}
+                        >
+                            <span className="block font-medium">{d.label}</span>
+                            <span className="text-xs text-gray-500">selesai {d.hari} hari kerja</span>
+                        </button>
+                    ))}
+                </div>
+            </fieldset>
+
+            <div>
+                <button
+                    type="button"
+                    onClick={() => setShowText((v) => !v)}
+                    aria-expanded={showText}
+                    className="text-primary text-xs font-medium hover:underline"
+                >
+                    {showText ? 'Sembunyikan uraian' : 'Lihat / ubah uraian'}
+                </button>
+                {showText && (
+                    <textarea
+                        aria-label="Uraian"
+                        rows={6}
+                        value={form.data.uraian}
+                        onChange={(e) => form.setData('uraian', e.target.value)}
+                        className="focus:border-primary mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none"
+                    />
+                )}
+                {form.errors.uraian && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.uraian}</p>}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <Link href={`/admin/input-manual?percakapan=${conversationId}`} className="text-xs text-gray-500 hover:text-gray-800 hover:underline">
+                    Perlu lampiran atau NIK? Buka formulir lengkap
+                </Link>
+                <div className="flex gap-2">
+                    <button type="button" onClick={onCancel} className="rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                        Batal
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={form.processing || form.data.region_id === '' || form.data.category_id === '' || form.data.judul.trim() === ''}
+                        className="bg-primary hover:bg-primary/90 flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                    >
+                        <Ticket className="h-4 w-4" aria-hidden="true" /> Terbitkan tiket
+                    </button>
+                </div>
+            </div>
+        </form>
     );
 }
 

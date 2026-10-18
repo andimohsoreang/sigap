@@ -1,6 +1,20 @@
 import { Link, router, useForm } from '@inertiajs/react';
-import { BookOpen, CalendarClock, CheckCircle2, CircleHelp, Clock, ExternalLink, FileUp, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
-import { type FormEvent, type ReactNode, useState } from 'react';
+import {
+    BookOpen,
+    CalendarClock,
+    CheckCircle2,
+    CircleHelp,
+    Clock,
+    ExternalLink,
+    FileUp,
+    ListChecks,
+    Pencil,
+    Plus,
+    Search,
+    Trash2,
+    X,
+} from 'lucide-react';
+import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
 
 import { DataTable, type DataTableColumn } from '@/components/sigap/data-table';
 import { Button } from '@/components/ui/button';
@@ -98,6 +112,14 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, p
         setFormOpen(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+
+    // /admin/pengetahuan?edit=ID (dari Tinjau berurutan) langsung membuka formulir ubah.
+    useEffect(() => {
+        const id = Number(new URLSearchParams(window.location.search).get('edit'));
+        const target = id ? articles.find((a) => a.id === id) : undefined;
+        if (target) openEdit(target);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const close = () => {
         setFormOpen(false);
@@ -235,6 +257,13 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, p
                     </Button>
                 ) : (
                     <div className="flex flex-wrap gap-2">
+                        {canPublish && stats.ditinjau > 0 && (
+                            <Button size="sm" asChild>
+                                <Link href="/admin/pengetahuan/tinjau">
+                                    <ListChecks className="h-4 w-4" /> Tinjau berurutan ({stats.ditinjau})
+                                </Link>
+                            </Button>
+                        )}
                         <Button size="sm" variant="outline" asChild>
                             <Link href="/admin/pengetahuan/dokumen">
                                 <FileUp className="h-4 w-4" /> Buat dari dokumen resmi

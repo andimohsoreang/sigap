@@ -97,6 +97,49 @@ class KnowledgeController extends Controller
         return back()->with('success', $this->savedMessage($article->status, $requested));
     }
 
+    /**
+     * GET /admin/pengetahuan/tinjau — tinjau artikel "ditinjau" satu per satu
+     * (Super Admin): artikel + tautan sumber, lalu Terbitkan / Kembalikan ke
+     * draf / Lewati. Artikel berikutnya langsung tampil.
+     */
+    public function review(Request $request): Response
+    {
+        $this->authorize('manageAdmins', User::class);
+
+        $skipped = collect(explode(',', (string) $request->query('lewati', '')))->map(fn ($id) => (int) $id)->filter()->values();
+        $queue = KnowledgeArticle::query()->where('status', KnowledgeArticle::STATUS_REVIEW);
+        $article = (clone $queue)->whereNotIn('id', $skipped)->orderBy('id')->first();
+
+        return Inertia::render('admin/pengetahuan-tinjau', [
+            'article' => $article ? [
+                'id' => $article->id,
+                'title' => $article->title,
+                'body' => $article->body,
+                'category' => $article->category,
+                'keywords' => $article->keywords,
+                'source' => $article->source,
+                'source_ref' => $article->source_ref,
+                'source_url' => $article->source_url,
+                'from_document' => $article->knowledge_document_id !== null,
+            ] : null,
+            'remaining' => (clone $queue)->count(),
+            'skipped' => $skipped,
+        ]);
+    }
+
+    /** POST /admin/pengetahuan/{article}/kembalikan — tidak lolos tinjauan, kembali ke draf. */
+    public function reject(Request $request, KnowledgeArticle $article): RedirectResponse
+    {
+        $this->authorize('manageAdmins', User::class);
+        $data = $request->validate(['catatan' => ['nullable', 'string', 'max:500']]);
+
+        $article->update(['status' => KnowledgeArticle::STATUS_DRAFT, 'updated_by' => $request->user()->id]);
+        $note = filled($data['catatan'] ?? null) ? " Catatan: {$data['catatan']}" : '';
+        $this->audit->safe('knowledge.rejected', $article, "Artikel \"{$article->title}\" dikembalikan ke draf.{$note}");
+
+        return back()->with('success', 'Artikel dikembalikan ke draf untuk diperbaiki.');
+    }
+
     /** Persetujuan cepat Super Admin atas artikel yang sudah ditinjau. */
     public function publish(Request $request, KnowledgeArticle $article): RedirectResponse
     {
