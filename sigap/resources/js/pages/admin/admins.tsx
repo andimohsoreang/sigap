@@ -6,14 +6,15 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AdminLayout from '@/layouts/admin-layout';
 import { useForm } from '@inertiajs/react';
-import { UserPlus } from 'lucide-react';
-import { type FormEvent } from 'react';
+import { Check, Mail, Pencil, UserPlus, X } from 'lucide-react';
+import { type FormEvent, useState } from 'react';
 
 interface Admin {
     id: number;
     nama: string;
     inisial: string;
     nip: string | null;
+    email: string | null;
     wilayah: string;
     role: string | null;
     role_value: string | null;
@@ -30,6 +31,7 @@ export default function Admins({ admins, regions, roles }: Props) {
     const { data, setData, post, processing, errors, reset, transform } = useForm({
         name: '',
         nip: '',
+        email: '',
         role: '',
         region_id: '',
         password: '',
@@ -65,6 +67,12 @@ export default function Admins({ admins, regions, roles }: Props) {
             accessorKey: 'nip',
             header: 'NIP / ID',
             cell: ({ getValue }) => getValue<string | null>() ?? '—',
+        },
+        {
+            accessorKey: 'email',
+            header: 'Email Notifikasi',
+            enableSorting: false,
+            cell: ({ row }) => <EmailCell admin={row.original} />,
         },
         {
             accessorKey: 'wilayah',
@@ -106,6 +114,19 @@ export default function Admins({ admins, regions, roles }: Props) {
                         </Field>
                         <Field label="NIP / ID Pegawai" required error={errors.nip}>
                             <Input value={data.nip} onChange={(e) => setData('nip', e.target.value)} placeholder="NIP Pegawai" />
+                        </Field>
+                        <Field
+                            label="Email"
+                            error={errors.email}
+                            hint="Untuk notifikasi tiket baru, perubahan status, EWS, dan rujukan. Tanpa email, petugas hanya menerima notifikasi di panel."
+                        >
+                            <Input
+                                type="email"
+                                autoComplete="off"
+                                value={data.email}
+                                onChange={(e) => setData('email', e.target.value)}
+                                placeholder="nama@transmigrasi.go.id"
+                            />
                         </Field>
                         <Field
                             label="Wilayah Tugas (Kawasan)"
@@ -192,6 +213,78 @@ export default function Admins({ admins, regions, roles }: Props) {
                 ]}
             />
         </AdminLayout>
+    );
+}
+
+/** Kolom email di tabel petugas: tampil + ubah di tempat (super admin). */
+function EmailCell({ admin }: { admin: Admin }) {
+    const [editing, setEditing] = useState(false);
+    const form = useForm({ email: admin.email ?? '' });
+
+    const save = (e: FormEvent) => {
+        e.preventDefault();
+        form.put(`/admin/petugas/${admin.id}/email`, {
+            preserveScroll: true,
+            onSuccess: () => setEditing(false),
+        });
+    };
+
+    if (editing) {
+        return (
+            <form onSubmit={save} className="flex min-w-64 flex-col gap-1">
+                <div className="flex items-center gap-1">
+                    <Input
+                        type="email"
+                        autoFocus
+                        aria-label={`Email ${admin.nama}`}
+                        value={form.data.email}
+                        onChange={(e) => form.setData('email', e.target.value)}
+                        placeholder="nama@transmigrasi.go.id"
+                        className="h-8 text-sm"
+                    />
+                    <Button type="submit" size="icon" className="h-8 w-8 shrink-0" disabled={form.processing} aria-label="Simpan email">
+                        <Check className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 shrink-0"
+                        aria-label="Batal"
+                        onClick={() => {
+                            form.reset();
+                            form.clearErrors();
+                            setEditing(false);
+                        }}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
+                {form.errors.email && <p className="text-xs font-semibold text-rose-500">{form.errors.email}</p>}
+            </form>
+        );
+    }
+
+    return (
+        <span className="flex items-center gap-2">
+            {admin.email ? (
+                <span className="flex items-center gap-1.5 text-sm text-gray-700">
+                    <Mail className="h-3.5 w-3.5 text-gray-400" />
+                    {admin.email}
+                </span>
+            ) : (
+                <span className="rounded bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">Belum ada email</span>
+            )}
+            <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="hover:text-brand-light rounded p-1 text-gray-400"
+                aria-label={admin.email ? `Ubah email ${admin.nama}` : `Tambah email ${admin.nama}`}
+                title={admin.email ? 'Ubah email' : 'Tambah email'}
+            >
+                <Pencil className="h-3.5 w-3.5" />
+            </button>
+        </span>
     );
 }
 

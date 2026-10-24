@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AuthenticateSession;
+use App\Http\Middleware\EnsurePortalVerified;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeaders;
@@ -66,6 +67,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => EnsureRole::class,
+            'portal.verified' => EnsurePortalVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -71,6 +71,7 @@ class E2eSetupCommand extends Command
                 'password' => Hash::make($password),
             ]
         );
+        $warga->forceFill(['email_verified_at' => now()])->save();
 
         $ticket = Ticket::factory()->count(2)->create([
             'region_id' => $region?->id,

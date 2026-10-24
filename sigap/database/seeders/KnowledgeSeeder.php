@@ -71,7 +71,12 @@ class KnowledgeSeeder extends Seeder
             ],
             [
                 'Bagaimana cara masuk sebagai warga?',
-                'Pilih menu Masuk, lalu gunakan NIK atau nama pengguna dan kata sandi Anda. Hak akses admin hanya diberikan kepada pegawai yang terdaftar.',
+                'Belum punya akun? Pilih menu Masuk lalu klik "Daftar di sini", isi NIK, nama, email, dan kata sandi, kemudian klik tautan verifikasi yang dikirim ke email Anda. Setelah itu masuk dengan NIK dan kata sandi. Tidak punya email? Tulis di chat ini dan minta dibantu petugas; petugas dapat membuatkan akun untuk Anda cukup dengan NIK dan nama sesuai KTP. Lupa kata sandi? Klik "Lupa kata sandi?" di halaman Masuk untuk menerima tautan atur ulang lewat email. Hak akses admin hanya diberikan kepada pegawai yang terdaftar.',
+                'Layanan SIGAP',
+            ],
+            [
+                'Saya lupa kata sandi dan tidak punya email, bagaimana?',
+                'Tekan "Bicara dengan petugas" di chat ini. Petugas akan menanyakan NIK dan nomor HP yang dulu Anda daftarkan. Bila cocok, Anda menerima tombol "Buat kata sandi baru" di chat; tekan tombol itu, buat kata sandi baru, dan Anda langsung masuk. Petugas tidak akan pernah menanyakan kata sandi Anda. Bila akun Anda punya email aktif, Anda juga bisa memakai menu "Lupa kata sandi?" di halaman Masuk.',
                 'Layanan SIGAP',
             ],
             [

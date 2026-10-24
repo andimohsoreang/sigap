@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInputManualRequest;
 use App\Http\Requests\UpdateTicketStatusRequest;
+use App\Models\AccountActivation;
 use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Channel;
@@ -28,6 +29,7 @@ use App\Services\AuditService;
 use App\Services\Channels\ChannelAdapterManager;
 use App\Services\ChatService;
 use App\Services\ContactCenterStats;
+use App\Services\StaffRegistrationService;
 use App\Services\StatsService;
 use App\Services\TicketService;
 use App\Support\Search;
@@ -56,6 +58,7 @@ class AdminController extends Controller
         private readonly StatsService $stats,
         private readonly AccountService $accounts,
         private readonly ContactCenterStats $contactCenterStats,
+        private readonly StaffRegistrationService $registrations,
     ) {}
 
     /* --------------------------- Matriks Rekap --------------------------- */
@@ -281,6 +284,12 @@ class AdminController extends Controller
             : null;
 
         if ($conversation) {
+            // Penanya yang sudah punya akun (login, atau didaftarkan petugas
+            // dari percakapan ini) tercatat sebagai pelapor tiket.
+            if ($account = $this->registrations->accountFor($conversation)) {
+                $this->registrations->linkTicket($ticket, $account);
+            }
+
             // Nomor tiket dikirim ke percakapan yang sama; percakapan ditutup "jadi tiket".
             $this->chat->send($conversation, "Tiket {$ticket->ticket_no} telah diterbitkan untuk laporan Anda. Perkembangannya dapat dipantau di halaman Lacak Tiket.", 'system', null, [
                 'kind' => 'tiket_terbit',
@@ -430,10 +439,11 @@ class AdminController extends Controller
         $user = $request->user();
         $suggestion = $suggester->suggest($conversation, $user->isSuperAdmin() ? null : $user->region_id);
         $contact = (string) $conversation->contact;
+        $account = $this->registrations->accountFor($conversation);
 
         return response()->json($suggestion + [
-            'nama' => $conversation->participantName(),
-            'telepon' => preg_match('/^[\d\s.+-]+$/', $contact) ? $contact : '',
+            'nama' => $account?->name ?? $conversation->participantName(),
+            'telepon' => $account?->phone ?? (preg_match('/^[\d\s.+-]+$/', $contact) ? $contact : ''),
         ]);
     }
 
@@ -491,6 +501,7 @@ class AdminController extends Controller
                     'nama' => $u->name,
                     'inisial' => mb_strtoupper(mb_substr($u->name, 0, 1)),
                     'nip' => $u->username,
+                    'email' => $u->email,
                     'wilayah' => $u->region?->name ?? 'Pusat',
                     'role' => $u->role?->label(),
                     'role_value' => $u->role?->value,
@@ -511,6 +522,7 @@ class AdminController extends Controller
         $created = User::create([
             'name' => $data['name'],
             'username' => $data['nip'],
+            'email' => self::normalizeEmail($data['email'] ?? null),
             'role' => UserRole::from($data['role']),
             'region_id' => $data['region_id'] ?? null,
             'password' => $data['password'],
@@ -522,6 +534,46 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', 'Admin baru berhasil disimpan.');
+    }
+
+    /**
+     * Super admin mengisi/mengganti surel petugas lain agar petugas menerima
+     * notifikasi surel (tiket baru, status, EWS, rujukan). Kosong = hapus surel.
+     */
+    public function updateAdminEmail(Request $request, User $petugas): RedirectResponse
+    {
+        $this->authorize('manageAdmins', User::class);
+        abort_unless($petugas->isAdmin(), 404);
+
+        $data = $request->validate([
+            'email' => ['nullable', 'email', 'max:150', Rule::unique('users', 'email')->ignore($petugas->id)],
+        ], self::emailMessages());
+
+        $email = self::normalizeEmail($data['email'] ?? null);
+
+        if ($email !== $petugas->email) {
+            $petugas->forceFill(['email' => $email])->save();
+            $this->audit->safe('admin.email_updated', $petugas, "Surel admin {$petugas->name} ({$petugas->username}) diperbarui.");
+        }
+
+        return back()->with('success', $email ? "Email {$petugas->name} disimpan." : "Email {$petugas->name} dihapus.");
+    }
+
+    /** Surel disimpan huruf kecil; string kosong menjadi null. */
+    public static function normalizeEmail(?string $email): ?string
+    {
+        $email = mb_strtolower(trim((string) $email));
+
+        return $email === '' ? null : $email;
+    }
+
+    /** @return array<string, string> */
+    public static function emailMessages(): array
+    {
+        return [
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah dipakai akun lain.',
+        ];
     }
 
     /**
@@ -537,6 +589,8 @@ class AdminController extends Controller
         return [
             'name' => ['required', 'string', 'max:150'],
             'nip' => ['required', 'string', 'max:50', 'unique:users,username'],
+            // Opsional, tetapi tanpa surel petugas hanya menerima notifikasi lonceng.
+            'email' => ['nullable', 'email', 'max:150', 'unique:users,email'],
             'role' => ['required', Rule::in(UserRole::adminValues())],
             'region_id' => [
                 Rule::requiredIf(fn () => $request->input('role') === UserRole::AdminKawasan->value),
@@ -551,6 +605,7 @@ class AdminController extends Controller
     {
         return [
             'region_id.required' => 'Admin kawasan wajib memiliki kawasan tugas.',
+            ...self::emailMessages(),
         ];
     }
 
@@ -764,6 +819,7 @@ class AdminController extends Controller
             'categories' => Category::query()->orderBy('id')->get(['id', 'name', 'slug', 'sla_days']),
             // A-05: pengaturan & kategori hanya dapat diubah super admin.
             'can_edit' => request()->user()->isSuperAdmin(),
+            'profil' => ['email' => request()->user()->email],
         ]);
     }
 
@@ -811,17 +867,26 @@ class AdminController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:150'],
+            'email' => ['nullable', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id)],
             'current_password' => ['nullable', 'required_with:password', 'string', 'current_password:web'],
             'password' => ['nullable', 'string', 'confirmed', self::adminPasswordRule()],
         ], [
             'current_password.required_with' => 'Masukkan kata sandi saat ini untuk mengganti kata sandi.',
             'current_password.current_password' => 'Kata sandi saat ini tidak sesuai.',
             'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
+            ...self::emailMessages(),
         ]);
 
-        if ($data['name'] !== $user->name) {
-            $user->forceFill(['name' => $data['name']])->save();
-            $this->audit->safe('account.profile_updated', $user, 'Profil admin diperbarui.', ['fields' => ['name']]);
+        // Surel hanya diubah bila field-nya dikirim (kosong = hapus surel).
+        $email = $request->exists('email') ? self::normalizeEmail($data['email'] ?? null) : $user->email;
+        $fields = array_keys(array_filter([
+            'name' => $data['name'] !== $user->name,
+            'email' => $email !== $user->email,
+        ]));
+
+        if ($fields !== []) {
+            $user->forceFill(['name' => $data['name'], 'email' => $email])->save();
+            $this->audit->safe('account.profile_updated', $user, 'Profil admin diperbarui.', ['fields' => $fields]);
         }
 
         if (! empty($data['password'])) {
@@ -1054,6 +1119,7 @@ class AdminController extends Controller
             'hasil' => $conversation->outcome ? ChatConversation::OUTCOMES[$conversation->outcome] ?? $conversation->outcome : null,
             'ditutup_at' => $conversation->closed_at?->toIso8601String(),
             'tiket' => $conversation->ticket ? ['nomor' => $conversation->ticket->ticket_no, 'url' => '/admin/tiket/'.$conversation->ticket->ticket_no] : null,
+            'akun' => $this->accountSummary($conversation),
             'messages' => $conversation->messages()->with('sender')->get()->map(fn (ChatMessage $m) => [
                 'id' => $m->id,
                 'body' => $m->body,
@@ -1070,6 +1136,37 @@ class AdminController extends Controller
                 'sumber' => $m->meta['sumber'] ?? [],
                 'nilai' => $m->feedback,
             ]),
+        ];
+    }
+
+    /**
+     * Status akun warga untuk panel akun di Kotak Masuk (daftar / pulihkan).
+     *
+     * @return array{nama: string, nik: string|null, jenis: string, status: string, didaftarkan_oleh: string|null, berlaku_sampai: string|null}|null
+     */
+    private function accountSummary(ChatConversation $conversation): ?array
+    {
+        $account = $this->registrations->accountFor($conversation);
+        if (! $account) {
+            return null;
+        }
+
+        $latest = $this->registrations->latestActivation($conversation);
+        $pending = $this->registrations->resendable($conversation);
+
+        return [
+            'nama' => $account->name,
+            'nik' => $account->maskedNik(),
+            // aktivasi = akun baru didaftarkan petugas; pemulihan = lupa kata sandi.
+            'jenis' => $latest?->purpose ?? AccountActivation::PURPOSE_ACTIVATION,
+            // aktif (tautan sudah dipakai) | menunggu (tautan berlaku) | kedaluwarsa (perlu kirim ulang)
+            'status' => match (true) {
+                $pending === null => 'aktif',
+                $pending->expires_at->isFuture() && $pending->used_at === null => 'menunggu',
+                default => 'kedaluwarsa',
+            },
+            'didaftarkan_oleh' => $account->registered_by ? $account->registeredBy?->name : null,
+            'berlaku_sampai' => $pending?->used_at === null ? $pending?->expires_at?->toIso8601String() : null,
         ];
     }
 

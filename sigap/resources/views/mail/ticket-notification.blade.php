@@ -1,10 +1,10 @@
 @php
-    $meta = is_array($this->payload['meta'] ?? null) ? $this->payload['meta'] : [];
+    $meta = is_array($payload['meta'] ?? null) ? $payload['meta'] : [];
 @endphp
 <x-mail::message>
-# {{ $this->payload['title'] ?? 'SIGAP — Notifikasi' }}
+# {{ $payload['title'] ?? 'SIGAP — Notifikasi' }}
 
-{{ $this->payload['body'] ?? '' }}
+{{ $payload['body'] ?? '' }}
 
 @if (count($meta))
 <x-mail::table>
@@ -16,9 +16,9 @@
 </x-mail::table>
 @endif
 
-@isset($this->payload['cta_url'])
-<x-mail::button :url="config('app.url') . $this->payload['cta_url']">
-{{ $this->payload['cta_label'] ?? 'Buka di SIGAP' }}
+@isset($payload['cta_url'])
+<x-mail::button :url="config('app.url') . $payload['cta_url']">
+{{ $payload['cta_label'] ?? 'Buka di SIGAP' }}
 </x-mail::button>
 @endisset
 

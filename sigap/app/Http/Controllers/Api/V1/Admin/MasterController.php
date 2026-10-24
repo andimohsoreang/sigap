@@ -151,6 +151,7 @@ class MasterController extends Controller
         $user = User::create([
             'name' => $data['name'],
             'username' => $data['nip'],
+            'email' => AdminController::normalizeEmail($data['email'] ?? null),
             'role' => UserRole::from($data['role']),
             'region_id' => $data['region_id'] ?? null,
             'password' => $data['password'],

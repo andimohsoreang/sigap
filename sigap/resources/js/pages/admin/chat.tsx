@@ -13,12 +13,14 @@ import {
     Clock,
     Hand,
     Inbox,
+    KeyRound,
     MessageCircleQuestion,
     Phone,
     Search,
     SendHorizontal,
     ShieldAlert,
     Ticket,
+    UserPlus,
     UserRound,
     Waypoints,
     type LucideIcon,
@@ -78,7 +80,19 @@ interface Active {
     ditutup_at?: string | null;
     tiket?: { nomor: string; url: string } | null;
     rujukan?: { kode: string; portal: string | null; status: string; url: string }[];
+    akun?: AccountInfo | null;
     messages: Message[];
+}
+
+/** Akun warga yang didaftarkan / dipulihkan petugas dari percakapan ini. */
+interface AccountInfo {
+    nama: string;
+    nik: string | null;
+    /** aktivasi = akun baru; pemulihan = lupa kata sandi. */
+    jenis: 'aktivasi' | 'pemulihan';
+    status: 'aktif' | 'menunggu' | 'kedaluwarsa';
+    didaftarkan_oleh: string | null;
+    berlaku_sampai: string | null;
 }
 
 interface ReferralPortal {
@@ -151,6 +165,7 @@ export default function Chat({
     const [search, setSearch] = useState('');
     // Panel aksi yang sedang terbuka di bawah tombol hasil (satu per waktu).
     const [panel, setPanel] = useState<'tiket' | 'rujuk' | null>(null);
+    const [accountMode, setAccountMode] = useState<AccountMode>(null);
     const referOpen = panel === 'rujuk';
     const setReferOpen = (open: boolean | ((v: boolean) => boolean)) =>
         setPanel((p) => ((typeof open === 'function' ? open(p === 'rujuk') : open) ? 'rujuk' : null));
@@ -187,6 +202,9 @@ export default function Chat({
             router.get('/admin/chat', { tab, conversation: activeId }, { replace: true, preserveState: true, preserveScroll: true });
         }
     }, [activeId, tab]);
+
+    // Formulir akun tertutup lagi saat pindah percakapan.
+    useEffect(() => setAccountMode(null), [activeId]);
 
     // Gulir ke pesan terbaru saat utas berganti atau pesan bertambah.
     useEffect(() => {
@@ -419,6 +437,17 @@ export default function Chat({
                                         </button>
                                     )}
                                 </div>
+
+                                <AccountStrip
+                                    key={active.id}
+                                    conversationId={active.id}
+                                    guest={active.tipe === 'tamu'}
+                                    account={active.akun ?? null}
+                                    defaultName={active.nama}
+                                    defaultContact={active.kontak ?? null}
+                                    mode={accountMode}
+                                    onMode={setAccountMode}
+                                />
 
                                 {aiEnabled && detailsOpen && (
                                     <div className="space-y-4 border-t border-gray-100 p-4">
@@ -816,6 +845,302 @@ function TicketPanel({ conversationId, options, onCancel }: { conversationId: nu
                         <Ticket className="h-4 w-4" aria-hidden="true" /> Terbitkan tiket
                     </button>
                 </div>
+            </div>
+        </form>
+    );
+}
+
+type AccountMode = 'daftar' | 'pulihkan' | null;
+
+/**
+ * Akun warga dari percakapan. Masalah warga dijawab dulu, lalu petugas
+ * membantu administrasinya lewat chat:
+ * - Daftarkan akun: cukup NIK, nama, dan nomor HP.
+ * - Pulihkan akun (lupa kata sandi): cocokkan NIK + nomor HP terdaftar.
+ * Tautan "buat kata sandi" dikirim ke chat warga; tanpa surel.
+ */
+function AccountStrip({
+    conversationId,
+    guest,
+    account,
+    defaultName,
+    defaultContact,
+    mode,
+    onMode,
+}: {
+    conversationId: number;
+    guest: boolean;
+    account: AccountInfo | null;
+    defaultName: string;
+    defaultContact: string | null;
+    mode: AccountMode;
+    onMode: (mode: AccountMode) => void;
+}) {
+    const isPhone = defaultContact !== null && /^[\d\s.+-]+$/.test(defaultContact);
+    const form = useForm({
+        nik: '',
+        nama: defaultName === 'Tamu' ? '' : defaultName,
+        telepon: isPhone ? defaultContact : '',
+        email: defaultContact !== null && defaultContact.includes('@') ? defaultContact : '',
+        konfirmasi: false as boolean,
+    });
+    const resend = () => router.post(`/admin/chat/${conversationId}/akun/kirim-ulang`, {}, { preserveScroll: true });
+    const submit = (e: FormEvent) => {
+        e.preventDefault();
+        form.post(`/admin/chat/${conversationId}/akun`, { preserveScroll: true, onSuccess: () => onMode(null) });
+    };
+    const inputClass = 'focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none';
+
+    if (account) {
+        const recovery = account.jenis === 'pemulihan';
+        if (account.status === 'aktif') {
+            if (recovery) {
+                return (
+                    <p className="flex items-center gap-2 border-t border-gray-100 px-4 py-2.5 text-sm text-gray-600">
+                        <BadgeCheck className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                        Kata sandi baru sudah dibuat warga
+                    </p>
+                );
+            }
+            return account.didaftarkan_oleh ? (
+                <p className="flex items-center gap-2 border-t border-gray-100 px-4 py-2.5 text-sm text-gray-600">
+                    <BadgeCheck className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                    Akun aktif · didaftarkan {account.didaftarkan_oleh}
+                </p>
+            ) : null;
+        }
+
+        const expired = account.status === 'kedaluwarsa';
+        return (
+            <div className="flex flex-wrap items-center gap-3 border-t border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <KeyRound className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span className="min-w-0 flex-1">
+                    {recovery ? 'Pemulihan akun' : 'Akun'} <b>{account.nama}</b>
+                    {account.nik ? <span className="font-mono"> · {account.nik}</span> : null}
+                    {recovery ? ': tautan kata sandi baru sudah dikirim.' : ' sudah dibuat.'}{' '}
+                    {expired
+                        ? 'Tautannya sudah kedaluwarsa.'
+                        : `Menunggu warga membuat kata sandi${recovery ? ' baru' : ''} (tautan berlaku sampai ${account.berlaku_sampai ? formatDateTime(account.berlaku_sampai) : '—'}).`}
+                </span>
+                <button
+                    type="button"
+                    onClick={resend}
+                    className="h-9 shrink-0 rounded-lg border border-amber-300 bg-white px-3 text-sm font-medium text-amber-900 hover:border-amber-500"
+                >
+                    {expired ? 'Kirim tautan baru' : 'Kirim ulang tautan'}
+                </button>
+            </div>
+        );
+    }
+
+    if (!guest) return null;
+
+    return (
+        <div className="border-t border-gray-100">
+            {mode === null ? (
+                <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm text-gray-600">
+                    <span className="min-w-0 flex-1 basis-60">
+                        Belum masuk dengan akun. Setelah masalahnya terjawab, bantu daftarkan akun atau pulihkan akun yang lupa kata sandinya.
+                    </span>
+                    <button
+                        type="button"
+                        onClick={() => onMode('pulihkan')}
+                        className="hover:border-primary hover:text-primary flex h-9 shrink-0 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 font-medium text-gray-800"
+                    >
+                        <KeyRound className="h-4 w-4" aria-hidden="true" /> Lupa kata sandi
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => onMode('daftar')}
+                        className="hover:border-primary hover:text-primary flex h-9 shrink-0 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 font-medium text-gray-800"
+                    >
+                        <UserPlus className="h-4 w-4" aria-hidden="true" /> Daftarkan akun
+                    </button>
+                </div>
+            ) : mode === 'pulihkan' ? (
+                <RecoverForm conversationId={conversationId} defaultContact={isPhone ? defaultContact : ''} onDone={() => onMode(null)} />
+            ) : (
+                <form onSubmit={submit} className="space-y-3 bg-gray-50 p-4">
+                    <p className="text-sm text-gray-700">
+                        Tanyakan NIK dan nama sesuai KTP lewat chat. Warga akan menerima tombol untuk membuat kata sandinya sendiri, tanpa perlu
+                        surel.
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                            <label htmlFor="akun-nik" className="mb-1 block text-xs font-semibold text-gray-700">
+                                NIK (16 digit)
+                            </label>
+                            <input
+                                id="akun-nik"
+                                inputMode="numeric"
+                                maxLength={16}
+                                value={form.data.nik}
+                                onChange={(e) => form.setData('nik', e.target.value.replace(/\D/g, ''))}
+                                className={cn(inputClass, 'font-mono')}
+                                autoComplete="off"
+                            />
+                            {form.errors.nik && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.nik}</p>}
+                        </div>
+                        <div>
+                            <label htmlFor="akun-nama" className="mb-1 block text-xs font-semibold text-gray-700">
+                                Nama sesuai KTP
+                            </label>
+                            <input
+                                id="akun-nama"
+                                value={form.data.nama}
+                                onChange={(e) => form.setData('nama', e.target.value)}
+                                className={inputClass}
+                                autoComplete="off"
+                            />
+                            {form.errors.nama && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.nama}</p>}
+                        </div>
+                        <div>
+                            <label htmlFor="akun-telepon" className="mb-1 block text-xs font-semibold text-gray-700">
+                                Nomor HP / WhatsApp <span className="font-normal text-gray-500">(opsional)</span>
+                            </label>
+                            <input
+                                id="akun-telepon"
+                                inputMode="tel"
+                                value={form.data.telepon}
+                                onChange={(e) => form.setData('telepon', e.target.value)}
+                                placeholder="08…"
+                                className={inputClass}
+                                autoComplete="off"
+                            />
+                            {form.errors.telepon && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.telepon}</p>}
+                        </div>
+                        <div>
+                            <label htmlFor="akun-email" className="mb-1 block text-xs font-semibold text-gray-700">
+                                Surel <span className="font-normal text-gray-500">(opsional)</span>
+                            </label>
+                            <input
+                                id="akun-email"
+                                type="email"
+                                value={form.data.email}
+                                onChange={(e) => form.setData('email', e.target.value)}
+                                className={inputClass}
+                                autoComplete="off"
+                            />
+                            {form.errors.email && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.email}</p>}
+                        </div>
+                    </div>
+                    <label className="flex items-start gap-2 text-sm text-gray-700">
+                        <input
+                            type="checkbox"
+                            checked={form.data.konfirmasi}
+                            onChange={(e) => form.setData('konfirmasi', e.target.checked)}
+                            className="accent-primary mt-0.5 h-4 w-4"
+                        />
+                        <span>Saya sudah mencocokkan identitas warga, dan warga setuju datanya disimpan untuk layanan pengaduan (UU PDP).</span>
+                    </label>
+                    {form.errors.konfirmasi && <p className="text-xs font-semibold text-rose-600">{form.errors.konfirmasi}</p>}
+                    <div className="flex justify-end gap-2">
+                        <button type="button" onClick={() => onMode(null)} className="rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={form.processing || form.data.nik.length !== 16 || form.data.nama.trim() === '' || !form.data.konfirmasi}
+                            className="bg-primary hover:bg-primary/90 flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                        >
+                            <UserPlus className="h-4 w-4" aria-hidden="true" /> Buat akun &amp; kirim tautan
+                        </button>
+                    </div>
+                </form>
+            )}
+        </div>
+    );
+}
+
+/**
+ * Lupa kata sandi lewat chat. Petugas menanyakan NIK dan nomor HP yang
+ * terdaftar; sistem yang mencocokkan (nomor terdaftar tidak pernah
+ * ditampilkan). Akun tanpa nomor HP memerlukan catatan cara verifikasi.
+ */
+function RecoverForm({ conversationId, defaultContact, onDone }: { conversationId: number; defaultContact: string; onDone: () => void }) {
+    const form = useForm({ nik: '', telepon: defaultContact, catatan: '', konfirmasi: false as boolean });
+    const needsNote = Boolean(form.errors.catatan) || form.data.catatan !== '';
+    const inputClass = 'focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none';
+    const submit = (e: FormEvent) => {
+        e.preventDefault();
+        form.post(`/admin/chat/${conversationId}/akun/pulihkan`, { preserveScroll: true, onSuccess: onDone });
+    };
+
+    return (
+        <form onSubmit={submit} className="space-y-3 bg-gray-50 p-4">
+            <p className="text-sm text-gray-700">
+                Tanyakan NIK dan nomor HP yang dulu didaftarkan warga. Bila cocok, warga menerima tombol untuk membuat kata sandi baru di chat ini.
+                Jangan pernah menyebutkan nomor HP yang terdaftar kepada penanya.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                    <label htmlFor="pulih-nik" className="mb-1 block text-xs font-semibold text-gray-700">
+                        NIK (16 digit)
+                    </label>
+                    <input
+                        id="pulih-nik"
+                        inputMode="numeric"
+                        maxLength={16}
+                        value={form.data.nik}
+                        onChange={(e) => form.setData('nik', e.target.value.replace(/\D/g, ''))}
+                        className={cn(inputClass, 'font-mono')}
+                        autoComplete="off"
+                    />
+                    {form.errors.nik && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.nik}</p>}
+                </div>
+                <div>
+                    <label htmlFor="pulih-telepon" className="mb-1 block text-xs font-semibold text-gray-700">
+                        Nomor HP terdaftar (menurut warga)
+                    </label>
+                    <input
+                        id="pulih-telepon"
+                        inputMode="tel"
+                        value={form.data.telepon}
+                        onChange={(e) => form.setData('telepon', e.target.value)}
+                        placeholder="08…"
+                        className={inputClass}
+                        autoComplete="off"
+                    />
+                    {form.errors.telepon && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.telepon}</p>}
+                </div>
+            </div>
+            {needsNote && (
+                <div>
+                    <label htmlFor="pulih-catatan" className="mb-1 block text-xs font-semibold text-gray-700">
+                        Cara Anda mencocokkan identitas
+                    </label>
+                    <textarea
+                        id="pulih-catatan"
+                        rows={2}
+                        value={form.data.catatan}
+                        onChange={(e) => form.setData('catatan', e.target.value)}
+                        placeholder="Mis. warga datang ke kantor kawasan membawa KTP asli"
+                        className="focus:border-primary w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none"
+                    />
+                    <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.catatan}</p>
+                </div>
+            )}
+            <label className="flex items-start gap-2 text-sm text-gray-700">
+                <input
+                    type="checkbox"
+                    checked={form.data.konfirmasi}
+                    onChange={(e) => form.setData('konfirmasi', e.target.checked)}
+                    className="accent-primary mt-0.5 h-4 w-4"
+                />
+                <span>Saya sudah mencocokkan identitas penanya dengan pemilik akun.</span>
+            </label>
+            {form.errors.konfirmasi && <p className="text-xs font-semibold text-rose-600">{form.errors.konfirmasi}</p>}
+            <div className="flex justify-end gap-2">
+                <button type="button" onClick={onDone} className="rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                    Batal
+                </button>
+                <button
+                    type="submit"
+                    disabled={form.processing || form.data.nik.length !== 16 || !form.data.konfirmasi}
+                    className="bg-primary hover:bg-primary/90 flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                >
+                    <KeyRound className="h-4 w-4" aria-hidden="true" /> Cocokkan &amp; kirim tautan
+                </button>
             </div>
         </form>
     );

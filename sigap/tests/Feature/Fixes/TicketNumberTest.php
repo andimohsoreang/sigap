@@ -7,6 +7,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Services\AttachmentService;
 use App\Services\NotificationService;
+use App\Services\ReporterNotifier;
 use App\Services\SlaCalculator;
 use App\Services\TicketService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -62,6 +63,7 @@ class TicketNumberTest extends TestCase
             app(SlaCalculator::class),
             app(NotificationService::class),
             app(AttachmentService::class),
+            app(ReporterNotifier::class),
         ])->makePartial();
 
         Ticket::factory()->create(['ticket_no' => 'TKT-261012-AAAAAA'])->delete();

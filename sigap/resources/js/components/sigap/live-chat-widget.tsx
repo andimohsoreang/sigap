@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { echo, echoIsConfigured } from '@laravel/echo-react';
-import { BookOpen, Bot, ExternalLink, Globe, Headset, LogIn, MessagesSquare, Send, Ticket, UserRound, X } from 'lucide-react';
+import { BookOpen, Bot, ExternalLink, Globe, Headset, KeyRound, LogIn, MessagesSquare, Send, Ticket, UserRound, X } from 'lucide-react';
 import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 /**
@@ -80,6 +80,8 @@ interface ChatMessage {
     portal?: PortalCardInfo | null;
     rujukan?: ReferralInfo | null;
     referensi?: string | null;
+    /** Tombol buat kata sandi untuk akun yang didaftarkan petugas. */
+    aktivasi?: { url: string; berlaku_sampai: string; jenis?: 'aktivasi' | 'pemulihan' } | null;
     nilai?: number | null;
 }
 
@@ -675,6 +677,18 @@ function SystemNotice({ message }: { message: ChatMessage }) {
         >
             {message.body}
             {message.referensi && <span className="mt-1 block font-bold">Nomor referensi: {message.referensi}</span>}
+            {message.jenis === 'aktivasi' &&
+                (message.aktivasi ? (
+                    <a
+                        href={message.aktivasi.url}
+                        className="bg-primary mt-2 flex items-center justify-center gap-1.5 rounded-md px-3 py-2.5 text-[13px] font-semibold text-white hover:opacity-90"
+                    >
+                        <KeyRound className="h-4 w-4" aria-hidden="true" />{' '}
+                        {message.aktivasi.jenis === 'pemulihan' ? 'Buat kata sandi baru' : 'Buat kata sandi'}
+                    </a>
+                ) : (
+                    <span className="mt-1 block font-semibold">Tautan ini sudah tidak berlaku. Minta tautan baru ke petugas.</span>
+                ))}
             {message.portal && (
                 <div className="text-left text-gray-800">
                     <PortalCard portal={message.portal} referral={message.rujukan ?? null} />

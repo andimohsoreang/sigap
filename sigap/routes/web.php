@@ -1,16 +1,20 @@
 <?php
 
 use App\Http\Controllers\Web\AdminController;
+use App\Http\Controllers\Web\AktivasiAkunController;
 use App\Http\Controllers\Web\ChatController;
 use App\Http\Controllers\Web\ContactCenterController;
+use App\Http\Controllers\Web\DaftarController;
 use App\Http\Controllers\Web\KnowledgeController;
 use App\Http\Controllers\Web\KnowledgeDocumentController;
+use App\Http\Controllers\Web\LupaSandiController;
 use App\Http\Controllers\Web\MasukController;
 use App\Http\Controllers\Web\PengaduanFormController;
 use App\Http\Controllers\Web\PortalController;
 use App\Http\Controllers\Web\PublicController;
 use App\Http\Controllers\Web\ReferralController;
 use App\Http\Controllers\Web\ReferralPublicController;
+use App\Http\Controllers\Web\VerifikasiEmailController;
 use App\Http\Controllers\Web\WargaPortalController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,13 +58,35 @@ Route::post('/lacak-tiket/survei', [PublicController::class, 'storeSurvey'])->mi
 Route::redirect('/pengaduan', '/pengaduan/baru', 301);
 Route::post('/pengaduan', [PengaduanFormController::class, 'store'])->middleware('throttle:pengaduan')->name('pengaduan.store.legacy');
 
-// Login/keluar (NIK/username + kata sandi).
+// Login/keluar (NIK/username + kata sandi), daftar akun warga & lupa sandi.
+// Aktivasi akun yang didaftarkan petugas dari chat (tautan sekali pakai).
+Route::get('/aktivasi/{token}', [AktivasiAkunController::class, 'show'])->middleware('throttle:lookup')->name('aktivasi.show');
+Route::post('/aktivasi/{token}', [AktivasiAkunController::class, 'store'])->middleware('throttle:akun')->name('aktivasi.store');
+
 Route::middleware('guest')->group(function () {
     Route::get('/masuk', [MasukController::class, 'create'])->name('masuk');
     // A-01: login web dibatasi limiter 'login' (identifier+IP & per IP).
     Route::post('/masuk', [MasukController::class, 'store'])->middleware('throttle:login')->name('masuk.store');
+
+    Route::get('/daftar', [DaftarController::class, 'create'])->name('daftar');
+    Route::post('/daftar', [DaftarController::class, 'store'])->middleware('throttle:akun')->name('daftar.store');
+
+    Route::get('/lupa-sandi', [LupaSandiController::class, 'create'])->name('password.request');
+    Route::post('/lupa-sandi', [LupaSandiController::class, 'store'])->middleware('throttle:akun')->name('password.email');
+    Route::get('/atur-ulang-sandi/{token}', [LupaSandiController::class, 'edit'])->name('password.reset');
+    Route::post('/atur-ulang-sandi', [LupaSandiController::class, 'update'])->middleware('throttle:akun')->name('password.store');
 });
 Route::post('/keluar', [MasukController::class, 'destroy'])->middleware('auth')->name('keluar');
+
+// Verifikasi surel akun warga (nama rute bawaan Laravel dipakai middleware `verified`).
+Route::middleware('auth')->group(function () {
+    Route::get('/verifikasi-email', [VerifikasiEmailController::class, 'notice'])->name('verification.notice');
+    Route::get('/verifikasi-email/{id}/{hash}', [VerifikasiEmailController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+    Route::post('/verifikasi-email/kirim-ulang', [VerifikasiEmailController::class, 'resend'])->middleware('throttle:akun')->name('verification.send');
+    Route::post('/verifikasi-email/ganti', [VerifikasiEmailController::class, 'changeEmail'])->middleware('throttle:akun')->name('verification.change');
+});
 
 // Live chat publik & warga (PRD D5 — Reverb, fallback polling).
 // Tamu wajib mengisi nama dulu (POST /chat/mulai); warga login memakai akunnya.
@@ -104,6 +130,10 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
     Route::post('/chat/{conversation}/tutup', [ContactCenterController::class, 'close'])->name('admin.chat.close');
     Route::post('/chat/{conversation}/rujuk', [ContactCenterController::class, 'refer'])->name('admin.chat.refer');
     Route::get('/chat/{conversation}/saran-tiket', [AdminController::class, 'ticketSuggestion'])->name('admin.chat.saran-tiket');
+    // Daftarkan akun warga dari percakapan (tautan buat kata sandi dikirim ke chat).
+    Route::post('/chat/{conversation}/akun', [ContactCenterController::class, 'register'])->name('admin.chat.akun');
+    Route::post('/chat/{conversation}/akun/pulihkan', [ContactCenterController::class, 'recover'])->name('admin.chat.akun.pulihkan');
+    Route::post('/chat/{conversation}/akun/kirim-ulang', [ContactCenterController::class, 'resendActivation'])->name('admin.chat.akun.ulang');
 
     // Rujukan portal: penanggung jawab mendampingi warga sampai berhasil.
     Route::get('/rujukan', [ReferralController::class, 'index'])->name('admin.rujukan');
@@ -153,6 +183,7 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
     Route::middleware('role:super_admin')->group(function () {
         Route::get('/petugas', [AdminController::class, 'admins'])->name('admin.petugas');
         Route::post('/petugas', [AdminController::class, 'storeAdmin'])->name('admin.petugas.store');
+        Route::put('/petugas/{petugas}/email', [AdminController::class, 'updateAdminEmail'])->whereNumber('petugas')->name('admin.petugas.email');
         Route::get('/log-aktivitas', [AdminController::class, 'activityLog'])->name('admin.log');
     });
 
@@ -163,8 +194,8 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
     });
 });
 
-// Portal Warga — khusus peran warga.
-Route::middleware(['auth', 'role:warga'])->prefix('portal-warga')->group(function () {
+// Portal Warga — khusus peran warga dengan surel terverifikasi.
+Route::middleware(['auth', 'role:warga', 'portal.verified'])->prefix('portal-warga')->group(function () {
     Route::get('/', [WargaPortalController::class, 'index'])->name('warga.portal');
     Route::patch('/profil', [WargaPortalController::class, 'updateProfile'])->name('warga.profil.update');
     Route::get('/tiket/{ticket:ticket_no}/lampiran', [WargaPortalController::class, 'attachment'])->name('warga.tiket.lampiran');

@@ -25,4 +25,8 @@ return [
         // WhatsApp dinonaktifkan — tidak ada driver sampai PRD D10 diaktifkan.
     ],
 
+    // Surel perkembangan tiket ke PELAPOR (tiket dibuat, status berubah,
+    // tanggapan publik). Lihat App\Services\ReporterNotifier.
+    'reporter_email' => (bool) env('NOTIFY_REPORTER_EMAIL', true),
+
 ];

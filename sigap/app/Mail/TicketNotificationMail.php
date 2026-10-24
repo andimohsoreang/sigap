@@ -27,6 +27,6 @@ class TicketNotificationMail extends Mailable implements ShouldQueue
     {
         return $this
             ->subject($this->payload['subject'] ?? '[SIGAP] Notifikasi Tiket')
-            ->view('mail.ticket-notification');
+            ->markdown('mail.ticket-notification');
     }
 }

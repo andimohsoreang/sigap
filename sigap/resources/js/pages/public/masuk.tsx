@@ -8,7 +8,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { LoaderCircle, Lock, LogIn, User } from 'lucide-react';
 import { type FormEvent } from 'react';
 
-export default function Masuk() {
+export default function Masuk({ status, canResetPassword }: { status?: string | null; canResetPassword?: boolean }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         identifier: '',
         password: '',
@@ -32,6 +32,10 @@ export default function Masuk() {
                             <p className="mt-1 text-sm text-gray-500">Untuk warga (NIK) maupun petugas/admin (username)</p>
                         </div>
 
+                        {status && (
+                            <p className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{status}</p>
+                        )}
+
                         <form onSubmit={submit} className="space-y-5">
                             <div className="space-y-2">
                                 <Label htmlFor="identifier">NIK / Username</Label>
@@ -50,7 +54,14 @@ export default function Masuk() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="password">Kata Sandi</Label>
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="password">Kata Sandi</Label>
+                                    {canResetPassword && (
+                                        <Link href="/lupa-sandi" className="text-brand-light text-xs font-semibold hover:underline">
+                                            Lupa kata sandi?
+                                        </Link>
+                                    )}
+                                </div>
                                 <div className="relative">
                                     <Lock className="absolute top-3 left-3 h-4 w-4 text-gray-400" />
                                     <Input
@@ -80,6 +91,13 @@ export default function Masuk() {
                         </form>
 
                         <p className="mt-6 text-center text-sm text-gray-500">
+                            Warga belum punya akun?{' '}
+                            <Link href="/daftar" className="text-brand-light font-bold hover:underline">
+                                Daftar di sini
+                            </Link>
+                        </p>
+
+                        <p className="mt-2 text-center text-sm text-gray-500">
                             Anda tetap bisa{' '}
                             <Link href="/katalog" className="text-brand-light font-bold hover:underline">
                                 mengajukan pengaduan tanpa login

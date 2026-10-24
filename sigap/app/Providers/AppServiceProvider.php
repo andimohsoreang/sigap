@@ -77,6 +77,13 @@ class AppServiceProvider extends ServiceProvider
         // 'pengaduan' membatasi spam tiket publik & survei (per IP asli).
         RateLimiter::for('pengaduan', fn (Request $request) => Limit::perMinutes(10, 10)->by('pengaduan:'.$request->ip()));
 
+        // 'akun' membatasi daftar akun, lupa sandi & kirim ulang verifikasi
+        // (anti-spam surel dan tebak NIK/surel terdaftar).
+        RateLimiter::for('akun', fn (Request $request) => [
+            Limit::perMinutes(10, 5)->by('akun:'.$request->path().'|'.$request->ip()),
+            Limit::perHour(30)->by('akun:ip:'.$request->ip()),
+        ]);
+
         // 'lookup' membatasi pencarian nomor tiket publik (anti-enumerasi):
         // GET /lacak/{no}, GET /api/v1/tiket/{no}, dan rute survei.
         RateLimiter::for('lookup', fn (Request $request) => Limit::perMinute(30)->by('lookup:'.$request->ip()));

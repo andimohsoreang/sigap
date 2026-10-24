@@ -31,6 +31,7 @@ class TicketService
         private readonly SlaCalculator $sla,
         private readonly NotificationService $notifications,
         private readonly AttachmentService $attachments,
+        private readonly ReporterNotifier $reporters,
     ) {}
 
     /**
@@ -67,6 +68,7 @@ class TicketService
         // Real-time bersifat best-effort: kegagalan Reverb tidak boleh
         // membatalkan tiket yang sudah tersimpan (PRD D5).
         $this->broadcastTicket($ticket, 'created');
+        $this->reporters->ticketCreated($ticket);
 
         return $ticket;
     }
@@ -139,6 +141,8 @@ class TicketService
 
         if ($changed) {
             $this->broadcastTicket($ticket, 'status', $note);
+            // Catatan status bersifat internal: pelapor hanya menerima status barunya.
+            $this->reporters->statusChanged($ticket);
         }
 
         return $ticket;
@@ -185,10 +189,10 @@ class TicketService
         return $ticket;
     }
 
-    /** Tambah tanggapan admin/petugas. */
+    /** Tambah tanggapan admin/petugas. Tanggapan publik dikirim ke surel pelapor. */
     public function reply(Ticket $ticket, string $body, ?User $author = null, bool $isPublic = true): TicketReply
     {
-        return DB::transaction(function () use ($ticket, $body, $author, $isPublic) {
+        $reply = DB::transaction(function () use ($ticket, $body, $author, $isPublic) {
             $reply = TicketReply::create([
                 'ticket_id' => $ticket->id,
                 'author_id' => $author?->id,
@@ -200,6 +204,10 @@ class TicketService
 
             return $reply;
         });
+
+        $this->reporters->replied($ticket, $reply);
+
+        return $reply;
     }
 
     /**

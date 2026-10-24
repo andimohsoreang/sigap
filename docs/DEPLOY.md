@@ -115,7 +115,8 @@ openssl rand -hex 32                        # REVERB_APP_SECRET, lalu sekali lag
 | `DB_PASSWORD` | acak; dipakai container `db` saat pertama kali dibuat |
 | `REVERB_APP_KEY` = `VITE_REVERB_APP_KEY`, `REVERB_APP_SECRET` | acak |
 | `REVERB_ALLOWED_ORIGINS`, `SANCTUM_STATEFUL_DOMAINS`, `VITE_REVERB_HOST` | `app2.andimohamad.my.id` |
-| `MAIL_*` | SMTP kementerian (wajib agar notifikasi surel terkirim) |
+| `MAIL_*` | SMTP kementerian. **Wajib** di production: tanpa SMTP, warga tidak bisa memverifikasi akun, tidak bisa atur ulang sandi, dan tidak menerima kabar tiket. `MAIL_FROM_ADDRESS` memakai alamat resmi (mis. `no-reply@transmigrasi.go.id`) |
+| `NOTIFY_REPORTER_EMAIL` | `true` (bawaan): surel ke pelapor saat tiket dibuat, status berubah, dan ada tanggapan publik. `false` untuk mematikan |
 | `RECAPTCHA_SITE_KEY`, `RECAPTCHA_SECRET_KEY` | kunci reCAPTCHA v3 untuk domain ini — **wajib di production**. Bila kosong, verifikasi *fail closed*: pengaduan publik, survei, dan chat tamu ditolak (422). Kosong hanya boleh di `local`/`testing` |
 
 Aturan penting:
@@ -328,6 +329,9 @@ Checklist:
 - [ ] Pengaduan publik (reCAPTCHA v3) menghasilkan tiket `TKT-YYMMDD-XXXXXX`; lacak menampilkan pelapor tersamar.
 - [ ] Survei muncul setelah status Selesai.
 - [ ] Notifikasi lonceng muncul dan surel masuk (`php artisan queue:failed` kosong).
+- [ ] Daftar akun warga di `/daftar` → surel verifikasi masuk → tautan membuka Portal Warga.
+- [ ] `/lupa-sandi` dengan NIK warga → surel atur ulang masuk → sandi baru bisa dipakai masuk.
+- [ ] Pengaduan dengan email → pelapor menerima surel nomor tiket & kode akses; ubah status & tanggapan publik → surel kabar masuk.
 - [ ] `https://app2.andimohamad.my.id/.env` → 403; `/storage/...` → 404.
 - [ ] `docker compose ps`: tidak ada port selain `127.0.0.1:${WEB_PORT}`; `sudo ss -tlnp | grep -E ':(5432|8080)\b'` kosong.
 - [ ] `APP_DEBUG=false`; tidak ada akun demo; backup & uji restore sudah dilakukan; rollback sudah dicoba sekali.

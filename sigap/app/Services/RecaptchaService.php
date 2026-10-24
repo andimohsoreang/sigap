@@ -28,6 +28,10 @@ class RecaptchaService
 
     public const ACTION_CHAT = 'chat';
 
+    public const ACTION_DAFTAR = 'daftar';
+
+    public const ACTION_LUPA_SANDI = 'lupa_sandi';
+
     public function enabled(): bool
     {
         return ! empty(config('services.recaptcha.secret'));

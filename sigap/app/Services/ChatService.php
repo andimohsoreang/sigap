@@ -7,6 +7,7 @@ use App\Events\ChatUnreadChanged;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\Ticket;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -246,8 +247,31 @@ class ChatService
             'portal' => $meta['portal'] ?? null,
             'rujukan' => $meta['rujukan'] ?? null,
             'referensi' => $meta['referensi'] ?? null,
+            'aktivasi' => self::activationLink($meta['aktivasi'] ?? null),
             'nilai' => $m->feedback,
         ];
+    }
+
+    /**
+     * Tombol "buat kata sandi" untuk akun yang didaftarkan petugas. Token
+     * tersimpan terenkripsi di pesan; tautan kedaluwarsa tidak ditampilkan.
+     *
+     * @param  array{token?: string, berlaku_sampai?: string}|null  $data
+     * @return array{url: string, berlaku_sampai: string, jenis: string}|null
+     */
+    private static function activationLink(?array $data): ?array
+    {
+        if (! isset($data['token'], $data['berlaku_sampai']) || now()->greaterThanOrEqualTo($data['berlaku_sampai'])) {
+            return null;
+        }
+
+        try {
+            $token = Crypt::decryptString($data['token']);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return ['url' => '/aktivasi/'.$token, 'berlaku_sampai' => $data['berlaku_sampai'], 'jenis' => $data['jenis'] ?? 'aktivasi'];
     }
 
     private function broadcast(object $event): void

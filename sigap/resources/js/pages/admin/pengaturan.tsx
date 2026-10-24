@@ -19,9 +19,10 @@ interface Props {
     categories: { id: number; name: string; slug: string; sla_days: number | null }[];
     /** A-05: pengaturan sistem & kategori hanya dapat diubah Super Admin. */
     can_edit: boolean;
+    profil: { email: string | null };
 }
 
-export default function Pengaturan({ settings, categories, can_edit: canEdit }: Props) {
+export default function Pengaturan({ settings, categories, can_edit: canEdit, profil: profilData }: Props) {
     const { auth } = usePage<SharedData>().props;
     const [newCategory, setNewCategory] = useState('');
 
@@ -33,7 +34,13 @@ export default function Pengaturan({ settings, categories, can_edit: canEdit }: 
     });
 
     // Profil
-    const profil = useForm({ name: auth?.user?.name ?? '', current_password: '', password: '', password_confirmation: '' });
+    const profil = useForm({
+        name: auth?.user?.name ?? '',
+        email: profilData.email ?? '',
+        current_password: '',
+        password: '',
+        password_confirmation: '',
+    });
 
     // Notifikasi internal
     const notif = useForm({
@@ -96,6 +103,18 @@ export default function Pengaturan({ settings, categories, can_edit: canEdit }: 
                         <form onSubmit={submitProfil} className="space-y-4">
                             <Field label="Nama Lengkap" error={profil.errors.name}>
                                 <Input value={profil.data.name} onChange={(e) => profil.setData('name', e.target.value)} />
+                            </Field>
+                            <Field label="Email Notifikasi" error={profil.errors.email}>
+                                <Input
+                                    type="email"
+                                    autoComplete="email"
+                                    value={profil.data.email}
+                                    onChange={(e) => profil.setData('email', e.target.value)}
+                                    placeholder="nama@transmigrasi.go.id"
+                                />
+                                <p className="mt-1 text-[11px] text-gray-400">
+                                    Untuk notifikasi tiket baru, perubahan status, EWS, dan rujukan. Kosongkan bila tidak ingin menerima email.
+                                </p>
                             </Field>
                             <Field label="Kata Sandi Saat Ini" error={profil.errors.current_password}>
                                 <Input

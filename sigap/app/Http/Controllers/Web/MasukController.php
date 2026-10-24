@@ -23,7 +23,7 @@ class MasukController extends Controller
     {
         return Inertia::render('public/masuk', [
             'status' => $request->session()->get('status'),
-            'canResetPassword' => false,
+            'canResetPassword' => true,
         ]);
     }
 

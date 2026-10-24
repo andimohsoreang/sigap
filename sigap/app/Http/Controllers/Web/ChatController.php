@@ -26,7 +26,7 @@ use Illuminate\Support\Str;
  */
 class ChatController extends Controller
 {
-    private const SESSION_KEY = 'chat_guest_token';
+    public const SESSION_KEY = 'chat_guest_token';
 
     public function __construct(
         private readonly ChatService $chat,
