@@ -194,10 +194,53 @@
    kolom isian mengikuti komponen (sudut 6–8px), tanpa pengecualian global.
    -------------------------------------------------------------------------- */
 .absol-admin {
-    /* Utilitas font-heading/font-body/font-mono di dalam admin ikut Inter/Mono. */
-    --font-heading: var(--font-sans);
+    /* Admin v2 (pen.dev "Admin v2 / …"): navy + emas, Space Grotesk untuk judul,
+       Inter untuk isi, JetBrains Mono untuk kode tiket/NIP/IP. */
+    --adm-primary: #003d68;
+    --adm-primary-deep: #022b4a;
+    --adm-primary-soft: #e8f0f7;
+    --adm-accent: #c29642;
+    --adm-accent-soft: #fbf3e3;
+    --adm-bg: #f4f6f9;
+    --adm-surface: #ffffff;
+    --adm-surface-2: #f8fafc;
+    --adm-border: #e3e8ee;
+    --adm-border-strong: #cdd6df;
+    --adm-text: #17232f;
+    --adm-text-2: #4a5868;
+    --adm-text-3: #667382;
+    --adm-success: #0d7a5f;
+    --adm-success-soft: #e7f4ef;
+    --adm-warning: #9a5b00;
+    --adm-warning-soft: #fdf3e1;
+    --adm-danger: #b42318;
+    --adm-danger-soft: #fdecea;
+    --adm-info: #0b5fa5;
+    --adm-info-soft: #e8f1fa;
+
+    /* Token tema dihitung di :root, jadi ditimpa langsung di sini agar tombol,
+       teks, dan cincin fokus yang memakai "primary"/"brand" ikut palet baru. */
+    --primary: var(--adm-primary);
+    --ring: var(--adm-primary);
+    --color-primary: var(--adm-primary);
+    --color-ring: var(--adm-primary);
+    --color-accent: var(--adm-primary-soft);
+    --color-accent-foreground: var(--adm-primary);
+    --color-muted: var(--adm-surface-2);
+    --color-muted-foreground: var(--adm-text-3);
+    --color-border: var(--adm-border);
+    --color-input: var(--adm-border-strong);
+    --color-foreground: var(--adm-text);
+    --color-brand: var(--adm-primary);
+    --color-brand-light: var(--adm-primary);
+    --color-brand-soft: var(--adm-primary-soft);
+    --color-gold: var(--adm-accent);
+
+    --font-heading: 'Space Grotesk', var(--font-sans);
     --font-body: var(--font-sans);
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    color: var(--adm-text);
 
     font-family: var(--font-sans);
     /* cv05: "l" berekor, cv08: "I" berserif — l/I/1 tidak tertukar di NIK & kode. */

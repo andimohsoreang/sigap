@@ -3,7 +3,7 @@ import { flexRender } from '@tanstack/react-table';
 import type { LegacyColumnDef } from '@tanstack/react-table/legacy';
 import { getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useLegacyTable } from '@tanstack/react-table/legacy';
 import type { ColumnFiltersState, ColumnVisibilityState, SortingState } from '@tanstack/table-core';
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Search, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronsUpDown, Columns3, Search, X } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -178,14 +178,14 @@ export function DataTable<T extends object>({
     };
 
     return (
-        <Card className="overflow-hidden rounded-xl border-gray-200 shadow-none">
-            {/* Toolbar */}
-            <div className="flex flex-col gap-3 border-b border-gray-100 p-4 lg:flex-row lg:items-center">
-                {toolbarTitle && <h3 className="text-base font-semibold whitespace-nowrap text-gray-900">{toolbarTitle}</h3>}
+        <Card className="gap-0 overflow-hidden rounded-xl border-[#e3e8ee] py-0 shadow-none">
+            {/* Toolbar: judul di kiri, pencarian + filter + kolom di kanan */}
+            <div className="flex flex-col gap-2.5 border-b border-[#e3e8ee] px-5 py-3.5 lg:flex-row lg:flex-wrap lg:items-center">
+                {toolbarTitle && <h3 className="text-[15px] font-semibold whitespace-nowrap text-[#17232f] lg:mr-auto">{toolbarTitle}</h3>}
 
                 {isServer && serverSide ? (
-                    <div className="relative w-full max-w-xs lg:max-w-sm lg:flex-grow">
-                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <div className="relative w-full lg:w-[220px] 2xl:w-[280px]">
+                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#667382]" />
                         <Input
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
@@ -199,8 +199,8 @@ export function DataTable<T extends object>({
                         />
                     </div>
                 ) : (
-                    <div className="relative w-full max-w-xs lg:max-w-sm lg:flex-grow">
-                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <div className="relative w-full lg:w-[220px] 2xl:w-[280px]">
+                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#667382]" />
                         <Input
                             value={globalFilter}
                             onChange={(e) => setGlobalFilter(e.target.value)}
@@ -224,7 +224,7 @@ export function DataTable<T extends object>({
                                 }
                             }}
                         >
-                            <SelectTrigger className="h-9 w-auto min-w-[150px] gap-2 text-sm" aria-label={f.placeholder}>
+                            <SelectTrigger className="h-9 w-auto gap-2 text-[13.5px]" aria-label={f.placeholder}>
                                 <SelectValue placeholder={f.placeholder} />
                             </SelectTrigger>
                             <SelectContent>
@@ -245,12 +245,12 @@ export function DataTable<T extends object>({
                     </Button>
                 )}
 
-                <div className="ml-auto flex items-center gap-2">
+                <div className="flex items-center gap-2 lg:ml-0">
                     {toolbarActions}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" className="h-9">
-                                <ChevronDown className="h-4 w-4" /> Kolom
+                                <Columns3 className="h-4 w-4" /> Kolom
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
@@ -276,7 +276,7 @@ export function DataTable<T extends object>({
             </div>
 
             <Table>
-                <TableHeader className="bg-gray-50">
+                <TableHeader className="bg-[#f8fafc]">
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow key={headerGroup.id} className="hover:bg-transparent">
                             {headerGroup.headers.map((header) => {
@@ -303,7 +303,7 @@ export function DataTable<T extends object>({
                                             <button
                                                 type="button"
                                                 onClick={toggleSort}
-                                                className="-ml-1 flex cursor-pointer items-center gap-1 hover:text-gray-700"
+                                                className="-ml-1 flex cursor-pointer items-center gap-1 hover:text-[#17232f]"
                                                 aria-label={`Urutkan ${typeof header.column.columnDef.header === 'string' ? header.column.columnDef.header : header.column.id}`}
                                             >
                                                 {flexRender(header.column.columnDef.header, header.getContext())}
@@ -312,7 +312,7 @@ export function DataTable<T extends object>({
                                                 ) : sorted === 'desc' ? (
                                                     <ArrowDown className="h-3.5 w-3.5" />
                                                 ) : (
-                                                    <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
+                                                    <ChevronsUpDown className="h-3.5 w-3.5 opacity-60" />
                                                 )}
                                             </button>
                                         ) : (
@@ -327,7 +327,7 @@ export function DataTable<T extends object>({
                 <TableBody>
                     {table.getRowModel().rows.length === 0 ? (
                         <TableRow className="hover:bg-transparent">
-                            <TableCell colSpan={columns.length} className="py-10 text-center text-gray-400">
+                            <TableCell colSpan={columns.length} className="py-10 text-center text-[#667382]">
                                 {emptyMessage}
                             </TableCell>
                         </TableRow>
@@ -337,7 +337,7 @@ export function DataTable<T extends object>({
                                 {row.getVisibleCells().map((cell) => {
                                     const meta = cell.column.columnDef.meta as DataTableColumnMeta | undefined;
                                     return (
-                                        <TableCell key={cell.id} className={cn('text-gray-700', meta?.className)}>
+                                        <TableCell key={cell.id} className={cn('text-[#17232f]', meta?.className)}>
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </TableCell>
                                     );

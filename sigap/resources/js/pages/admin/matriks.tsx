@@ -120,24 +120,27 @@ export default function Matriks({ tickets, rekap, filters, options }: Props) {
         >
             {/* KPI */}
             <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
-                <AdminStat label="Total Tiket Rekapan" value={rekap.total.toLocaleString('id-ID')} tone="brand" icon={Table2} />
+                <AdminStat
+                    label="Total tiket rekap"
+                    value={rekap.total.toLocaleString('id-ID')}
+                    unit="tiket"
+                    hint="Sesuai filter yang aktif"
+                    tone="brand"
+                    icon={Table2}
+                />
                 <AdminStat
                     label="Peringatan EWS"
-                    value={
-                        <>
-                            {rekap.ews} <span className="text-xs font-normal text-red-400">Terlambat</span>
-                        </>
-                    }
+                    value={rekap.ews.toLocaleString('id-ID')}
+                    unit="terlambat"
+                    hint="Tiket melewati batas waktu respons awal"
                     tone="red"
                     icon={AlertTriangle}
                 />
                 <AdminStat
-                    label="SLA Terpenuhi"
-                    value={
-                        <>
-                            {rekap.sla_pct}% <span className="text-xs font-normal text-green-500">Tepat Waktu</span>
-                        </>
-                    }
+                    label="SLA terpenuhi"
+                    value={`${rekap.sla_pct}%`}
+                    unit="tepat waktu"
+                    hint="Tiket ditangani dalam batas waktu"
                     tone="green"
                     icon={CheckCircle2}
                 />

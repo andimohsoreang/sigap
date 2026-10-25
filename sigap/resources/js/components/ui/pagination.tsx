@@ -58,19 +58,17 @@ export function Pagination({
     return (
         <div
             className={cn(
-                'flex flex-col items-center justify-between gap-3 border-t border-gray-200 px-5 py-3 sm:flex-row',
+                'flex flex-col items-center justify-between gap-3 border-t border-[#e3e8ee] px-5 py-3.5 sm:flex-row',
                 className,
             )}
         >
             <div className="flex items-center gap-4">
-                <span className="text-xs text-gray-500">
-                    Menampilkan <strong className="text-gray-700">{from}</strong>–
-                    <strong className="text-gray-700">{to}</strong> dari{' '}
-                    <strong className="text-gray-700">{meta.total}</strong> {itemLabel}
+                <span className="text-[13px] text-[#4a5868]">
+                    Menampilkan {from}–{to} dari {meta.total} {itemLabel}
                 </span>
                 {onPerPageChange && (
                     <Select value={String(meta.per_page)} onValueChange={(v) => onPerPageChange(Number(v))}>
-                        <SelectTrigger className="h-7 w-[110px] text-xs">
+                        <SelectTrigger className="h-9 w-[124px] text-[13px]">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -87,8 +85,8 @@ export function Pagination({
             <div className="flex items-center gap-1">
                 <Button
                     size="icon"
-                    variant="ghost"
-                    className="h-8 w-8"
+                    variant="outline"
+                    className="h-8 w-8 rounded-lg"
                     disabled={current <= 1}
                     onClick={() => onPageChange(1)}
                     title="Halaman pertama"
@@ -97,8 +95,8 @@ export function Pagination({
                 </Button>
                 <Button
                     size="icon"
-                    variant="ghost"
-                    className="h-8 w-8"
+                    variant="outline"
+                    className="h-8 w-8 rounded-lg"
                     disabled={current <= 1}
                     onClick={() => onPageChange(current - 1)}
                     title="Halaman sebelumnya"
@@ -111,8 +109,8 @@ export function Pagination({
                         <Button
                             key={p}
                             size="icon"
-                            variant={p === current ? 'default' : 'ghost'}
-                            className="h-8 w-8 text-xs"
+                            variant={p === current ? 'default' : 'outline'}
+                            className="h-8 w-8 rounded-lg text-[13px] font-semibold"
                             onClick={() => p !== current && onPageChange(p)}
                             aria-current={p === current ? 'page' : undefined}
                         >
@@ -127,8 +125,8 @@ export function Pagination({
 
                 <Button
                     size="icon"
-                    variant="ghost"
-                    className="h-8 w-8"
+                    variant="outline"
+                    className="h-8 w-8 rounded-lg"
                     disabled={current >= last}
                     onClick={() => onPageChange(current + 1)}
                     title="Halaman berikutnya"
@@ -137,8 +135,8 @@ export function Pagination({
                 </Button>
                 <Button
                     size="icon"
-                    variant="ghost"
-                    className="h-8 w-8"
+                    variant="outline"
+                    className="h-8 w-8 rounded-lg"
                     disabled={current >= last}
                     onClick={() => onPageChange(last)}
                     title="Halaman terakhir"

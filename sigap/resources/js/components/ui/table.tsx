@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 function Table({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) {
     return (
         <div className="relative w-full overflow-x-auto">
-            <table className={cn('w-full caption-bottom text-left text-sm', className)} {...props} />
+            <table className={cn('w-full caption-bottom text-left text-[13.5px]', className)} {...props} />
         </div>
     );
 }
@@ -26,7 +26,7 @@ function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTableRowElem
     return (
         <tr
             className={cn(
-                'border-b border-gray-100 transition-colors hover:bg-gray-50 data-[state=selected]:bg-gray-100',
+                'border-b border-[#e3e8ee] transition-colors hover:bg-[#f8fafc] data-[state=selected]:bg-[#f4f6f9]',
                 className,
             )}
             {...props}
@@ -38,7 +38,7 @@ function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTableCell
     return (
         <th
             className={cn(
-                'h-11 px-5 text-left align-middle text-[13px] font-semibold whitespace-nowrap text-gray-600 [&:has([role=checkbox])]:pr-0',
+                'h-11 px-5 text-left align-middle text-[12.5px] font-semibold whitespace-nowrap text-[#4a5868] [&:has([role=checkbox])]:pr-0',
                 className,
             )}
             {...props}
@@ -47,7 +47,7 @@ function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTableCell
 }
 
 function TableCell({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
-    return <td className={cn('px-5 py-3 align-middle whitespace-nowrap', className)} {...props} />;
+    return <td className={cn('px-5 py-3.5 align-middle whitespace-nowrap', className)} {...props} />;
 }
 
 function TableCaption({ className, ...props }: React.HTMLAttributes<HTMLTableCaptionElement>) {

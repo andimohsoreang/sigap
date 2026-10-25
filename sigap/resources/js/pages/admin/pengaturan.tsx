@@ -239,7 +239,7 @@ export default function Pengaturan({ settings, categories, can_edit: canEdit, pr
                 <Card className="border-gray-200">
                     <CardHeader className="border-b border-gray-100 pb-3">
                         <CardTitle className="flex items-center gap-2 text-base text-gray-800">
-                            <Bell className="h-5 w-5 text-orange-500" /> Notifikasi Tiket Internal
+                            <Bell className="text-primary h-5 w-5" /> Notifikasi Tiket Internal
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6">
@@ -278,7 +278,7 @@ export default function Pengaturan({ settings, categories, can_edit: canEdit, pr
                                 </div>
                             </fieldset>
                             <div className="flex justify-end">
-                                <Button type="submit" disabled={!canEdit || notif.processing} className="bg-orange-500 hover:bg-orange-600">
+                                <Button type="submit" disabled={!canEdit || notif.processing}>
                                     <Save className="h-4 w-4" /> Simpan Notifikasi
                                 </Button>
                             </div>
