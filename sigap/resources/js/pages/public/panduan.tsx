@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import {
     Activity,
     BarChart3,
@@ -28,8 +28,8 @@ import {
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 
+import TaraPage from '@/components/sigap/tara-shell';
 import { Button } from '@/components/ui/button';
-import PublicLayout from '@/layouts/public-layout';
 import { cn } from '@/lib/utils';
 
 /**
@@ -402,63 +402,33 @@ export default function Panduan() {
     const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     return (
-        <PublicLayout title="Panduan">
-            <Head title="Panduan Lengkap — SIGAP">
-                <link rel="preconnect" href="https://fonts.bunny.net" />
-                <link
-                    rel="stylesheet"
-                    href="https://fonts.bunny.net/css?family=space-grotesk:500,700|jost:300,400,500,600,700"
-                    head-key="absol-fonts"
-                />
-            </Head>
-
+        <TaraPage
+            title="Panduan Lengkap"
+            description="Panduan visual seluruh fitur SIGAP untuk masyarakat dan admin."
+            active="panduan"
+            eyebrow="Pusat Bantuan"
+            heading="Panduan Lengkap SIGAP"
+            subtitle="Dokumentasi visual seluruh fitur — untuk masyarakat maupun admin — langkah demi langkah dengan tangkapan layar asli aplikasi. Klik gambar untuk memperbesar, gunakan tombol panah untuk berpindah."
+            pose="menjelaskan"
+            poseAlt="TARA menjelaskan cara memakai SIGAP"
+        >
             <div className="font-body">
-                {/* HERO */}
-                <section className="bg-brand relative overflow-hidden pt-14 pb-16 lg:pt-16 lg:pb-20">
-                    <div className="from-brand via-brand to-brand-light absolute inset-0 bg-gradient-to-br" />
-                    <div
-                        className="absol-grid-pan absolute inset-0 opacity-10"
-                        style={{
-                            backgroundImage:
-                                'linear-gradient(rgba(255,255,255,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.35) 1px, transparent 1px)',
-                            backgroundSize: '56px 56px',
-                        }}
-                    />
-                    <div className="absol-orb absolute -top-24 -right-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-
-                    <div className="relative z-10 mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
-                        <span className="text-secondary mb-4 inline-flex items-center gap-3 text-xs font-bold tracking-[3px] uppercase">
-                            <span className="bg-secondary hidden h-[2px] w-6 sm:block" />
-                            Pusat Bantuan
-                            <span className="bg-secondary hidden h-[2px] w-6 sm:block" />
-                        </span>
-                        <h1 className="font-heading text-3xl font-extrabold tracking-tight text-white uppercase md:text-5xl">
-                            Panduan Lengkap SIGAP
-                        </h1>
-                        <div className="bg-secondary mx-auto mt-5 h-[3px] w-20 rounded-full" />
-                        <p className="mx-auto mt-6 max-w-2xl text-white/85 md:text-lg">
-                            Dokumentasi visual seluruh fitur — untuk masyarakat maupun admin — langkah demi langkah dengan tangkapan layar asli
-                            aplikasi. Klik gambar untuk memperbesar, gunakan tombol panah untuk berpindah.
-                        </p>
-
-                        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-5">
-                            {ALUR_SINGKAT.map(({ icon: Icon, label, desc }, i) => (
-                                <div
-                                    key={label}
-                                    className="rounded-xl border border-white/20 bg-white/10 p-4 text-left backdrop-blur-md transition hover:bg-white/15"
-                                >
-                                    <div className="mb-2 flex items-center gap-2">
-                                        <span className="bg-secondary text-brand flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold">
-                                            {i + 1}
-                                        </span>
-                                        <Icon className="h-4 w-4 text-white" />
-                                    </div>
-                                    <p className="font-heading text-sm font-bold text-white uppercase">{label}</p>
-                                    <p className="mt-0.5 text-xs text-white/70">{desc}</p>
+                {/* Alur singkat */}
+                <section className="mx-auto max-w-[1312px] px-4 pt-10 sm:px-6 lg:px-16">
+                    <ol className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                        {ALUR_SINGKAT.map(({ icon: Icon, label, desc }, i) => (
+                            <li key={label} className="rounded-[18px] border border-[#e6ebf0] bg-white p-4">
+                                <div className="mb-2 flex items-center gap-2">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--t-gold)] text-xs font-bold text-[var(--t-deep)]">
+                                        {i + 1}
+                                    </span>
+                                    <Icon className="h-4 w-4 text-[var(--t-navy)]" />
                                 </div>
-                            ))}
-                        </div>
-                    </div>
+                                <p className="font-heading text-sm font-bold text-[var(--t-deep)] uppercase">{label}</p>
+                                <p className="mt-0.5 text-xs text-[#5b6b7a]">{desc}</p>
+                            </li>
+                        ))}
+                    </ol>
                 </section>
 
                 <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
@@ -660,6 +630,6 @@ export default function Panduan() {
                     </div>
                 </div>
             )}
-        </PublicLayout>
+        </TaraPage>
     );
 }

@@ -6,12 +6,14 @@ import { cn } from '@/lib/utils';
 
 /** Header beranda baru & halaman Chat TARA (desain pen.dev). */
 
-const NAV = [
-    { label: 'Beranda', href: '/beranda-baru' },
-    { label: 'Lacak Tiket', href: '/lacak' },
-    { label: 'Katalog Pengaduan', href: '/katalog' },
-    { label: 'Peta Kawasan', href: '/peta' },
-    { label: 'Panduan', href: '/panduan' },
+export type TaraNav = 'beranda' | 'chat' | 'lacak' | 'katalog' | 'peta' | 'panduan';
+
+const NAV: { key: TaraNav; label: string; href: string }[] = [
+    { key: 'beranda', label: 'Beranda', href: '/beranda-baru' },
+    { key: 'lacak', label: 'Lacak Tiket', href: '/lacak' },
+    { key: 'katalog', label: 'Katalog Pengaduan', href: '/katalog' },
+    { key: 'peta', label: 'Peta Kawasan', href: '/peta' },
+    { key: 'panduan', label: 'Panduan', href: '/panduan' },
 ];
 
 export default function TransiHeader({
@@ -24,7 +26,7 @@ export default function TransiHeader({
     loggedIn: boolean;
     isAdmin: boolean;
     onChat: () => void;
-    active?: 'beranda' | 'chat';
+    active?: TaraNav;
     className?: string;
 }) {
     const [open, setOpen] = useState(false);
@@ -68,9 +70,10 @@ export default function TransiHeader({
                         <Link
                             key={n.href}
                             href={n.href}
+                            aria-current={n.key === active ? 'page' : undefined}
                             className={cn(
                                 'relative text-[15px] transition-colors after:absolute after:-bottom-1.5 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-[var(--t-gold)] after:transition-transform after:duration-300 hover:text-[var(--t-navy)] hover:after:scale-x-100',
-                                n.href === '/beranda-baru' && active === 'beranda' ? 'font-semibold text-[var(--t-navy)]' : 'text-[#4a5565]',
+                                n.key === active ? 'font-semibold text-[var(--t-navy)]' : 'text-[#4a5565]',
                             )}
                         >
                             {n.label}

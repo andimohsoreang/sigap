@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react';
 
+import { TaraFooter, TaraLauncher } from '@/components/sigap/tara-shell';
 import TransiHeader from '@/components/sigap/transi-header';
 import { goToChat } from '@/lib/chat-transition';
 import { cn } from '@/lib/utils';
@@ -233,28 +234,6 @@ function visible(id: string): HTMLElement | null {
     return r.bottom > 0 && r.top < window.innerHeight ? el : null;
 }
 
-/** Tombol TARA melayang: membuka halaman chat layar penuh. */
-function TransiLauncher() {
-    return (
-        <div className="transi-launcher fixed right-4 bottom-4 z-[100] flex items-center gap-3 sm:right-6 sm:bottom-6">
-            <button
-                type="button"
-                onClick={(e) => goToChat({ source: e.currentTarget.parentElement })}
-                className="transi-launcher__bubble hidden rounded-2xl rounded-br-sm bg-white px-4 py-2.5 text-sm font-semibold text-[#022b4a] shadow-[0_10px_24px_rgba(0,18,36,0.18)] sm:block"
-            >
-                Ada yang bisa dibantu?
-            </button>
-            <button
-                type="button"
-                onClick={(e) => goToChat({ source: e.currentTarget })}
-                aria-label="Chat dengan TARA"
-                className="transi-launcher__face h-16 w-16 rounded-full border-[3px] border-[#c29642] bg-[#f8f3ef] bg-cover bg-center shadow-[0_12px_28px_rgba(0,18,36,0.35)] sm:h-[72px] sm:w-[72px]"
-                style={{ backgroundImage: `url(${IMG}/avatar.webp)` }}
-            />
-        </div>
-    );
-}
-
 /* ------------------------------------------------------------------- page */
 
 export default function BerandaTransi() {
@@ -295,8 +274,8 @@ export default function BerandaTransi() {
                     <Faq />
                     <ClosingCta />
                 </main>
-                <SiteFooter />
-                <TransiLauncher />
+                <TaraFooter />
+                <TaraLauncher />
             </div>
         </>
     );
@@ -1015,79 +994,3 @@ function ClosingCta() {
 }
 
 /* ----------------------------------------------------------------- footer */
-
-function SiteFooter() {
-    const cols: [string, [string, string][]][] = [
-        [
-            'Layanan',
-            [
-                ['Lacak Tiket', '/lacak'],
-                ['Katalog Pengaduan', '/katalog'],
-                ['Portal Warga', '/portal-warga'],
-            ],
-        ],
-        [
-            'Informasi',
-            [
-                ['Panduan Layanan', '/panduan'],
-                ['Pedoman Layanan', '/pedoman-layanan'],
-                ['Syarat dan Ketentuan', '/syarat-ketentuan'],
-                ['Kebijakan Privasi', '/kebijakan-privasi'],
-                ['Tentang Kami', '/tentang-kami'],
-            ],
-        ],
-    ];
-
-    return (
-        <footer className="bg-[#011e33] text-[#9fb2c3]">
-            <div className="mx-auto flex max-w-[1312px] flex-col gap-10 px-4 pt-12 pb-8 sm:px-6 lg:px-16 lg:pt-16">
-                <div className="flex flex-col gap-10 lg:flex-row lg:gap-16">
-                    <div className="flex flex-col gap-3 lg:w-[420px]">
-                        <span className="font-heading text-[22px] font-bold text-white">SIGAP</span>
-                        <p className="text-[15px] leading-[1.55]">Suara Masyarakat, Inisiatif Gerak Aksi, Penyelesaian Tuntas.</p>
-                        <p className="text-sm text-[var(--t-gold)] italic">“Komitmen Melayani, Menuntaskan Tanpa Henti”</p>
-                    </div>
-                    <div className="grid flex-1 grid-cols-2 gap-6 lg:gap-16">
-                        {cols.map(([title, links]) => (
-                            <div key={title} className="flex flex-col gap-3">
-                                <span className="text-[13px] font-semibold tracking-[0.1em] text-[#d6e0ea] uppercase">
-                                    {title === 'Informasi' ? (
-                                        <>
-                                            Informasi<span className="hidden lg:inline"> &amp; Kebijakan</span>
-                                        </>
-                                    ) : (
-                                        title
-                                    )}
-                                </span>
-                                {title === 'Layanan' && (
-                                    <button
-                                        type="button"
-                                        onClick={(e) => goToChat({ source: e.currentTarget })}
-                                        className="w-fit text-left text-[15px] transition-colors hover:text-white"
-                                    >
-                                        Chat TARA
-                                    </button>
-                                )}
-                                {links.map(([label, href]) => (
-                                    <Link key={href} href={href} className="w-fit text-[15px] transition-colors hover:text-white">
-                                        {label}
-                                    </Link>
-                                ))}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                <div className="flex flex-col gap-2 border-t border-white/10 pt-6 text-[13px] text-[#6f8496] sm:flex-row sm:items-center sm:justify-between">
-                    <span>© 2026 Kementerian Transmigrasi Republik Indonesia. Seluruh hak cipta dilindungi.</span>
-                    <span className="flex items-center gap-4">
-                        <Link href="/" className="transition-colors hover:text-white">
-                            Kembali ke tampilan lama
-                        </Link>
-                        <span aria-hidden="true">·</span>
-                        <span>Maskot TARA</span>
-                    </span>
-                </div>
-            </div>
-        </footer>
-    );
-}
