@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\KnowledgeArticle;
+use App\Models\Referral;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Services\Ai\AiException;
@@ -131,6 +132,25 @@ class AssistantChatTest extends TestCase
         // Setelah diteruskan, AI diam dan pesan warga masuk ke petugas.
         $this->ask('Halo, ada petugas?')->assertJsonCount(0, 'balasan');
         $this->assertSame(2, $conversation->fresh()->unread_admin);
+    }
+
+    public function test_complaint_without_details_asks_for_them_before_referring_or_handing_off(): void
+    {
+        $conversation = $this->startGuest();
+
+        // Tombol cepat "Lapor masalah": belum ada isi aduannya.
+        $this->ask('Saya mau melapor masalah')
+            ->assertJsonCount(1, 'balasan')
+            ->assertJsonPath('balasan.0.jenis', 'tanya_detail')
+            ->assertJsonPath('asisten.mode', 'ai');
+
+        $conversation->refresh();
+        $this->assertSame('ai', $conversation->handled_by);
+        $this->assertSame(0, Referral::query()->count());
+
+        // Setelah warga menjelaskan, aduan diringkas dan diteruskan seperti biasa.
+        $this->ask('Jalan poros SP3 rusak parah sudah 3 bulan')->assertJsonPath('balasan.0.jenis', 'ringkasan');
+        $this->assertSame('petugas', $conversation->fresh()->handled_by);
     }
 
     public function test_out_of_hours_handoff_asks_for_contact_and_stores_it_encrypted(): void

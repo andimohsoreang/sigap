@@ -36,6 +36,11 @@ class AssistantService
 
     private const REFERENCE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 
+    /** Aduan dengan kata bermakna sesedikit ini ("saya mau melapor masalah") ditanya detailnya dulu. */
+    private const MIN_COMPLAINT_TERMS = 3;
+
+    private const ASK_DETAILS = 'Baik, saya bantu. Ceritakan masalahnya: apa yang terjadi, di kawasan atau SP mana, dan sejak kapan? Bila ada, sebutkan juga dampaknya.';
+
     public function __construct(
         private readonly LlmClient $llm,
         private readonly KnowledgeRetriever $retriever,
@@ -70,7 +75,8 @@ class AssistantService
             return [$this->ticketStatus($conversation, $ticketNo, $viewer)];
         }
 
-        $articles = $this->retriever->sources($this->searchText($conversation, $text, $incoming->id));
+        $query = $this->searchText($conversation, $text, $incoming->id);
+        $articles = $this->retriever->sources($query);
 
         try {
             $result = $this->ask($conversation, $text, $articles, $incoming->id);
@@ -82,6 +88,12 @@ class AssistantService
 
         if ($result['perlu_petugas']) {
             return $this->handoff($conversation, 'diminta', $summary);
+        }
+
+        // Niat melapor tanpa detail: tanya dulu masalahnya, jangan langsung
+        // merujuk ke portal atau mengantrekan ke petugas dengan aduan kosong.
+        if (in_array($result['jenis'], ['aduan', 'pribadi'], true) && count($this->retriever->terms($query)) < self::MIN_COMPLAINT_TERMS) {
+            return [$this->say($conversation, self::ASK_DETAILS, ['kind' => 'tanya_detail'])];
         }
 
         // Aduan/urusan pribadi yang dilayani portal lain (mis. lahan → Trans
