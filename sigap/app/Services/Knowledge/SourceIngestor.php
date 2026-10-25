@@ -115,7 +115,7 @@ class SourceIngestor
             }
 
             $pages++;
-            [$found, $links, $contentLinks] = $this->read($resource, $source->name);
+            [$found, $links, $contentLinks] = $this->read($resource, $source->name, $url === $start);
             array_push($segments, ...$found);
 
             if (! $source->follow_links) {
@@ -145,10 +145,12 @@ class SourceIngestor
      * @param  array{url: string, type: string, body: string}  $resource
      * @return array{0: list<array{url: string|null, title: string, heading: string|null, page: int|null, text: string}>, 1: list<string>, 2: list<string>}
      */
-    private function read(array $resource, string $fallbackTitle): array
+    private function read(array $resource, string $fallbackTitle, bool $isStart = false): array
     {
         $url = $resource['url'];
-        $fileTitle = urldecode(Str::of((string) parse_url($url, PHP_URL_PATH))->afterLast('/')->beforeLast('.')->replace(['_', '-'], ' ')->toString());
+        // Berkas yang didaftarkan langsung memakai nama sumbernya ("JDIH — UU 29/2009 …");
+        // berkas temuan dari tautan memakai nama berkasnya.
+        $fileTitle = $isStart ? $fallbackTitle : urldecode(Str::of((string) parse_url($url, PHP_URL_PATH))->afterLast('/')->beforeLast('.')->replace(['_', '-'], ' ')->squish()->toString());
 
         if ($resource['type'] === OfficialWebFetcher::TYPE_HTML) {
             $page = $this->html->extract($resource['body'], $url);
