@@ -54,14 +54,14 @@ import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 
 /**
- * Chat TRANSI layar penuh (/chat) — desain pen.dev "Publik / Chat TRANSI".
+ * Chat TARA layar penuh (/chat) — desain pen.dev "Publik / Chat TARA".
  *
  * Memakai endpoint yang sama dengan widget (/chat/pesan, /chat/mulai, …),
  * jadi riwayat percakapan satu. Tamu mengisi nama langsung di kolom chat;
  * pertanyaan dari landing ditahan lalu terkirim setelah nama terisi.
  */
 
-const AVATAR = '/images/transi/avatar.webp';
+const AVATAR = '/images/tara/avatar.webp';
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
@@ -451,7 +451,7 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
     };
 
     const hasConversation = conversationId !== null && messages.length > 0;
-    const title = staff ? `TRANSI & ${staff.nama.split(' ')[0]}` : 'TRANSI';
+    const title = staff ? `TARA & ${staff.nama.split(' ')[0]}` : 'TARA';
     const status = closed
         ? 'Percakapan diakhiri · tulis pesan untuk melanjutkan'
         : staff
@@ -503,7 +503,7 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
 
     return (
         <>
-            <Head title="Chat TRANSI — SIGAP">
+            <Head title="Chat TARA — SIGAP">
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link
                     rel="stylesheet"
@@ -525,7 +525,7 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
                     <LeftPanel layanan={layanan} onTopic={askTopic} />
 
                     {/* Percakapan */}
-                    <section className="vt-chat-target flex min-h-0 flex-col bg-white" aria-label="Percakapan dengan TRANSI">
+                    <section className="vt-chat-target flex min-h-0 flex-col bg-white" aria-label="Percakapan dengan TARA">
                         <MobileTopBar
                             title={title}
                             status={status}
@@ -614,7 +614,7 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
                                     <div className="flex-1" />
                                     {messages.length === 0 && (
                                         <AiBubble time={null}>
-                                            Halo{identity ? `, ${identity.nama.split(' ')[0]}` : ''}! Saya TRANSI 👋 Saya membantu urusan transmigrasi
+                                            Halo{identity ? `, ${identity.nama.split(' ')[0]}` : ''}! Saya TARA 👋 Saya membantu urusan transmigrasi
                                             dari sumber resmi, dan memanggil petugas bila perlu.
                                             {!needsIdentity && !pending && (
                                                 <span className="mt-3 flex flex-wrap gap-2">
@@ -842,7 +842,7 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
                                         needsIdentity
                                             ? 'Tulis nama Anda, mis. Siti Aminah'
                                             : staff && !closed
-                                              ? `Balas ke ${staff.nama.split(' ')[0]} atau tanya TRANSI…`
+                                              ? `Balas ke ${staff.nama.split(' ')[0]} atau tanya TARA…`
                                               : 'Tulis pertanyaan atau keluhan Anda…'
                                     }
                                     className="min-w-0 flex-1 bg-transparent text-[15px] text-[#1f2d3a] outline-none placeholder:text-[#8a96a3]"
@@ -868,7 +868,7 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
                                 </div>
                             ) : (
                                 <p className="mt-2 hidden text-xs text-[#8a96a3] sm:block">
-                                    TRANSI bisa keliru. Keputusan resmi selalu disampaikan petugas melalui tiket Anda.
+                                    TARA bisa keliru. Keputusan resmi selalu disampaikan petugas melalui tiket Anda.
                                 </p>
                             )}
                         </form>
@@ -947,20 +947,20 @@ function LeftPanel({ layanan, onTopic }: { layanan: Layanan; onTopic: (q: string
             </button>
             <div className="flex flex-col gap-3">
                 <img
-                    src="/images/transi/00-menyapa.webp"
+                    src="/images/tara/tablet.webp"
                     alt=""
-                    width={520}
-                    height={520}
-                    className="transi-float h-40 w-40 object-contain xl:h-44 xl:w-44"
+                    width={273}
+                    height={900}
+                    className="transi-float h-48 w-32 object-contain xl:h-56 xl:w-36"
                 />
-                <h1 className="font-heading text-[22px] font-bold">TRANSI</h1>
+                <h1 className="font-heading text-[22px] font-bold">TARA</h1>
                 <p className="text-[13px] leading-relaxed text-[#bcd0e0]">
                     Asisten SIGAP. Menjawab dari sumber resmi Kementerian Transmigrasi, lalu meneruskan ke petugas bila perlu tindakan.
                 </p>
             </div>
             <div className="flex flex-col gap-3">
                 <p className="text-[11px] font-semibold tracking-[0.12em] text-[#8fa9bf] uppercase">Status layanan</p>
-                {layanan.ai_aktif && <StatusRow icon={Bot} label="TRANSI" value="Online 24 jam" dot="bg-[#4ade80]" />}
+                {layanan.ai_aktif && <StatusRow icon={Bot} label="TARA" value="Online 24 jam" dot="bg-[#4ade80]" />}
                 <StatusRow
                     icon={Headset}
                     label="Petugas"
@@ -1126,7 +1126,7 @@ function TicketPanel({ panel }: { panel: Panel | null }) {
 
     const done = t?.status === 'selesai';
     const steps: { label: string; at: string | null; done: boolean; sub?: string | null }[] = [
-        { label: 'Laporan diterima TRANSI', at: panel.dimulai_at, done: true },
+        { label: 'Laporan diterima TARA', at: panel.dimulai_at, done: true },
         ...(panel.konfirmasi
             ? [
                   {
@@ -1271,7 +1271,7 @@ function TicketPanel({ panel }: { panel: Panel | null }) {
 
 /* ------------------------------------------------------------------ thread */
 
-function AiBubble({ children, time, author = 'TRANSI' }: { children: ReactNode; time: string | null; author?: string }) {
+function AiBubble({ children, time, author = 'TARA' }: { children: ReactNode; time: string | null; author?: string }) {
     return (
         <div className="transi-msg-in flex gap-2.5">
             <span
@@ -1395,7 +1395,7 @@ function MessageRow({
             )}
             <div className="flex max-w-[88%] min-w-0 flex-col gap-1 sm:max-w-[520px]">
                 <p className="flex gap-1.5 text-xs">
-                    <span className="font-semibold text-[var(--t-deep)]">{fromStaff ? `${m.penulis} · Petugas` : 'TRANSI'}</span>
+                    <span className="font-semibold text-[var(--t-deep)]">{fromStaff ? `${m.penulis} · Petugas` : 'TARA'}</span>
                     <span className="text-[#8a96a3]">{jam(m.pada)}</span>
                 </p>
                 <div className="rounded-2xl rounded-tl-[4px] border border-[#e6ebf0] bg-white px-3.5 py-2.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap text-[#1f2d3a]">
@@ -1539,7 +1539,7 @@ function ConfirmationCard({
 
 function Typing() {
     return (
-        <div className="flex items-center gap-2.5" aria-label="TRANSI sedang mengetik">
+        <div className="flex items-center gap-2.5" aria-label="TARA sedang mengetik">
             <span
                 className="h-8 w-8 shrink-0 rounded-full bg-[var(--t-cream)] bg-cover bg-center"
                 style={{ backgroundImage: `url(${AVATAR})` }}
@@ -1550,7 +1550,7 @@ function Typing() {
                 <span className="h-1.5 w-1.5 rounded-full bg-[#8a96a3]" />
                 <span className="h-1.5 w-1.5 rounded-full bg-[#8a96a3]" />
             </span>
-            <span className="text-xs text-[#8a96a3]">TRANSI sedang mengetik…</span>
+            <span className="text-xs text-[#8a96a3]">TARA sedang mengetik…</span>
         </div>
     );
 }

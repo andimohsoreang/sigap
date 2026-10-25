@@ -1283,7 +1283,7 @@ function MessageItem({ message: m, participant, initial }: { message: Message; p
 
     const fromStaff = m.sender_type === 'admin';
     const fromAi = m.sender_type === 'ai';
-    const name = fromAi ? 'Asisten SIGAP' : fromStaff ? m.penulis : participant;
+    const name = fromAi ? 'TARA (asisten AI)' : fromStaff ? m.penulis : participant;
 
     return (
         <li className="flex gap-3">

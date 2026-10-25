@@ -205,7 +205,7 @@ class ChatController extends Controller
     }
 
     /**
-     * GET /chat — halaman Chat TRANSI layar penuh. Percakapan dimuat lewat
+     * GET /chat — halaman Chat TARA layar penuh. Percakapan dimuat lewat
      * /chat/pesan (sama dengan widget), jadi riwayatnya satu.
      */
     public function page(): InertiaResponse

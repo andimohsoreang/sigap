@@ -42,14 +42,14 @@ import { type SharedData } from '@/types';
 
 /**
  * Beranda baru (/beranda-baru) — contact center yang semuanya dimulai dari
- * chat, dengan maskot TRANSI. Desain: pen.dev "Publik / Beranda — Contact
- * Center TRANSI" (desktop) dan varian Mobile 320–430.
+ * chat, dengan maskot TARA. Desain: pen.dev "Publik / Beranda — Contact
+ * Center TARA" (desktop) dan varian Mobile 320–430.
  *
  * Semua tombol chat membawa ke halaman /chat (lib/chat-transition): kotak
  * tanya atau kartu hero membesar menjadi panel percakapan.
  */
 
-const IMG = '/images/transi';
+const IMG = '/images/tara';
 
 const SAMPLE_QUESTIONS: { icon: LucideIcon; text: string }[] = [
     { icon: MapPinned, text: 'Sertifikat lahan saya belum keluar' },
@@ -61,7 +61,7 @@ const SAMPLE_QUESTIONS: { icon: LucideIcon; text: string }[] = [
 const STEPS: { icon: LucideIcon; title: string; desc: string; pillIcon: LucideIcon; pill: string; mono?: boolean; strong?: boolean }[] = [
     {
         icon: MessageCircle,
-        title: 'Tanya TRANSI, kapan saja',
+        title: 'Tanya TARA, kapan saja',
         desc: 'Asisten menjawab 24 jam hanya dari artikel resmi Kementerian, lengkap dengan sumbernya. Data pribadi yang Anda ketik otomatis disamarkan.',
         pillIcon: BookOpen,
         pill: 'Sumber: Panduan Layanan SIGAP',
@@ -69,7 +69,7 @@ const STEPS: { icon: LucideIcon; title: string; desc: string; pillIcon: LucideIc
     {
         icon: Headset,
         title: 'Diteruskan ke petugas bila perlu',
-        desc: 'Untuk aduan atau hak pribadi, TRANSI meneruskan ke petugas dengan ringkasan, jadi Anda tidak perlu mengulang cerita. Di luar jam kerja, tinggalkan nomor WhatsApp.',
+        desc: 'Untuk aduan atau hak pribadi, TARA meneruskan ke petugas dengan ringkasan, jadi Anda tidak perlu mengulang cerita. Di luar jam kerja, tinggalkan nomor WhatsApp.',
         pillIcon: Hash,
         pill: 'REF-261025-NMAJ',
         mono: true,
@@ -96,7 +96,7 @@ const TRUST: { icon: LucideIcon; title: string; desc: string }[] = [
     {
         icon: BookCheck,
         title: 'Tidak mengarang jawaban',
-        desc: 'TRANSI hanya menjawab dari Basis Pengetahuan resmi. Bila tidak tahu, ia memanggil petugas.',
+        desc: 'TARA hanya menjawab dari Basis Pengetahuan resmi. Bila tidak tahu, ia memanggil petugas.',
     },
     { icon: ShieldCheck, title: 'Data pribadi disamarkan', desc: 'NIK dan nomor HP yang Anda ketik disamarkan sebelum diproses asisten.' },
     { icon: Timer, title: 'Dipantau sampai selesai', desc: 'Setiap tiket punya target waktu selesai, diakhiri survei kepuasan dari Anda.' },
@@ -129,8 +129,8 @@ const FAQS = [
         a: 'Bisa. Tulis kebutuhan Anda di chat. Petugas mencocokkan NIK dan nama Anda, lalu mengirim tombol untuk membuat kata sandi langsung di chat. Setelah itu Anda masuk dengan NIK dan kata sandi.',
     },
     {
-        q: 'Bagaimana kalau TRANSI tidak tahu jawabannya?',
-        a: 'TRANSI hanya menjawab dari artikel resmi. Bila jawabannya tidak ada, pertanyaan Anda diteruskan ke petugas beserta ringkasannya. Di luar jam layanan, Anda bisa meninggalkan nomor WhatsApp untuk dihubungi.',
+        q: 'Bagaimana kalau TARA tidak tahu jawabannya?',
+        a: 'TARA hanya menjawab dari artikel resmi. Bila jawabannya tidak ada, pertanyaan Anda diteruskan ke petugas beserta ringkasannya. Di luar jam layanan, Anda bisa meninggalkan nomor WhatsApp untuk dihubungi.',
     },
     {
         q: 'Saya lupa kata sandi, apa yang harus dilakukan?',
@@ -233,7 +233,7 @@ function visible(id: string): HTMLElement | null {
     return r.bottom > 0 && r.top < window.innerHeight ? el : null;
 }
 
-/** Tombol TRANSI melayang: membuka halaman chat layar penuh. */
+/** Tombol TARA melayang: membuka halaman chat layar penuh. */
 function TransiLauncher() {
     return (
         <div className="transi-launcher fixed right-4 bottom-4 z-[100] flex items-center gap-3 sm:right-6 sm:bottom-6">
@@ -247,7 +247,7 @@ function TransiLauncher() {
             <button
                 type="button"
                 onClick={(e) => goToChat({ source: e.currentTarget })}
-                aria-label="Chat dengan TRANSI"
+                aria-label="Chat dengan TARA"
                 className="transi-launcher__face h-16 w-16 rounded-full border-[3px] border-[#c29642] bg-[#f8f3ef] bg-cover bg-center shadow-[0_12px_28px_rgba(0,18,36,0.35)] sm:h-[72px] sm:w-[72px]"
                 style={{ backgroundImage: `url(${IMG}/avatar.webp)` }}
             />
@@ -265,7 +265,7 @@ export default function BerandaTransi() {
 
     return (
         <>
-            <Head title="Contact Center TRANSI — SIGAP">
+            <Head title="Contact Center TARA — SIGAP">
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link
                     rel="stylesheet"
@@ -274,7 +274,7 @@ export default function BerandaTransi() {
                 />
                 <meta
                     name="description"
-                    content="Contact Center Kementerian Transmigrasi. Tanya, lapor, cek status tiket, sampai dibuatkan akun, cukup mulai dari chat dengan TRANSI."
+                    content="Contact Center Kementerian Transmigrasi. Tanya, lapor, cek status tiket, sampai dibuatkan akun, cukup mulai dari chat dengan TARA."
                 />
             </Head>
 
@@ -335,7 +335,7 @@ function Hero({ aiEnabled }: { aiEnabled: boolean }) {
                         Semua urusan transmigrasi, cukup mulai dari chat.
                     </h1>
                     <p className="transi-rise max-w-[58ch] text-[17px] leading-[1.55] text-[#c9d6e2] sm:text-[19px]" style={delay(0.28)}>
-                        Tanya, lapor, cek status tiket, sampai dibuatkan akun. TRANSI dan petugas kami membantu dalam satu percakapan: tanpa formulir
+                        Tanya, lapor, cek status tiket, sampai dibuatkan akun. TARA dan petugas kami membantu dalam satu percakapan: tanpa formulir
                         panjang, tanpa harus punya email.
                     </p>
                     <div className="transi-rise flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3.5" style={delay(0.4)}>
@@ -344,7 +344,7 @@ function Hero({ aiEnabled }: { aiEnabled: boolean }) {
                             onClick={() => goToChat({ source: visible(HERO_CARD_ID) })}
                             className="transi-lift font-heading flex h-14 items-center justify-center gap-2.5 rounded-full bg-[var(--t-gold)] px-[26px] text-[17px] font-bold text-[var(--t-deep)] shadow-[0_10px_28px_rgba(194,150,66,0.35)] hover:bg-[#d0a552] hover:shadow-[0_14px_34px_rgba(194,150,66,0.45)]"
                         >
-                            <MessageCircle className="h-5 w-5" aria-hidden="true" /> Mulai chat dengan TRANSI
+                            <MessageCircle className="h-5 w-5" aria-hidden="true" /> Mulai chat dengan TARA
                         </button>
                         <Link
                             href="/lacak"
@@ -379,7 +379,7 @@ function Hero({ aiEnabled }: { aiEnabled: boolean }) {
     );
 }
 
-/** TRANSI menyapa + kartu chat yang memutar alur nyata secara berurutan. */
+/** TARA menyapa + kartu chat yang memutar alur nyata secara berurutan. */
 function HeroVisual() {
     return (
         <div className="relative mx-auto w-full max-w-[460px] pb-10 lg:mx-0 lg:aspect-square lg:max-w-[648px] lg:self-end lg:pb-0">
@@ -388,10 +388,10 @@ function HeroVisual() {
                 <div aria-hidden="true" className="transi-halo absolute inset-[-2%] rounded-full border-2 border-[#c29642]/25" />
                 <div aria-hidden="true" className="absolute inset-[9%] rounded-full bg-white/[0.05]" />
                 <img
-                    src={`${IMG}/08-selamat-datang.webp`}
-                    alt="TRANSI, maskot contact center SIGAP, menyambut dengan kedua tangan terbuka"
-                    width={760}
-                    height={760}
+                    src={`${IMG}/menyambut.webp`}
+                    alt="TARA, maskot contact center SIGAP, menyambut warga"
+                    width={396}
+                    height={900}
                     fetchPriority="high"
                     className="transi-float transi-rise relative h-full w-full object-contain drop-shadow-[0_24px_40px_rgba(0,10,25,0.35)]"
                     style={delay(0.3)}
@@ -411,7 +411,7 @@ function HeroVisual() {
                         aria-hidden="true"
                     />
                     <span className="min-w-0">
-                        <span className="font-heading block text-sm font-bold text-white">TRANSI</span>
+                        <span className="font-heading block text-sm font-bold text-white">TARA</span>
                         <span className="block truncate text-[11px] text-[#bcd0e0]">Asisten SIGAP · menjawab dari sumber resmi</span>
                     </span>
                 </div>
@@ -420,7 +420,7 @@ function HeroVisual() {
                         className="transi-pop w-fit max-w-[85%] rounded-[14px] rounded-bl-[4px] border border-[#e6ebf0] bg-white px-3 py-2 text-[#1f2d3a]"
                         style={delay(0.9)}
                     >
-                        Halo, saya TRANSI 👋 Ceritakan saja kebutuhan Anda.
+                        Halo, saya TARA 👋 Ceritakan saja kebutuhan Anda.
                     </p>
                     <p
                         className="transi-pop ml-auto w-fit max-w-[80%] rounded-[14px] rounded-br-[4px] bg-[var(--t-navy)] px-3 py-2 text-white"
@@ -559,10 +559,10 @@ function JustType() {
                     </div>
                     <button
                         type="submit"
-                        aria-label="Tanya TRANSI"
+                        aria-label="Tanya TARA"
                         className="transi-lift font-heading flex h-12 w-12 shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--t-gold)] text-base font-bold text-[var(--t-deep)] hover:bg-[#d0a552] sm:h-[52px] sm:w-auto sm:px-[22px]"
                     >
-                        <span className="hidden sm:inline">Tanya TRANSI</span>
+                        <span className="hidden sm:inline">Tanya TARA</span>
                         <ArrowUpRight className="hidden h-[18px] w-[18px] sm:block" aria-hidden="true" />
                         <ArrowUp className="h-5 w-5 sm:hidden" aria-hidden="true" />
                     </button>
@@ -625,19 +625,19 @@ function Journey() {
                         Dari bertanya sampai tuntas, Anda tidak perlu pindah tempat.
                     </h2>
                     <p data-reveal style={delay(0.16)} className="text-base leading-[1.6] text-[#4a5a68] sm:text-[17px]">
-                        TRANSI menjawab lebih dulu. Bila urusan Anda butuh tindakan, petugas masuk ke percakapan yang sama, menerbitkan tiket, merujuk
+                        TARA menjawab lebih dulu. Bila urusan Anda butuh tindakan, petugas masuk ke percakapan yang sama, menerbitkan tiket, merujuk
                         ke portal yang tepat, bahkan membuatkan akun Anda.
                     </p>
                     <img
                         data-reveal="left"
                         style={delay(0.2)}
-                        src={`${IMG}/01-menunjuk-kanan.webp`}
+                        src={`${IMG}/menunjuk.webp`}
                         alt=""
-                        width={560}
-                        height={560}
+                        width={458}
+                        height={900}
                         loading="lazy"
                         decoding="async"
-                        className="hidden h-[340px] w-[340px] object-contain lg:block"
+                        className="hidden h-[420px] w-[300px] object-contain lg:block"
                     />
                 </div>
 
@@ -700,7 +700,7 @@ function Trust() {
                             style={delay(0.08)}
                             className="font-heading text-[30px] leading-[1.15] font-bold tracking-[-0.015em] text-balance sm:text-[40px]"
                         >
-                            TRANSI menjawab cepat. Petugas memastikan tuntas.
+                            TARA menjawab cepat. Petugas memastikan tuntas.
                         </h2>
                     </div>
                     <div className="grid gap-6 sm:grid-cols-2 sm:gap-x-10 sm:gap-y-8">
@@ -724,13 +724,13 @@ function Trust() {
                         Kalau saya belum tahu jawabannya, saya panggilkan petugas, ya!
                     </p>
                     <img
-                        src={`${IMG}/03-jempol-sukses.webp`}
-                        alt="TRANSI mengacungkan jempol"
-                        width={560}
-                        height={560}
+                        src={`${IMG}/jempol.webp`}
+                        alt="TARA mengacungkan jempol"
+                        width={267}
+                        height={900}
                         loading="lazy"
                         decoding="async"
-                        className="transi-float order-1 h-[150px] w-[150px] object-contain sm:h-[200px] sm:w-[200px] lg:order-2 lg:h-[400px] lg:w-[400px]"
+                        className="transi-float order-1 h-[200px] w-[120px] object-contain sm:h-[260px] sm:w-[160px] lg:order-2 lg:h-[460px] lg:w-[300px]"
                     />
                 </div>
             </div>
@@ -780,7 +780,7 @@ function TrackAndPaths() {
                             </button>
                         </div>
                         <p className="text-[15px] leading-[1.55] text-[#6b5a45]">
-                            Lupa nomornya? Tanyakan saja ke TRANSI. Bila Anda masuk dengan akun, semua tiket tampil di Portal Warga.
+                            Lupa nomornya? Tanyakan saja ke TARA. Bila Anda masuk dengan akun, semua tiket tampil di Portal Warga.
                         </p>
                     </form>
 
@@ -859,7 +859,7 @@ function Faq() {
                 className,
             )}
         >
-            <MessageCircle className="h-[18px] w-[18px]" aria-hidden="true" /> Tanya TRANSI
+            <MessageCircle className="h-[18px] w-[18px]" aria-hidden="true" /> Tanya TARA
         </button>
     );
 
@@ -869,13 +869,13 @@ function Faq() {
                 <div className="flex flex-col gap-[18px]">
                     <img
                         data-reveal="zoom"
-                        src={`${IMG}/06-berpikir.webp`}
+                        src={`${IMG}/mendengarkan.webp`}
                         alt=""
-                        width={400}
-                        height={400}
+                        width={253}
+                        height={900}
                         loading="lazy"
                         decoding="async"
-                        className="hidden h-60 w-60 object-contain lg:block"
+                        className="hidden h-80 w-48 object-contain lg:block"
                     />
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex flex-col gap-3">
@@ -892,17 +892,17 @@ function Faq() {
                         </div>
                         <img
                             data-reveal="zoom"
-                            src={`${IMG}/06-berpikir.webp`}
+                            src={`${IMG}/mendengarkan.webp`}
                             alt=""
-                            width={400}
-                            height={400}
+                            width={253}
+                            height={900}
                             loading="lazy"
                             decoding="async"
-                            className="h-24 w-24 shrink-0 object-contain lg:hidden"
+                            className="h-32 w-16 shrink-0 object-contain lg:hidden"
                         />
                     </div>
                     <p data-reveal style={delay(0.12)} className="text-base leading-[1.6] text-[#5b4a36]">
-                        Tidak menemukan jawabannya? TRANSI siap menjawab pertanyaan lain, dan memanggil petugas bila perlu.
+                        Tidak menemukan jawabannya? TARA siap menjawab pertanyaan lain, dan memanggil petugas bila perlu.
                     </p>
                     <div data-reveal style={delay(0.16)} className="hidden lg:block">
                         {askButton('w-fit')}
@@ -985,17 +985,17 @@ function ClosingCta() {
                 style={{ background: 'radial-gradient(60% 140% at 20% 60%, rgba(194,150,66,0.25) 0%, rgba(0,61,104,0) 70%), var(--t-navy)' }}
             >
                 <img
-                    src={`${IMG}/00-menyapa.webp`}
-                    alt="TRANSI melambaikan tangan"
-                    width={520}
-                    height={520}
+                    src={`${IMG}/menyapa.webp`}
+                    alt="TARA melambaikan tangan"
+                    width={278}
+                    height={900}
                     loading="lazy"
                     decoding="async"
-                    className="transi-float h-44 w-44 shrink-0 object-contain sm:h-56 sm:w-56 lg:h-[300px] lg:w-[300px]"
+                    className="transi-float h-56 w-36 shrink-0 object-contain sm:h-72 sm:w-44 lg:h-[340px] lg:w-[220px]"
                 />
                 <div className="flex flex-1 flex-col gap-3.5">
                     <h2 className="font-heading text-[26px] leading-[1.15] font-bold tracking-[-0.015em] text-balance sm:text-[38px]">
-                        Halo, saya TRANSI. Ada yang bisa saya bantu hari ini?
+                        Halo, saya TARA. Ada yang bisa saya bantu hari ini?
                     </h2>
                     <p className="text-[15px] leading-[1.6] text-[#c9d6e2] sm:text-[17px]">
                         Petugas siap Senin–Jumat, 08.00–16.00 WIB. Di luar jam itu, pesan Anda tetap dicatat dan petugas menghubungi Anda pada hari
@@ -1065,7 +1065,7 @@ function SiteFooter() {
                                         onClick={(e) => goToChat({ source: e.currentTarget })}
                                         className="w-fit text-left text-[15px] transition-colors hover:text-white"
                                     >
-                                        Chat TRANSI
+                                        Chat TARA
                                     </button>
                                 )}
                                 {links.map(([label, href]) => (
@@ -1084,7 +1084,7 @@ function SiteFooter() {
                             Kembali ke tampilan lama
                         </Link>
                         <span aria-hidden="true">·</span>
-                        <span>Maskot TRANSI</span>
+                        <span>Maskot TARA</span>
                     </span>
                 </div>
             </div>

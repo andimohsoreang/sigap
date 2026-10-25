@@ -275,7 +275,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   Beranda baru — Contact Center TRANSI (/beranda-baru).
+   Beranda baru — Contact Center TARA (/beranda-baru).
    Animasi ringan berbasis CSS: muncul bertahap saat halaman dibuka, maskot
    melayang, gelembung chat berurutan, konten muncul saat digulir. Semua
    dimatikan bila pengguna memilih "kurangi gerakan".
@@ -506,7 +506,7 @@
     display: none;
 }
 
-/* Peluncur chat TRANSI. */
+/* Peluncur chat TARA. */
 .transi-launcher {
     transition:
         transform 0.35s var(--t-ease),
@@ -569,7 +569,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   Transisi landing ↔ Chat TRANSI (View Transitions; lihat lib/chat-transition).
+   Transisi landing ↔ Chat TARA (View Transitions; lihat lib/chat-transition).
    -------------------------------------------------------------------------- */
 @media (min-width: 1024px) {
     .vt-chat-target {
@@ -664,7 +664,7 @@ html[data-vt='back-sheet']::view-transition-new(root) {
     }
 }
 
-/* Halaman Chat TRANSI. */
+/* Halaman Chat TARA. */
 @keyframes transi-msg-in {
     from {
         opacity: 0;

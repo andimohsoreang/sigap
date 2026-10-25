@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
 
 /**
- * Perpindahan landing ↔ halaman Chat TRANSI.
+ * Perpindahan landing ↔ halaman Chat TARA.
  *
  * - Desktop: elemen sumber (kotak tanya / kartu chat hero) "membesar" menjadi
  *   panel percakapan lewat View Transitions (nama bersama `transi-chat`).

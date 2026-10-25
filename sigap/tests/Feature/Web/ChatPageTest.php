@@ -13,7 +13,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * Halaman Chat TRANSI layar penuh: cookie tamu 30 hari, panel tiket,
+ * Halaman Chat TARA layar penuh: cookie tamu 30 hari, panel tiket,
  * akhiri chat, transkrip, dan lanjutkan di perangkat lain.
  */
 class ChatPageTest extends TestCase

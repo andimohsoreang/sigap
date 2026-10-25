@@ -191,7 +191,7 @@ class ReferralController extends Controller
                 'oleh' => match ($e->actor) {
                     'petugas' => $e->user?->name ?? 'Petugas',
                     'warga' => 'Warga',
-                    'ai' => 'Asisten SIGAP',
+                    'ai' => 'TARA',
                     default => 'Sistem',
                 },
                 'catatan' => $e->note,

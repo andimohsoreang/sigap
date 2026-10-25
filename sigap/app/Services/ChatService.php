@@ -355,7 +355,7 @@ class ChatService
             'mine' => $mine,
             'penulis' => match ($m->sender_type) {
                 'admin' => $m->sender?->name ?? 'Petugas SIGAP',
-                'ai' => 'Asisten SIGAP',
+                'ai' => 'TARA',
                 'system' => 'SIGAP',
                 default => 'Anda',
             },
@@ -435,7 +435,7 @@ class ChatService
         if ($conversation->isWithAssistant() && in_array($senderType, ['user', 'guest'], true)) {
             $out[] = $this->send(
                 $conversation,
-                'Lampiran tersimpan. TRANSI tidak membaca isi foto atau dokumen; tekan "Bicara dengan petugas" agar petugas memeriksanya.',
+                'Lampiran tersimpan. TARA tidak membaca isi foto atau dokumen; tekan "Bicara dengan petugas" agar petugas memeriksanya.',
                 'system',
                 null,
                 ['kind' => 'lampiran_ai'],

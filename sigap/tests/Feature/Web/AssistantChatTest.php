@@ -75,7 +75,7 @@ class AssistantChatTest extends TestCase
         $this->ask('Bagaimana cara daftar program transmigrasi?')
             ->assertJsonPath('balasan.0.sender_type', 'ai')
             ->assertJsonPath('balasan.0.jenis', 'jawaban')
-            ->assertJsonPath('balasan.0.penulis', 'Asisten SIGAP')
+            ->assertJsonPath('balasan.0.penulis', 'TARA')
             ->assertJsonPath('balasan.0.sumber.0.label', 'Pedoman Seleksi · Hal. 12')
             ->assertJsonPath('balasan.0.sumber.0.url', 'https://jdih.transmigrasi.go.id/web/regulations');
 

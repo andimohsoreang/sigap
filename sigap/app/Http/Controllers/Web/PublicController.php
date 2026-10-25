@@ -48,7 +48,7 @@ class PublicController extends Controller
     }
 
     /**
-     * Beranda baru (uji coba): contact center TRANSI, semua dimulai dari chat.
+     * Beranda baru (uji coba): contact center TARA, semua dimulai dari chat.
      * Beranda utama tetap yang lama dan menautkan ke sini lewat "Coba Desain Baru".
      */
     public function homeTransi(): Response

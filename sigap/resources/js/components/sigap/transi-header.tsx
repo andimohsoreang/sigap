@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
-/** Header beranda baru & halaman Chat TRANSI (desain pen.dev). */
+/** Header beranda baru & halaman Chat TARA (desain pen.dev). */
 
 const NAV = [
     { label: 'Beranda', href: '/beranda-baru' },
@@ -84,7 +84,7 @@ export default function TransiHeader({
                         onClick={onChat}
                         className="transi-lift hidden h-10 items-center gap-2 rounded-full border-[1.5px] border-[var(--t-navy)] px-4 text-[15px] font-semibold text-[var(--t-navy)] hover:bg-[var(--t-navy)] hover:text-white lg:flex"
                     >
-                        <MessageCircle className="h-[18px] w-[18px]" aria-hidden="true" /> Chat TRANSI
+                        <MessageCircle className="h-[18px] w-[18px]" aria-hidden="true" /> Chat TARA
                     </button>
                     <Link
                         href={account.href}
@@ -126,7 +126,7 @@ export default function TransiHeader({
                             }}
                             className="mt-2 flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--t-gold)] font-semibold text-[var(--t-deep)]"
                         >
-                            <MessageCircle className="h-5 w-5" aria-hidden="true" /> Chat dengan TRANSI
+                            <MessageCircle className="h-5 w-5" aria-hidden="true" /> Chat dengan TARA
                         </button>
                     </nav>
                 </div>

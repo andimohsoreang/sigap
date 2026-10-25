@@ -54,8 +54,8 @@ export function openSigap() {
     askSigap('');
 }
 
-/** Wajah maskot TRANSI (tombol peluncur & kepala jendela chat versi beranda baru). */
-const TRANSI_AVATAR = '/images/transi/avatar.webp';
+/** Wajah maskot TARA (tombol peluncur & kepala jendela chat versi beranda baru). */
+const TRANSI_AVATAR = '/images/tara/avatar.webp';
 
 export interface Source {
     /** Nomor seperti tertulis di jawaban ([n]). Pesan lama tanpa nomor memakai urutan. */
@@ -191,8 +191,8 @@ export function merge(prev: ChatMessage[], incoming: ChatMessage[]): ChatMessage
 }
 
 /**
- * `variant="transi"` (beranda baru): tombol peluncur berwajah maskot TRANSI
- * dengan gelembung sapaan, dan kepala jendela memakai nama TRANSI.
+ * `variant="transi"` (beranda baru): tombol peluncur berwajah maskot TARA
+ * dengan gelembung sapaan, dan kepala jendela memakai nama TARA.
  */
 export default function LiveChatWidget({ variant = 'default' }: { variant?: 'default' | 'transi' }) {
     const transi = variant === 'transi';
@@ -392,7 +392,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
     };
 
     const greeting = withAi
-        ? `Halo${identity ? `, ${identity.nama}` : ''}! Saya Asisten SIGAP. Tanyakan syarat, prosedur, atau status tiket Anda. Untuk aduan, saya bantu teruskan ke petugas.`
+        ? `Halo${identity ? `, ${identity.nama}` : ''}! Saya TARA, asisten SIGAP. Tanyakan syarat, prosedur, atau status tiket Anda. Untuk aduan, saya bantu teruskan ke petugas.`
         : `Halo${identity ? `, ${identity.nama}` : ''}! Ada yang bisa kami bantu?`;
 
     return (
@@ -418,7 +418,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                         ref={toggleRef}
                         type="button"
                         onClick={() => setOpen((v) => !v)}
-                        aria-label={open ? 'Tutup chat TRANSI' : unread > 0 ? `Buka chat TRANSI, ${unread} balasan baru` : 'Buka chat TRANSI'}
+                        aria-label={open ? 'Tutup chat TARA' : unread > 0 ? `Buka chat TARA, ${unread} balasan baru` : 'Buka chat TARA'}
                         aria-expanded={open}
                         aria-controls="sigap-live-chat"
                         className="transi-launcher__face relative h-16 w-16 rounded-full border-[3px] border-[#c29642] bg-[#f8f3ef] bg-cover bg-center shadow-[0_12px_28px_rgba(0,18,36,0.35)] sm:h-[72px] sm:w-[72px]"
@@ -483,9 +483,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                             <Headset className="h-5 w-5 shrink-0" aria-hidden="true" />
                         )}
                         <div className="min-w-0">
-                            <p className="text-sm leading-tight font-bold">
-                                {transi && withAi ? 'TRANSI' : withAi ? 'Asisten SIGAP' : 'Petugas SIGAP'}
-                            </p>
+                            <p className="text-sm leading-tight font-bold">{withAi ? 'TARA' : 'Petugas SIGAP'}</p>
                             <p className="truncate text-[11px] leading-tight opacity-85">
                                 {withAi
                                     ? 'Menjawab dari sumber resmi'
@@ -526,7 +524,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                             aria-label="Riwayat percakapan"
                             className="flex h-96 max-h-[60vh] flex-col gap-3 overflow-y-auto scroll-smooth bg-gray-50 p-4 text-sm"
                         >
-                            <Bubble mine={false} ai={withAi} author={withAi ? 'Asisten SIGAP' : 'Petugas SIGAP'}>
+                            <Bubble mine={false} ai={withAi} author={withAi ? 'TARA' : 'Petugas SIGAP'}>
                                 {greeting}
                             </Bubble>
 

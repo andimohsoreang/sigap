@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PublicController::class, 'home'])->name('home');
 // Tampilan beranda lama tetap tersedia sebagai pembanding.
 Route::get('/beranda-standar', [PublicController::class, 'homeStandard'])->name('beranda.standar');
-// Beranda baru: contact center TRANSI yang semuanya dimulai dari chat (uji coba).
+// Beranda baru: contact center TARA yang semuanya dimulai dari chat (uji coba).
 Route::get('/beranda-baru', [PublicController::class, 'homeTransi'])->name('beranda.baru');
 // Alamat lama versi absol diarahkan ke beranda utama agar tautan lama tidak 404.
 Route::redirect('/beranda-absol', '/', 301);
@@ -107,7 +107,7 @@ Route::post('/chat/konfirmasi/{message}', [ChatController::class, 'answerConfirm
 Route::post('/chat/akhiri', [ChatController::class, 'end'])->middleware('throttle:chat')->name('chat.end');
 Route::get('/chat/transkrip', [ChatController::class, 'transcript'])->middleware('throttle:chat-baca')->name('chat.transcript');
 Route::post('/chat/lanjutkan', [ChatController::class, 'resume'])->middleware('throttle:akun')->name('chat.resume');
-// Halaman chat layar penuh (Chat TRANSI).
+// Halaman chat layar penuh (Chat TARA).
 Route::get('/chat', [ChatController::class, 'page'])->name('chat.page');
 Route::post('/chat/pesan/{message}/nilai', [ChatController::class, 'feedback'])->whereNumber('message')->middleware('throttle:chat')->name('chat.feedback');
 
