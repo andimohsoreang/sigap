@@ -31,7 +31,7 @@ class ChatConversation extends Model
         'terjawab_petugas' => 'Terjawab petugas',
         'tiket' => 'Jadi tiket',
         'lapor' => 'Diarahkan ke SP4N-LAPOR!',
-        'wbs' => 'Diarahkan ke WBS',
+        'wbs' => 'Diarahkan ke Inspektorat',
         'rujuk_portal' => 'Dirujuk ke portal',
         'tidak_selesai' => 'Tidak selesai',
         'diakhiri_warga' => 'Diakhiri warga',

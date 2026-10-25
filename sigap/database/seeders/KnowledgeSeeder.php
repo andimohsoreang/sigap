@@ -65,8 +65,8 @@ class KnowledgeSeeder extends Seeder
                 'Layanan SIGAP',
             ],
             [
-                'Kapan sebaiknya melapor ke SP4N-LAPOR! atau WBS?',
-                'Gunakan SP4N-LAPOR! (lapor.go.id) bila masalah Anda juga menyangkut instansi lain, misalnya pemerintah daerah atau ATR/BPN. Gunakan Whistleblowing System (WBS) untuk dugaan pungutan liar, korupsi, atau pelanggaran oleh pegawai; identitas pelapor dilindungi.',
+                'Kapan sebaiknya melapor ke SP4N-LAPOR! atau ke Inspektorat Jenderal?',
+                'Gunakan SP4N-LAPOR! (sp4n.lapor.go.id) bila masalah Anda juga menyangkut instansi lain, misalnya pemerintah daerah atau ATR/BPN; Anda dapat memilih agar identitas dirahasiakan. Untuk dugaan pungutan liar, penyalahgunaan wewenang, atau pelanggaran oleh pegawai Kementerian Transmigrasi, laporkan ke PPID (ppid@transmigrasi.go.id, WhatsApp 0812-9001-9358) yang meneruskannya ke Inspektorat Jenderal paling lambat 30 hari kerja. Gratifikasi dilaporkan ke Gratifikasi Online KPK (gol.kpk.go.id).',
                 'Rujukan',
             ],
             [

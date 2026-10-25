@@ -62,7 +62,7 @@ const CHANNEL_ICONS: Record<string, typeof Building2> = {
 };
 
 /** Pertanyaan cepat di kotak tanya (dikirim ke Asisten SIGAP). */
-const QUICK_QUESTIONS = ['Bagaimana cara membuat pengaduan?', 'Berapa lama pengaduan ditangani?', 'Kapan melapor ke SP4N-LAPOR! atau WBS?'];
+const QUICK_QUESTIONS = ['Bagaimana cara membuat pengaduan?', 'Berapa lama pengaduan ditangani?', 'Kapan melapor ke SP4N-LAPOR! atau Inspektorat?'];
 
 export default function BerandaAbsol({ stats, channels, faqs }: Props) {
     const { assistant } = usePage<SharedData>().props;

@@ -69,7 +69,7 @@ class ContactCenterController extends Controller
 
         $notice = match ($data['hasil']) {
             'lapor' => 'Petugas menyarankan laporan Anda disampaikan melalui SP4N-LAPOR! (www.lapor.go.id) karena juga menyangkut instansi lain. Anda dapat memakai ringkasan percakapan ini saat melapor.',
-            'wbs' => 'Untuk dugaan pelanggaran atau pungutan liar, silakan laporkan melalui Whistleblowing System (WBS) Kementerian Transmigrasi. Identitas pelapor dilindungi.',
+            'wbs' => 'Untuk dugaan pungutan liar, penyalahgunaan wewenang, atau pelanggaran oleh pegawai Kementerian Transmigrasi, laporkan ke PPID (ppid.transmigrasi.go.id · ppid@transmigrasi.go.id · WhatsApp 0812-9001-9358). Laporan diteruskan ke Inspektorat Jenderal paling lambat 30 hari kerja. Anda juga dapat melapor lewat SP4N-LAPOR! dan memilih agar identitas dirahasiakan. Untuk gratifikasi, gunakan Gratifikasi Online KPK (gol.kpk.go.id).',
             'terjawab_petugas' => 'Percakapan ditutup oleh petugas. Tulis pesan baru bila masih ada yang ingin ditanyakan.',
             default => null,
         };

@@ -35,10 +35,12 @@ class MasterSeeder extends Seeder
 
         // Kanal pengaduan (5 kanal resmi + integrasi nasional)
         $channels = [
-            ['type' => 'sosmed', 'name' => '@SIGAP_RI', 'account_name' => '@SIGAP_RI', 'url' => 'https://instagram.com/sigap', 'status' => 'aktif'],
+            ['type' => 'sosmed', 'name' => '@kementrans.ri', 'account_name' => '@kementrans.ri', 'url' => 'https://www.instagram.com/kementrans.ri/', 'status' => 'aktif'],
             ['type' => 'kantor', 'name' => 'Kanal Kantor Pemerintahan', 'url' => null, 'status' => 'aktif'],
-            ['type' => 'nasional', 'name' => 'SP4N-LAPOR!', 'url' => 'https://api.lapor.go.id/v2/instansi/kemenatrans', 'status' => 'aktif'],
-            ['type' => 'nasional', 'name' => 'Whistleblowing System', 'url' => 'https://wbs.kemenatrans.go.id/api/v1/rekap', 'status' => 'aktif'],
+            ['type' => 'nasional', 'name' => 'SP4N-LAPOR!', 'url' => 'https://sp4n.lapor.go.id/instansi/kementerian-transmigrasi', 'status' => 'aktif'],
+            // Kementrans tidak punya situs WBS sendiri; pengaduan pelanggaran pegawai diterima PPID dan
+            // ditindaklanjuti Inspektorat Jenderal. Nama dipertahankan karena dipakai adapter sinkron (stub).
+            ['type' => 'nasional', 'name' => 'Whistleblowing System', 'account_name' => 'Inspektorat Jenderal', 'url' => 'https://ppid.transmigrasi.go.id/standar-layanan/pengaduan-penyalahgunaan-wewenang', 'status' => 'aktif'],
             ['type' => 'internal', 'name' => 'Pengaduan Internal Pegawai', 'url' => null, 'status' => 'aktif'],
         ];
         foreach ($channels as $ch) {

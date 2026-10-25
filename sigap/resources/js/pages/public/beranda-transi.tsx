@@ -110,12 +110,13 @@ const OTHER_PATHS: { icon: LucideIcon; title: string; desc: string; href: string
     { icon: Phone, title: 'Kontak kantor', desc: 'Alamat dan telepon kantor pusat serta kawasan.', href: '/tentang-kami' },
 ];
 
-const CHANNELS: { icon: LucideIcon; label: string }[] = [
-    { icon: AtSign, label: '@SIGAP_RI' },
-    { icon: Landmark, label: 'Kantor pemerintahan' },
-    { icon: Megaphone, label: 'SP4N-LAPOR!' },
-    { icon: ShieldAlert, label: 'Whistleblowing System' },
-    { icon: Briefcase, label: 'Pengaduan internal pegawai' },
+/** Kanal resmi lain (alamat diperiksa langsung di situs resmi, 25 Okt 2026). */
+const CHANNELS: { icon: LucideIcon; label: string; href: string }[] = [
+    { icon: AtSign, label: '@kementrans.ri', href: 'https://www.instagram.com/kementrans.ri/' },
+    { icon: Landmark, label: 'PPID Kementrans', href: 'https://ppid.transmigrasi.go.id/' },
+    { icon: Megaphone, label: 'SP4N-LAPOR!', href: 'https://sp4n.lapor.go.id/instansi/kementerian-transmigrasi' },
+    { icon: ShieldAlert, label: 'Inspektorat Jenderal', href: 'https://ppid.transmigrasi.go.id/standar-layanan/pengaduan-penyalahgunaan-wewenang' },
+    { icon: Briefcase, label: 'Pengaduan internal pegawai', href: '/pengaduan/internal' },
 ];
 
 const FAQS = [
@@ -826,12 +827,15 @@ function TrackAndPaths() {
                     <span className="hidden h-12 w-px bg-[#e8edf2] lg:block" aria-hidden="true" />
                     <ul className="flex flex-1 flex-wrap gap-2.5 lg:justify-between">
                         {CHANNELS.map((c) => (
-                            <li
-                                key={c.label}
-                                className="flex items-center gap-2 rounded-[10px] bg-[#f6f8fa] px-3.5 py-2.5 text-sm font-medium text-[#2a3a48]"
-                            >
-                                <c.icon className="h-4 w-4 text-[var(--t-navy)]" aria-hidden="true" />
-                                {c.label}
+                            <li key={c.label}>
+                                <a
+                                    href={c.href}
+                                    {...(c.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                    className="transi-lift flex items-center gap-2 rounded-[10px] bg-[#f6f8fa] px-3.5 py-2.5 text-sm font-medium text-[#2a3a48] hover:bg-[#eef3f7] hover:text-[var(--t-navy)]"
+                                >
+                                    <c.icon className="h-4 w-4 text-[var(--t-navy)]" aria-hidden="true" />
+                                    {c.label}
+                                </a>
                             </li>
                         ))}
                     </ul>

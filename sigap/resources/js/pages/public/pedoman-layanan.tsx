@@ -11,7 +11,7 @@ const ALUR = [
     ['Selesai', 'Notifikasi hasil dikirim ke pelapor.'],
 ];
 
-const KANAL = ['Portal Web SIGAP', 'WBS', 'SP4N-LAPOR!', 'Media Sosial', 'Loket Kantor'];
+const KANAL = ['Portal Web SIGAP', 'PPID & Inspektorat Jenderal', 'SP4N-LAPOR!', 'Media Sosial', 'Loket Kantor'];
 
 const SLA = [
     ['Darurat / Keselamatan', 'Maks. 1 x 24 jam', '3 hari kerja'],

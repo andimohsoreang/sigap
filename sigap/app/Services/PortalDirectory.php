@@ -18,6 +18,9 @@ use Illuminate\Support\Str;
  */
 class PortalDirectory
 {
+    /** Kata umum yang tidak dipakai untuk mencocokkan portal. */
+    private const GENERIC_WORDS = ['transmigrasi', 'transmigran', 'kementerian', 'kementrans', 'republik', 'indonesia', 'portal', 'layanan', 'online', 'daring', 'resmi', 'web', 'situs', 'aplikasi'];
+
     /** @return Collection<int, Portal> */
     public function publicPortals(): Collection
     {
@@ -54,10 +57,17 @@ class PortalDirectory
      */
     public function suggest(string $question): ?Portal
     {
-        $words = IndonesianText::words($question);
+        // Kata yang ada di hampir semua portal ("Kementerian Transmigrasi")
+        // tidak membedakan apa pun; tanpa disaring, PPID/JDIH selalu menang
+        // untuk pertanyaan seperti "cara daftar transmigrasi".
+        $all = IndonesianText::words($question);
+        $words = array_values(array_filter($all, fn (array $keys) => array_intersect($keys, self::GENERIC_WORDS) === []));
         if ($words === []) {
             return null;
         }
+        // Pertanyaan menyebut "transmigrasi": portal yang memang khusus urusan
+        // transmigrasi (kata itu ada di kata kuncinya) mendapat poin tambahan.
+        $aboutTransmigration = count($all) > count($words);
 
         $best = null;
         $bestScore = 0;
@@ -74,6 +84,9 @@ class PortalDirectory
                 }
             }
 
+            if ($score > 0 && $aboutTransmigration && array_intersect(['transmigrasi', 'transmigran'], array_keys($body)) !== []) {
+                $score += 1;
+            }
             if ($score > $bestScore) {
                 [$best, $bestScore] = [$portal, $score];
             }

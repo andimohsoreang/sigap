@@ -582,7 +582,7 @@ export default function Chat({
                                                     </ActionButton>
                                                 )}
                                                 <ActionButton icon={ShieldAlert} onClick={() => close('wbs')}>
-                                                    Rujuk ke WBS
+                                                    Rujuk ke Inspektorat
                                                 </ActionButton>
                                             </div>
                                         )}

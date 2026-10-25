@@ -66,7 +66,7 @@ export default function FormulirInternal({ units, categories }: Props) {
                         <Link href="/pengaduan/baru" className="text-brand-light font-bold hover:underline">
                             Formulir SIGAP
                         </Link>
-                        . Untuk indikasi pelanggaran/etik, gunakan kanal Whistleblowing (WBS).
+                        . Untuk indikasi pelanggaran/etik, laporkan ke Inspektorat Jenderal (itjen@transmigrasi.go.id) atau lewat PPID.
                     </span>
                 </div>
 
