@@ -6,13 +6,14 @@ import { cn } from '@/lib/utils';
 
 /** Header beranda baru & halaman Chat TARA (desain pen.dev). */
 
-export type TaraNav = 'beranda' | 'chat' | 'lacak' | 'katalog' | 'peta' | 'panduan';
+export type TaraNav = 'beranda' | 'chat' | 'lacak' | 'katalog' | 'peta' | 'data' | 'panduan';
 
 const NAV: { key: TaraNav; label: string; href: string }[] = [
     { key: 'beranda', label: 'Beranda', href: '/beranda-baru' },
     { key: 'lacak', label: 'Lacak Tiket', href: '/lacak' },
     { key: 'katalog', label: 'Katalog Pengaduan', href: '/katalog' },
     { key: 'peta', label: 'Peta Kawasan', href: '/peta' },
+    { key: 'data', label: 'Data', href: '/tentang' },
     { key: 'panduan', label: 'Panduan', href: '/panduan' },
 ];
 
