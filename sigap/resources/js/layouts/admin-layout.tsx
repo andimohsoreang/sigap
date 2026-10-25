@@ -224,12 +224,10 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
             </Head>
 
             <div className="flex">
-                <aside
-                    className={cn(
-                        'sticky top-0 hidden h-screen shrink-0 self-start transition-[width] duration-200 md:block',
-                        collapsed ? 'w-[76px]' : 'w-64',
-                    )}
-                >
+                {/* Sidebar tetap (fixed) + ruang pengganti selebar sidebar, agar sidebar
+                    selalu setinggi layar walau isi halaman lebih tinggi dari wadahnya. */}
+                <div aria-hidden="true" className={cn('hidden shrink-0 transition-[width] duration-200 md:block', collapsed ? 'w-[76px]' : 'w-64')} />
+                <aside className={cn('fixed inset-y-0 left-0 z-30 hidden transition-[width] duration-200 md:block', collapsed ? 'w-[76px]' : 'w-64')}>
                     {sidebar(collapsed)}
                 </aside>
 
