@@ -57,6 +57,9 @@ final class IndonesianText
         'translok' => 'lokal', 'pindahan' => 'pindah', 'merantau' => 'pindah',
         'registrasi' => 'daftar', 'mendaftar' => 'daftar',
         'kriteria' => 'syarat', 'ketentuan' => 'syarat', 'kualifikasi' => 'syarat',
+        // "batas usia", "umur maksimal" = pertanyaan tentang syarat.
+        'batas' => 'syarat', 'maksimal' => 'syarat', 'minimal' => 'syarat', 'maks' => 'syarat',
+        'umur' => 'usia', 'ikut' => 'daftar', 'gabung' => 'daftar', 'bergabung' => 'daftar',
         'status' => 'lacak', 'cek' => 'lacak', 'pantau' => 'lacak', 'memantau' => 'lacak',
     ];
 

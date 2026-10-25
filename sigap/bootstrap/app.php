@@ -29,6 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('sigap:ews-check')->dailyAt('07:00')->withoutOverlapping();
         $schedule->command('sigap:pantau-rujukan')->weekdays()->hourly()->between('8:00', '17:00')->withoutOverlapping();
         $schedule->command('sigap:cek-portal')->hourly()->withoutOverlapping();
+        // Kutipan Sumber Resmi mengikuti isi terbaru situs Kementerian.
+        $schedule->command('sigap:sinkron-sumber')->weeklyOn(1, '02:00')->withoutOverlapping();
 
         // Retensi data (D-01): hapus percakapan tamu kedaluwarsa & log audit lama.
         $schedule->command('model:prune', [

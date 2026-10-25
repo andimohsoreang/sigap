@@ -4,6 +4,7 @@ namespace App\Services\Knowledge;
 
 use App\Models\KnowledgeArticle;
 use App\Models\KnowledgeDocument;
+use App\Models\KnowledgeSource;
 use App\Models\User;
 use App\Services\Ai\AiException;
 use App\Services\Ai\LlmClient;
@@ -13,10 +14,12 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * Dokumen resmi → usulan artikel Basis Pengetahuan.
+ * Dokumen resmi → kutipan Sumber Resmi + usulan artikel Basis Pengetahuan.
  *
- * AI hanya MENGUSULKAN tanya-jawab beserta halaman sumbernya. Usulan baru
- * menjadi artikel setelah dipilih petugas, dan selalu berstatus draf.
+ * - Teksnya langsung dipotong menjadi kutipan yang dapat dirujuk asisten
+ *   (nama berkas + halaman), tanpa menunggu AI.
+ * - AI hanya MENGUSULKAN tanya-jawab beserta halaman sumbernya. Usulan baru
+ *   menjadi artikel setelah dipilih petugas, dan selalu berstatus draf.
  */
 class KnowledgeDocumentService
 {
@@ -27,16 +30,18 @@ class KnowledgeDocumentService
 
     public function __construct(
         private readonly PdfTextExtractor $extractor,
+        private readonly DocxTextExtractor $docx,
         private readonly LlmClient $llm,
         private readonly KnowledgeRetriever $retriever,
+        private readonly SourceIngestor $ingestor,
     ) {}
 
     public function process(KnowledgeDocument $document): void
     {
         try {
-            $pages = $this->extractor->pages(Storage::disk('local')->path($document->path));
+            $pages = $this->pages($document);
         } catch (\RuntimeException $e) {
-            $this->fail($document, 'PDF tidak dapat dibaca. Pastikan berkas tidak rusak atau terkunci kata sandi.', $e);
+            $this->fail($document, 'Berkas tidak dapat dibaca. Pastikan berkas tidak rusak atau terkunci kata sandi.', $e);
 
             return;
         }
@@ -47,6 +52,17 @@ class KnowledgeDocumentService
             return;
         }
 
+        // Kutipan dulu: berkas sudah bisa dirujuk asisten walau AI gagal mengusulkan artikel.
+        $source = KnowledgeSource::query()->firstOrCreate(
+            ['knowledge_document_id' => $document->id],
+            [
+                'kind' => KnowledgeSource::KIND_FILE,
+                'name' => Str::limit($document->original_name, 250, ''),
+                'created_by' => $document->uploaded_by,
+            ],
+        );
+        $this->ingestor->sync($source);
+
         try {
             $proposals = [];
             foreach ($this->chunks($pages) as $chunk) {
@@ -56,7 +72,13 @@ class KnowledgeDocumentService
                 }
             }
         } catch (AiException $e) {
-            $this->fail($document, 'Asisten AI tidak dapat dihubungi. Coba proses ulang beberapa saat lagi.', $e);
+            Log::warning("Usulan artikel dokumen #{$document->id} gagal: ".$e->getMessage());
+            $document->forceFill([
+                'pages' => count($pages),
+                'status' => KnowledgeDocument::STATUS_READY,
+                'error' => 'Isi berkas sudah dapat dikutip asisten. Usulan artikel belum dapat dibuat karena asisten AI tidak dapat dihubungi; coba proses ulang beberapa saat lagi.',
+                'proposals' => [],
+            ])->save();
 
             return;
         }
@@ -96,7 +118,7 @@ class KnowledgeDocumentService
                 'body' => trim($item['jawaban']),
                 'category' => $item['kategori'] ?? $proposal['kategori'] ?? null,
                 'source' => $source,
-                'source_ref' => 'Hal. '.$proposal['halaman'],
+                'source_ref' => ($document->isDocx() ? 'Bagian ' : 'Hal. ').$proposal['halaman'],
                 'status' => KnowledgeArticle::STATUS_DRAFT,
                 'knowledge_document_id' => $document->id,
                 'created_by' => $user->id,
@@ -110,6 +132,25 @@ class KnowledgeDocumentService
         $document->forceFill(['proposals' => $proposals->values()->all()])->save();
 
         return $saved;
+    }
+
+    /**
+     * Teks per halaman. DOCX tidak berhalaman: tiap bagian (judul) dihitung satu "halaman".
+     *
+     * @return list<string>
+     */
+    private function pages(KnowledgeDocument $document): array
+    {
+        $path = Storage::disk('local')->path($document->path);
+
+        if (! $document->isDocx()) {
+            return $this->extractor->pages($path);
+        }
+
+        return array_map(
+            fn (array $s) => trim(($s['heading'] ? $s['heading']."\n" : '').$s['text']),
+            $this->docx->sections($path),
+        );
     }
 
     /**

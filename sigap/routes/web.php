@@ -7,6 +7,7 @@ use App\Http\Controllers\Web\ContactCenterController;
 use App\Http\Controllers\Web\DaftarController;
 use App\Http\Controllers\Web\KnowledgeController;
 use App\Http\Controllers\Web\KnowledgeDocumentController;
+use App\Http\Controllers\Web\KnowledgeSourceController;
 use App\Http\Controllers\Web\LupaSandiController;
 use App\Http\Controllers\Web\MasukController;
 use App\Http\Controllers\Web\PengaduanFormController;
@@ -62,6 +63,8 @@ Route::post('/pengaduan', [PengaduanFormController::class, 'store'])->middleware
 
 // Login/keluar (NIK/username + kata sandi), daftar akun warga & lupa sandi.
 // Aktivasi akun yang didaftarkan petugas dari chat (tautan sekali pakai).
+// Berkas resmi yang dirujuk jawaban asisten AI (hanya yang ditandai boleh ditampilkan).
+Route::get('/sumber/berkas/{source}', [KnowledgeSourceController::class, 'publicFile'])->middleware('throttle:lookup')->name('sumber.berkas');
 Route::get('/aktivasi/{token}', [AktivasiAkunController::class, 'show'])->middleware('throttle:lookup')->name('aktivasi.show');
 Route::post('/aktivasi/{token}', [AktivasiAkunController::class, 'store'])->middleware('throttle:akun')->name('aktivasi.store');
 
@@ -171,6 +174,12 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
     Route::post('/pengetahuan/dokumen/{document}/ulang', [KnowledgeDocumentController::class, 'retry'])->name('admin.pengetahuan.dokumen.ulang');
     Route::get('/pengetahuan/dokumen/{document}/berkas', [KnowledgeDocumentController::class, 'file'])->name('admin.pengetahuan.dokumen.berkas');
     Route::delete('/pengetahuan/dokumen/{document}', [KnowledgeDocumentController::class, 'destroy'])->name('admin.pengetahuan.dokumen.destroy');
+    Route::get('/pengetahuan/sumber', [KnowledgeSourceController::class, 'index'])->name('admin.pengetahuan.sumber');
+    Route::post('/pengetahuan/sumber', [KnowledgeSourceController::class, 'store'])->name('admin.pengetahuan.sumber.store');
+    Route::post('/pengetahuan/sumber/sinkron', [KnowledgeSourceController::class, 'syncAll'])->name('admin.pengetahuan.sumber.sinkron-semua');
+    Route::put('/pengetahuan/sumber/{source}', [KnowledgeSourceController::class, 'update'])->name('admin.pengetahuan.sumber.update');
+    Route::post('/pengetahuan/sumber/{source}/sinkron', [KnowledgeSourceController::class, 'sync'])->name('admin.pengetahuan.sumber.sinkron');
+    Route::delete('/pengetahuan/sumber/{source}', [KnowledgeSourceController::class, 'destroy'])->name('admin.pengetahuan.sumber.destroy');
     Route::post('/pengetahuan', [KnowledgeController::class, 'store'])->name('admin.pengetahuan.store');
     Route::put('/pengetahuan/{article}', [KnowledgeController::class, 'update'])->name('admin.pengetahuan.update');
     Route::post('/pengetahuan/{article}/terbitkan', [KnowledgeController::class, 'publish'])->name('admin.pengetahuan.terbitkan');

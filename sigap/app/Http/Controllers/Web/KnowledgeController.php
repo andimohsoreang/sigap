@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\ChatMessage;
 use App\Models\KnowledgeArticle;
+use App\Models\KnowledgePassage;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\Knowledge\KnowledgeRetriever;
@@ -226,7 +227,9 @@ class KnowledgeController extends Controller
      * pertanyaan ini, beserta skornya. Membantu petugas menilai apakah
      * artikel perlu kata kunci tambahan.
      *
-     * @return array{question: string, results: list<array{id: int, title: string, score: float, coverage: int}>}|null
+     * Kutipan Sumber Resmi yang ikut dikirim ditampilkan terpisah.
+     *
+     * @return array{question: string, results: list<array{id: int, title: string, score: float, coverage: int}>, passages: list<array{id: int, title: string, source: string|null, source_id: int|null}>}|null
      */
     private function probe(string $question): ?array
     {
@@ -244,6 +247,14 @@ class KnowledgeController extends Controller
                     'title' => $hit['article']->title,
                     'score' => $hit['score'],
                     'coverage' => (int) round($hit['coverage'] * 100),
+                ])
+                ->all(),
+            'passages' => $this->retriever->passages($question)
+                ->map(fn (KnowledgePassage $p) => [
+                    'id' => $p->id,
+                    'title' => $p->displayTitle(),
+                    'source' => $p->label(),
+                    'source_id' => $p->knowledge_source_id,
                 ])
                 ->all(),
         ];

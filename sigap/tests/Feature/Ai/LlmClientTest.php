@@ -31,6 +31,19 @@ class LlmClientTest extends TestCase
             && $r['response_format'] === ['type' => 'json_object']);
     }
 
+    public function test_reasoning_effort_is_sent_only_when_configured(): void
+    {
+        Http::fake(['ai.test/*' => Http::response(['choices' => [['message' => ['content' => 'ok']]]])]);
+
+        $this->client()->complete([['role' => 'user', 'content' => 'hai']]);
+        (new OpenAiCompatibleClient('https://ai.test/v1', 'kunci-uji', 'model-uji', reasoningEffort: 'none'))
+            ->complete([['role' => 'user', 'content' => 'hai']]);
+
+        $sent = Http::recorded()->map(fn ($pair) => $pair[0]->data());
+        $this->assertArrayNotHasKey('reasoning_effort', $sent[0]);
+        $this->assertSame('none', $sent[1]['reasoning_effort']);
+    }
+
     public function test_client_retries_without_response_format_when_provider_rejects_it(): void
     {
         Http::fake(['ai.test/*' => Http::sequence()

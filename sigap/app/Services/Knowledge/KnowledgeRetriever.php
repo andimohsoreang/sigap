@@ -3,6 +3,8 @@
 namespace App\Services\Knowledge;
 
 use App\Models\KnowledgeArticle;
+use App\Models\KnowledgePassage;
+use App\Models\KnowledgeSource;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -17,6 +19,10 @@ use Illuminate\Support\Facades\Cache;
  *   (IDF), jadi tidak membuat artikel yang tak relevan ikut terpilih;
  * - artikel harus memuat sebagian besar kata penting pertanyaan (cakupan),
  *   agar satu kata kebetulan sama tidak dianggap jawaban.
+ *
+ * Kutipan Sumber Resmi (situs & berkas resmi) dicari dengan cara yang sama
+ * di indeksnya sendiri, lalu dikirim SETELAH artikel: artikel sudah ditinjau
+ * petugas, kutipan menambal pertanyaan yang belum punya artikel.
  */
 class KnowledgeRetriever
 {
@@ -44,18 +50,95 @@ class KnowledgeRetriever
     }
 
     /**
+     * Artikel terbit + kutipan Sumber Resmi aktif, artikel lebih dulu.
+     *
+     * @return Collection<int, KnowledgeArticle|KnowledgePassage>
+     */
+    public function sources(string $question, int $articles = 3, int $passages = 3): Collection
+    {
+        return $this->search($question, $articles)->concat($this->passages($question, $passages))->values();
+    }
+
+    /**
+     * Kutipan terpilih: teks yang sama persis (mis. halaman yang sama dirayapi
+     * dua sumber) dikirim sekali, dan tiap sumber diberi giliran dulu sebelum
+     * sumber yang sama dipakai lagi — agar bila dua situs resmi menulis
+     * ketentuan berbeda, keduanya sampai ke AI.
+     *
+     * @return Collection<int, KnowledgePassage> kutipan beserta sumbernya, paling relevan dulu
+     */
+    public function passages(string $question, int $limit = 3): Collection
+    {
+        $ids = array_column(array_slice($this->rankPassages($question), 0, $limit * 5), 'id');
+        if ($ids === []) {
+            return collect();
+        }
+
+        $found = KnowledgePassage::query()->with('source.document')->whereKey($ids)->get()->keyBy('id');
+        $ranked = collect($ids)->map(fn (int $id) => $found->get($id))->filter()->values();
+
+        $seenText = [];
+        $unique = $ranked->filter(function (KnowledgePassage $p) use (&$seenText) {
+            $key = md5(mb_strtolower(preg_replace('/\s+/u', ' ', $p->body)));
+            if (isset($seenText[$key])) {
+                return false;
+            }
+
+            return $seenText[$key] = true;
+        })->values();
+
+        $firstPerSource = $unique->unique('knowledge_source_id');
+        $picked = $firstPerSource->take($limit)
+            ->concat($unique->diff($firstPerSource)->take(max(0, $limit - $firstPerSource->count())))
+            ->pluck('id')
+            ->all();
+
+        // Urutan akhir tetap menurut relevansi.
+        return $unique->filter(fn (KnowledgePassage $p) => in_array($p->id, $picked, true))->values();
+    }
+
+    /**
+     * @return list<array{id: int, score: float, coverage: float}>
+     */
+    public function rankPassages(string $question): array
+    {
+        $index = $this->passageIndex();
+
+        return array_map(
+            fn (array $hit) => ['id' => $index['ids'][$hit['i']], 'score' => $hit['score'], 'coverage' => $hit['coverage']],
+            $this->score($index, $question),
+        );
+    }
+
+    /**
      * Peringkat lengkap beserta skornya (dipakai uji kualitas pencarian).
      *
      * @return list<array{article: KnowledgeArticle, score: float, coverage: float}>
      */
     public function rank(string $question): array
     {
+        $index = $this->index();
+
+        return array_map(
+            fn (array $hit) => ['article' => $index['articles'][$hit['i']], 'score' => $hit['score'], 'coverage' => $hit['coverage']],
+            $this->score($index, $question),
+        );
+    }
+
+    /**
+     * BM25 + syarat cakupan di atas satu indeks.
+     *
+     * @param  array{docs: list<array{tf: array<string, int>, len: int}>, df: array<string, int>, avg: float}  $index
+     * @return list<array{i: int, score: float, coverage: float}>
+     */
+    private function score(array $index, string $question): array
+    {
         $words = IndonesianText::words($question);
         if ($words === []) {
             return [];
         }
 
-        ['articles' => $articles, 'docs' => $docs, 'df' => $df, 'avg' => $avg] = $this->index();
+        ['docs' => $docs, 'df' => $df, 'avg' => $avg] = $index;
         $n = count($docs);
         if ($n === 0) {
             return [];
@@ -93,7 +176,7 @@ class KnowledgeRetriever
 
             $coverage = $covered / $totalWeight;
             if ($score > 0 && $coverage >= self::MIN_COVERAGE) {
-                $hits[] = ['article' => $articles[$i], 'score' => round($score, 3), 'coverage' => round($coverage, 2)];
+                $hits[] = ['i' => $i, 'score' => round($score, 3), 'coverage' => round($coverage, 2)];
             }
         }
 
@@ -140,6 +223,43 @@ class KnowledgeRetriever
             $avg = $docs === [] ? 1.0 : array_sum(array_column($docs, 'len')) / count($docs);
 
             return ['articles' => array_values($articles), 'docs' => $docs, 'df' => $df, 'avg' => $avg];
+        });
+    }
+
+    /**
+     * Indeks kutipan dari sumber aktif. Hanya id + frekuensi kata yang
+     * di-cache; isi kutipan dimuat dari basis data untuk hasil teratas saja.
+     *
+     * @return array{ids: list<int>, docs: list<array{tf: array<string, int>, len: int}>, df: array<string, int>, avg: float}
+     */
+    private function passageIndex(): array
+    {
+        return Cache::remember(KnowledgeSource::CACHE_KEY, now()->addMinutes(10), function () {
+            $ids = [];
+            $docs = [];
+            $df = [];
+
+            KnowledgePassage::query()
+                ->whereIn('knowledge_source_id', KnowledgeSource::query()->active()->select('id'))
+                ->select(['id', 'title', 'heading', 'body'])
+                ->orderBy('id')
+                ->chunk(500, function ($passages) use (&$ids, &$docs, &$df) {
+                    foreach ($passages as $passage) {
+                        $tf = IndonesianText::frequencies($passage->body);
+                        foreach (IndonesianText::frequencies(implode(' ', [$passage->title, $passage->heading])) as $key => $count) {
+                            $tf[$key] = ($tf[$key] ?? 0) + $count * 2;
+                        }
+                        foreach (array_keys($tf) as $key) {
+                            $df[$key] = ($df[$key] ?? 0) + 1;
+                        }
+                        $ids[] = $passage->id;
+                        $docs[] = ['tf' => $tf, 'len' => max(1, array_sum($tf))];
+                    }
+                });
+
+            $avg = $docs === [] ? 1.0 : array_sum(array_column($docs, 'len')) / count($docs);
+
+            return ['ids' => $ids, 'docs' => $docs, 'df' => $df, 'avg' => $avg];
         });
     }
 }

@@ -100,7 +100,7 @@ export default function PengetahuanDokumen({ documents, selected, can_delete: ca
     return (
         <AdminLayout
             title="Buat artikel dari dokumen resmi"
-            subtitle="AI merangkum dokumen menjadi tanya-jawab. Setiap usulan menyebut halaman sumbernya dan masuk sebagai draf untuk ditinjau."
+            subtitle="Isi dokumen langsung dapat dikutip asisten AI (lihat Sumber Resmi). AI juga merangkumnya menjadi usulan tanya-jawab yang menyebut halaman sumbernya dan masuk sebagai draf untuk ditinjau."
             actions={
                 <Button variant="outline" size="sm" asChild>
                     <Link href="/admin/pengetahuan">Kembali ke Basis Pengetahuan</Link>
@@ -138,18 +138,18 @@ export default function PengetahuanDokumen({ documents, selected, can_delete: ca
                     <Card className="border-gray-200">
                         <CardHeader className="border-b border-gray-100 pb-3">
                             <CardTitle className="flex items-center gap-2 text-sm font-bold text-gray-800">
-                                <Upload className="text-brand-light h-4 w-4" /> Unggah PDF resmi
+                                <Upload className="text-brand-light h-4 w-4" /> Unggah PDF/DOCX resmi
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3 p-4">
                             <form onSubmit={submitUpload} className="space-y-3">
                                 <label htmlFor="dokumen" className="sr-only">
-                                    Berkas PDF
+                                    Berkas PDF atau DOCX
                                 </label>
                                 <Input
                                     id="dokumen"
                                     type="file"
-                                    accept="application/pdf"
+                                    accept="application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                                     onChange={(e) => upload.setData('dokumen', e.target.files?.[0] ?? null)}
                                 />
                                 {upload.errors.dokumen && <p className="text-xs font-semibold text-rose-600">{upload.errors.dokumen}</p>}
@@ -159,7 +159,7 @@ export default function PengetahuanDokumen({ documents, selected, can_delete: ca
                                 </Button>
                             </form>
                             <p className="text-xs text-gray-500">
-                                Pedoman, regulasi, atau SOP berbentuk PDF teks (maks. 20 MB). Dokumen hasil pindai belum didukung.
+                                Pedoman, regulasi, atau SOP berbentuk PDF teks atau Word .docx (maks. 20 MB). Dokumen hasil pindai belum didukung.
                             </p>
                         </CardContent>
                     </Card>
@@ -215,7 +215,7 @@ export default function PengetahuanDokumen({ documents, selected, can_delete: ca
                             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4">
                                 <div className="flex min-w-0 items-center gap-3">
                                     <span className="flex h-12 w-10 shrink-0 items-end justify-center rounded bg-rose-100 pb-1.5 text-[10px] font-extrabold text-rose-700">
-                                        PDF
+                                        {selected.nama.toLowerCase().endsWith('.docx') ? 'DOCX' : 'PDF'}
                                     </span>
                                     <div className="min-w-0">
                                         <p className="truncate font-bold text-gray-800">{selected.nama}</p>
@@ -228,7 +228,7 @@ export default function PengetahuanDokumen({ documents, selected, can_delete: ca
                                 <div className="flex items-center gap-2">
                                     <Button variant="outline" size="sm" asChild>
                                         <a href={selected.berkas_url} target="_blank" rel="noreferrer">
-                                            <ExternalLink className="h-4 w-4" /> Buka PDF
+                                            <ExternalLink className="h-4 w-4" /> Buka berkas
                                         </a>
                                     </Button>
                                     {canDelete &&

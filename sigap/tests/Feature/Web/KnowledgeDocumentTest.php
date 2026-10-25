@@ -129,7 +129,7 @@ class KnowledgeDocumentTest extends TestCase
         $this->assertStringContainsString('hasil pindai', (string) $document->error);
     }
 
-    public function test_ai_failure_marks_document_failed_and_can_be_retried(): void
+    public function test_ai_failure_still_makes_document_citable_and_can_be_retried(): void
     {
         $this->app->bind(LlmClient::class, fn () => new class implements LlmClient
         {
@@ -140,17 +140,24 @@ class KnowledgeDocumentTest extends TestCase
         });
 
         $document = $this->upload(['Syarat pendaftaran calon transmigran meliputi kepala keluarga berusia produktif.']);
-        $this->assertSame('gagal', $document->status);
+        // Kutipan tetap dibuat walau AI mati; usulan artikel menyusul.
+        $this->assertSame('siap', $document->status);
+        $this->assertSame([], $document->proposals);
+        $this->assertStringContainsString('dapat dikutip asisten', (string) $document->error);
+        $this->assertSame(1, $document->source->passages()->count());
 
         $this->app->bind(LlmClient::class, fn () => new FakeLlmClient);
         $this->post("/admin/pengetahuan/dokumen/{$document->id}/ulang");
-        $this->assertSame('siap', $document->fresh()->status);
+        $document->refresh();
+        $this->assertSame('siap', $document->status);
+        $this->assertNull($document->error);
+        $this->assertNotEmpty($document->proposals);
     }
 
-    public function test_only_pdf_is_accepted_and_only_admins_may_upload(): void
+    public function test_only_pdf_or_docx_is_accepted_and_only_admins_may_upload(): void
     {
         $this->actingAs($this->admin)
-            ->post('/admin/pengetahuan/dokumen', ['dokumen' => UploadedFile::fake()->create('catatan.docx', 10)])
+            ->post('/admin/pengetahuan/dokumen', ['dokumen' => UploadedFile::fake()->createWithContent('catatan.txt', 'teks biasa')])
             ->assertSessionHasErrors('dokumen');
 
         $this->actingAs(User::factory()->warga()->create())

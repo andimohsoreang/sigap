@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
             $ai = config('services.ai');
 
             return $ai['driver'] === 'openai'
-                ? new OpenAiCompatibleClient($ai['base_url'], $ai['api_key'], $ai['model'], $ai['timeout'], $ai['max_tokens'])
+                ? new OpenAiCompatibleClient($ai['base_url'], $ai['api_key'], $ai['model'], $ai['timeout'], $ai['max_tokens'], $ai['reasoning_effort'] ?? null)
                 : new FakeLlmClient;
         });
     }

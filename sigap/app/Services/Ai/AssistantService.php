@@ -5,6 +5,8 @@ namespace App\Services\Ai;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\KnowledgeArticle;
+use App\Models\KnowledgePassage;
+use App\Models\KnowledgeSource;
 use App\Models\Portal;
 use App\Models\User;
 use App\Services\ChatService;
@@ -20,7 +22,8 @@ use Illuminate\Support\Str;
  * Asisten AI contact center.
  *
  * Satu pintu, dua jalan:
- * - Bisa dijawab dari Basis Pengetahuan → AI menjawab dengan sumber.
+ * - Bisa dijawab dari Basis Pengetahuan (artikel terbit) atau Sumber Resmi
+ *   (kutipan situs & berkas resmi Kementerian) → AI menjawab dengan sumber.
  * - Aduan, hak pribadi, diminta warga, sumber tidak ada, atau AI gagal →
  *   percakapan diteruskan ke petugas beserta ringkasan.
  *
@@ -67,7 +70,7 @@ class AssistantService
             return [$this->ticketStatus($conversation, $ticketNo, $viewer)];
         }
 
-        $articles = $this->retriever->search($this->searchText($conversation, $text, $incoming->id));
+        $articles = $this->retriever->sources($this->searchText($conversation, $text, $incoming->id));
 
         try {
             $result = $this->ask($conversation, $text, $articles, $incoming->id);
@@ -94,8 +97,15 @@ class AssistantService
                     .($summary ? "\n\nRingkasan: {$summary}" : ''), ['kind' => 'ringkasan']),
                 ...$this->handoff($conversation, 'aduan', $summary),
             ],
+            // Ketentuan umumnya (bila ada sumbernya) tetap ditampilkan; kepastian
+            // untuk kasus warga sendiri diserahkan ke petugas.
             'pribadi' => [
-                $this->say($conversation, 'Pertanyaan ini menyangkut data Anda pribadi, jadi perlu diperiksa langsung oleh petugas. Saya tidak dapat memastikannya.', ['kind' => 'pribadi']),
+                ...($this->citedSources($result, $articles)->isNotEmpty() && $result['jawaban'] !== ''
+                    ? [$this->answer($conversation, $text, $result, $articles)]
+                    : []),
+                $this->say($conversation, $this->citedSources($result, $articles)->isNotEmpty() && $result['jawaban'] !== ''
+                    ? 'Untuk memastikan apakah ketentuan di atas berlaku pada kasus Anda, perlu diperiksa langsung oleh petugas. Saya tidak dapat memastikannya.'
+                    : 'Pertanyaan ini menyangkut data Anda pribadi, jadi perlu diperiksa langsung oleh petugas. Saya tidak dapat memastikannya.', ['kind' => 'pribadi']),
                 ...$this->handoff($conversation, 'pribadi', $summary),
             ],
             'tidak_jelas' => [$this->say(
@@ -184,24 +194,21 @@ class AssistantService
 
         $message->forceFill(['feedback' => $helpful ? 1 : -1])->save();
 
-        $ids = collect($message->meta['sumber'] ?? [])->pluck('id')->filter()->all();
+        // Hanya artikel yang punya statistik penilaian; kutipan tidak.
+        $ids = collect($message->meta['sumber'] ?? [])->reject(fn ($s) => ($s['jenis'] ?? 'artikel') !== 'artikel')->pluck('id')->filter()->all();
         if ($ids !== []) {
             KnowledgeArticle::query()->whereKey($ids)->increment($helpful ? 'helpful_count' : 'unhelpful_count');
         }
     }
 
     /**
-     * @param  array{jenis: string, jawaban: string, sumber: list<int>, portal: string|null, perlu_petugas: bool, ringkasan: string}  $result
-     * @param  Collection<int, KnowledgeArticle>  $articles
+     * @param  array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, portal: string|null, perlu_petugas: bool, ringkasan: string}  $result
+     * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
      */
     private function answer(ChatConversation $conversation, string $question, array $result, Collection $articles, ?Portal $portal = null): ChatMessage
     {
         // Tanpa sumber yang sah, tidak ada jawaban: AI tidak boleh menebak.
-        $sources = collect($result['sumber'])
-            ->map(fn (int $no) => $articles->values()->get($no - 1))
-            ->filter()
-            ->unique('id')
-            ->values();
+        $sources = $this->citedSources($result, $articles);
 
         if (($sources->isEmpty() || $result['jawaban'] === '') && $portal !== null) {
             // Katalog portal dikelola admin = sumber resmi untuk "layanan ini ada di mana".
@@ -219,23 +226,61 @@ class AssistantService
             );
         }
 
-        KnowledgeArticle::query()->whereKey($sources->pluck('id')->all())->increment('used_count');
+        $articleIds = $sources->filter(fn ($s) => $s instanceof KnowledgeArticle)->pluck('id')->all();
+        if ($articleIds !== []) {
+            KnowledgeArticle::query()->whereKey($articleIds)->increment('used_count');
+        }
+        $sourceIds = $sources->filter(fn ($s) => $s instanceof KnowledgePassage)->pluck('knowledge_source_id')->unique()->all();
+        if ($sourceIds !== []) {
+            KnowledgeSource::query()->whereKey($sourceIds)->increment('used_count');
+        }
 
         return $this->say($conversation, $result['jawaban'], [
             'kind' => 'jawaban',
-            'sumber' => $sources->map(fn (KnowledgeArticle $a) => [
-                'id' => $a->id,
-                'judul' => $a->title,
-                'label' => $a->sourceLabel(),
-                'url' => $a->source_url,
-            ])->all(),
+            // Ditandai hanya bila memang ada lebih dari satu sumber yang dikutip.
+            'beda_sumber' => $result['beda_sumber'] && $sources->count() > 1,
+            'sumber' => $sources->map(fn (KnowledgeArticle|KnowledgePassage $s, int $no) => $s instanceof KnowledgePassage
+                ? [
+                    'no' => $no,
+                    'jenis' => 'kutipan',
+                    'kutipan_id' => $s->id,
+                    'judul' => $s->displayTitle(),
+                    'label' => $s->label(),
+                    'url' => $s->link(),
+                    'kutipan' => Str::limit(preg_replace('/\s+/u', ' ', $s->body), 280),
+                    'diambil' => $s->source?->fetched_at?->toIso8601String(),
+                ]
+                : [
+                    'no' => $no,
+                    'jenis' => 'artikel',
+                    'id' => $s->id,
+                    'judul' => $s->title,
+                    'label' => $s->sourceLabel(),
+                    'url' => $s->source_url,
+                ])->values()->all(),
             'portal' => $portal?->card(),
         ]);
     }
 
     /**
-     * @param  Collection<int, KnowledgeArticle>  $articles
-     * @return array{jenis: string, jawaban: string, sumber: list<int>, portal: string|null, perlu_petugas: bool, ringkasan: string}
+     * Sumber yang benar-benar dikutip AI, dengan nomor seperti di jawaban
+     * (agar [n] cocok dengan daftar sumber). Nomor di luar yang dikirim dibuang.
+     *
+     * @param  array{sumber: list<int>}  $result
+     * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
+     * @return Collection<int, KnowledgeArticle|KnowledgePassage>
+     */
+    private function citedSources(array $result, Collection $articles): Collection
+    {
+        return collect($result['sumber'])
+            ->unique()
+            ->mapWithKeys(fn (int $no) => [$no => $articles->values()->get($no - 1)])
+            ->filter();
+    }
+
+    /**
+     * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
+     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, portal: string|null, perlu_petugas: bool, ringkasan: string}
      */
     private function ask(ChatConversation $conversation, string $question, Collection $articles, int $incomingId): array
     {
@@ -264,8 +309,8 @@ class AssistantService
      * Dipakai alur chat dan perintah `sigap:uji-asisten`.
      *
      * @param  list<array{dari: string, isi: string}>  $history
-     * @param  Collection<int, KnowledgeArticle>  $articles
-     * @return array{jenis: string, jawaban: string, sumber: list<int>, portal: string|null, perlu_petugas: bool, ringkasan: string}
+     * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
+     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, portal: string|null, perlu_petugas: bool, ringkasan: string}
      *
      * @throws AiException
      */
@@ -275,12 +320,21 @@ class AssistantService
             'pertanyaan' => $this->masker->mask($question),
             'riwayat' => $history,
             'portal' => $this->portals->forAssistant($question),
-            'sumber' => $articles->values()->map(fn (KnowledgeArticle $a, int $i) => [
-                'no' => $i + 1,
-                'judul' => $a->title,
-                'isi' => Str::limit($a->body, 2500),
-                'rujukan' => $a->sourceLabel(),
-            ])->all(),
+            'sumber' => $articles->values()->map(fn (KnowledgeArticle|KnowledgePassage $s, int $i) => $s instanceof KnowledgePassage
+                ? [
+                    'no' => $i + 1,
+                    'jenis' => 'kutipan',
+                    'judul' => $s->displayTitle(),
+                    'isi' => Str::limit($s->body, 1500),
+                    'rujukan' => $s->label(),
+                ]
+                : [
+                    'no' => $i + 1,
+                    'jenis' => 'artikel',
+                    'judul' => $s->title,
+                    'isi' => Str::limit($s->body, 2500),
+                    'rujukan' => $s->sourceLabel(),
+                ])->all(),
         ];
 
         $content = $this->llm->complete([
@@ -294,6 +348,7 @@ class AssistantService
             'jenis' => in_array($data['jenis'] ?? null, self::TYPES, true) ? $data['jenis'] : 'informasi',
             'jawaban' => trim((string) ($data['jawaban'] ?? '')),
             'sumber' => array_values(array_filter(array_map('intval', (array) ($data['sumber'] ?? [])))),
+            'beda_sumber' => (bool) ($data['beda_sumber'] ?? false),
             'portal' => $this->portals->find(is_string($data['portal'] ?? null) ? $data['portal'] : null)?->code,
             'perlu_petugas' => (bool) ($data['perlu_petugas'] ?? false),
             'ringkasan' => Str::limit(trim((string) ($data['ringkasan'] ?? '')), 600),

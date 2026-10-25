@@ -57,7 +57,17 @@ interface Message {
     pada: string | null;
     dibaca?: boolean;
     jenis?: string | null;
-    sumber?: { id: number; judul: string; label: string | null }[];
+    sumber?: {
+        no?: number;
+        jenis?: 'artikel' | 'kutipan';
+        id?: number;
+        kutipan_id?: number;
+        judul: string;
+        label: string | null;
+        url?: string | null;
+        kutipan?: string;
+    }[];
+    beda_sumber?: boolean;
     nilai?: number | null;
     lampiran?: { nama: string; mime: string; ukuran: number; gambar: boolean; url: string } | null;
     konfirmasi?: {
@@ -270,7 +280,7 @@ export default function Chat({
 
     return (
         <AdminLayout
-            title={aiEnabled ? 'Kotak Masuk' : 'Pesan Masuk (Live Chat)'}
+            title={aiEnabled ? 'Pesan Masuk' : 'Pesan Masuk (Live Chat)'}
             badge={aiEnabled ? 'Asisten AI aktif' : undefined}
             subtitle={aiEnabled ? 'Percakapan yang diteruskan asisten dan live chat warga.' : 'Percakapan real-time via Laravel Reverb.'}
         >
@@ -1351,11 +1361,31 @@ function MessageItem({ message: m, participant, initial }: { message: Message; p
                                 </span>
                             </a>
                         ))}
+                    {m.beda_sumber && (
+                        <span className="mt-3 block rounded-md bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-900">
+                            Sumber resmi berbeda: semua versi ditampilkan ke warga. Pastikan ketentuan yang berlaku.
+                        </span>
+                    )}
                     {(m.sumber?.length ?? 0) > 0 && (
                         <span className="mt-3 flex flex-col gap-1 border-t border-gray-200 pt-2.5 text-xs text-gray-600">
                             {m.sumber!.map((s, i) => (
-                                <span key={s.id} className="flex items-center gap-1.5">
-                                    <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />[{i + 1}] {s.label ?? s.judul}
+                                <span key={`${s.jenis ?? 'artikel'}-${s.id ?? s.kutipan_id ?? i}`} className="flex flex-col gap-0.5">
+                                    <span className="flex items-center gap-1.5">
+                                        <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />[{s.no ?? i + 1}]{' '}
+                                        {s.url ? (
+                                            <a href={s.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                                {s.jenis === 'kutipan' ? s.judul : (s.label ?? s.judul)}
+                                            </a>
+                                        ) : s.jenis === 'kutipan' ? (
+                                            s.judul
+                                        ) : (
+                                            (s.label ?? s.judul)
+                                        )}
+                                        <span className="rounded bg-gray-100 px-1.5 text-[10px] font-semibold text-gray-600">
+                                            {s.jenis === 'kutipan' ? 'kutipan langsung' : 'artikel'}
+                                        </span>
+                                    </span>
+                                    {s.jenis === 'kutipan' && s.label && <span className="pl-5 text-[11px] text-gray-500">{s.label}</span>}
                                 </span>
                             ))}
                         </span>

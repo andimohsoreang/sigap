@@ -4,7 +4,23 @@ import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { echo, echoIsConfigured } from '@laravel/echo-react';
-import { BookOpen, Bot, ExternalLink, Globe, Headset, KeyRound, LogIn, Maximize2, MessagesSquare, Send, Ticket, UserRound, X } from 'lucide-react';
+import {
+    AlertTriangle,
+    BookOpen,
+    Bot,
+    ExternalLink,
+    FileText,
+    Globe,
+    Headset,
+    KeyRound,
+    LogIn,
+    Maximize2,
+    MessagesSquare,
+    Send,
+    Ticket,
+    UserRound,
+    X,
+} from 'lucide-react';
 import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 /**
@@ -42,10 +58,17 @@ export function openSigap() {
 const TRANSI_AVATAR = '/images/transi/avatar.webp';
 
 export interface Source {
-    id: number;
+    /** Nomor seperti tertulis di jawaban ([n]). Pesan lama tanpa nomor memakai urutan. */
+    no?: number;
+    /** artikel = Basis Pengetahuan yang sudah ditinjau; kutipan = langsung dari situs/berkas resmi. */
+    jenis?: 'artikel' | 'kutipan';
+    id?: number;
+    kutipan_id?: number;
     judul: string;
     label: string | null;
     url?: string | null;
+    kutipan?: string;
+    diambil?: string | null;
 }
 
 export interface TicketInfo {
@@ -84,6 +107,8 @@ export interface ChatMessage {
     pada: string | null;
     jenis?: string | null;
     sumber?: Source[];
+    /** Sumber resmi yang dikutip menyebut ketentuan berbeda; semua versi ditampilkan. */
+    beda_sumber?: boolean;
     tiket?: TicketInfo | null;
     portal?: PortalCardInfo | null;
     rujukan?: ReferralInfo | null;
@@ -658,6 +683,65 @@ function Bubble({
     );
 }
 
+/**
+ * Daftar sumber di bawah jawaban asisten. Kutipan dari situs/berkas resmi
+ * menampilkan potongan teks aslinya + tanggal diambil, agar warga bisa
+ * mencocokkan jawaban dengan sumbernya.
+ */
+export function SourceList({ sources }: { sources: Source[] }) {
+    return (
+        <div className="mt-2 flex flex-col gap-2 border-t border-dashed border-gray-200 pt-2 whitespace-normal">
+            <span className="text-[10px] font-bold tracking-wide text-gray-500 uppercase">Sumber resmi</span>
+            {sources.map((s, i) => {
+                const no = s.no ?? i + 1;
+                const Icon = s.jenis === 'kutipan' ? (s.url?.startsWith('/sumber/') || !s.url ? FileText : Globe) : BookOpen;
+                const title = s.jenis === 'kutipan' ? s.judul : (s.label ?? s.judul);
+                const head = (
+                    <>
+                        <Icon className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+                        <span>
+                            [{no}] {title}
+                        </span>
+                        {s.url && (
+                            <>
+                                <ExternalLink className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+                                <span className="sr-only">(buka sumber di tab baru)</span>
+                            </>
+                        )}
+                    </>
+                );
+
+                return (
+                    <div key={`${s.jenis ?? 'artikel'}-${s.id ?? s.kutipan_id ?? i}`} className="flex flex-col gap-1">
+                        {s.url ? (
+                            <a
+                                href={s.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary flex items-start gap-1 text-[11px] font-semibold hover:underline"
+                            >
+                                {head}
+                            </a>
+                        ) : (
+                            <span className="text-primary flex items-start gap-1 text-[11px] font-semibold">{head}</span>
+                        )}
+                        {s.jenis === 'kutipan' && (
+                            <>
+                                {s.kutipan && (
+                                    <blockquote className="line-clamp-3 border-l-2 border-gray-300 pl-2 text-[11px] leading-snug text-gray-600 italic">
+                                        “{s.kutipan}”
+                                    </blockquote>
+                                )}
+                                {s.label && <span className="pl-2 text-[10px] text-gray-500">{s.label}</span>}
+                            </>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
 /** Sumber, kartu status tiket, dan tombol penilaian di bawah jawaban asisten. */
 export function AiExtras({
     message,
@@ -700,29 +784,16 @@ export function AiExtras({
 
             {message.portal && <PortalCard portal={message.portal} referral={message.rujukan ?? null} />}
 
-            {(message.sumber?.length ?? 0) > 0 && (
-                <div className="mt-2 flex flex-col gap-1 border-t border-dashed border-gray-200 pt-2 whitespace-normal">
-                    {message.sumber!.map((s, i) =>
-                        s.url ? (
-                            <a
-                                key={s.id}
-                                href={s.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary flex items-start gap-1 text-[11px] font-semibold hover:underline"
-                            >
-                                <BookOpen className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />[{i + 1}] {s.label ?? s.judul}
-                                <ExternalLink className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
-                                <span className="sr-only">(buka dokumen di tab baru)</span>
-                            </a>
-                        ) : (
-                            <span key={s.id} className="text-primary flex items-start gap-1 text-[11px] font-semibold">
-                                <BookOpen className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />[{i + 1}] {s.label ?? s.judul}
-                            </span>
-                        ),
-                    )}
+            {message.beda_sumber && (
+                <div className="mt-2 flex items-start gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2 text-[11px] leading-snug whitespace-normal text-amber-900">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <span>
+                        <strong>Sumber resmi menyebut ketentuan berbeda.</strong> Semua versi ditampilkan beserta sumbernya. Pastikan ketentuan yang
+                        berlaku ke petugas atau dinas transmigrasi kabupaten/kota.
+                    </span>
                 </div>
             )}
+            {(message.sumber?.length ?? 0) > 0 && <SourceList sources={message.sumber!} />}
 
             {message.jenis === 'jawaban' && (
                 <div className="mt-2 flex items-center gap-2 text-[11px] whitespace-normal text-gray-500">

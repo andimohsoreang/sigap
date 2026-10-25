@@ -363,6 +363,7 @@ class ChatService
             // Hanya kunci yang aman untuk penanya (bukan `pertanyaan` internal).
             'jenis' => $meta['kind'] ?? null,
             'sumber' => $meta['sumber'] ?? [],
+            'beda_sumber' => (bool) ($meta['beda_sumber'] ?? false),
             'tiket' => $meta['tiket'] ?? null,
             'portal' => $meta['portal'] ?? null,
             'rujukan' => $meta['rujukan'] ?? null,

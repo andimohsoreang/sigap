@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Log;
  * - OpenCode Zen : https://opencode.ai/inference/openai/v1
  * - Ollama       : http://localhost:11434/v1
  * - vLLM         : http://<server>:8000/v1
+ * - Sumopod AI   : https://ai.sumopod.com/v1
+ *
+ * Model penalaran (mis. deepseek-v4-flash) "berpikir" dulu sebelum menjawab:
+ * lambat dan bisa menghabiskan jatah token sebelum jawaban keluar. Isi
+ * `reasoning_effort` (mis. "none") untuk mematikannya.
  */
 class OpenAiCompatibleClient implements LlmClient
 {
@@ -21,6 +26,7 @@ class OpenAiCompatibleClient implements LlmClient
         private readonly string $model,
         private readonly int $timeout = 45,
         private readonly int $maxTokens = 900,
+        private readonly ?string $reasoningEffort = null,
     ) {}
 
     public function complete(array $messages, bool $json = false): string
@@ -31,6 +37,9 @@ class OpenAiCompatibleClient implements LlmClient
             'temperature' => 0.2,
             'max_tokens' => $this->maxTokens,
         ];
+        if ($this->reasoningEffort !== null && $this->reasoningEffort !== '') {
+            $payload['reasoning_effort'] = $this->reasoningEffort;
+        }
 
         $response = $this->send($json ? $payload + ['response_format' => ['type' => 'json_object']] : $payload);
 

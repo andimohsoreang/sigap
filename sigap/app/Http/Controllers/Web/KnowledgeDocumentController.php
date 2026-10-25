@@ -17,9 +17,11 @@ use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * Buat artikel dari dokumen resmi: unggah PDF → AI mengusulkan tanya-jawab
- * dengan rujukan halaman → petugas memilih → tersimpan sebagai DRAF.
- * Tidak ada yang dipakai asisten AI sebelum diterbitkan Super Admin.
+ * Dokumen resmi (PDF/DOCX):
+ * - isinya langsung menjadi kutipan Sumber Resmi yang dirujuk asisten AI
+ *   (dapat dinonaktifkan di halaman Sumber Resmi);
+ * - AI mengusulkan tanya-jawab dengan rujukan halaman → petugas memilih →
+ *   tersimpan sebagai DRAF yang baru dipakai setelah diterbitkan Super Admin.
  */
 class KnowledgeDocumentController extends Controller
 {
@@ -66,13 +68,14 @@ class KnowledgeDocumentController extends Controller
     {
         $this->authorize('manageMaster', User::class);
 
-        $request->validate(['dokumen' => ['required', 'file', 'mimes:pdf', 'max:20480']], [
-            'dokumen.mimes' => 'Hanya berkas PDF yang dapat diproses.',
-            'dokumen.max' => 'Ukuran PDF paling besar 20 MB.',
+        $request->validate(['dokumen' => ['required', 'file', 'mimes:pdf,docx', 'max:20480']], [
+            'dokumen.mimes' => 'Hanya berkas PDF atau Word (.docx) yang dapat diproses.',
+            'dokumen.max' => 'Ukuran berkas paling besar 20 MB.',
         ]);
 
         $file = $request->file('dokumen');
-        $path = $file->storeAs('knowledge', Str::uuid().'.pdf', 'local');
+        $extension = $file->guessExtension() === 'docx' ? 'docx' : 'pdf';
+        $path = $file->storeAs('knowledge', Str::uuid().'.'.$extension, 'local');
 
         $document = KnowledgeDocument::create([
             'original_name' => Str::limit($file->getClientOriginalName(), 250, ''),
@@ -86,7 +89,7 @@ class KnowledgeDocumentController extends Controller
         $this->audit->safe('knowledge.document_uploaded', $document, "Dokumen \"{$document->original_name}\" diunggah untuk Basis Pengetahuan.");
 
         return redirect("/admin/pengetahuan/dokumen?dokumen={$document->id}")
-            ->with('success', 'Dokumen diunggah. AI sedang menyusun usulan artikel.');
+            ->with('success', 'Dokumen diunggah. Isinya sedang dibaca untuk kutipan asisten dan usulan artikel.');
     }
 
     public function saveDrafts(Request $request, KnowledgeDocument $document): RedirectResponse
@@ -121,14 +124,23 @@ class KnowledgeDocumentController extends Controller
     public function file(KnowledgeDocument $document): BinaryFileResponse
     {
         $this->authorize('manageMaster', User::class);
+
+        return self::serve($document);
+    }
+
+    /** Kirim berkas dokumen: PDF inline, DOCX sebagai unduhan. */
+    public static function serve(KnowledgeDocument $document): BinaryFileResponse
+    {
         abort_unless(Storage::disk('local')->exists($document->path), 404);
 
         // Nama berkas berasal dari pengguna: hanya karakter aman yang masuk header.
-        $name = preg_replace('/[^\w .()-]/u', '_', Str::ascii($document->original_name)) ?: 'dokumen.pdf';
+        $name = preg_replace('/[^\w .()-]/u', '_', Str::ascii($document->original_name)) ?: 'dokumen';
+        $docx = $document->isDocx();
 
         return response()->file(Storage::disk('local')->path($document->path), [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.$name.'"',
+            'Content-Type' => $docx ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 'application/pdf',
+            'Content-Disposition' => ($docx ? 'attachment' : 'inline').'; filename="'.$name.'"',
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 
@@ -137,9 +149,10 @@ class KnowledgeDocumentController extends Controller
         $this->authorize('manageAdmins', User::class);
 
         Storage::disk('local')->delete($document->path);
+        $document->source?->delete(); // kutipannya ikut terhapus
         $document->delete();
-        $this->audit->safe('knowledge.document_deleted', null, "Dokumen \"{$document->original_name}\" dihapus (artikel yang sudah dibuat tetap ada).");
+        $this->audit->safe('knowledge.document_deleted', null, "Dokumen \"{$document->original_name}\" dihapus beserta kutipannya (artikel yang sudah dibuat tetap ada).");
 
-        return redirect('/admin/pengetahuan/dokumen')->with('success', 'Dokumen dihapus. Artikel yang sudah dibuat tetap ada.');
+        return redirect('/admin/pengetahuan/dokumen')->with('success', 'Dokumen dan kutipannya dihapus. Artikel yang sudah dibuat tetap ada.');
     }
 }

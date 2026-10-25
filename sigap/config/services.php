@@ -56,6 +56,9 @@ return [
         'model' => env('AI_MODEL', 'deepseek-v4.1-flash'),
         'timeout' => (int) env('AI_TIMEOUT', 45),
         'max_tokens' => (int) env('AI_MAX_TOKENS', 900),
+        // Model penalaran: "none" mematikan proses berpikir (jauh lebih cepat).
+        // Kosongkan untuk model biasa yang tidak mengenal parameter ini.
+        'reasoning_effort' => env('AI_REASONING_EFFORT'),
         // Jam layanan petugas (WIB). Di luar jam ini, percakapan yang
         // diteruskan diberi nomor referensi dan warga diminta kontak.
         'service_hours' => [
@@ -65,6 +68,19 @@ return [
             'end' => env('AI_SERVICE_END', '16:00'),
             'label' => env('AI_SERVICE_LABEL', 'Senin–Jumat, 08.00–16.00 WIB'),
         ],
+    ],
+
+    // Sumber Resmi: situs yang boleh diambil untuk kutipan asisten AI. Hanya
+    // domain di daftar ini (beserta subdomainnya) yang dapat didaftarkan, dan
+    // pengalihan ke domain lain ditolak.
+    'knowledge' => [
+        'allowed_hosts' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+            'KNOWLEDGE_ALLOWED_HOSTS',
+            'transmigrasi.go.id,peraturan.bpk.go.id,peraturan.go.id',
+        ))))),
+        'max_pages' => (int) env('KNOWLEDGE_MAX_PAGES', 25),
+        'max_bytes' => (int) env('KNOWLEDGE_MAX_BYTES', 20 * 1024 * 1024),
+        'timeout' => (int) env('KNOWLEDGE_TIMEOUT', 30),
     ],
 
 ];

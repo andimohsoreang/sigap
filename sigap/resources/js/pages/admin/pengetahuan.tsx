@@ -7,6 +7,7 @@ import {
     Clock,
     ExternalLink,
     FileUp,
+    Globe,
     ListChecks,
     Pencil,
     Plus,
@@ -56,6 +57,7 @@ interface Unanswered {
 interface Probe {
     question: string;
     results: { id: number; title: string; score: number; coverage: number }[];
+    passages: { id: number; title: string; source: string | null; source_id: number | null }[];
 }
 
 interface Props {
@@ -249,7 +251,7 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, p
     return (
         <AdminLayout
             title="Basis Pengetahuan"
-            subtitle="Satu-satunya sumber jawaban asisten AI. Hanya artikel berstatus Terbit yang dipakai AI."
+            subtitle="Sumber jawaban asisten AI: artikel berstatus Terbit, ditambah kutipan langsung dari situs dan berkas resmi di Sumber Resmi."
             actions={
                 formOpen ? (
                     <Button variant="outline" size="sm" onClick={close}>
@@ -264,6 +266,11 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, p
                                 </Link>
                             </Button>
                         )}
+                        <Button size="sm" variant="outline" asChild>
+                            <Link href="/admin/pengetahuan/sumber">
+                                <Globe className="h-4 w-4" /> Sumber Resmi
+                            </Link>
+                        </Button>
                         <Button size="sm" variant="outline" asChild>
                             <Link href="/admin/pengetahuan/dokumen">
                                 <FileUp className="h-4 w-4" /> Buat dari dokumen resmi
@@ -474,9 +481,13 @@ function ProbeCard({ probe }: { probe: Probe | null }) {
                     </Button>
                 </form>
                 {probe &&
-                    (probe.results.length === 0 ? (
+                    (probe.results.length === 0 && probe.passages.length === 0 ? (
                         <p className="rounded-md bg-amber-50 p-3 text-xs text-amber-800">
-                            Tidak ada artikel yang cocok. AI akan menjawab “belum menemukan informasi resmi” dan menawarkan petugas.
+                            Tidak ada artikel atau kutipan yang cocok. AI akan menjawab “belum menemukan informasi resmi” dan menawarkan petugas.
+                        </p>
+                    ) : probe.results.length === 0 ? (
+                        <p className="rounded-md bg-gray-50 p-3 text-xs text-gray-600">
+                            Tidak ada artikel yang cocok; AI menjawab dari kutipan di bawah.
                         </p>
                     ) : (
                         <ol className="space-y-2">
@@ -491,6 +502,26 @@ function ProbeCard({ probe }: { probe: Probe | null }) {
                             ))}
                         </ol>
                     ))}
+                {probe && probe.passages.length > 0 && (
+                    <div className="space-y-2 border-t border-gray-100 pt-3">
+                        <p className="text-xs font-bold text-gray-600">Kutipan Sumber Resmi yang ikut dikirim</p>
+                        <ol className="space-y-2">
+                            {probe.passages.map((p, i) => (
+                                <li key={p.id} className="flex items-start gap-2 text-sm">
+                                    <span className="text-primary mt-0.5 text-xs font-bold tabular-nums">
+                                        [{probe.results.slice(0, 3).length + i + 1}]
+                                    </span>
+                                    <span className="flex-1">
+                                        <Link href={`/admin/pengetahuan/sumber?sumber=${p.source_id}`} className="text-gray-700 hover:underline">
+                                            {p.title}
+                                        </Link>
+                                        {p.source && <span className="block text-xs text-gray-500">{p.source}</span>}
+                                    </span>
+                                </li>
+                            ))}
+                        </ol>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

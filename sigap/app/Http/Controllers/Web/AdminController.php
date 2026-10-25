@@ -1137,6 +1137,7 @@ class AdminController extends Controller
                 'lampiran' => ChatService::attachment($m, '/admin/chat/lampiran/'),
                 'konfirmasi' => ChatService::confirmation($m),
                 'sumber' => $m->meta['sumber'] ?? [],
+                'beda_sumber' => (bool) ($m->meta['beda_sumber'] ?? false),
                 'nilai' => $m->feedback,
             ]),
         ];
