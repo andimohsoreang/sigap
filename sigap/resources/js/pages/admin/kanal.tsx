@@ -5,10 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AdminLayout from '@/layouts/admin-layout';
+import { formatDateTime } from '@/lib/admin-format';
 import { router, useForm } from '@inertiajs/react';
 import { Building2, Hash, RefreshCw, RotateCw, ShieldCheck } from 'lucide-react';
 import { type FormEvent } from 'react';
-import { formatDateTime } from './matriks';
 
 interface Channel {
     id: number;

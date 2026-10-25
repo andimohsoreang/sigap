@@ -226,8 +226,16 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
             <div className="flex">
                 {/* Sidebar tetap (fixed) + ruang pengganti selebar sidebar, agar sidebar
                     selalu setinggi layar walau isi halaman lebih tinggi dari wadahnya. */}
-                <div aria-hidden="true" className={cn('hidden shrink-0 transition-[width] duration-200 md:block', collapsed ? 'w-[76px]' : 'w-64')} />
-                <aside className={cn('fixed inset-y-0 left-0 z-30 hidden transition-[width] duration-200 md:block', collapsed ? 'w-[76px]' : 'w-64')}>
+                <div
+                    aria-hidden="true"
+                    className={cn('hidden shrink-0 transition-[width] duration-200 md:block print:hidden', collapsed ? 'w-[76px]' : 'w-64')}
+                />
+                <aside
+                    className={cn(
+                        'fixed inset-y-0 left-0 z-30 hidden transition-[width] duration-200 md:block print:hidden',
+                        collapsed ? 'w-[76px]' : 'w-64',
+                    )}
+                >
                     {sidebar(collapsed)}
                 </aside>
 
@@ -250,7 +258,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
 
                 <div className="flex min-w-0 flex-1 flex-col">
                     {/* Topbar: remah roti + notifikasi + akun */}
-                    <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-[var(--adm-border)] bg-white px-4 md:px-7">
+                    <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-[var(--adm-border)] bg-white px-4 md:px-7 print:hidden">
                         <button
                             type="button"
                             onClick={() => setMobileOpen(true)}
@@ -308,7 +316,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                         </div>
                     </header>
 
-                    <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">
+                    <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8 print:p-0">
                         {/* Judul halaman */}
                         <div className="mb-6 flex flex-wrap items-start gap-x-4 gap-y-3">
                             <div className="min-w-0 flex-1">
@@ -456,9 +464,10 @@ function Pill({ tone, children }: { tone: 'danger' | 'warning' | 'info' | 'succe
 
 export function StatusBadge({ value, label }: { value?: string | null; label?: string | null }) {
     const tones: Record<string, 'danger' | 'warning' | 'info' | 'success' | 'neutral' | 'primary'> = {
-        baru: 'info',
-        verifikasi: 'primary',
-        diproses: 'warning',
+        // Palet tahap mengikuti desain Admin v2 (Matriks Rekapitulasi).
+        baru: 'warning',
+        verifikasi: 'info',
+        diproses: 'primary',
         selesai: 'success',
         ditolak: 'danger',
     };

@@ -29,10 +29,12 @@ use App\Services\AuditService;
 use App\Services\Channels\ChannelAdapterManager;
 use App\Services\ChatService;
 use App\Services\ContactCenterStats;
+use App\Services\MatrixService;
 use App\Services\StaffRegistrationService;
 use App\Services\StatsService;
 use App\Services\TicketService;
 use App\Support\Search;
+use App\Support\TicketFilters;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -63,14 +65,21 @@ class AdminController extends Controller
 
     /* --------------------------- Matriks Rekap --------------------------- */
 
-    public function matriks(Request $request): Response
+    public function matriks(Request $request, MatrixService $matrix): Response
     {
         $this->authorize('viewAny', Ticket::class);
 
+        $user = $request->user();
+        $periode = TicketFilters::periode($request, defaultCurrentMonth: true);
+        $sumbu = array_key_exists($request->string('sumbu')->toString(), MatrixService::SUMBU)
+            ? $request->string('sumbu')->toString()
+            : 'kategori';
+
+        // Daftar tiket: cakupan peran + periode + seluruh saringan tabel.
         $query = $this->scopedTickets(Ticket::query())
             ->with(['category', 'region', 'channel', 'assignee']);
 
-        $this->applyFilters($query, $request);
+        TicketFilters::apply($query, $request, $periode);
 
         $perPage = min(max($request->integer('per_page', 10), 1), 100);
         if (! $this->applySorting($query, $request, $this->ticketSortMap())) {
@@ -78,8 +87,16 @@ class AdminController extends Controller
         }
         $paginator = $query->paginate($perPage)->withQueryString();
 
-        $counts = $this->scopedTickets(Ticket::query());
-        $byStatus = $this->stats->statusCounts($counts);
+        // Rekap: cakupan peran + saringan kawasan saja (periode diterapkan MatrixService).
+        $regionId = $request->filled('region_id') ? $request->integer('region_id') : null;
+        $scope = $this->scopedTickets(Ticket::query())->when($regionId, fn ($q) => $q->where('region_id', $regionId));
+        $regionIds = match (true) {
+            $regionId !== null => [$regionId],
+            $user->isSuperAdmin() => null,
+            default => array_values(array_filter([$user->region_id])),
+        };
+
+        $range = TicketFilters::range($periode);
 
         return Inertia::render('admin/matriks', [
             'tickets' => [
@@ -87,14 +104,20 @@ class AdminController extends Controller
                 'meta' => $this->paginationMeta($paginator),
             ],
             // D-05: agregat SQL (tanpa memuat semua tiket).
-            'rekap' => [
-                'total' => array_sum($byStatus),
-                'ews' => $this->stats->overdueCount($counts),
-                'sla_pct' => $this->stats->slaPercentage($counts),
-                'by_status' => $byStatus,
+            'rekap' => $matrix->build($scope, $range, $sumbu, $regionIds),
+            'periode' => [
+                'value' => $periode,
+                'label' => $range ? TicketFilters::monthLabel($range[0]) : 'Semua waktu',
+                'bulan_berjalan' => $periode === now()->format('Y-m'),
             ],
-            'filters' => $this->filterProps($request),
-            'options' => $this->formOptions(),
+            'filters' => TicketFilters::props($request, $periode) + ['sumbu' => $sumbu],
+            'chips' => TicketFilters::chips($request, $periode),
+            'options' => $this->formOptions() + [
+                'months' => $matrix->months($this->scopedTickets(Ticket::query()), $periode),
+            ],
+            // A-11: admin kawasan hanya melihat kawasannya sendiri.
+            'region_locked' => $user->role === UserRole::AdminKawasan,
+            'own_region' => $user->region ? ['id' => $user->region->id, 'name' => $user->region->name] : null,
         ]);
     }
 
@@ -108,7 +131,9 @@ class AdminController extends Controller
             ->public()
             ->with(['category', 'region', 'channel', 'assignee']);
 
-        $this->applyFilters($query, $request);
+        // Periode opsional (mis. dari klik sel Matriks Rekapitulasi).
+        $periode = TicketFilters::periode($request);
+        TicketFilters::apply($query, $request, $periode);
 
         $perPage = min(max($request->integer('per_page', 15), 1), 100);
         if (! $this->applySorting($query, $request, $this->ticketSortMap())) {
@@ -121,7 +146,8 @@ class AdminController extends Controller
                 'data' => collect($paginator->items())->map(fn (Ticket $t) => $this->ticketRow($t)),
                 'meta' => $this->paginationMeta($paginator),
             ],
-            'filters' => $this->filterProps($request),
+            'filters' => TicketFilters::props($request, $periode),
+            'chips' => TicketFilters::chips($request, $periode),
             'statuses' => collect(TicketStatus::cases())->mapWithKeys(fn (TicketStatus $s) => [$s->value => $s->label()]),
         ]);
     }
@@ -981,38 +1007,6 @@ class AdminController extends Controller
             'created_at' => 'created_at',
             'tenggat_sla' => 'sla_due_at',
             'overdue' => 'sla_due_at',
-        ];
-    }
-
-    private function applyFilters($query, Request $request): void
-    {
-        if ($request->filled('status')) {
-            $query->where('status', $request->string('status'));
-        }
-        if ($request->filled('region_id')) {
-            $query->where('region_id', $request->integer('region_id'));
-        }
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->integer('category_id'));
-        }
-        if ($request->filled('impact')) {
-            $query->where('impact', $request->string('impact'));
-        }
-        if ($request->filled('q')) {
-            Search::apply($query, ['title', 'ticket_no'], $request->string('q')->toString());
-        }
-    }
-
-    /** @return array<string, mixed> */
-    private function filterProps(Request $request): array
-    {
-        return [
-            'q' => $request->string('q')->toString(),
-            'status' => $request->string('status')->toString(),
-            'region_id' => $request->string('region_id')->toString(),
-            'category_id' => $request->string('category_id')->toString(),
-            'impact' => $request->string('impact')->toString(),
-            'sort' => $request->string('sort')->toString(),
         ];
     }
 

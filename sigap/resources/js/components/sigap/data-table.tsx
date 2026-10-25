@@ -72,6 +72,8 @@ interface DataTableProps<T extends object> {
         perPageKey?: string;
         /** Nama parameter query untuk sort, format "kolom:asc|desc". */
         sortKey?: string;
+        /** Pertahankan posisi gulir saat berpindah halaman/saringan (tabel di bawah halaman panjang). */
+        preserveScroll?: boolean;
     };
 }
 
@@ -117,7 +119,7 @@ export function DataTable<T extends object>({
             if (v === undefined || v === '' || v === 'all') delete base[k];
             else base[k] = v;
         });
-        router.get(serverSide.url, base, { preserveState: true, replace: true });
+        router.get(serverSide.url, base, { preserveState: true, replace: true, preserveScroll: serverSide.preserveScroll ?? false });
     };
 
     /** Arah sorting aktif dari query string server, untuk kolom tertentu. */

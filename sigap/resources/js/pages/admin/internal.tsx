@@ -4,7 +4,7 @@ import { CalendarDays, Eye, Timer, Wifi } from 'lucide-react';
 import { DataTable, type DataTableColumn } from '@/components/sigap/data-table';
 import { Button } from '@/components/ui/button';
 import AdminLayout, { AdminStat, ImpactBadge, StatusBadge } from '@/layouts/admin-layout';
-import { formatDate } from './matriks';
+import { formatDate } from '@/lib/admin-format';
 
 interface Row {
     nomor: string;

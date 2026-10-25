@@ -5,10 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout, { ImpactBadge, StatusBadge } from '@/layouts/admin-layout';
+import { formatDate, formatDateTime } from '@/lib/admin-format';
 import { Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, Building2, Clock, Download, Eye, History, Link2, MapPin, Send, Tag, User2 } from 'lucide-react';
 import { type FormEvent } from 'react';
-import { formatDate, formatDateTime } from './matriks';
 
 interface Detail {
     nomor: string;

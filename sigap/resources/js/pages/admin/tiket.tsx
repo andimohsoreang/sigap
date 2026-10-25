@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Eye } from 'lucide-react';
+import { Eye, X } from 'lucide-react';
 
 import { DataTable, type DataTableColumn } from '@/components/sigap/data-table';
 import { Button } from '@/components/ui/button';
@@ -22,11 +22,23 @@ interface Props {
         data: TicketRow[];
         meta: { total: number; current_page: number; last_page: number; per_page: number; from: number | null; to: number | null };
     };
-    filters: { status: string; q: string };
+    filters: Record<string, string>;
+    /** Saringan aktif tanpa kontrol di halaman ini (mis. dari klik sel Matriks Rekapitulasi). */
+    chips: { key: string; label: string }[];
     statuses: Record<string, string>;
 }
 
-export default function ManajemenTiket({ tickets, filters, statuses }: Props) {
+export default function ManajemenTiket({ tickets, filters, chips, statuses }: Props) {
+    /** URL halaman ini tanpa satu/semua saringan chip. */
+    const withoutFilters = (keys: string[]) => {
+        const params = new URLSearchParams();
+        Object.entries(filters).forEach(([k, v]) => {
+            if (v && !keys.includes(k)) params.set(k, v);
+        });
+        const query = params.toString();
+        return `/admin/tiket${query ? `?${query}` : ''}`;
+    };
+
     const columns: DataTableColumn<TicketRow>[] = [
         {
             accessorKey: 'nomor',
@@ -84,6 +96,24 @@ export default function ManajemenTiket({ tickets, filters, statuses }: Props) {
 
     return (
         <AdminLayout title="Manajemen Tiket Aktif" subtitle="Pengaduan masyarakat dari seluruh kanal.">
+            {chips.length > 0 && (
+                <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+                    <span className="text-[var(--adm-text-3)]">Disaring:</span>
+                    {chips.map((c) => (
+                        <Link
+                            key={c.key}
+                            href={withoutFilters([c.key])}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--adm-border-strong)] bg-white px-3 py-1 text-xs font-medium hover:bg-[var(--adm-surface-2)]"
+                        >
+                            {c.label}
+                            <X className="h-3.5 w-3.5" aria-label="Hapus saringan" />
+                        </Link>
+                    ))}
+                    <Link href={withoutFilters(chips.map((c) => c.key))} className="text-xs font-semibold text-[var(--adm-primary)] hover:underline">
+                        Hapus semua
+                    </Link>
+                </div>
+            )}
             <DataTable<TicketRow>
                 columns={columns}
                 data={tickets.data}
@@ -101,7 +131,7 @@ export default function ManajemenTiket({ tickets, filters, statuses }: Props) {
                 serverSide={{
                     url: '/admin/tiket',
                     meta: tickets.meta,
-                    currentValues: { status: filters.status, q: filters.q },
+                    currentValues: filters,
                 }}
             />
         </AdminLayout>

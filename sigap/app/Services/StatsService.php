@@ -149,23 +149,42 @@ class StatsService
     /** Rata-rata durasi penyelesaian (jam) tiket selesai, dihitung di SQL. */
     public function averageResolutionHours(Builder $query): float
     {
+        return $this->averageHours(
+            (clone $query)->where('status', TicketStatus::Selesai->value),
+            'created_at',
+            'resolved_at',
+        ) ?? 0.0;
+    }
+
+    /** Rata-rata waktu respons awal (jam): responded_at - created_at. Null bila belum ada data. */
+    public function averageResponseHours(Builder $query): ?float
+    {
+        return $this->averageHours($query, 'created_at', 'responded_at');
+    }
+
+    /**
+     * Rata-rata selisih dua kolom waktu (jam), dihitung di SQL per driver.
+     * Baris dengan kolom akhir kosong diabaikan; null bila tidak ada baris.
+     * Nama kolom HARUS berasal dari kode, bukan dari input pengguna.
+     */
+    public function averageHours(Builder $query, string $from, string $to): ?float
+    {
         $driver = (clone $query)->getConnection()->getDriverName();
 
         $expression = match ($driver) {
-            'pgsql' => 'AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 3600.0)',
-            'mysql', 'mariadb' => 'AVG(TIMESTAMPDIFF(SECOND, created_at, resolved_at) / 3600.0)',
-            'sqlsrv' => 'AVG(DATEDIFF(SECOND, created_at, resolved_at) / 3600.0)',
-            default => 'AVG((julianday(resolved_at) - julianday(created_at)) * 24.0)',
+            'pgsql' => "AVG(EXTRACT(EPOCH FROM ({$to} - {$from})) / 3600.0)",
+            'mysql', 'mariadb' => "AVG(TIMESTAMPDIFF(SECOND, {$from}, {$to}) / 3600.0)",
+            'sqlsrv' => "AVG(DATEDIFF(SECOND, {$from}, {$to}) / 3600.0)",
+            default => "AVG((julianday({$to}) - julianday({$from})) * 24.0)",
         };
 
         $value = (clone $query)
             ->reorder()
-            ->where('status', TicketStatus::Selesai->value)
-            ->whereNotNull('resolved_at')
+            ->whereNotNull($to)
             ->toBase()
             ->selectRaw($expression.' as hours')
             ->value('hours');
 
-        return round((float) $value, 1);
+        return $value === null ? null : round((float) $value, 1);
     }
 }
