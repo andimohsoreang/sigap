@@ -93,7 +93,7 @@ class ChatService
     }
 
     /** Tutup percakapan dengan satu hasil (lihat ChatConversation::OUTCOMES). */
-    public function close(ChatConversation $conversation, string $outcome, int $userId, ?Ticket $ticket = null): void
+    public function close(ChatConversation $conversation, string $outcome, ?int $userId, ?Ticket $ticket = null): void
     {
         $conversation->forceFill([
             'handled_by' => ChatConversation::HANDLED_STAFF,
@@ -103,6 +103,126 @@ class ChatService
             'ticket_id' => $ticket?->id ?? $conversation->ticket_id,
             'assigned_to' => $conversation->assigned_to ?? $userId,
         ])->save();
+    }
+
+    /**
+     * Warga/tamu mengakhiri percakapan sendiri. Riwayat tidak dihapus; pesan
+     * baru akan membuka percakapan lagi (AssistantService::reopenIfClosed).
+     */
+    public function endByParticipant(ChatConversation $conversation, ?int $userId): ?ChatMessage
+    {
+        if ($conversation->isClosed()) {
+            return null;
+        }
+
+        $outcome = match (true) {
+            $conversation->ticket_id !== null => 'tiket',
+            $conversation->isWithAssistant() && $conversation->handoff_at === null => 'terjawab_ai',
+            default => 'diakhiri_warga',
+        };
+
+        $message = $this->send(
+            $conversation,
+            'Anda mengakhiri percakapan. Riwayatnya tetap tersimpan; tulis pesan baru kapan saja untuk melanjutkan.',
+            'system',
+            null,
+            ['kind' => 'diakhiri'],
+        );
+
+        $conversation->forceFill([
+            'outcome' => $outcome,
+            'closed_at' => now(),
+            'closed_by' => $userId,
+            'unread_user' => 0,
+        ])->save();
+
+        return $message;
+    }
+
+    /**
+     * Panel "Tiket dari percakapan ini" untuk penanya: referensi, linimasa,
+     * petugas, dan kontak tersamar. Hanya data milik percakapan ini.
+     *
+     * @return array<string, mixed>
+     */
+    public function participantPanel(ChatConversation $conversation): array
+    {
+        $conversation->loadMissing(['assignee:id,name,unit,region_id', 'assignee.region:id,name', 'ticket.category:id,name', 'ticket.histories']);
+        $ticket = $conversation->ticket;
+        $staff = $conversation->assignee;
+
+        return [
+            'referensi' => $conversation->reference,
+            'dimulai_at' => $conversation->created_at?->toIso8601String(),
+            'diteruskan_at' => $conversation->handoff_at?->toIso8601String(),
+            'data_diverifikasi_at' => $conversation->data_verified_at?->toIso8601String(),
+            'konfirmasi' => $conversation->messages()->getQuery()
+                ->where('sender_type', 'admin')
+                ->where('meta->kind', 'konfirmasi_data')
+                ->reorder('id', 'desc')
+                ->first()?->meta['status'] ?? null,
+            'ditutup' => $conversation->isClosed(),
+            'petugas' => $staff && $conversation->handled_by === ChatConversation::HANDLED_STAFF ? [
+                'nama' => $staff->name,
+                'unit' => $staff->unit ?: ($staff->region?->name ? 'Kawasan '.$staff->region->name : 'Petugas SIGAP'),
+            ] : null,
+            'kontak' => self::maskContact($conversation->contact),
+            'tiket' => $ticket ? [
+                'nomor' => $ticket->ticket_no,
+                'status' => $ticket->status?->value,
+                'status_label' => $ticket->status?->label(),
+                'kategori' => $ticket->category?->name,
+                'prioritas' => $ticket->impact?->label(),
+                'dibuat_at' => $ticket->created_at?->toIso8601String(),
+                'diproses_at' => $ticket->histories->firstWhere('to_status', 'diproses')?->created_at?->toIso8601String(),
+                'selesai_at' => $ticket->resolved_at?->toIso8601String(),
+                'target_at' => $ticket->sla_due_at?->toIso8601String(),
+                'url' => '/lacak/'.$ticket->ticket_no,
+            ] : null,
+        ];
+    }
+
+    /** "0812 •••• 4471" atau "si***@gmail.com". */
+    public static function maskContact(?string $contact): ?string
+    {
+        $contact = trim((string) $contact);
+        if ($contact === '') {
+            return null;
+        }
+        if (str_contains($contact, '@')) {
+            [$local, $domain] = explode('@', $contact, 2);
+
+            return mb_substr($local, 0, 2).'***@'.$domain;
+        }
+        $digits = preg_replace('/\D/', '', $contact);
+
+        return strlen($digits) >= 8 ? substr($digits, 0, 4).' •••• '.substr($digits, -4) : '••••';
+    }
+
+    /** Transkrip teks polos untuk diunduh penanya (tanpa data internal). */
+    public function transcript(ChatConversation $conversation): string
+    {
+        $lines = [
+            'Transkrip percakapan SIGAP — Contact Center Kementerian Transmigrasi',
+            'Dimulai: '.$conversation->created_at?->copy()->setTimezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i').' WIB',
+        ];
+        if ($conversation->reference) {
+            $lines[] = 'Nomor referensi: '.$conversation->reference;
+        }
+        if ($conversation->ticket) {
+            $lines[] = 'Tiket: '.$conversation->ticket->ticket_no;
+        }
+        $lines[] = str_repeat('-', 60);
+
+        foreach ($conversation->messages()->with('sender')->get() as $m) {
+            $p = self::present($m);
+            $time = $m->created_at?->copy()->setTimezone('Asia/Jakarta')->format('d/m/Y H.i');
+            $lines[] = '';
+            $lines[] = "[{$time}] {$p['penulis']}";
+            $lines[] = $m->body;
+        }
+
+        return implode("\n", $lines)."\n";
     }
 
     /** Petugas membuka percakapan: nolkan penghitung & tandai pesan warga/tamu dibaca. */
@@ -248,8 +368,121 @@ class ChatService
             'rujukan' => $meta['rujukan'] ?? null,
             'referensi' => $meta['referensi'] ?? null,
             'aktivasi' => self::activationLink($meta['aktivasi'] ?? null),
+            'lampiran' => self::attachment($m, '/chat/lampiran/'),
+            'konfirmasi' => self::confirmation($m),
             'nilai' => $m->feedback,
         ];
+    }
+
+    /**
+     * Lampiran pesan untuk tampilan (tanpa path penyimpanan).
+     *
+     * @return array{nama: string, mime: string, ukuran: int, gambar: bool, url: string}|null
+     */
+    public static function attachment(ChatMessage $m, string $urlPrefix): ?array
+    {
+        $a = $m->meta['lampiran'] ?? null;
+        if (! is_array($a) || empty($a['path'])) {
+            return null;
+        }
+
+        return [
+            'nama' => (string) ($a['nama'] ?? 'lampiran'),
+            'mime' => (string) ($a['mime'] ?? ''),
+            'ukuran' => (int) ($a['ukuran'] ?? 0),
+            'gambar' => str_starts_with((string) ($a['mime'] ?? ''), 'image/'),
+            'url' => $urlPrefix.$m->id,
+        ];
+    }
+
+    /**
+     * Kartu konfirmasi data dari petugas.
+     *
+     * @return array{id: int, pengantar: string, data: list<array{label: string, nilai: string}>, status: string, koreksi: string|null}|null
+     */
+    public static function confirmation(ChatMessage $m): ?array
+    {
+        if ($m->kind() !== 'konfirmasi_data') {
+            return null;
+        }
+
+        return [
+            'id' => $m->id,
+            'pengantar' => (string) ($m->meta['pengantar'] ?? ''),
+            'data' => array_values($m->meta['data'] ?? []),
+            'status' => (string) ($m->meta['status'] ?? 'menunggu'),
+            'koreksi' => $m->meta['koreksi'] ?? null,
+        ];
+    }
+
+    /**
+     * Warga/tamu mengirim foto atau dokumen. Asisten AI tidak membaca isi
+     * lampiran, jadi penanya diberi tahu cara meminta petugas memeriksanya.
+     *
+     * @param  array{path: string, nama: string, mime: string, ukuran: int}  $file
+     * @return list<ChatMessage>
+     */
+    public function sendAttachment(ChatConversation $conversation, array $file, ?string $caption, string $senderType, ?int $senderId): array
+    {
+        $caption = trim((string) $caption);
+        $message = $this->send($conversation, $caption !== '' ? $caption : '📎 '.$file['nama'], $senderType, $senderId, [
+            'kind' => 'lampiran',
+            'lampiran' => $file,
+        ]);
+
+        $out = [$message];
+        if ($conversation->isWithAssistant() && in_array($senderType, ['user', 'guest'], true)) {
+            $out[] = $this->send(
+                $conversation,
+                'Lampiran tersimpan. TRANSI tidak membaca isi foto atau dokumen; tekan "Bicara dengan petugas" agar petugas memeriksanya.',
+                'system',
+                null,
+                ['kind' => 'lampiran_ai'],
+            );
+        }
+
+        return $out;
+    }
+
+    /**
+     * Petugas meminta warga mengonfirmasi data laporan. NIK hanya disimpan
+     * tersamar di kartu.
+     *
+     * @param  list<array{label: string, nilai: string}>  $data
+     */
+    public function requestConfirmation(ChatConversation $conversation, array $data, string $intro, int $staffId): ChatMessage
+    {
+        $lines = array_map(fn (array $d) => "{$d['label']}: {$d['nilai']}", $data);
+
+        return $this->send($conversation, $intro."\n".implode("\n", $lines), 'admin', $staffId, [
+            'kind' => 'konfirmasi_data',
+            'pengantar' => $intro,
+            'data' => $data,
+            'status' => 'menunggu',
+        ]);
+    }
+
+    /** Warga menjawab kartu konfirmasi: "benar" atau "ubah" (+ koreksi). */
+    public function answerConfirmation(ChatConversation $conversation, ChatMessage $card, string $answer, ?string $correction, string $senderType, ?int $senderId): ChatMessage
+    {
+        $correction = trim((string) $correction);
+        $meta = $card->meta ?? [];
+        $meta['status'] = $answer === 'benar' ? 'benar' : 'ubah';
+        $meta['dijawab_at'] = now()->toIso8601String();
+        if ($answer !== 'benar' && $correction !== '') {
+            $meta['koreksi'] = $correction;
+        }
+        $card->forceFill(['meta' => $meta])->save();
+
+        if ($answer === 'benar') {
+            $conversation->forceFill(['data_verified_at' => now()])->save();
+        }
+
+        $body = $answer === 'benar'
+            ? 'Data sudah benar.'
+            : ($correction !== '' ? "Data perlu diubah: {$correction}" : 'Data perlu diubah. Saya jelaskan di pesan berikutnya.');
+
+        return $this->send($conversation, $body, $senderType, $senderId, ['kind' => 'jawaban_konfirmasi']);
     }
 
     /**

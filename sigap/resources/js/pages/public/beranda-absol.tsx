@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
+    ArrowRight,
     Building2,
     ChevronDown,
     Clock,
@@ -121,6 +122,16 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                     />
 
                     <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center px-4 sm:px-6 lg:px-8">
+                        <Link
+                            href="/beranda-baru"
+                            className="group mb-6 inline-flex items-center gap-2.5 rounded-full border border-white/25 bg-white/10 py-1.5 pr-4 pl-1.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/50 hover:bg-white/15"
+                        >
+                            <span className="bg-secondary text-brand rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wide uppercase">
+                                Baru
+                            </span>
+                            Coba Desain Baru
+                            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                        </Link>
                         <span className="text-secondary mb-4 inline-flex items-center gap-3 text-xs font-bold tracking-[3px] uppercase">
                             <span className="bg-secondary hidden h-[2px] w-6 sm:block" />
                             {aiEnabled ? 'Contact Center Kementerian Transmigrasi' : 'Pusat Bantuan SIGAP'}

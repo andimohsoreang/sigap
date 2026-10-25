@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ChatAttachmentService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
@@ -33,6 +34,7 @@ class ChatConversation extends Model
         'wbs' => 'Diarahkan ke WBS',
         'rujuk_portal' => 'Dirujuk ke portal',
         'tidak_selesai' => 'Tidak selesai',
+        'diakhiri_warga' => 'Diakhiri warga',
     ];
 
     protected $fillable = [
@@ -46,6 +48,7 @@ class ChatConversation extends Model
         'handled_by',
         'handoff_at',
         'handoff_reason',
+        'data_verified_at',
         'ai_summary',
         'reference',
         'contact',
@@ -63,6 +66,7 @@ class ChatConversation extends Model
             'unread_admin' => 'integer',
             'unread_user' => 'integer',
             'handoff_at' => 'datetime',
+            'data_verified_at' => 'datetime',
             'closed_at' => 'datetime',
             // Kontak warga (WhatsApp/surel) = data pribadi: disimpan terenkripsi.
             'contact' => 'encrypted',
@@ -133,6 +137,12 @@ class ChatConversation extends Model
     public static function unreadForAdmins(): int
     {
         return (int) static::query()->sum('unread_admin');
+    }
+
+    /** Lampiran percakapan ikut dihapus saat retensi (D-01). */
+    protected function pruning(): void
+    {
+        app(ChatAttachmentService::class)->deleteConversation($this->id);
     }
 
     public function prunable(): Builder

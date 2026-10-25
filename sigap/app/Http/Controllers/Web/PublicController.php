@@ -47,6 +47,15 @@ class PublicController extends Controller
         return Inertia::render('public/beranda', $this->homeProps());
     }
 
+    /**
+     * Beranda baru (uji coba): contact center TRANSI, semua dimulai dari chat.
+     * Beranda utama tetap yang lama dan menautkan ke sini lewat "Coba Desain Baru".
+     */
+    public function homeTransi(): Response
+    {
+        return Inertia::render('public/beranda-transi');
+    }
+
     /** @return array<string, mixed> */
     private function homeProps(): array
     {

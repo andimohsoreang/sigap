@@ -79,6 +79,12 @@ class AppServiceProvider extends ServiceProvider
 
         // 'akun' membatasi daftar akun, lupa sandi & kirim ulang verifikasi
         // (anti-spam surel dan tebak NIK/surel terdaftar).
+        // 'chat-lampiran': unggah foto/dokumen di chat (maks. 5 MB per file).
+        RateLimiter::for('chat-lampiran', fn (Request $request) => [
+            Limit::perMinute(6)->by('chat-lampiran:m:'.$request->ip()),
+            Limit::perHour(30)->by('chat-lampiran:h:'.$request->ip()),
+        ]);
+
         RateLimiter::for('akun', fn (Request $request) => [
             Limit::perMinutes(10, 5)->by('akun:'.$request->path().'|'.$request->ip()),
             Limit::perHour(30)->by('akun:ip:'.$request->ip()),

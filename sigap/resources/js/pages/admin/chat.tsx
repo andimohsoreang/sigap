@@ -10,7 +10,9 @@ import {
     Bot,
     CheckCircle2,
     ChevronUp,
+    ClipboardCheck,
     Clock,
+    FileText,
     Hand,
     Inbox,
     KeyRound,
@@ -57,6 +59,14 @@ interface Message {
     jenis?: string | null;
     sumber?: { id: number; judul: string; label: string | null }[];
     nilai?: number | null;
+    lampiran?: { nama: string; mime: string; ukuran: number; gambar: boolean; url: string } | null;
+    konfirmasi?: {
+        id: number;
+        pengantar: string;
+        data: { label: string; nilai: string }[];
+        status: 'menunggu' | 'benar' | 'ubah';
+        koreksi: string | null;
+    } | null;
 }
 
 interface Active {
@@ -81,6 +91,7 @@ interface Active {
     tiket?: { nomor: string; url: string } | null;
     rujukan?: { kode: string; portal: string | null; status: string; url: string }[];
     akun?: AccountInfo | null;
+    data_diverifikasi_at?: string | null;
     messages: Message[];
 }
 
@@ -448,6 +459,15 @@ export default function Chat({
                                     mode={accountMode}
                                     onMode={setAccountMode}
                                 />
+
+                                {!closed && (
+                                    <DataConfirmStrip
+                                        key={`k-${active.id}`}
+                                        conversationId={active.id}
+                                        defaultName={active.nama}
+                                        verifiedAt={active.data_diverifikasi_at ?? null}
+                                    />
+                                )}
 
                                 {aiEnabled && detailsOpen && (
                                     <div className="space-y-4 border-t border-gray-100 p-4">
@@ -1146,6 +1166,102 @@ function RecoverForm({ conversationId, defaultContact, onDone }: { conversationI
     );
 }
 
+/**
+ * Kartu konfirmasi data: petugas mengirim ringkasan data laporan ke chat;
+ * warga menjawab "Data sudah benar" atau "Ubah data". NIK tampil tersamar.
+ */
+function DataConfirmStrip({ conversationId, defaultName, verifiedAt }: { conversationId: number; defaultName: string; verifiedAt: string | null }) {
+    const [open, setOpen] = useState(false);
+    const form = useForm({ nama: defaultName === 'Tamu' ? '' : defaultName, nik: '', lokasi: '', kategori: '', pengantar: '' });
+    const inputClass = 'focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none';
+    const submit = (e: FormEvent) => {
+        e.preventDefault();
+        form.post(`/admin/chat/${conversationId}/konfirmasi-data`, { preserveScroll: true, onSuccess: () => setOpen(false) });
+    };
+
+    if (!open) {
+        return (
+            <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 px-4 py-2.5 text-sm text-gray-600">
+                <span className="min-w-0 flex-1 basis-60">
+                    {verifiedAt ? (
+                        <span className="flex items-center gap-1.5">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" /> Data laporan sudah dikonfirmasi warga ·{' '}
+                            {formatDateTime(verifiedAt)}
+                        </span>
+                    ) : (
+                        'Pastikan data laporan benar sebelum tiket terbit: kirim kartu konfirmasi ke warga.'
+                    )}
+                </span>
+                <button
+                    type="button"
+                    onClick={() => setOpen(true)}
+                    className="hover:border-primary hover:text-primary flex h-9 shrink-0 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 font-medium text-gray-800"
+                >
+                    <ClipboardCheck className="h-4 w-4" aria-hidden="true" /> {verifiedAt ? 'Kirim ulang konfirmasi' : 'Minta konfirmasi data'}
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <form onSubmit={submit} className="space-y-3 border-t border-gray-100 bg-gray-50 p-4">
+            <p className="text-sm text-gray-700">
+                Warga menerima kartu berisi data ini dengan tombol "Data sudah benar" dan "Ubah data". NIK tampil tersamar.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+                {(
+                    [
+                        ['konf-nama', 'nama', 'Nama', 'Nama sesuai KTP'],
+                        ['konf-nik', 'nik', 'NIK (opsional)', '16 digit, tampil tersamar'],
+                        ['konf-lokasi', 'lokasi', 'Lokasi (opsional)', 'Mis. UPT Mahalona SP2, Luwu Timur'],
+                        ['konf-kategori', 'kategori', 'Kategori (opsional)', 'Mis. Pertanahan · Sertifikat'],
+                    ] as const
+                ).map(([id, key, label, ph]) => (
+                    <div key={id}>
+                        <label htmlFor={id} className="mb-1 block text-xs font-semibold text-gray-700">
+                            {label}
+                        </label>
+                        <input
+                            id={id}
+                            value={form.data[key]}
+                            onChange={(e) => form.setData(key, key === 'nik' ? e.target.value.replace(/\D/g, '').slice(0, 16) : e.target.value)}
+                            placeholder={ph}
+                            inputMode={key === 'nik' ? 'numeric' : undefined}
+                            className={cn(inputClass, key === 'nik' && 'font-mono')}
+                            autoComplete="off"
+                        />
+                        {form.errors[key] && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors[key]}</p>}
+                    </div>
+                ))}
+            </div>
+            <div>
+                <label htmlFor="konf-pengantar" className="mb-1 block text-xs font-semibold text-gray-700">
+                    Kalimat pembuka (opsional)
+                </label>
+                <input
+                    id="konf-pengantar"
+                    value={form.data.pengantar}
+                    onChange={(e) => form.setData('pengantar', e.target.value)}
+                    placeholder="Mohon konfirmasi data berikut agar laporan Anda bisa kami teruskan:"
+                    className={inputClass}
+                />
+            </div>
+            <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setOpen(false)} className="rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                    Batal
+                </button>
+                <button
+                    type="submit"
+                    disabled={form.processing || form.data.nama.trim() === ''}
+                    className="bg-primary hover:bg-primary/90 flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                >
+                    <ClipboardCheck className="h-4 w-4" aria-hidden="true" /> Kirim kartu konfirmasi
+                </button>
+            </div>
+        </form>
+    );
+}
+
 function MessageItem({ message: m, participant, initial }: { message: Message; participant: string; initial: string }) {
     if (m.sender_type === 'system') {
         return (
@@ -1181,7 +1297,60 @@ function MessageItem({ message: m, participant, initial }: { message: Message; p
                         fromAi && 'bg-gray-50',
                     )}
                 >
-                    {m.body}
+                    {m.konfirmasi ? (
+                        <span className="block whitespace-normal">
+                            <span className="block">{m.konfirmasi.pengantar}</span>
+                            <span className="mt-2 grid gap-1 rounded-lg bg-white/10 p-2.5 text-sm">
+                                {m.konfirmasi.data.map((d) => (
+                                    <span key={d.label}>
+                                        <span className="opacity-75">{d.label}:</span> {d.nilai}
+                                    </span>
+                                ))}
+                            </span>
+                            <span
+                                className={cn(
+                                    'mt-2 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                                    m.konfirmasi.status === 'benar'
+                                        ? 'bg-emerald-100 text-emerald-800'
+                                        : m.konfirmasi.status === 'ubah'
+                                          ? 'bg-amber-100 text-amber-900'
+                                          : 'bg-white/20 text-white',
+                                )}
+                            >
+                                {m.konfirmasi.status === 'benar'
+                                    ? 'Dikonfirmasi warga'
+                                    : m.konfirmasi.status === 'ubah'
+                                      ? 'Warga minta perbaikan'
+                                      : 'Menunggu jawaban warga'}
+                            </span>
+                        </span>
+                    ) : (
+                        !(m.lampiran && m.body.startsWith('📎')) && m.body
+                    )}
+                    {m.lampiran &&
+                        (m.lampiran.gambar ? (
+                            <a href={m.lampiran.url} target="_blank" rel="noopener noreferrer" className="mt-2 block overflow-hidden rounded-lg">
+                                <img
+                                    src={m.lampiran.url}
+                                    alt={`Lampiran: ${m.lampiran.nama}`}
+                                    loading="lazy"
+                                    className="max-h-64 max-w-xs object-cover"
+                                />
+                            </a>
+                        ) : (
+                            <a
+                                href={m.lampiran.url}
+                                className="mt-2 flex w-fit items-center gap-2.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 hover:bg-gray-100"
+                            >
+                                <FileText className="h-5 w-5 text-gray-600" aria-hidden="true" />
+                                <span>
+                                    <span className="block font-medium">{m.lampiran.nama}</span>
+                                    <span className="block text-xs text-gray-500">
+                                        {Math.max(1, Math.round(m.lampiran.ukuran / 1024))} KB · unduh
+                                    </span>
+                                </span>
+                            </a>
+                        ))}
                     {(m.sumber?.length ?? 0) > 0 && (
                         <span className="mt-3 flex flex-col gap-1 border-t border-gray-200 pt-2.5 text-xs text-gray-600">
                             {m.sumber!.map((s, i) => (

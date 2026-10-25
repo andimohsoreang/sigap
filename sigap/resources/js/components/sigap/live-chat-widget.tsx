@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { echo, echoIsConfigured } from '@laravel/echo-react';
-import { BookOpen, Bot, ExternalLink, Globe, Headset, KeyRound, LogIn, MessagesSquare, Send, Ticket, UserRound, X } from 'lucide-react';
+import { BookOpen, Bot, ExternalLink, Globe, Headset, KeyRound, LogIn, Maximize2, MessagesSquare, Send, Ticket, UserRound, X } from 'lucide-react';
 import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 /**
@@ -33,14 +33,22 @@ export function askSigap(question: string) {
     window.dispatchEvent(new CustomEvent<{ question: string }>(ASK_EVENT, { detail: { question } }));
 }
 
-interface Source {
+/** Buka widget chat tanpa mengirim pertanyaan. */
+export function openSigap() {
+    askSigap('');
+}
+
+/** Wajah maskot TRANSI (tombol peluncur & kepala jendela chat versi beranda baru). */
+const TRANSI_AVATAR = '/images/transi/avatar.webp';
+
+export interface Source {
     id: number;
     judul: string;
     label: string | null;
     url?: string | null;
 }
 
-interface TicketInfo {
+export interface TicketInfo {
     nomor: string;
     status: string | null;
     status_label: string | null;
@@ -50,7 +58,7 @@ interface TicketInfo {
     url: string;
 }
 
-interface PortalCardInfo {
+export interface PortalCardInfo {
     kode: string;
     nama: string;
     kegunaan: string;
@@ -60,13 +68,13 @@ interface PortalCardInfo {
     tersedia: boolean;
 }
 
-interface ReferralInfo {
+export interface ReferralInfo {
     kode: string;
     url: string;
     pendamping: string | null;
 }
 
-interface ChatMessage {
+export interface ChatMessage {
     id: number;
     body: string;
     sender_type: string;
@@ -80,17 +88,37 @@ interface ChatMessage {
     portal?: PortalCardInfo | null;
     rujukan?: ReferralInfo | null;
     referensi?: string | null;
+    /** Foto/dokumen yang dikirim di chat. */
+    lampiran?: ChatAttachment | null;
+    /** Kartu konfirmasi data dari petugas. */
+    konfirmasi?: ChatConfirmation | null;
     /** Tombol buat kata sandi untuk akun yang didaftarkan petugas. */
     aktivasi?: { url: string; berlaku_sampai: string; jenis?: 'aktivasi' | 'pemulihan' } | null;
     nilai?: number | null;
 }
 
-interface Identity {
+export interface ChatAttachment {
+    nama: string;
+    mime: string;
+    ukuran: number;
+    gambar: boolean;
+    url: string;
+}
+
+export interface ChatConfirmation {
+    id: number;
+    pengantar: string;
+    data: { label: string; nilai: string }[];
+    status: 'menunggu' | 'benar' | 'ubah';
+    koreksi: string | null;
+}
+
+export interface Identity {
     nama: string;
     tipe: 'warga' | 'tamu';
 }
 
-interface Assistant {
+export interface Assistant {
     aktif: boolean;
     mode: 'ai' | 'petugas';
     jam_layanan: string;
@@ -99,7 +127,7 @@ interface Assistant {
     butuh_kontak: boolean;
 }
 
-interface ChatState {
+export interface ChatState {
     conversation_id: number | null;
     identitas: Identity | null;
     belum_dibaca: number;
@@ -107,22 +135,22 @@ interface ChatState {
     asisten?: Assistant;
 }
 
-function csrfToken(): string {
+export function csrfToken(): string {
     const match = document.cookie.match(new RegExp('(^|;\\s*)' + XSRF_COOKIE + '=([^;]*)'));
     return match ? decodeURIComponent(match[2]) : '';
 }
 
-function isMine(m: ChatMessage): boolean {
+export function isMine(m: ChatMessage): boolean {
     return m.mine ?? (m.sender_type === 'user' || m.sender_type === 'guest');
 }
 
-function jam(value: string | null): string {
+export function jam(value: string | null): string {
     if (!value) return '';
     const d = new Date(value);
     return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 }
 
-async function postJson(url: string, body: unknown): Promise<Response> {
+export async function postJson(url: string, body: unknown): Promise<Response> {
     return fetch(url, {
         method: 'POST',
         credentials: 'same-origin',
@@ -131,13 +159,18 @@ async function postJson(url: string, body: unknown): Promise<Response> {
     });
 }
 
-function merge(prev: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
+export function merge(prev: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
     const byId = new Map(prev.map((m) => [m.id, m]));
     incoming.forEach((m) => byId.set(m.id, m));
     return [...byId.values()].sort((a, b) => a.id - b.id);
 }
 
-export default function LiveChatWidget() {
+/**
+ * `variant="transi"` (beranda baru): tombol peluncur berwajah maskot TRANSI
+ * dengan gelembung sapaan, dan kepala jendela memakai nama TRANSI.
+ */
+export default function LiveChatWidget({ variant = 'default' }: { variant?: 'default' | 'transi' }) {
+    const transi = variant === 'transi';
     const { auth } = usePage<SharedData>().props;
     const loggedIn = Boolean(auth?.user);
 
@@ -340,31 +373,67 @@ export default function LiveChatWidget() {
     return (
         <div className="no-print">
             {/* Tombol bubble */}
-            <button
-                ref={toggleRef}
-                type="button"
-                onClick={() => setOpen((v) => !v)}
-                aria-label={open ? 'Tutup live chat' : unread > 0 ? `Buka live chat, ${unread} balasan baru` : 'Buka live chat'}
-                aria-expanded={open}
-                aria-controls="sigap-live-chat"
-                className={cn(
-                    'bg-secondary fixed right-4 bottom-4 z-[100] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-[0_4px_15px_rgba(195,161,103,0.4)] transition-transform hover:scale-110 sm:right-6 sm:bottom-6',
-                    open && 'scale-0',
-                )}
-            >
-                <MessagesSquare className="h-6 w-6" />
-                {unread > 0 && !open && (
-                    <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white ring-2 ring-white">
-                        {unread > 9 ? '9+' : unread}
-                    </span>
-                )}
-            </button>
+            {transi ? (
+                <div
+                    className={cn(
+                        'transi-launcher fixed right-4 bottom-4 z-[100] flex items-center gap-3 sm:right-6 sm:bottom-6',
+                        open && 'is-hidden',
+                    )}
+                >
+                    {!open && (
+                        <button
+                            type="button"
+                            onClick={() => setOpen(true)}
+                            className="transi-launcher__bubble hidden rounded-2xl rounded-br-sm bg-white px-4 py-2.5 text-sm font-semibold text-[#022b4a] shadow-[0_10px_24px_rgba(0,18,36,0.18)] sm:block"
+                        >
+                            Ada yang bisa dibantu?
+                        </button>
+                    )}
+                    <button
+                        ref={toggleRef}
+                        type="button"
+                        onClick={() => setOpen((v) => !v)}
+                        aria-label={open ? 'Tutup chat TRANSI' : unread > 0 ? `Buka chat TRANSI, ${unread} balasan baru` : 'Buka chat TRANSI'}
+                        aria-expanded={open}
+                        aria-controls="sigap-live-chat"
+                        className="transi-launcher__face relative h-16 w-16 rounded-full border-[3px] border-[#c29642] bg-[#f8f3ef] bg-cover bg-center shadow-[0_12px_28px_rgba(0,18,36,0.35)] sm:h-[72px] sm:w-[72px]"
+                        style={{ backgroundImage: `url(${TRANSI_AVATAR})` }}
+                    >
+                        {unread > 0 && !open && (
+                            <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white ring-2 ring-white">
+                                {unread > 9 ? '9+' : unread}
+                            </span>
+                        )}
+                    </button>
+                </div>
+            ) : (
+                <button
+                    ref={toggleRef}
+                    type="button"
+                    onClick={() => setOpen((v) => !v)}
+                    aria-label={open ? 'Tutup live chat' : unread > 0 ? `Buka live chat, ${unread} balasan baru` : 'Buka live chat'}
+                    aria-expanded={open}
+                    aria-controls="sigap-live-chat"
+                    className={cn(
+                        'bg-secondary fixed right-4 bottom-4 z-[100] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-[0_4px_15px_rgba(195,161,103,0.4)] transition-transform hover:scale-110 sm:right-6 sm:bottom-6',
+                        open && 'scale-0',
+                    )}
+                >
+                    <MessagesSquare className="h-6 w-6" />
+                    {unread > 0 && !open && (
+                        <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white ring-2 ring-white">
+                            {unread > 9 ? '9+' : unread}
+                        </span>
+                    )}
+                </button>
+            )}
 
             {/* Jendela chat */}
             <div
                 id="sigap-live-chat"
                 className={cn(
-                    'fixed right-4 bottom-20 z-[100] flex w-[calc(100vw-2rem)] max-w-md origin-bottom-right flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-transform duration-300 sm:right-6 sm:bottom-24 sm:w-96',
+                    'fixed right-4 z-[100] flex w-[calc(100vw-2rem)] max-w-md origin-bottom-right flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-transform duration-300 sm:right-6 sm:w-96',
+                    transi ? 'bottom-24 rounded-2xl sm:bottom-28' : 'bottom-20 sm:bottom-24',
                     open ? 'scale-100' : 'pointer-events-none scale-0',
                 )}
                 role="dialog"
@@ -375,15 +444,23 @@ export default function LiveChatWidget() {
                     if (e.key === 'Escape') close();
                 }}
             >
-                <div className="bg-primary flex items-center justify-between px-4 py-3 text-white">
+                <div className={cn('flex items-center justify-between px-4 py-3 text-white', transi ? 'bg-[#003d68]' : 'bg-primary')}>
                     <div className="flex min-w-0 items-center gap-2">
-                        {withAi ? (
+                        {transi ? (
+                            <span
+                                className="h-8 w-8 shrink-0 rounded-full bg-[#f8f3ef] bg-cover bg-center ring-2 ring-white/40"
+                                style={{ backgroundImage: `url(${TRANSI_AVATAR})` }}
+                                aria-hidden="true"
+                            />
+                        ) : withAi ? (
                             <Bot className="h-5 w-5 shrink-0" aria-hidden="true" />
                         ) : (
                             <Headset className="h-5 w-5 shrink-0" aria-hidden="true" />
                         )}
                         <div className="min-w-0">
-                            <p className="text-sm leading-tight font-bold">{withAi ? 'Asisten SIGAP' : 'Petugas SIGAP'}</p>
+                            <p className="text-sm leading-tight font-bold">
+                                {transi && withAi ? 'TRANSI' : withAi ? 'Asisten SIGAP' : 'Petugas SIGAP'}
+                            </p>
                             <p className="truncate text-[11px] leading-tight opacity-85">
                                 {withAi
                                     ? 'Menjawab dari sumber resmi'
@@ -395,9 +472,14 @@ export default function LiveChatWidget() {
                             </p>
                         </div>
                     </div>
-                    <button type="button" onClick={close} aria-label="Tutup live chat" className="hover:opacity-80">
-                        <X className="h-5 w-5" />
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <a href="/chat" aria-label="Buka chat layar penuh" title="Buka layar penuh" className="hover:opacity-80">
+                            <Maximize2 className="h-4 w-4" />
+                        </a>
+                        <button type="button" onClick={close} aria-label="Tutup live chat" className="hover:opacity-80">
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
                 </div>
 
                 {needsIdentity ? (
@@ -441,6 +523,22 @@ export default function LiveChatWidget() {
                                                     onStaff={() => void requestStaff()}
                                                     canAskStaff={withAi}
                                                 />
+                                            ) : m.lampiran || m.konfirmasi ? (
+                                                <a
+                                                    href={m.lampiran && !m.konfirmasi ? m.lampiran.url : '/chat'}
+                                                    target={m.lampiran && !m.konfirmasi ? '_blank' : undefined}
+                                                    rel="noopener noreferrer"
+                                                    className={cn(
+                                                        'mt-1.5 block font-semibold underline underline-offset-2',
+                                                        isMine(m) ? 'text-white' : 'text-primary',
+                                                    )}
+                                                >
+                                                    {m.konfirmasi
+                                                        ? m.konfirmasi.status === 'menunggu'
+                                                            ? 'Jawab di layar penuh'
+                                                            : 'Lihat di layar penuh'
+                                                        : `Lihat lampiran (${m.lampiran!.nama})`}
+                                                </a>
                                             ) : undefined
                                         }
                                     >
@@ -561,7 +659,7 @@ function Bubble({
 }
 
 /** Sumber, kartu status tiket, dan tombol penilaian di bawah jawaban asisten. */
-function AiExtras({
+export function AiExtras({
     message,
     onRate,
     onStaff,
@@ -665,7 +763,7 @@ function AiExtras({
     );
 }
 
-function SystemNotice({ message }: { message: ChatMessage }) {
+export function SystemNotice({ message }: { message: ChatMessage }) {
     const amber = message.jenis === 'diteruskan' || message.jenis === 'minta_kontak' || message.jenis === 'kontak_tersimpan';
 
     return (
@@ -702,7 +800,7 @@ function SystemNotice({ message }: { message: ChatMessage }) {
  * Kartu portal tujuan. Dengan rujukan, tombol utama membuka halaman
  * pengantar SIGAP (langkah, ringkasan, tempat bukti) — bukan portal langsung.
  */
-function PortalCard({ portal, referral }: { portal: PortalCardInfo; referral: ReferralInfo | null }) {
+export function PortalCard({ portal, referral }: { portal: PortalCardInfo; referral: ReferralInfo | null }) {
     return (
         <div className="mt-2 overflow-hidden rounded-md border border-gray-200 bg-white whitespace-normal">
             <div className="px-2.5 py-2">
@@ -740,7 +838,7 @@ function PortalCard({ portal, referral }: { portal: PortalCardInfo; referral: Re
 }
 
 /** Kontak untuk dihubungi petugas di luar jam layanan. */
-function ContactForm({ reference, onSaved }: { reference: string | null; onSaved: (reply: ChatMessage[], state: Assistant) => void }) {
+export function ContactForm({ reference, onSaved }: { reference: string | null; onSaved: (reply: ChatMessage[], state: Assistant) => void }) {
     const [value, setValue] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);

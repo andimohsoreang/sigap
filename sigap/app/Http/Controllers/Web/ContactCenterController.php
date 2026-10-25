@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Web;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\ChatConversation;
+use App\Models\ChatMessage;
 use App\Models\Portal;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Services\AuditService;
+use App\Services\ChatAttachmentService;
 use App\Services\ChatService;
 use App\Services\ReferralService;
 use App\Services\StaffRegistrationService;
@@ -18,6 +20,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Aksi petugas di Kotak Masuk contact center: mengambil percakapan dan
@@ -270,5 +273,57 @@ class ContactCenterController extends Controller
         $given = $normalize($given);
 
         return $given !== '' && hash_equals($normalize($registered), $given);
+    }
+
+    /**
+     * POST /admin/chat/{conversation}/konfirmasi-data — kirim kartu
+     * konfirmasi data ke chat warga ("Data sudah benar" / "Ubah data").
+     * NIK hanya tampil tersamar.
+     */
+    public function requestConfirmation(Request $request, ChatConversation $conversation): RedirectResponse
+    {
+        $this->authorize('viewAny', Ticket::class);
+
+        $request->merge(['nik' => preg_replace('/\D/', '', (string) $request->input('nik')) ?: null]);
+        $data = $request->validate([
+            'nama' => ['required', 'string', 'max:150'],
+            'nik' => ['nullable', 'digits:16'],
+            'lokasi' => ['nullable', 'string', 'max:200'],
+            'kategori' => ['nullable', 'string', 'max:100'],
+            'pengantar' => ['nullable', 'string', 'max:300'],
+        ], [
+            'nama.required' => 'Nama wajib diisi.',
+            'nik.digits' => 'NIK harus 16 digit angka.',
+        ]);
+
+        $rows = array_values(array_filter([
+            ['label' => 'Nama', 'nilai' => trim($data['nama'])],
+            ! empty($data['nik']) ? ['label' => 'NIK', 'nilai' => self::maskNik($data['nik'])] : null,
+            ! empty($data['lokasi']) ? ['label' => 'Lokasi', 'nilai' => trim($data['lokasi'])] : null,
+            ! empty($data['kategori']) ? ['label' => 'Kategori', 'nilai' => trim($data['kategori'])] : null,
+        ]));
+
+        if ($conversation->isWithAssistant()) {
+            $this->chat->takeOver($conversation, $request->user()->id);
+        }
+        $intro = trim((string) ($data['pengantar'] ?? '')) ?: 'Mohon konfirmasi data berikut agar laporan Anda bisa kami teruskan:';
+        $this->chat->requestConfirmation($conversation, $rows, $intro, $request->user()->id);
+        $this->audit->safe('chat.data_confirmation_requested', $conversation, "Kartu konfirmasi data dikirim ke percakapan #{$conversation->id}.");
+
+        return back()->with('success', 'Kartu konfirmasi data dikirim ke chat warga.');
+    }
+
+    /** GET /admin/chat/lampiran/{message} — petugas melihat lampiran chat. */
+    public function attachment(ChatMessage $message, ChatAttachmentService $files): BinaryFileResponse
+    {
+        $this->authorize('viewAny', Ticket::class);
+
+        return ChatController::serveAttachment($message, $files);
+    }
+
+    /** "7324 •••• •••• 0012". */
+    private static function maskNik(string $nik): string
+    {
+        return substr($nik, 0, 4).' •••• •••• '.substr($nik, -4);
     }
 }

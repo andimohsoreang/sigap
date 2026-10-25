@@ -8,9 +8,11 @@ FROM composer:2 AS composer-bin
 
 # ---------- PHP dasar ----------
 FROM php:${PHP_VERSION}-fpm-alpine AS php-base
-RUN apk add --no-cache icu-libs libzip libpq fcgi \
- && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS icu-dev libzip-dev postgresql-dev linux-headers \
- && docker-php-ext-install -j"$(nproc)" pdo_pgsql intl zip bcmath pcntl opcache \
+# gd: foto lampiran chat di-encode ulang agar metadata (EXIF, termasuk lokasi GPS) terbuang.
+RUN apk add --no-cache icu-libs libzip libpq fcgi libpng libjpeg-turbo libwebp freetype \
+ && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS icu-dev libzip-dev postgresql-dev linux-headers libpng-dev libjpeg-turbo-dev libwebp-dev freetype-dev \
+ && docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype \
+ && docker-php-ext-install -j"$(nproc)" pdo_pgsql intl zip bcmath pcntl opcache gd \
  && apk del .build-deps
 COPY --from=composer-bin /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html

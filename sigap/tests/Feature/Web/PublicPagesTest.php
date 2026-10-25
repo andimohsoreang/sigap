@@ -34,6 +34,17 @@ class PublicPagesTest extends TestCase
             );
     }
 
+    public function test_beranda_baru_transi_renders_with_its_assets(): void
+    {
+        $this->get('/beranda-baru')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('public/beranda-transi'));
+
+        foreach (['08-selamat-datang', '01-menunjuk-kanan', '03-jempol-sukses', '06-berpikir', '00-menyapa', 'avatar'] as $image) {
+            $this->assertFileExists(public_path("images/transi/{$image}.webp"));
+        }
+    }
+
     public function test_old_absol_url_redirects_to_home(): void
     {
         $this->get('/beranda-absol')->assertRedirect('/')->assertStatus(301);

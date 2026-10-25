@@ -29,6 +29,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PublicController::class, 'home'])->name('home');
 // Tampilan beranda lama tetap tersedia sebagai pembanding.
 Route::get('/beranda-standar', [PublicController::class, 'homeStandard'])->name('beranda.standar');
+// Beranda baru: contact center TRANSI yang semuanya dimulai dari chat (uji coba).
+Route::get('/beranda-baru', [PublicController::class, 'homeTransi'])->name('beranda.baru');
 // Alamat lama versi absol diarahkan ke beranda utama agar tautan lama tidak 404.
 Route::redirect('/beranda-absol', '/', 301);
 // Panduan lengkap pengaduan & penanganan tiket.
@@ -96,6 +98,14 @@ Route::post('/chat/pesan', [ChatController::class, 'store'])->middleware('thrott
 // Contact center (asisten AI): minta petugas, tinggalkan kontak, nilai jawaban.
 Route::post('/chat/petugas', [ChatController::class, 'handoff'])->middleware('throttle:chat')->name('chat.handoff');
 Route::post('/chat/kontak', [ChatController::class, 'contact'])->middleware('throttle:chat')->name('chat.contact');
+Route::post('/chat/lampiran', [ChatController::class, 'uploadAttachment'])->middleware('throttle:chat-lampiran')->name('chat.attachment');
+Route::get('/chat/lampiran/{message}', [ChatController::class, 'showAttachment'])->whereNumber('message')->middleware('throttle:chat-baca')->name('chat.attachment.show');
+Route::post('/chat/konfirmasi/{message}', [ChatController::class, 'answerConfirmation'])->whereNumber('message')->middleware('throttle:chat')->name('chat.confirmation');
+Route::post('/chat/akhiri', [ChatController::class, 'end'])->middleware('throttle:chat')->name('chat.end');
+Route::get('/chat/transkrip', [ChatController::class, 'transcript'])->middleware('throttle:chat-baca')->name('chat.transcript');
+Route::post('/chat/lanjutkan', [ChatController::class, 'resume'])->middleware('throttle:akun')->name('chat.resume');
+// Halaman chat layar penuh (Chat TRANSI).
+Route::get('/chat', [ChatController::class, 'page'])->name('chat.page');
 Route::post('/chat/pesan/{message}/nilai', [ChatController::class, 'feedback'])->whereNumber('message')->middleware('throttle:chat')->name('chat.feedback');
 
 // Pengantar rujukan portal (tanpa login; token acak di URL).
@@ -132,6 +142,9 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
     Route::get('/chat/{conversation}/saran-tiket', [AdminController::class, 'ticketSuggestion'])->name('admin.chat.saran-tiket');
     // Daftarkan akun warga dari percakapan (tautan buat kata sandi dikirim ke chat).
     Route::post('/chat/{conversation}/akun', [ContactCenterController::class, 'register'])->name('admin.chat.akun');
+    // Kartu konfirmasi data & lampiran chat.
+    Route::post('/chat/{conversation}/konfirmasi-data', [ContactCenterController::class, 'requestConfirmation'])->name('admin.chat.konfirmasi');
+    Route::get('/chat/lampiran/{message}', [ContactCenterController::class, 'attachment'])->whereNumber('message')->name('admin.chat.lampiran');
     Route::post('/chat/{conversation}/akun/pulihkan', [ContactCenterController::class, 'recover'])->name('admin.chat.akun.pulihkan');
     Route::post('/chat/{conversation}/akun/kirim-ulang', [ContactCenterController::class, 'resendActivation'])->name('admin.chat.akun.ulang');
 
