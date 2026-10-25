@@ -294,6 +294,37 @@ class KnowledgeSourceTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_long_multi_aspect_question_gets_more_passages_from_several_sources(): void
+    {
+        // Tiap aspek pertanyaan dibahas situs resmi yang berbeda, ditambah kutipan yang tidak relevan.
+        $pages = [
+            'Arah Kebijakan' => ['Transmigrasi sebagai strategi pembangunan', 'Transmigrasi modern ditempatkan sebagai strategi pembangunan kawasan, bukan sekadar pemindahan penduduk.'],
+            'Evaluasi Kinerja' => ['Evaluasi keberhasilan pembangunan kawasan', 'Keberhasilan pendekatan pembangunan kawasan transmigrasi dievaluasi melalui indikator kinerja kawasan.'],
+            'Persebaran Penduduk' => ['Perubahan demografi dan urbanisasi', 'Perubahan demografi dan laju urbanisasi menjadi pertimbangan persebaran penduduk ke kawasan baru.'],
+            'Pemerataan Wilayah' => ['Ketimpangan ekonomi antarwilayah', 'Ketimpangan ekonomi antarwilayah dikurangi melalui pusat pertumbuhan baru di kawasan transmigrasi.'],
+            'Masyarakat Setempat' => ['Penghormatan hak masyarakat lokal', 'Penghormatan terhadap hak masyarakat lokal dijamin, termasuk melalui pola transmigrasi lokal.'],
+            'Layanan' => ['Jam layanan kantor', 'Kantor pelayanan buka Senin sampai Jumat pukul 08.00 sampai 15.00.'],
+        ];
+        foreach ($pages as $name => [$heading, $body]) {
+            $source = $this->site(['name' => $name, 'url' => 'https://www.transmigrasi.go.id/'.str($name)->slug(), 'status' => KnowledgeSource::STATUS_READY]);
+            $source->passages()->create(['title' => $name, 'heading' => $heading, 'body' => $body, 'url' => $source->url]);
+        }
+
+        $retriever = app(KnowledgeRetriever::class);
+        $question = 'Jika transmigrasi modern diklaim sebagai strategi pembangunan, bagaimana kementerian mengevaluasi keberhasilan pendekatan tersebut dalam konteks perubahan demografi, urbanisasi, ketimpangan ekonomi, serta tuntutan penghormatan terhadap hak masyarakat lokal?';
+
+        $this->assertTrue($retriever->isLong($question));
+        $this->assertGreaterThanOrEqual(3, count($retriever->segments($question)));
+
+        $passages = $retriever->sources($question)->filter(fn ($s) => $s instanceof KnowledgePassage);
+        $this->assertGreaterThan(3, $passages->count(), 'pertanyaan panjang mendapat lebih dari 3 kutipan');
+        $this->assertSame($passages->count(), $passages->unique('knowledge_source_id')->count(), 'kutipan dari sumber berbeda diutamakan');
+        $this->assertNotContains('Layanan', $passages->map(fn ($p) => $p->title)->all());
+
+        // Pertanyaan pendek tetap paling banyak 3 kutipan.
+        $this->assertLessThanOrEqual(3, $retriever->sources('strategi pembangunan kawasan transmigrasi')->count());
+    }
+
     public function test_inactive_source_is_not_used(): void
     {
         Http::fake([self::PAGE => Http::response($this->html($this->requirements()), 200, ['Content-Type' => 'text/html'])]);

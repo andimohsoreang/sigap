@@ -23,6 +23,11 @@ use Illuminate\Support\Facades\Cache;
  * Kutipan Sumber Resmi (situs & berkas resmi) dicari dengan cara yang sama
  * di indeksnya sendiri, lalu dikirim SETELAH artikel: artikel sudah ditinjau
  * petugas, kutipan menambal pertanyaan yang belum punya artikel.
+ *
+ * Pertanyaan panjang multi-aspek (mis. pertanyaan kebijakan) jarang lolos
+ * syarat cakupan sebagai satu kalimat utuh. Pertanyaan seperti itu juga
+ * dicari per segmen, hasilnya digabung bergiliran, dan kutipannya diperbanyak
+ * ({@see spread()}).
  */
 class KnowledgeRetriever
 {
@@ -38,25 +43,85 @@ class KnowledgeRetriever
     /** Artikel di bawah porsi skor artikel teratas ini tidak ikut dikirim. */
     private const RELATIVE_CUTOFF = 0.35;
 
+    /** Pertanyaan dengan kata bermakna sebanyak ini dianggap panjang/multi-aspek. */
+    public const LONG_QUESTION_TERMS = 12;
+
+    /** Jumlah kutipan untuk pertanyaan panjang (artikel tetap paling banyak 3). */
+    private const LONG_PASSAGES = 6;
+
+    /** Segmen dengan kata bermakna lebih sedikit digabung ke potongan berikutnya. */
+    private const MIN_SEGMENT_TERMS = 2;
+
+    /** Batas segmen per pertanyaan agar biaya pencarian tetap terukur. */
+    private const MAX_SEGMENTS = 8;
+
+    /**
+     * Syarat cakupan per segmen lebih longgar: satu segmen pun sering memuat
+     * dua aspek ("keberhasilan … perubahan demografi") yang dibahas di dua
+     * kutipan berbeda.
+     */
+    private const SEGMENT_MIN_COVERAGE = 0.3;
+
     /**
      * @return Collection<int, KnowledgeArticle> paling banyak `$limit` artikel, paling relevan dulu
      */
     public function search(string $question, int $limit = 3): Collection
     {
-        return collect($this->rank($question))
+        $index = $this->index();
+
+        return collect($this->spread($question, fn (string $q, float $min) => array_column($this->score($index, $q, $min), 'i')))
             ->take($limit)
-            ->map(fn (array $hit) => $hit['article'])
+            ->map(fn (int $i) => $index['articles'][$i])
             ->values();
     }
 
     /**
      * Artikel terbit + kutipan Sumber Resmi aktif, artikel lebih dulu.
+     * Tanpa `$passages`, pertanyaan panjang mendapat lebih banyak kutipan.
      *
      * @return Collection<int, KnowledgeArticle|KnowledgePassage>
      */
-    public function sources(string $question, int $articles = 3, int $passages = 3): Collection
+    public function sources(string $question, int $articles = 3, ?int $passages = null): Collection
     {
+        $passages ??= $this->isLong($question) ? self::LONG_PASSAGES : 3;
+
         return $this->search($question, $articles)->concat($this->passages($question, $passages))->values();
+    }
+
+    /** Pertanyaan panjang/multi-aspek: dicari per segmen dan diberi kutipan lebih banyak. */
+    public function isLong(string $question): bool
+    {
+        return count($this->terms($question)) >= self::LONG_QUESTION_TERMS;
+    }
+
+    /**
+     * Pecah pertanyaan per aspek: per kalimat, koma, dan kata sambung ("dan",
+     * "serta", "melainkan", …). Potongan yang kata bermaknanya kurang dari dua
+     * digabung ke potongan berikutnya agar tidak mencari satu kata lepas.
+     *
+     * @return list<string>
+     */
+    public function segments(string $question): array
+    {
+        $pieces = preg_split('/[.,;:?!\n]+|\s(?:dan|serta|maupun|melainkan|namun|tetapi|sedangkan|atau)\s/iu', $question, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        $segments = [];
+        $carry = '';
+        foreach ($pieces as $piece) {
+            $carry = trim($carry.' '.$piece);
+            if (count($this->terms($carry)) >= self::MIN_SEGMENT_TERMS) {
+                $segments[] = $carry;
+                $carry = '';
+            }
+        }
+        // Sisa pendek di ujung ("… adil dan berkelanjutan") ikut segmen terakhir.
+        if ($carry !== '' && $segments !== []) {
+            $segments[count($segments) - 1] .= ' '.$carry;
+        } elseif ($carry !== '') {
+            $segments[] = $carry;
+        }
+
+        return array_slice(array_values(array_unique($segments)), 0, self::MAX_SEGMENTS);
     }
 
     /**
@@ -69,7 +134,7 @@ class KnowledgeRetriever
      */
     public function passages(string $question, int $limit = 3): Collection
     {
-        $ids = array_column(array_slice($this->rankPassages($question), 0, $limit * 5), 'id');
+        $ids = array_slice($this->spread($question, fn (string $q, float $min) => array_column($this->rankPassages($q, $min), 'id')), 0, $limit * 5);
         if ($ids === []) {
             return collect();
         }
@@ -100,13 +165,13 @@ class KnowledgeRetriever
     /**
      * @return list<array{id: int, score: float, coverage: float}>
      */
-    public function rankPassages(string $question): array
+    public function rankPassages(string $question, float $minCoverage = self::MIN_COVERAGE): array
     {
         $index = $this->passageIndex();
 
         return array_map(
             fn (array $hit) => ['id' => $index['ids'][$hit['i']], 'score' => $hit['score'], 'coverage' => $hit['coverage']],
-            $this->score($index, $question),
+            $this->score($index, $question, $minCoverage),
         );
     }
 
@@ -126,12 +191,44 @@ class KnowledgeRetriever
     }
 
     /**
+     * Urutan kandidat. Pertanyaan pendek: peringkat biasa. Pertanyaan panjang:
+     * peringkat kalimat utuh dan tiap segmen digabung bergiliran (round-robin)
+     * — juara tiap daftar dulu, lalu peringkat kedua, dst. — agar tiap aspek
+     * yang ditanya mendapat kandidat. Urutannya tetap (deterministik).
+     *
+     * @param  callable(string, float): list<int>  $ranker  (teks, syarat cakupan) → id/posisi dokumen, paling relevan dulu
+     * @return list<int>
+     */
+    private function spread(string $question, callable $ranker): array
+    {
+        if (! $this->isLong($question)) {
+            return $ranker($question, self::MIN_COVERAGE);
+        }
+
+        $lists = [
+            $ranker($question, self::MIN_COVERAGE),
+            ...array_map(fn (string $segment) => $ranker($segment, self::SEGMENT_MIN_COVERAGE), $this->segments($question)),
+        ];
+        $merged = [];
+        $rounds = max(array_map('count', $lists));
+        for ($r = 0; $r < $rounds; $r++) {
+            foreach ($lists as $list) {
+                if (isset($list[$r])) {
+                    $merged[$list[$r]] ??= count($merged);
+                }
+            }
+        }
+
+        return array_keys($merged);
+    }
+
+    /**
      * BM25 + syarat cakupan di atas satu indeks.
      *
      * @param  array{docs: list<array{tf: array<string, int>, len: int}>, df: array<string, int>, avg: float}  $index
      * @return list<array{i: int, score: float, coverage: float}>
      */
-    private function score(array $index, string $question): array
+    private function score(array $index, string $question, float $minCoverage = self::MIN_COVERAGE): array
     {
         $words = IndonesianText::words($question);
         if ($words === []) {
@@ -175,7 +272,7 @@ class KnowledgeRetriever
             }
 
             $coverage = $covered / $totalWeight;
-            if ($score > 0 && $coverage >= self::MIN_COVERAGE) {
+            if ($score > 0 && $coverage >= $minCoverage) {
                 $hits[] = ['i' => $i, 'score' => round($score, 3), 'coverage' => round($coverage, 2)];
             }
         }

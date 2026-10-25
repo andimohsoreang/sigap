@@ -41,6 +41,9 @@ class AssistantService
 
     private const ASK_DETAILS = 'Baik, saya bantu. Ceritakan masalahnya: apa yang terjadi, di kawasan atau SP mana, dan sejak kapan? Bila ada, sebutkan juga dampaknya.';
 
+    /** Pertanyaan kebijakan yang tidak dibahas sumber: tetap diarahkan ke kanal resmi, bukan sekadar "tidak tahu". */
+    private const POLICY_NO_SOURCE = 'Pertanyaan ini menyangkut kebijakan Kementerian Transmigrasi. Saya belum menemukan sumber resmi yang membahasnya, jadi saya tidak akan berspekulasi. Untuk pernyataan resmi atau data kinerja program, Bapak/Ibu dapat mengajukan permohonan informasi publik ke PPID Kementerian Transmigrasi atau menghubungi Humas Kementerian.';
+
     public function __construct(
         private readonly LlmClient $llm,
         private readonly KnowledgeRetriever $retriever,
@@ -214,13 +217,23 @@ class AssistantService
     }
 
     /**
-     * @param  array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, portal: string|null, perlu_petugas: bool, ringkasan: string}  $result
+     * @param  array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, ringkasan: string}  $result
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
      */
     private function answer(ChatConversation $conversation, string $question, array $result, Collection $articles, ?Portal $portal = null): ChatMessage
     {
         // Tanpa sumber yang sah, tidak ada jawaban: AI tidak boleh menebak.
         $sources = $this->citedSources($result, $articles);
+
+        // Teks arahan tetap (bukan karangan AI); tetap dicatat sebagai
+        // pertanyaan tak terjawab agar petugas dapat menyiapkan artikelnya.
+        if (($sources->isEmpty() || $result['jawaban'] === '') && $result['kebijakan']) {
+            return $this->say($conversation, self::POLICY_NO_SOURCE, [
+                'kind' => 'tidak_tahu',
+                'kebijakan' => true,
+                'pertanyaan' => Str::limit($this->masker->mask($question), 200),
+            ]);
+        }
 
         if (($sources->isEmpty() || $result['jawaban'] === '') && $portal !== null) {
             // Katalog portal dikelola admin = sumber resmi untuk "layanan ini ada di mana".
@@ -251,6 +264,8 @@ class AssistantService
             'kind' => 'jawaban',
             // Ditandai hanya bila memang ada lebih dari satu sumber yang dikutip.
             'beda_sumber' => $result['beda_sumber'] && $sources->count() > 1,
+            // Pertanyaan kebijakan: widget menampilkan arahan ke PPID.
+            'kebijakan' => $result['kebijakan'],
             'sumber' => $sources->map(fn (KnowledgeArticle|KnowledgePassage $s, int $no) => $s instanceof KnowledgePassage
                 ? [
                     'no' => $no,
@@ -292,7 +307,7 @@ class AssistantService
 
     /**
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
-     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, portal: string|null, perlu_petugas: bool, ringkasan: string}
+     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, ringkasan: string}
      */
     private function ask(ChatConversation $conversation, string $question, Collection $articles, int $incomingId): array
     {
@@ -322,7 +337,7 @@ class AssistantService
      *
      * @param  list<array{dari: string, isi: string}>  $history
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
-     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, portal: string|null, perlu_petugas: bool, ringkasan: string}
+     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, ringkasan: string}
      *
      * @throws AiException
      */
@@ -356,11 +371,17 @@ class AssistantService
 
         $data = Prompts::decodeJson($content) ?? throw new AiException('Balasan AI bukan JSON.');
 
+        $type = in_array($data['jenis'] ?? null, self::TYPES, true) ? $data['jenis'] : 'informasi';
+        // Pertanyaan kebijakan dijawab sebagai informasi: "hak warga" di
+        // dalamnya bersifat umum, bukan kasus pribadi. Aduan tetap aduan.
+        $policy = (bool) ($data['kebijakan'] ?? false) && in_array($type, ['informasi', 'pribadi'], true);
+
         return [
-            'jenis' => in_array($data['jenis'] ?? null, self::TYPES, true) ? $data['jenis'] : 'informasi',
+            'jenis' => $policy ? 'informasi' : $type,
             'jawaban' => trim((string) ($data['jawaban'] ?? '')),
             'sumber' => array_values(array_filter(array_map('intval', (array) ($data['sumber'] ?? [])))),
             'beda_sumber' => (bool) ($data['beda_sumber'] ?? false),
+            'kebijakan' => $policy,
             'portal' => $this->portals->find(is_string($data['portal'] ?? null) ? $data['portal'] : null)?->code,
             'perlu_petugas' => (bool) ($data['perlu_petugas'] ?? false),
             'ringkasan' => Str::limit(trim((string) ($data['ringkasan'] ?? '')), 600),

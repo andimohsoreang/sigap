@@ -68,6 +68,7 @@ interface Message {
         kutipan?: string;
     }[];
     beda_sumber?: boolean;
+    kebijakan?: boolean;
     nilai?: number | null;
     lampiran?: { nama: string; mime: string; ukuran: number; gambar: boolean; url: string } | null;
     konfirmasi?: {
@@ -1364,6 +1365,11 @@ function MessageItem({ message: m, participant, initial }: { message: Message; p
                     {m.beda_sumber && (
                         <span className="mt-3 block rounded-md bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-900">
                             Sumber resmi berbeda: semua versi ditampilkan ke warga. Pastikan ketentuan yang berlaku.
+                        </span>
+                    )}
+                    {m.kebijakan && (
+                        <span className="mt-3 block rounded-md bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-900">
+                            Pertanyaan kebijakan: warga diarahkan ke PPID untuk pernyataan resmi atau data kinerja.
                         </span>
                     )}
                     {(m.sumber?.length ?? 0) > 0 && (

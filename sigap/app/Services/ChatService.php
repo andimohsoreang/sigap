@@ -364,6 +364,7 @@ class ChatService
             'jenis' => $meta['kind'] ?? null,
             'sumber' => $meta['sumber'] ?? [],
             'beda_sumber' => (bool) ($meta['beda_sumber'] ?? false),
+            'kebijakan' => (bool) ($meta['kebijakan'] ?? false),
             'tiket' => $meta['tiket'] ?? null,
             'portal' => $meta['portal'] ?? null,
             'rujukan' => $meta['rujukan'] ?? null,

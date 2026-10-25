@@ -1138,6 +1138,7 @@ class AdminController extends Controller
                 'konfirmasi' => ChatService::confirmation($m),
                 'sumber' => $m->meta['sumber'] ?? [],
                 'beda_sumber' => (bool) ($m->meta['beda_sumber'] ?? false),
+                'kebijakan' => (bool) ($m->meta['kebijakan'] ?? false),
                 'nilai' => $m->feedback,
             ]),
         ];

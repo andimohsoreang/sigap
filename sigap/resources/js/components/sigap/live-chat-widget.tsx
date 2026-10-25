@@ -13,6 +13,7 @@ import {
     Globe,
     Headset,
     KeyRound,
+    Landmark,
     LogIn,
     Maximize2,
     MessagesSquare,
@@ -109,6 +110,8 @@ export interface ChatMessage {
     sumber?: Source[];
     /** Sumber resmi yang dikutip menyebut ketentuan berbeda; semua versi ditampilkan. */
     beda_sumber?: boolean;
+    /** Pertanyaan kebijakan/analitis; pernyataan resmi dan data kinerja diarahkan ke PPID. */
+    kebijakan?: boolean;
     tiket?: TicketInfo | null;
     portal?: PortalCardInfo | null;
     rujukan?: ReferralInfo | null;
@@ -788,6 +791,25 @@ export function AiExtras({
                     <span>
                         <strong>Sumber resmi menyebut ketentuan berbeda.</strong> Semua versi ditampilkan beserta sumbernya. Pastikan ketentuan yang
                         berlaku ke petugas atau dinas transmigrasi kabupaten/kota.
+                    </span>
+                </div>
+            )}
+            {message.kebijakan && (
+                <div className="mt-2 flex items-start gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-2 text-[11px] leading-snug whitespace-normal text-blue-900">
+                    <Landmark className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <span>
+                        <strong>Pertanyaan kebijakan.</strong> Untuk pernyataan resmi atau data kinerja, ajukan permohonan informasi ke{' '}
+                        <a
+                            href="https://ppid.transmigrasi.go.id"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-0.5 font-semibold underline"
+                        >
+                            PPID Kementerian Transmigrasi
+                            <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                            <span className="sr-only">(membuka tab baru)</span>
+                        </a>
+                        .
                     </span>
                 </div>
             )}

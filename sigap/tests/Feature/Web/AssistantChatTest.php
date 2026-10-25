@@ -258,6 +258,71 @@ class AssistantChatTest extends TestCase
         $this->ask('Bagaimana cara daftar program transmigrasi?')->assertJsonPath('balasan.0.jenis', 'tidak_tahu');
     }
 
+    /** Model tiruan yang selalu menandai pertanyaan sebagai pertanyaan kebijakan. */
+    private function policyModel(string $type, string $answer, array $sources): void
+    {
+        $this->app->bind(LlmClient::class, fn () => new class($type, $answer, $sources) implements LlmClient
+        {
+            public function __construct(private string $type, private string $answer, private array $sources) {}
+
+            public function complete(array $messages, bool $json = false): string
+            {
+                return json_encode(['jenis' => $this->type, 'jawaban' => $this->answer, 'sumber' => $this->sources, 'beda_sumber' => false, 'kebijakan' => true, 'portal' => null, 'perlu_petugas' => false, 'ringkasan' => '']);
+            }
+        });
+    }
+
+    public function test_policy_question_is_answered_from_sources_with_ppid_note_without_handoff(): void
+    {
+        KnowledgeArticle::create([
+            'title' => 'Apa tujuan program transmigrasi?',
+            'body' => 'Transmigrasi diselenggarakan untuk meningkatkan kesejahteraan dan mendorong pemerataan pembangunan daerah.',
+            'category' => 'Program',
+            'status' => KnowledgeArticle::STATUS_PUBLISHED,
+        ]);
+        // Model keliru menandai "hak individu" sebagai urusan pribadi; tetap dijawab sebagai informasi.
+        $this->policyModel('pribadi', 'Tujuan program: kesejahteraan dan pemerataan pembangunan [1]. Data evaluasi belum tersedia di sumber resmi yang saya miliki. Untuk data kinerja, ajukan permohonan informasi ke PPID.', [1]);
+        $conversation = $this->startGuest();
+
+        $this->ask('Atas dasar apa program transmigrasi dibenarkan untuk pemerataan pembangunan dan kesejahteraan dibanding hak individu memilih tempat tinggal?')
+            ->assertJsonCount(1, 'balasan')
+            ->assertJsonPath('balasan.0.jenis', 'jawaban')
+            ->assertJsonPath('balasan.0.kebijakan', true)
+            ->assertJsonPath('balasan.0.sumber.0.no', 1)
+            ->assertJsonPath('asisten.mode', 'ai');
+
+        $conversation->refresh();
+        $this->assertSame('ai', $conversation->handled_by);
+        $this->assertNull($conversation->handoff_reason);
+        $this->assertTrue(ChatMessage::query()->where('sender_type', 'ai')->sole()->meta['kebijakan']);
+    }
+
+    public function test_policy_question_without_sources_points_to_ppid_instead_of_plain_unknown(): void
+    {
+        $this->policyModel('informasi', '', []);
+        $conversation = $this->startGuest();
+
+        $reply = $this->ask('Bagaimana kementerian menentukan keseimbangan antara kepentingan nasional untuk membuka pusat-pusat pertumbuhan ekonomi baru dan hak individu maupun keluarga untuk menentukan tempat tinggal, pekerjaan, serta masa depan mereka secara bebas?')
+            ->assertJsonCount(1, 'balasan')
+            ->assertJsonPath('balasan.0.jenis', 'tidak_tahu')
+            ->assertJsonPath('balasan.0.kebijakan', true)
+            ->assertJsonPath('asisten.mode', 'ai');
+
+        $this->assertStringContainsString('PPID', $reply->json('balasan.0.body'));
+        $this->assertSame('ai', $conversation->fresh()->handled_by);
+    }
+
+    public function test_complaint_is_never_downgraded_to_policy_question(): void
+    {
+        $this->policyModel('aduan', '', []);
+        $this->startGuest();
+
+        $this->ask('Jalan poros SP3 rusak parah sudah 3 bulan, kebijakan transmigrasi gagal')
+            ->assertJsonPath('balasan.0.jenis', 'ringkasan')
+            ->assertJsonPath('balasan.0.kebijakan', false)
+            ->assertJsonPath('asisten.mode', 'petugas');
+    }
+
     public function test_feedback_updates_article_stats_once_and_only_for_own_answers(): void
     {
         $this->startGuest();
