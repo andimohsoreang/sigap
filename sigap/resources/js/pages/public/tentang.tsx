@@ -308,7 +308,7 @@ export default function Tentang({ stats, regions }: Props) {
                             href="/peta"
                             className="flex items-center gap-1.5 text-[15px] font-semibold text-[var(--t-deep)] hover:text-[var(--t-navy)]"
                         >
-                            Lihat di Peta Kawasan <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                            Lihat di Peta Wilayah <ArrowRight className="h-4 w-4" aria-hidden="true" />
                         </Link>
                     </div>
                     <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

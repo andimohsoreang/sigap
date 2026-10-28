@@ -15,7 +15,7 @@ const NAV = [
     { label: 'Beranda', route: 'home', href: '/', page: 'home' },
     { label: 'Data', route: 'tentang', href: '/tentang', page: 'tentang' },
     { label: 'Katalog Pengaduan', route: 'katalog', href: '/katalog', page: 'katalog' },
-    { label: 'Peta Kawasan', route: 'peta', href: '/peta', page: 'peta' },
+    { label: 'Peta Wilayah', route: 'peta', href: '/peta', page: 'peta' },
     { label: 'Panduan', route: 'panduan', href: '/panduan', page: 'panduan' },
 ];
 

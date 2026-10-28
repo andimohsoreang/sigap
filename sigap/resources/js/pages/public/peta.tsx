@@ -82,11 +82,11 @@ export default function Peta({ regions, points }: Props) {
 
     return (
         <TaraPage
-            title="Peta Kawasan"
+            title="Peta Wilayah"
             description="Peta kawasan transmigrasi yang dilayani SIGAP."
             active="peta"
-            eyebrow="Peta Kawasan"
-            heading="Peta Kawasan Transmigrasi"
+            eyebrow="Peta Wilayah"
+            heading="Peta Wilayah Transmigrasi"
             subtitle={
                 <span className="flex flex-wrap items-center gap-x-6 gap-y-2 font-medium text-[var(--t-deep)]">
                     <span className="flex items-center gap-2">

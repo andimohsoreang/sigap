@@ -12,7 +12,7 @@ const NAV: { key: TaraNav; label: string; href: string }[] = [
     { key: 'beranda', label: 'Beranda', href: '/beranda-baru' },
     { key: 'lacak', label: 'Lacak Tiket', href: '/lacak' },
     { key: 'katalog', label: 'Katalog Pengaduan', href: '/katalog' },
-    { key: 'peta', label: 'Peta Kawasan', href: '/peta' },
+    { key: 'peta', label: 'Peta Wilayah', href: '/peta' },
     { key: 'data', label: 'Data', href: '/tentang' },
     { key: 'panduan', label: 'Panduan', href: '/panduan' },
 ];

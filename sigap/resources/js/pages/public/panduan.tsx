@@ -67,7 +67,7 @@ const FITUR_WARGA: Feature[] = [
         desc: (
             <>
                 Halaman awal SIGAP menampilkan statistik pengaduan, kanal layanan, dan pertanyaan umum. Dari beranda Anda bisa langsung menuju{' '}
-                <strong>Katalog Pengaduan</strong>, <strong>Peta Kawasan</strong>, <strong>Lacak Tiket</strong>, atau membuat laporan baru lewat
+                <strong>Katalog Pengaduan</strong>, <strong>Peta Wilayah</strong>, <strong>Lacak Tiket</strong>, atau membuat laporan baru lewat
                 tombol aksi utama.
             </>
         ),
@@ -92,7 +92,7 @@ const FITUR_WARGA: Feature[] = [
     {
         id: 'w-peta',
         icon: MapPin,
-        title: 'Peta Kawasan',
+        title: 'Peta Wilayah',
         desc: (
             <>
                 Peta interaktif sebaran kawasan transmigrasi dan titik pengaduan. Klik penanda pada peta untuk melihat ringkasan laporan per kawasan —
