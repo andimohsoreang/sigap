@@ -3,11 +3,9 @@ import {
     ArrowRight,
     ArrowUp,
     ArrowUpRight,
-    AtSign,
     BellRing,
     BookCheck,
     BookOpen,
-    Briefcase,
     ChartColumn,
     ClipboardList,
     FilePenLine,
@@ -15,16 +13,13 @@ import {
     Hash,
     Headset,
     KeyRound,
-    Landmark,
     Map as MapIcon,
     MapPinned,
-    Megaphone,
     MessageCircle,
     Minus,
     Phone,
     Plus,
     Search,
-    ShieldAlert,
     ShieldCheck,
     Ticket,
     TicketCheck,
@@ -35,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react';
 
+import KanalResmi, { type KanalPublik } from '@/components/sigap/kanal-resmi';
 import { TaraFooter, TaraLauncher } from '@/components/sigap/tara-shell';
 import TransiHeader from '@/components/sigap/transi-header';
 import { goToChat } from '@/lib/chat-transition';
@@ -109,15 +105,6 @@ const OTHER_PATHS: { icon: LucideIcon; title: string; desc: string; href: string
     { icon: MapIcon, title: 'Peta aduan kawasan', desc: 'Lihat sebaran aduan di setiap kawasan transmigrasi.', href: '/peta' },
     { icon: ChartColumn, title: 'Data SIGAP', desc: 'Statistik penanganan dan kepuasan layanan.', href: '/tentang' },
     { icon: Phone, title: 'Kontak kantor', desc: 'Alamat dan telepon kantor pusat serta kawasan.', href: '/tentang-kami' },
-];
-
-/** Kanal resmi lain (alamat diperiksa langsung di situs resmi, 25 Okt 2026). */
-const CHANNELS: { icon: LucideIcon; label: string; href: string }[] = [
-    { icon: AtSign, label: '@kementrans.ri', href: 'https://www.instagram.com/kementrans.ri/' },
-    { icon: Landmark, label: 'PPID Kementrans', href: 'https://ppid.transmigrasi.go.id/' },
-    { icon: Megaphone, label: 'SP4N-LAPOR!', href: 'https://sp4n.lapor.go.id/instansi/kementerian-transmigrasi' },
-    { icon: ShieldAlert, label: 'Inspektorat Jenderal', href: 'https://ppid.transmigrasi.go.id/standar-layanan/pengaduan-penyalahgunaan-wewenang' },
-    { icon: Briefcase, label: 'Pengaduan internal pegawai', href: '/pengaduan/internal' },
 ];
 
 const FAQS = [
@@ -236,7 +223,7 @@ function visible(id: string): HTMLElement | null {
 
 /* ------------------------------------------------------------------- page */
 
-export default function BerandaTransi() {
+export default function BerandaTransi({ kanal }: { kanal: KanalPublik }) {
     const { auth, assistant } = usePage<SharedData>().props;
     const aiEnabled = Boolean(assistant?.enabled);
     const pageRef = useRef<HTMLDivElement>(null);
@@ -270,7 +257,7 @@ export default function BerandaTransi() {
                     <JustType />
                     <Journey />
                     <Trust />
-                    <TrackAndPaths />
+                    <TrackAndPaths kanal={kanal} />
                     <Faq />
                     <ClosingCta />
                 </main>
@@ -719,7 +706,7 @@ function Trust() {
 
 /* --------------------------------------------------------- track & paths */
 
-function TrackAndPaths() {
+function TrackAndPaths({ kanal }: { kanal: KanalPublik }) {
     const [ticket, setTicket] = useState('');
     const submit = (e: FormEvent) => {
         e.preventDefault();
@@ -791,34 +778,7 @@ function TrackAndPaths() {
                     </div>
                 </div>
 
-                <div
-                    data-reveal
-                    className="flex flex-col gap-5 rounded-[20px] border border-[#e8edf2] p-6 sm:p-8 lg:flex-row lg:items-center lg:gap-6"
-                >
-                    <div className="flex items-center gap-3">
-                        <span className="font-heading text-5xl leading-none font-bold text-[var(--t-gold)]">5</span>
-                        <span className="text-[15px] leading-[1.3] font-semibold text-[var(--t-deep)]">
-                            kanal pengaduan
-                            <br />
-                            resmi lainnya
-                        </span>
-                    </div>
-                    <span className="hidden h-12 w-px bg-[#e8edf2] lg:block" aria-hidden="true" />
-                    <ul className="flex flex-1 flex-wrap gap-2.5 lg:justify-between">
-                        {CHANNELS.map((c) => (
-                            <li key={c.label}>
-                                <a
-                                    href={c.href}
-                                    {...(c.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                                    className="transi-lift flex items-center gap-2 rounded-[10px] bg-[#f6f8fa] px-3.5 py-2.5 text-sm font-medium text-[#2a3a48] hover:bg-[#eef3f7] hover:text-[var(--t-navy)]"
-                                >
-                                    <c.icon className="h-4 w-4 text-[var(--t-navy)]" aria-hidden="true" />
-                                    {c.label}
-                                </a>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+                <KanalResmi kanal={kanal} />
             </div>
         </section>
     );

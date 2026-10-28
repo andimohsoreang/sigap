@@ -197,6 +197,7 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
 
     Route::get('/pengaturan', [AdminController::class, 'pengaturan'])->name('admin.pengaturan');
     Route::put('/pengaturan', [AdminController::class, 'updatePengaturan'])->name('admin.pengaturan.update');
+    Route::put('/pengaturan/kanal-publik', [AdminController::class, 'updateKanalPublik'])->name('admin.pengaturan.kanal-publik');
     Route::put('/profil', [AdminController::class, 'updateOwnProfile'])->name('admin.profil.update');
     Route::post('/kategori', [AdminController::class, 'storeCategory'])->name('admin.kategori.store');
     Route::delete('/kategori/{category}', [AdminController::class, 'destroyCategory'])->name('admin.kategori.destroy');

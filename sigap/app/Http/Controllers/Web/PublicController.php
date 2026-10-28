@@ -11,6 +11,7 @@ use App\Models\Channel;
 use App\Models\KnowledgeArticle;
 use App\Models\Region;
 use App\Models\Ticket;
+use App\Services\PublicChannels;
 use App\Services\StatsService;
 use App\Services\SurveyService;
 use App\Services\TicketService;
@@ -53,7 +54,9 @@ class PublicController extends Controller
      */
     public function homeTransi(): Response
     {
-        return Inertia::render('public/beranda-transi');
+        return Inertia::render('public/beranda-transi', [
+            'kanal' => PublicChannels::get(),
+        ]);
     }
 
     /** @return array<string, mixed> */

@@ -1,3 +1,5 @@
+import KanalPublikForm from '@/components/sigap/kanal-publik-form';
+import { type KanalPublik } from '@/components/sigap/kanal-resmi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -17,12 +19,13 @@ interface Props {
         notification: { pic_email: string | null; pic_phone: string | null };
     };
     categories: { id: number; name: string; slug: string; sla_days: number | null }[];
+    kanal_publik: KanalPublik;
     /** A-05: pengaturan sistem & kategori hanya dapat diubah Super Admin. */
     can_edit: boolean;
     profil: { email: string | null };
 }
 
-export default function Pengaturan({ settings, categories, can_edit: canEdit, profil: profilData }: Props) {
+export default function Pengaturan({ settings, categories, kanal_publik: kanalPublik, can_edit: canEdit, profil: profilData }: Props) {
     const { auth } = usePage<SharedData>().props;
     const [newCategory, setNewCategory] = useState('');
 
@@ -285,6 +288,8 @@ export default function Pengaturan({ settings, categories, can_edit: canEdit, pr
                         </form>
                     </CardContent>
                 </Card>
+
+                <KanalPublikForm initial={kanalPublik} canEdit={canEdit} />
             </div>
 
             <div className="mt-6 flex items-center gap-2 text-xs text-gray-400">

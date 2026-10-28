@@ -30,6 +30,7 @@ use App\Services\Channels\ChannelAdapterManager;
 use App\Services\ChatService;
 use App\Services\ContactCenterStats;
 use App\Services\MatrixService;
+use App\Services\PublicChannels;
 use App\Services\StaffRegistrationService;
 use App\Services\StatsService;
 use App\Services\TicketService;
@@ -843,6 +844,7 @@ class AdminController extends Controller
                 ],
             ],
             'categories' => Category::query()->orderBy('id')->get(['id', 'name', 'slug', 'sla_days']),
+            'kanal_publik' => PublicChannels::get(),
             // A-05: pengaturan & kategori hanya dapat diubah super admin.
             'can_edit' => request()->user()->isSuperAdmin(),
             'profil' => ['email' => request()->user()->email],
@@ -878,6 +880,20 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', 'Pengaturan disimpan.');
+    }
+
+    /** Kanal resmi lain di beranda publik (Social Media, Kantor, tautan langsung). */
+    public function updateKanalPublik(Request $request): RedirectResponse
+    {
+        $this->authorize('manageAdmins', User::class);
+
+        PublicChannels::put($request->validate(PublicChannels::rules()));
+
+        $this->audit->safe('settings.updated', null, 'Kanal resmi di beranda publik diperbarui.', [
+            'keys' => [PublicChannels::KEY],
+        ]);
+
+        return back()->with('success', 'Kanal beranda disimpan.');
     }
 
     /**
