@@ -48,9 +48,24 @@ class PublicChannels
                 'lat' => -6.2580742,
                 'lng' => 106.8593531,
             ],
-            'lapor' => ['aktif' => true, 'label' => 'SP4N-LAPOR!', 'url' => 'https://sp4n.lapor.go.id/instansi/kementerian-transmigrasi'],
-            'kpk' => ['aktif' => true, 'label' => 'Whistleblowing KPK', 'url' => 'https://kws.kpk.go.id/'],
-            'internal' => ['aktif' => true, 'label' => 'Pengaduan internal pegawai', 'url' => '/pengaduan/internal'],
+            'lapor' => [
+                'aktif' => true,
+                'label' => 'SP4N-LAPOR!',
+                'url' => 'https://sp4n.lapor.go.id/instansi/kementerian-transmigrasi',
+                'deskripsi' => 'Pengaduan pelayanan publik nasional. Cocok bila masalah juga menyangkut instansi lain; identitas dapat dirahasiakan.',
+            ],
+            'kpk' => [
+                'aktif' => true,
+                'label' => 'Whistleblowing KPK',
+                'url' => 'https://kws.kpk.go.id/',
+                'deskripsi' => 'Laporkan dugaan tindak pidana korupsi langsung ke KPK. Identitas pelapor dijaga kerahasiaannya.',
+            ],
+            'internal' => [
+                'aktif' => true,
+                'label' => 'Pengaduan internal pegawai',
+                'url' => '/pengaduan/internal',
+                'deskripsi' => 'Laporkan gangguan sarana dan TIK kantor. Khusus pegawai Kementerian Transmigrasi.',
+            ],
         ];
     }
 
@@ -101,6 +116,7 @@ class PublicChannels
             $rules["{$key}.aktif"] = ['required', 'boolean'];
             $rules["{$key}.label"] = ['required', 'string', 'max:40'];
             $rules["{$key}.url"] = ["required_if:{$key}.aktif,true", ...$url];
+            $rules["{$key}.deskripsi"] = ['nullable', 'string', 'max:200'];
         }
 
         return $rules;

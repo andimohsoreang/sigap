@@ -1,45 +1,14 @@
-import { Link } from '@inertiajs/react';
-import {
-    ArrowRight,
-    ArrowUpRight,
-    AtSign,
-    Building2,
-    Database,
-    FilePenLine,
-    HandCoins,
-    IdCard,
-    Landmark,
-    type LucideIcon,
-    Megaphone,
-    Route,
-    ShieldCheck,
-    Sprout,
-    Star,
-    Tag,
-} from 'lucide-react';
+import { ArrowRight, ArrowUpRight, AtSign, Building2, Database, HandCoins, type LucideIcon, Route, Sprout, Tag } from 'lucide-react';
+import { type ReactNode } from 'react';
 
+import { activeLinks, external, type KanalPublik, KantorInfo, KantorMapPanel, SosmedList } from '@/components/sigap/kanal-resmi';
 import TaraPage, { AskTaraCard, TaraEyebrow } from '@/components/sigap/tara-shell';
 
-interface Channel {
-    id: number;
-    type: string;
-    type_label: string;
-    name: string;
-    account_name: string | null;
-    url: string | null;
-    status: string;
-}
-
 interface Props {
-    channels: Channel[];
+    /** Kanal resmi (setting `kanal_publik`), sama dengan strip di beranda. */
+    kanal: KanalPublik;
     categories: { id: number; name: string; slug: string }[];
 }
-
-const CHANNEL_STYLE: Record<string, { icon: LucideIcon; action: string; external: boolean }> = {
-    sosmed: { icon: AtSign, action: 'Buka Kanal', external: true },
-    kantor: { icon: Landmark, action: 'Kunjungi Loket', external: false },
-    nasional: { icon: Megaphone, action: 'Buka', external: true },
-};
 
 /** Ikon kategori ditebak dari namanya; kategori baru memakai ikon label. */
 function categoryIcon(name: string): LucideIcon {
@@ -51,9 +20,8 @@ function categoryIcon(name: string): LucideIcon {
     return Tag;
 }
 
-export default function Katalog({ channels, categories }: Props) {
-    // Kanal internal sudah diwakili kartu "Pengaduan Internal Pegawai".
-    const others = channels.filter((c) => c.type !== 'internal');
+export default function Katalog({ kanal, categories }: Props) {
+    const links = activeLinks(kanal);
 
     return (
         <TaraPage
@@ -67,95 +35,61 @@ export default function Katalog({ channels, categories }: Props) {
             poseAlt="TARA menunjuk ke pilihan kanal pengaduan"
         >
             <div className="mx-auto flex max-w-[1312px] flex-col gap-14 px-4 py-14 sm:px-6 lg:px-16 lg:py-16">
-                <div className="grid gap-6 lg:grid-cols-2">
-                    <article className="relative flex flex-col gap-5 overflow-hidden rounded-[24px] bg-[radial-gradient(120%_120%_at_85%_0%,#0a5a91_0%,#022b4a_60%)] p-7 text-white sm:p-9">
-                        <div className="flex items-start justify-between gap-4">
-                            <span className="flex h-[52px] w-[52px] items-center justify-center rounded-xl bg-white/10">
-                                <FilePenLine className="h-6 w-6 text-[var(--t-gold)]" aria-hidden="true" />
-                            </span>
-                            <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-semibold">
-                                <Star className="h-3.5 w-3.5" aria-hidden="true" /> Kanal utama
-                            </span>
-                        </div>
-                        <h2 className="font-heading text-[26px] font-bold sm:text-[28px]">Layanan SIGAP</h2>
-                        <p className="max-w-[560px] text-[15.5px] leading-relaxed text-[#c9d6e2]">
-                            Layanan portal pengaduan mandiri terintegrasi: Suara Masyarakat, Inisiatif Gerak Aksi, Penyelesaian Tuntas.
-                        </p>
-                        <Link
-                            href="/pengaduan/baru"
-                            className="transi-lift mt-1 flex h-12 w-fit items-center gap-2 rounded-full bg-[var(--t-gold)] px-6 font-semibold text-[var(--t-deep)] hover:bg-[#d0a552]"
-                        >
-                            <ArrowRight className="h-[18px] w-[18px]" aria-hidden="true" /> Buka Formulir
-                        </Link>
-                    </article>
-
-                    <article className="flex flex-col gap-5 rounded-[24px] border border-[#ece6dc] bg-[#f7f3ee] p-7 sm:p-9">
-                        <div className="flex items-start justify-between gap-4">
-                            <span className="flex h-[52px] w-[52px] items-center justify-center rounded-xl bg-white">
-                                <Building2 className="h-6 w-6 text-[var(--t-navy)]" aria-hidden="true" />
-                            </span>
-                            <span className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[13px] font-semibold text-[#9a7330]">
-                                <IdCard className="h-3.5 w-3.5" aria-hidden="true" /> Khusus pegawai
-                            </span>
-                        </div>
-                        <h2 className="font-heading text-[26px] font-bold text-[var(--t-deep)] sm:text-[28px]">Pengaduan Internal Pegawai</h2>
-                        <p className="max-w-[560px] text-[15.5px] leading-relaxed text-[#4b3f30]">
-                            Laporkan gangguan sarana &amp; TIK kantor — internet mati, listrik padam, perangkat rusak, dll. Khusus pegawai Kementerian
-                            Transmigrasi.
-                        </p>
-                        <Link
-                            href="/pengaduan/internal"
-                            className="transi-lift mt-1 flex h-12 w-fit items-center gap-2 rounded-full bg-[var(--t-navy)] px-6 font-semibold text-white hover:bg-[#00508a]"
-                        >
-                            <ArrowRight className="h-[18px] w-[18px]" aria-hidden="true" /> Lapor Gangguan
-                        </Link>
-                    </article>
-                </div>
-
-                {others.length > 0 && (
-                    <section aria-labelledby="kanal-lain" className="flex flex-col gap-5">
+                {(kanal.sosmed.aktif || kanal.kantor.aktif || links.length > 0) && (
+                    <section aria-labelledby="kanal-resmi" className="flex flex-col gap-5">
                         <TaraEyebrow>
-                            <span id="kanal-lain">Kanal resmi lainnya</span>
+                            <span id="kanal-resmi">Kanal resmi</span>
                         </TaraEyebrow>
-                        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                            {others.map((ch) => {
-                                const isWbs = /whistle|inspektorat|wbs/i.test(`${ch.name} ${ch.account_name ?? ''}`);
-                                const style = CHANNEL_STYLE[ch.type] ?? CHANNEL_STYLE.nasional;
-                                const Icon = isWbs ? ShieldCheck : style.icon;
-                                const Arrow = style.external ? ArrowUpRight : ArrowRight;
-                                return (
-                                    <article key={ch.id} className="flex flex-col rounded-[18px] border border-[#e6ebf0] bg-white p-6">
-                                        <span className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-[#eef3f8]">
-                                            <Icon className="h-5 w-5 text-[var(--t-navy)]" aria-hidden="true" />
-                                        </span>
-                                        <h3 className="font-heading mt-5 text-lg font-bold text-[var(--t-deep)]">{ch.name}</h3>
-                                        <p className="mt-1.5 flex-1 text-sm leading-relaxed text-[#5b6b7a]">
-                                            {ch.account_name ?? 'Kanal pengaduan resmi Kementerian Transmigrasi.'}
-                                        </p>
-                                        <div className="mt-5 border-t border-[#e6ebf0] pt-4">
-                                            {ch.url ? (
-                                                <a
-                                                    href={ch.url}
-                                                    target={style.external ? '_blank' : undefined}
-                                                    rel={style.external ? 'noopener noreferrer' : undefined}
-                                                    className="flex w-fit items-center gap-1.5 text-[15px] font-semibold text-[var(--t-deep)] hover:text-[var(--t-navy)]"
-                                                >
-                                                    {style.action} <Arrow className="h-4 w-4" aria-hidden="true" />
-                                                </a>
-                                            ) : (
-                                                // Kanal tanpa tautan (mis. loket kantor): alamat & jam layanan ada di Pedoman Layanan.
-                                                <Link
-                                                    href="/pedoman-layanan"
-                                                    className="flex w-fit items-center gap-1.5 text-[15px] font-semibold text-[var(--t-deep)] hover:text-[var(--t-navy)]"
-                                                >
-                                                    {style.action} <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                                                </Link>
-                                            )}
+
+                        {(kanal.sosmed.aktif || kanal.kantor.aktif) && (
+                            <div className="grid gap-5 lg:grid-cols-2">
+                                {kanal.sosmed.aktif && (
+                                    <article className="flex flex-col gap-5 rounded-[18px] border border-[#e6ebf0] bg-white p-6 sm:p-7">
+                                        <CardHeading icon={AtSign} title={kanal.sosmed.label}>
+                                            Akun resmi dan kontak langsung Kementerian Transmigrasi.
+                                        </CardHeading>
+                                        <SosmedList sosmed={kanal.sosmed} className="grid gap-2.5 sm:grid-cols-2" />
+                                    </article>
+                                )}
+                                {kanal.kantor.aktif && (
+                                    <article className="flex flex-col overflow-hidden rounded-[18px] border border-[#e6ebf0] bg-white">
+                                        <KantorMapPanel kantor={kanal.kantor} className="h-56" />
+                                        <div className="flex flex-1 flex-col gap-5 p-6 sm:p-7">
+                                            <CardHeading icon={Building2} title={kanal.kantor.label}>
+                                                {kanal.kantor.nama}
+                                            </CardHeading>
+                                            <KantorInfo kantor={kanal.kantor} />
                                         </div>
                                     </article>
-                                );
-                            })}
-                        </div>
+                                )}
+                            </div>
+                        )}
+
+                        {links.length > 0 && (
+                            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                                {links.map(({ key, icon: Icon, item }) => {
+                                    const Arrow = item.url.startsWith('http') ? ArrowUpRight : ArrowRight;
+                                    return (
+                                        <article key={key} className="flex flex-col rounded-[18px] border border-[#e6ebf0] bg-white p-6">
+                                            <span className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-[#eef3f8]">
+                                                <Icon className="h-5 w-5 text-[var(--t-navy)]" aria-hidden="true" />
+                                            </span>
+                                            <h3 className="font-heading mt-5 text-lg font-bold text-[var(--t-deep)]">{item.label}</h3>
+                                            <p className="mt-1.5 flex-1 text-sm leading-relaxed text-[#5b6b7a]">{item.deskripsi}</p>
+                                            <div className="mt-5 border-t border-[#e6ebf0] pt-4">
+                                                <a
+                                                    href={item.url}
+                                                    {...external(item.url)}
+                                                    className="flex w-fit items-center gap-1.5 text-[15px] font-semibold text-[var(--t-deep)] hover:text-[var(--t-navy)]"
+                                                >
+                                                    Buka <Arrow className="h-4 w-4" aria-hidden="true" />
+                                                </a>
+                                            </div>
+                                        </article>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </section>
                 )}
 
@@ -189,5 +123,19 @@ export default function Katalog({ channels, categories }: Props) {
                 <AskTaraCard title="Bingung harus lewat kanal mana?" desc="Ceritakan saja ke TARA, nanti diarahkan ke kanal yang tepat." />
             </div>
         </TaraPage>
+    );
+}
+
+function CardHeading({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: ReactNode }) {
+    return (
+        <div className="flex items-start gap-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] bg-[#eef3f8]">
+                <Icon className="h-5 w-5 text-[var(--t-navy)]" aria-hidden="true" />
+            </span>
+            <div>
+                <h3 className="font-heading text-lg font-bold text-[var(--t-deep)]">{title}</h3>
+                <p className="mt-0.5 text-sm text-[#5b6b7a]">{children}</p>
+            </div>
+        </div>
     );
 }

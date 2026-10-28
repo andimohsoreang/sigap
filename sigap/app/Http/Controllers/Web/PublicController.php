@@ -88,7 +88,7 @@ class PublicController extends Controller
     public function catalog(): Response
     {
         return Inertia::render('public/katalog', [
-            'channels' => $this->channelList(),
+            'kanal' => PublicChannels::get(),
             'categories' => Category::query()->where('is_active', true)->get(['id', 'name', 'slug']),
         ]);
     }

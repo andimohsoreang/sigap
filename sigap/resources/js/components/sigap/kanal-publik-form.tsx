@@ -187,7 +187,7 @@ export default function KanalPublikForm({ initial, canEdit }: { initial: KanalPu
                                     item={data[key]}
                                     hint={hint}
                                     onChange={(patch) => set(key, patch)}
-                                    errors={{ label: err(`${key}.label`), url: err(`${key}.url`) }}
+                                    errors={{ label: err(`${key}.label`), url: err(`${key}.url`), deskripsi: err(`${key}.deskripsi`) }}
                                     disabled={!canEdit}
                                 />
                             ))}
@@ -240,7 +240,7 @@ function LinkSection({
     item: KanalTautan;
     hint: string;
     onChange: (patch: Partial<KanalTautan>) => void;
-    errors: { label?: string; url?: string };
+    errors: { label?: string; url?: string; deskripsi?: string };
     disabled: boolean;
 }) {
     return (
@@ -253,6 +253,9 @@ function LinkSection({
                     <Input value={item.url ?? ''} onChange={(e) => onChange({ url: e.target.value || null })} placeholder={hint} />
                 </Field>
             </div>
+            <Field label="Deskripsi (tampil di Katalog)" error={errors.deskripsi}>
+                <Textarea rows={2} value={item.deskripsi ?? ''} onChange={(e) => onChange({ deskripsi: e.target.value || null })} />
+            </Field>
         </Section>
     );
 }

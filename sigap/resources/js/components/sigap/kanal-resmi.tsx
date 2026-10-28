@@ -59,6 +59,7 @@ export type KanalTautan = {
     aktif: boolean;
     label: string;
     url: string | null;
+    deskripsi: string | null;
 };
 
 function XLogo(props: SVGProps<SVGSVGElement>) {
@@ -84,7 +85,18 @@ function waLink(phone: string): string {
     return `https://wa.me/${digits.startsWith('0') ? `62${digits.slice(1)}` : digits}`;
 }
 
-const external = (url: string) => (url.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {});
+/** Kanal tautan langsung yang aktif dan punya URL, urut tampilan. */
+export function activeLinks(kanal: KanalPublik): { key: string; icon: LucideIcon; item: KanalTautan & { url: string } }[] {
+    return (
+        [
+            { key: 'lapor', icon: Megaphone, item: kanal.lapor },
+            { key: 'kpk', icon: ShieldAlert, item: kanal.kpk },
+            { key: 'internal', icon: Briefcase, item: kanal.internal },
+        ] as { key: string; icon: LucideIcon; item: KanalTautan }[]
+    ).filter((l): l is { key: string; icon: LucideIcon; item: KanalTautan & { url: string } } => l.item.aktif && Boolean(l.item.url));
+}
+
+export const external = (url: string) => (url.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {});
 
 const chipClass =
     'transi-lift flex items-center gap-2 rounded-[10px] bg-[#f6f8fa] px-3.5 py-2.5 text-sm font-medium text-[#2a3a48] hover:bg-[#eef3f7] hover:text-[var(--t-navy)]';
@@ -92,11 +104,7 @@ const chipClass =
 export default function KanalResmi({ kanal }: { kanal: KanalPublik }) {
     const [open, setOpen] = useState<'sosmed' | 'kantor' | null>(null);
 
-    const links: { key: string; icon: LucideIcon; item: KanalTautan }[] = [
-        { key: 'lapor', icon: Megaphone, item: kanal.lapor },
-        { key: 'kpk', icon: ShieldAlert, item: kanal.kpk },
-        { key: 'internal', icon: Briefcase, item: kanal.internal },
-    ].filter((l) => l.item.aktif && l.item.url);
+    const links = activeLinks(kanal);
 
     const count = Number(kanal.sosmed.aktif) + Number(kanal.kantor.aktif) + links.length;
     if (count === 0) return null;
@@ -131,7 +139,7 @@ export default function KanalResmi({ kanal }: { kanal: KanalPublik }) {
                 )}
                 {links.map(({ key, icon: Icon, item }) => (
                     <li key={key}>
-                        <a href={item.url!} {...external(item.url!)} className={chipClass}>
+                        <a href={item.url} {...external(item.url)} className={chipClass}>
                             <Icon className="h-4 w-4 text-[var(--t-navy)]" aria-hidden="true" />
                             {item.label}
                         </a>
@@ -145,77 +153,87 @@ export default function KanalResmi({ kanal }: { kanal: KanalPublik }) {
                         <DialogTitle className="font-heading text-xl text-[var(--t-deep)]">{kanal.sosmed.label}</DialogTitle>
                         <DialogDescription className="text-[#5b6b7a]">Akun resmi dan kontak langsung Kementerian Transmigrasi.</DialogDescription>
                     </DialogHeader>
-                    <ul className="space-y-2">
-                        {kanal.sosmed.akun.map((a) => {
-                            const p = PLATFORMS[a.platform] ?? PLATFORMS.lainnya;
-                            return <ContactRow key={`${a.platform}-${a.url}`} href={a.url} icon={p.icon} title={a.nama} hint={p.label} />;
-                        })}
-                        {kanal.sosmed.email && (
-                            <ContactRow href={`mailto:${kanal.sosmed.email}`} icon={Mail} title={kanal.sosmed.email} hint="Email" />
-                        )}
-                        {kanal.sosmed.whatsapp && (
-                            <ContactRow
-                                href={waLink(kanal.sosmed.whatsapp)}
-                                icon={MessageCircle}
-                                title={kanal.sosmed.whatsapp}
-                                hint="Hotline WhatsApp"
-                                highlight
-                            />
-                        )}
-                    </ul>
+                    <SosmedList sosmed={kanal.sosmed} />
                 </DialogContent>
             </Dialog>
 
             <Dialog open={open === 'kantor'} onOpenChange={(v) => !v && setOpen(null)}>
                 <DialogContent className="transi-page max-w-[calc(100%-32px)] gap-0 overflow-hidden rounded-[20px] border-[#e8edf2] bg-white p-0 sm:max-w-xl sm:rounded-[20px] [&>button:last-child]:rounded-full [&>button:last-child]:bg-white [&>button:last-child]:p-1.5 [&>button:last-child]:opacity-100 [&>button:last-child]:shadow-md">
-                    {kanal.kantor.lat !== null && kanal.kantor.lng !== null && (
-                        <div className="relative z-0 h-56 bg-[#eef3f7] sm:h-64">
-                            <Suspense fallback={null}>
-                                <KantorMap lat={kanal.kantor.lat} lng={kanal.kantor.lng} />
-                            </Suspense>
-                        </div>
-                    )}
+                    <KantorMapPanel kantor={kanal.kantor} className="h-56 sm:h-64" />
                     <div className="space-y-4 p-6">
                         <DialogHeader className="text-left">
                             <DialogTitle className="font-heading text-xl text-[var(--t-deep)]">{kanal.kantor.nama}</DialogTitle>
                             <DialogDescription className="sr-only">Alamat lengkap dan lokasi kantor.</DialogDescription>
                         </DialogHeader>
-                        <dl className="space-y-3 text-[15px] text-[#2a3a48]">
-                            <InfoRow icon={MapPin} label="Alamat">
-                                {kanal.kantor.alamat}
-                            </InfoRow>
-                            {kanal.kantor.telepon && (
-                                <InfoRow icon={Phone} label="Telepon">
-                                    <a
-                                        href={`tel:${kanal.kantor.telepon.replace(/[^\d+]/g, '')}`}
-                                        className="hover:text-[var(--t-navy)] hover:underline"
-                                    >
-                                        {kanal.kantor.telepon}
-                                    </a>
-                                </InfoRow>
-                            )}
-                            {kanal.kantor.jam && (
-                                <InfoRow icon={Clock} label="Jam layanan">
-                                    {kanal.kantor.jam}
-                                </InfoRow>
-                            )}
-                        </dl>
-                        <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                                kanal.kantor.lat !== null && kanal.kantor.lng !== null
-                                    ? `${kanal.kantor.lat},${kanal.kantor.lng}`
-                                    : kanal.kantor.alamat,
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="transi-lift font-heading inline-flex h-11 items-center gap-2 rounded-full bg-[var(--t-navy)] px-5 text-[15px] font-semibold text-white hover:bg-[var(--t-deep)]"
-                        >
-                            <Navigation className="h-4 w-4" aria-hidden="true" /> Buka di Google Maps
-                        </a>
+                        <KantorInfo kantor={kanal.kantor} />
                     </div>
                 </DialogContent>
             </Dialog>
         </div>
+    );
+}
+
+/** Daftar akun media sosial, email, dan Hotline WhatsApp. */
+export function SosmedList({ sosmed, className = 'space-y-2' }: { sosmed: KanalPublik['sosmed']; className?: string }) {
+    return (
+        <ul className={className}>
+            {sosmed.akun.map((a) => {
+                const p = PLATFORMS[a.platform] ?? PLATFORMS.lainnya;
+                return <ContactRow key={`${a.platform}-${a.url}`} href={a.url} icon={p.icon} title={a.nama} hint={p.label} />;
+            })}
+            {sosmed.email && <ContactRow href={`mailto:${sosmed.email}`} icon={Mail} title={sosmed.email} hint="Email" />}
+            {sosmed.whatsapp && (
+                <ContactRow href={waLink(sosmed.whatsapp)} icon={MessageCircle} title={sosmed.whatsapp} hint="Hotline WhatsApp" highlight />
+            )}
+        </ul>
+    );
+}
+
+/** Peta pin kantor; tidak tampil bila koordinat kosong. */
+export function KantorMapPanel({ kantor, className }: { kantor: KanalPublik['kantor']; className?: string }) {
+    if (kantor.lat === null || kantor.lng === null) return null;
+
+    return (
+        <div className={`relative z-0 bg-[#eef3f7] ${className ?? ''}`}>
+            <Suspense fallback={null}>
+                <KantorMap lat={kantor.lat} lng={kantor.lng} />
+            </Suspense>
+        </div>
+    );
+}
+
+/** Alamat, telepon, jam layanan, dan tombol Google Maps. */
+export function KantorInfo({ kantor }: { kantor: KanalPublik['kantor'] }) {
+    const query = kantor.lat !== null && kantor.lng !== null ? `${kantor.lat},${kantor.lng}` : kantor.alamat;
+
+    return (
+        <>
+            <dl className="space-y-3 text-[15px] text-[#2a3a48]">
+                <InfoRow icon={MapPin} label="Alamat">
+                    {kantor.alamat}
+                </InfoRow>
+                {kantor.telepon && (
+                    <InfoRow icon={Phone} label="Telepon">
+                        <a href={`tel:${kantor.telepon.replace(/[^\d+]/g, '')}`} className="hover:text-[var(--t-navy)] hover:underline">
+                            {kantor.telepon}
+                        </a>
+                    </InfoRow>
+                )}
+                {kantor.jam && (
+                    <InfoRow icon={Clock} label="Jam layanan">
+                        {kantor.jam}
+                    </InfoRow>
+                )}
+            </dl>
+            <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transi-lift font-heading inline-flex h-11 w-fit items-center gap-2 rounded-full bg-[var(--t-navy)] px-5 text-[15px] font-semibold text-white hover:bg-[var(--t-deep)]"
+            >
+                <Navigation className="h-4 w-4" aria-hidden="true" /> Buka di Google Maps
+            </a>
+        </>
     );
 }
 
@@ -251,7 +269,9 @@ function ContactRow({
                     <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
                 </span>
                 <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold text-[var(--t-deep)]">{title}</span>
+                    <span className="block truncate font-semibold text-[var(--t-deep)]" title={title}>
+                        {title}
+                    </span>
                     <span className="block text-[13px] text-[#5b6b7a]">{hint}</span>
                 </span>
                 <ArrowUpRight className="h-4 w-4 shrink-0 text-[#8a96a3] group-hover:text-[var(--t-navy)]" aria-hidden="true" />

@@ -35,6 +35,16 @@ class PublicChannelsTest extends TestCase
             ->where('kanal.kpk.url', 'https://kws.kpk.go.id/'));
     }
 
+    public function test_katalog_lists_the_same_channels(): void
+    {
+        $this->get('/katalog')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('public/katalog')
+            ->has('kanal.sosmed.akun', 5)
+            ->where('kanal.kantor.label', 'Kantor')
+            ->where('kanal.internal.url', '/pengaduan/internal')
+            ->has('categories'));
+    }
+
     public function test_super_admin_can_update_channels(): void
     {
         $admin = User::factory()->admin(UserRole::SuperAdmin)->create();
