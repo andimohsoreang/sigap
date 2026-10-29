@@ -40,6 +40,18 @@ class KnowledgeRetriever
     /** Porsi bobot kata pertanyaan yang harus ditemukan di artikel. */
     private const MIN_COVERAGE = 0.45;
 
+    /**
+     * Bobot tetap kata domain umum di penyebut cakupan, sebagai porsi rata-rata
+     * bobot kata pertanyaan (bukan IDF kata umum itu sendiri).
+     */
+    private const GENERIC_COVERAGE_SHARE = 0.25;
+
+    /**
+     * Kata di IndonesianText::GENERIC_WORDS yang tetap khas untuk Basis
+     * Pengetahuan ("jam layanan", "biaya layanan"), meski umum untuk portal.
+     */
+    private const SPECIFIC_FOR_KNOWLEDGE = ['layanan'];
+
     /** Artikel di bawah porsi skor artikel teratas ini tidak ikut dikirim. */
     private const RELATIVE_CUTOFF = 0.35;
 
@@ -251,16 +263,22 @@ class KnowledgeRetriever
         $wordWeights = array_map(fn (array $keys) => min($rarest, max(array_map($idf, $keys))), $words);
 
         // Kata domain umum ("transmigrasi", "kementerian") tetap menambah skor,
-        // tetapi tidak dihitung untuk syarat cakupan: tanpa ini, satu artikel
-        // yang kebetulan menyebut "Kementerian Transmigrasi" lolos cakupan untuk
-        // hampir semua pertanyaan karena kata itu jarang di artikel lain dan
-        // berbobot tinggi. Pertanyaan yang hanya berisi kata umum
-        // ("transmigrasi itu apa?") tetap memakai semua katanya.
-        $counted = array_map(fn (array $keys) => ! IndonesianText::isGeneric($keys), $words);
+        // tetapi kecocokannya tidak dihitung untuk lolos syarat cakupan: tanpa
+        // ini, satu artikel yang kebetulan menyebut "Kementerian Transmigrasi"
+        // lolos untuk hampir semua pertanyaan karena kata itu jarang di artikel
+        // lain dan berbobot tinggi. Di penyebut ia tetap ada dengan bobot kecil
+        // yang tetap, agar pertanyaan pendek tidak lolos hanya dengan satu kata
+        // biasa ("daftar jadi transmigran" → "cara masuk sebagai warga"), tanpa
+        // menghukum artikel yang benar saat basis pengetahuan masih kecil.
+        // Pertanyaan yang hanya berisi kata umum ("transmigrasi itu apa?")
+        // tetap memakai semua katanya.
+        $counted = array_map(fn (array $keys) => ! IndonesianText::isGeneric(array_diff($keys, self::SPECIFIC_FOR_KNOWLEDGE)), $words);
         if (! in_array(true, $counted, true)) {
             $counted = array_fill(0, count($words), true);
         }
-        $totalWeight = array_sum(array_filter($wordWeights, fn (int $w) => $counted[$w], ARRAY_FILTER_USE_KEY)) ?: 1.0;
+        $specificWeights = array_filter($wordWeights, fn (int $w) => $counted[$w], ARRAY_FILTER_USE_KEY);
+        $genericWeight = self::GENERIC_COVERAGE_SHARE * array_sum($wordWeights) / count($wordWeights);
+        $totalWeight = (array_sum($specificWeights) + (count($words) - count($specificWeights)) * $genericWeight) ?: 1.0;
 
         $hits = [];
         foreach ($docs as $i => $doc) {
