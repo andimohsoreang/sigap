@@ -66,6 +66,11 @@ return [
         'breaker_threshold' => (int) env('AI_BREAKER_THRESHOLD', 5),
         'breaker_cooldown' => (int) env('AI_BREAKER_COOLDOWN', 300),
         'max_calls_per_conversation_hour' => (int) env('AI_MAX_CALLS_PER_CONVERSATION_HOUR', 20),
+        // Jawaban asinkron lewat antrean (PRD-AI FR-AI-04). false = jalur sinkron lama.
+        'async' => (bool) env('AI_ASYNC', true),
+        'queue' => env('AI_QUEUE', 'ai'),
+        // Penanda "menyiapkan jawaban" lebih lama dari ini dianggap macet → serah ke petugas.
+        'pending_timeout' => (int) env('AI_PENDING_TIMEOUT', 60),
         // Model khusus per tugas (kosong = AI_MODEL) — PRD-AI FR-AI-09.
         'models' => [
             'saran_tiket' => env('AI_MODEL_SARAN_TIKET'),

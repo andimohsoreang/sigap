@@ -33,6 +33,7 @@
         <!-- Asisten AI mati secara bawaan; tes AI menyalakannya sendiri. -->
         <env name="AI_ENABLED" value="false"/>
         <env name="AI_DRIVER" value="fake"/>
+        <env name="AI_ASYNC" value="false"/>
         <env name="AI_API_KEY" value=""/>
     </php>
 </phpunit>

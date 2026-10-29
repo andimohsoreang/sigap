@@ -70,6 +70,32 @@ class AssistantService
     }
 
     /**
+     * Apakah {@see respond()} untuk pesan ini akan memanggil model? Bila tidak
+     * (AI mati, nomor tiket, petugas sedang aktif, balasan pendek saat menunggu
+     * petugas), jawaban dibuat sinkron; bila ya, boleh lewat antrean `ai`
+     * (PRD-AI FR-AI-04). Kondisinya sama persis dengan cabang awal respond().
+     */
+    public function needsModel(ChatConversation $conversation, ChatMessage $incoming): bool
+    {
+        if (! self::enabled()) {
+            return false;
+        }
+
+        $text = trim($incoming->body);
+        if ($this->ticketNumber($text) !== null) {
+            return false;
+        }
+
+        if (! $conversation->isWithAssistant()) {
+            return ! $conversation->isClosed()
+                && ! $this->staffActive($conversation)
+                && count($this->retriever->terms($text)) >= 2;
+        }
+
+        return true;
+    }
+
+    /**
      * Tanggapi pesan warga/tamu yang baru tersimpan.
      *
      * @return list<ChatMessage> pesan asisten/sistem yang dibuat (kosong bila
@@ -219,11 +245,7 @@ class AssistantService
      */
     private function answerWhileWaiting(ChatConversation $conversation, ChatMessage $incoming, ?User $viewer): array
     {
-        $staffActive = $conversation->messages()->getQuery()
-            ->where('sender_type', 'admin')
-            ->where('created_at', '>=', now()->subMinutes(self::STAFF_ACTIVE_MINUTES))
-            ->exists();
-        if ($conversation->isClosed() || $staffActive) {
+        if ($conversation->isClosed() || $this->staffActive($conversation)) {
             return [];
         }
 
@@ -251,6 +273,15 @@ class AssistantService
         }
 
         return $this->waitingNotice($conversation, $incoming->id);
+    }
+
+    /** Petugas membalas dalam {@see STAFF_ACTIVE_MINUTES} menit terakhir. */
+    private function staffActive(ChatConversation $conversation): bool
+    {
+        return $conversation->messages()->getQuery()
+            ->where('sender_type', 'admin')
+            ->where('created_at', '>=', now()->subMinutes(self::STAFF_ACTIVE_MINUTES))
+            ->exists();
     }
 
     /**

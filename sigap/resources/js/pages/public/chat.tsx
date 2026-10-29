@@ -40,13 +40,14 @@ import {
     AiExtras,
     AnswerBody,
     ContactForm,
-    SystemNotice,
     csrfToken,
     isMine,
     jam,
     merge,
+    POLL_TYPING_MS,
     postJson,
     staffActive,
+    SystemNotice,
     useWaitLabel,
     type Assistant,
     type ChatAttachment,
@@ -210,11 +211,14 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
     // Polling saat tab terlihat (tamu tidak bisa ikut kanal privat; pengguna login sebagai cadangan).
     useEffect(() => {
         if (!conversationId) return;
-        const timer = window.setInterval(() => {
-            if (document.visibilityState === 'visible') void load();
-        }, POLL_MS);
+        const timer = window.setInterval(
+            () => {
+                if (document.visibilityState === 'visible') void load();
+            },
+            assistant?.mengetik ? POLL_TYPING_MS : POLL_MS,
+        );
         return () => window.clearInterval(timer);
-    }, [conversationId, load]);
+    }, [conversationId, load, assistant?.mengetik]);
 
     // Realtime (Reverb) untuk pengguna login.
     useEffect(() => {
@@ -738,7 +742,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                         />
                                     )}
 
-                                    {outgoing && !needsIdentity && (withAi || awaitingStaff) && <Typing />}
+                                    {((outgoing && !needsIdentity && (withAi || awaitingStaff)) || assistant?.mengetik) && <Typing />}
 
                                     {assistant?.butuh_kontak && (
                                         <div className="overflow-hidden rounded-2xl border border-amber-200">

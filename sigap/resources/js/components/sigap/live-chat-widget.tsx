@@ -44,6 +44,8 @@ import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useStat
 const XSRF_COOKIE = 'XSRF-TOKEN';
 const POLL_OPEN_MS = 8000;
 const POLL_CLOSED_MS = 30000;
+/** Selama TARA menyiapkan jawaban: polling rapat sebagai cadangan Reverb (tamu tidak ikut kanal privat). */
+export const POLL_TYPING_MS = 1500;
 export const ASK_EVENT = 'sigap:tanya';
 
 /** Buka widget chat dan kirim pertanyaan (dipakai kotak tanya beranda). */
@@ -154,6 +156,8 @@ export interface Assistant {
     petugas_tersedia: boolean;
     referensi: string | null;
     butuh_kontak: boolean;
+    /** TARA sedang menyiapkan jawaban di antrean `ai` (PRD-AI FR-AI-04). */
+    mengetik?: boolean;
 }
 
 export interface ChatState {
@@ -213,7 +217,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
     const [outgoing, setOutgoing] = useState<string | null>(null);
-    const waitLabel = useWaitLabel(sending);
+    const waitLabel = useWaitLabel(sending || Boolean(assistant?.mengetik));
     const [error, setError] = useState<string | null>(null);
     const [queued, setQueued] = useState<string | null>(null);
 
@@ -269,10 +273,10 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
             () => {
                 if (document.visibilityState === 'visible') void load(openRef.current);
             },
-            open ? POLL_OPEN_MS : POLL_CLOSED_MS,
+            open ? (assistant?.mengetik ? POLL_TYPING_MS : POLL_OPEN_MS) : POLL_CLOSED_MS,
         );
         return () => window.clearInterval(timer);
-    }, [conversationId, open, load]);
+    }, [conversationId, open, load, assistant?.mengetik]);
 
     // Reverb: pesan baru realtime untuk pengguna login.
     useEffect(() => {
@@ -587,7 +591,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                                 </div>
                             )}
 
-                            {outgoing && (withAi || awaitingStaff) && (
+                            {((outgoing && (withAi || awaitingStaff)) || assistant?.mengetik) && (
                                 <p className="text-xs text-gray-500" role="status">
                                     {waitLabel}
                                 </p>
@@ -759,23 +763,35 @@ export function AnswerBody({ text }: { text: string }) {
     );
 }
 
+/** Tahap label tunggu: setelah 15 dtk tanpa balasan tampil "masih menyiapkan" (PRD-AI FR-AI-04). */
+export const WAIT_STAGES: readonly { after: number; label: string }[] = [
+    { after: 0, label: 'TARA sedang mengetik…' },
+    { after: 3000, label: 'TARA sedang mencari di sumber resmi…' },
+    { after: 15000, label: 'TARA masih menyiapkan jawaban, mohon tunggu sebentar…' },
+];
+
+/** Label untuk lama menunggu `elapsedMs`. */
+export function waitLabelFor(elapsedMs: number): string {
+    return [...WAIT_STAGES].reverse().find((s) => elapsedMs >= s.after)?.label ?? WAIT_STAGES[0].label;
+}
+
 /**
  * Label tunggu bertahap: jawaban AI butuh beberapa detik, jadi warga diberi
  * tahu apa yang sedang terjadi alih-alih titik-titik saja.
  */
 export function useWaitLabel(active: boolean): string {
-    const [stage, setStage] = useState(0);
+    const [elapsed, setElapsed] = useState(0);
 
     useEffect(() => {
         if (!active) return;
-        const timers = [setTimeout(() => setStage(1), 3000), setTimeout(() => setStage(2), 9000)];
+        const timers = WAIT_STAGES.slice(1).map((s) => setTimeout(() => setElapsed(s.after), s.after));
         return () => {
             timers.forEach(clearTimeout);
-            setStage(0);
+            setElapsed(0);
         };
     }, [active]);
 
-    return ['TARA sedang mengetik…', 'TARA sedang mencari di sumber resmi…', 'Masih menyusun jawaban, mohon tunggu sebentar…'][stage];
+    return waitLabelFor(elapsed);
 }
 
 /**

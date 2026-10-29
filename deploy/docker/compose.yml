@@ -44,6 +44,13 @@ services:
     command: ["php", "artisan", "queue:work", "--tries=3", "--backoff=10", "--max-time=3600", "--sleep=3"]
     stop_grace_period: 60s
 
+  # Jawaban TARA (PRD-AI FR-AI-04): image & database sama, hanya prosesnya
+  # dipisah agar jawaban tidak antre di belakang pemrosesan PDF. Bukan microservice.
+  queue-ai:
+    <<: *app
+    command: ["php", "artisan", "queue:work", "--queue=ai", "--sleep=1", "--tries=1", "--timeout=60", "--max-time=3600"]
+    stop_grace_period: 60s
+
   scheduler:
     <<: *app
     command: ["php", "artisan", "schedule:work"]

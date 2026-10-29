@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Events\CitizenMessageReceived;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StartChatRequest;
 use App\Models\ChatConversation;
@@ -124,9 +125,20 @@ class ChatController extends Controller
             $request->user()?->id,
         );
 
-        // Warga membalas kode bukti rujukan (mis. kode tracking Trans Tuntas).
+        // Jalur cepat tetap sinkron (tanpa model): kode bukti rujukan, nomor
+        // tiket, percakapan yang sedang dipegang petugas. Selebihnya, bila
+        // AI_ASYNC aktif, jawaban TARA disiapkan di antrean `ai` dan dikirim
+        // lewat Reverb/polling — warga tidak menunggu model (PRD-AI FR-AI-04).
         $captured = $this->referrals->captureFromChat($conversation, $data['body']);
-        $replies = $captured !== null ? [$captured] : $this->assistant->respond($conversation, $message, $request->user());
+        if ($captured !== null) {
+            $replies = [$captured];
+        } elseif (config('services.ai.async') && $this->assistant->needsModel($conversation, $message)) {
+            $conversation->forceFill(['ai_pending_at' => now()])->save();
+            CitizenMessageReceived::dispatch($conversation->id, $message->id);
+            $replies = [];
+        } else {
+            $replies = $this->assistant->respond($conversation, $message, $request->user());
+        }
 
         $this->rememberGuest($request, $conversation);
 
@@ -448,6 +460,8 @@ class ChatController extends Controller
             'jam_layanan' => $this->hours->label(),
             'petugas_tersedia' => $this->hours->isOpen(),
             'referensi' => $conversation?->reference,
+            // TARA sedang menyiapkan jawaban di antrean `ai`.
+            'mengetik' => $conversation?->ai_pending_at !== null,
             // Diteruskan di luar jam layanan dan belum meninggalkan kontak.
             'butuh_kontak' => $withStaff && $conversation->handoff_at !== null && $conversation->contact === null && ! $this->hours->isOpen(),
         ];

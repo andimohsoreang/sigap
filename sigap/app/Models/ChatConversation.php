@@ -66,6 +66,7 @@ class ChatConversation extends Model
             'unread_admin' => 'integer',
             'unread_user' => 'integer',
             'handoff_at' => 'datetime',
+            'ai_pending_at' => 'datetime',
             'data_verified_at' => 'datetime',
             'closed_at' => 'datetime',
             // Kontak warga (WhatsApp/surel) = data pribadi: disimpan terenkripsi.
