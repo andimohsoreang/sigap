@@ -212,6 +212,9 @@ lang/id/asisten.php   ← semua teks balasan TARA
 - `php artisan sigap:uji-asisten` menerima ambang dan keluar dengan kode gagal bila tidak terpenuhi:
   `--min-pencarian=95 --min-klasifikasi=85 --maks-tanpa-sumber=0 --maks-p95=12`.
 - CI (tanpa model) selalu menjalankan bagian pencarian (`--hanya-pencarian`).
+- Pencarian dinilai berbasis isi: tiap kasus punya `harus_memuat`, frasa fakta dari teks resmi yang wajib
+  ada di salah satu dari 3 sumber teratas `sources()` (artikel ATAU kutipan Sumber Resmi). Judul artikel
+  (`artikel`) tetap dipakai untuk metrik terpisah "artikel saja".
 - Dengan model sungguhan: wajib sebelum mengganti `AI_MODEL`, penyedia, atau versi prompt; serta
   terjadwal mingguan dengan ringkasan dikirim ke Super Admin.
 - Paket uji `database/data/uji-asisten.php` bertambah dari pertanyaan nyata yang dinilai 👎 atau

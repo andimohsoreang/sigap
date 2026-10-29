@@ -452,8 +452,9 @@ Portal yang tidak dapat diakses otomatis tidak ditawarkan; warga diteruskan ke p
 ### Menguji kualitas
 
 `php artisan sigap:uji-asisten` menjalankan ±40 pertanyaan bergaya warga (`database/data/uji-asisten.php`)
-terhadap artikel terbit dan model yang dikonfigurasi, tanpa menyimpan percakapan. Hasilnya: ketepatan
-pencarian sumber, ketepatan klasifikasi (informasi/aduan/pribadi/lainnya), jumlah jawaban tanpa sumber
+terhadap sumber yang sama dengan TARA (artikel terbit + kutipan Sumber Resmi) dan model yang dikonfigurasi,
+tanpa menyimpan percakapan. Hasilnya: ketepatan pencarian (frasa fakta `harus_memuat` ada di salah satu dari
+3 sumber teratas; metrik "artikel saja" tetap menilai judul artikel), ketepatan klasifikasi (informasi/aduan/pribadi/lainnya), jumlah jawaban tanpa sumber
 (ditolak sistem), dan waktu jawab median. Jalankan setiap kali mengganti `AI_MODEL` atau setelah menambah
 banyak artikel. `--hanya-pencarian` melewati model (tanpa biaya API).
 

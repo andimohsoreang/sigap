@@ -104,8 +104,10 @@ php artisan sigap:uji-asisten --rinci                 # alur lengkap dengan mode
 - Pencarian: BM25 di atas kata dasar Bahasa Indonesia (`app/Services/Knowledge/IndonesianText.php` — imbuhan,
   sinonim, kata pengisi Jawa/Sunda). Bila artikel tidak ditemukan dengan istilah warga, isi **Kata kunci
   tambahan** pada artikel, lalu cek dengan kotak **Uji pencarian** di halaman yang sama.
-- Paket uji ada di `database/data/uji-asisten.php`; tambahkan pertanyaan nyata yang gagal. Tes
-  `RetrievalQualityTest` menjaga agar pertanyaan yang sudah terjawab tidak kehilangan sumbernya.
+- Paket uji ada di `database/data/uji-asisten.php`; tambahkan pertanyaan nyata yang gagal. Tiap kasus punya
+  `harus_memuat` (frasa fakta dari teks resmi yang wajib ada di 3 sumber teratas, artikel atau kutipan
+  Sumber Resmi) dan `artikel` (judul, untuk metrik "artikel saja"). Tes `RetrievalQualityTest` menjaga agar
+  pertanyaan yang sudah terjawab tidak kehilangan sumbernya.
 
 ### Rujukan portal
 
