@@ -38,7 +38,8 @@ Route::redirect('/beranda-absol', '/beranda-lama', 301);
 Route::get('/panduan', [PublicController::class, 'guide'])->name('panduan');
 Route::get('/tentang', [PublicController::class, 'about'])->name('tentang');
 Route::get('/katalog', [PublicController::class, 'catalog'])->name('katalog');
-Route::get('/katalog/kantor-balai', [PublicController::class, 'offices'])->name('katalog.kantor');
+// Halaman Kantor & Balai kini menjadi isi Katalog Pengaduan.
+Route::redirect('/katalog/kantor-balai', '/katalog', 301);
 Route::get('/peta', [PublicController::class, 'map'])->name('peta');
 // Lacak tiket publik dibatasi limiter 'lookup' (anti-enumerasi nomor tiket).
 Route::get('/lacak', [PublicController::class, 'track'])->middleware('throttle:lookup')->name('lacak');

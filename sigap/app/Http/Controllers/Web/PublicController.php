@@ -6,7 +6,6 @@ use App\Enums\TicketStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSurveyRequest;
 use App\Http\Resources\V1\TicketResource;
-use App\Models\Category;
 use App\Models\Channel;
 use App\Models\KnowledgeArticle;
 use App\Models\Region;
@@ -89,20 +88,13 @@ class PublicController extends Controller
         ]);
     }
 
-    /** Katalog kanal & kategori pengaduan. */
+    /**
+     * Katalog Pengaduan: kanal resmi serta Kantor Pusat & balai transmigrasi
+     * (desain Wonder "SIGAP Kantor dan Balai Accordion").
+     */
     public function catalog(): Response
     {
         return Inertia::render('public/katalog', [
-            'kanal' => PublicChannels::get(),
-            'categories' => Category::query()->where('is_active', true)->get(['id', 'name', 'slug']),
-            'kantor' => PublicChannels::offices(),
-        ]);
-    }
-
-    /** Kantor pusat & balai transmigrasi beserta kanal resmi. */
-    public function offices(): Response
-    {
-        return Inertia::render('public/kantor-balai', [
             'kanal' => PublicChannels::get(),
             'kantor' => PublicChannels::offices(),
         ]);

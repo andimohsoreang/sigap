@@ -41,14 +41,14 @@ class PublicChannelsTest extends TestCase
             ->component('public/katalog')
             ->has('kanal.sosmed.akun', 5)
             ->where('kanal.kantor.label', 'Kantor')
-            ->where('kanal.internal.url', '/pengaduan/internal')
-            ->has('categories'));
+            ->where('kanal.internal.url', '/pengaduan/internal'));
     }
 
     public function test_kantor_balai_page_lists_head_office_and_four_balai(): void
     {
-        $this->get('/katalog/kantor-balai')->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('public/kantor-balai')
+        $this->get('/katalog/kantor-balai')->assertRedirect('/katalog')->assertStatus(301);
+        $this->get('/katalog')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('public/katalog')
             ->has('kantor', 5)
             ->where('kantor.0.kode', 'pusat')
             ->where('kantor.0.alamat', PublicChannels::defaults()['kantor']['alamat'])

@@ -56,7 +56,6 @@ class PublicPagesTest extends TestCase
         foreach ([
             '/tentang' => 'public/tentang',
             '/katalog' => 'public/katalog',
-            '/katalog/kantor-balai' => 'public/kantor-balai',
             '/peta' => 'public/peta',
             '/lacak' => 'public/lacak',
             '/pedoman-layanan' => 'public/pedoman-layanan',
