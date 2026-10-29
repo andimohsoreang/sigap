@@ -159,6 +159,8 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
     const [conversationId, setConversationId] = useState<number | null>(null);
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
+    // Pesan yang sedang dikirim: langsung tampil sebelum balasan TARA datang.
+    const [outgoing, setOutgoing] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [pending, setPending] = useState<string | null>(null);
     const [resumeOpen, setResumeOpen] = useState(false);
@@ -178,6 +180,8 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
     const needsIdentity = loaded && !loggedIn && !identity;
     const staff = panel?.petugas ?? null;
     const closed = Boolean(panel?.ditutup);
+    // Diteruskan tetapi petugas belum membalas: TARA masih menjawab pertanyaan umum.
+    const awaitingStaff = Boolean(assistant?.aktif && !withAi && !closed && !messages.some((m) => m.sender_type === 'admin'));
     const links = useMemo(() => channelLinks(kanal), [kanal]);
 
     const load = useCallback(async () => {
@@ -242,6 +246,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
             const text = body.trim();
             if (!text || sending) return false;
             setSending(true);
+            setOutgoing(text);
             setError(null);
             try {
                 const res = await postJson('/chat/pesan', { body: text });
@@ -268,6 +273,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                 setError('Tidak ada koneksi. Pesan belum terkirim.');
             } finally {
                 setSending(false);
+                setOutgoing(null);
             }
             return false;
         },
@@ -670,14 +676,18 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                         onAnswer={answerCard}
                                     />
 
-                                    {pending && (needsIdentity || sending) && (
+                                    {(needsIdentity ? pending : outgoing) && (
                                         <div className="transi-msg-in flex flex-col items-end gap-1">
-                                            <p className="max-w-[85%] rounded-2xl rounded-tr-[4px] bg-[var(--t-navy)] px-3.5 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap text-white opacity-85 sm:max-w-[420px]">
-                                                {pending}
+                                            <p className="max-w-[85%] rounded-2xl rounded-tr-[4px] bg-[var(--t-navy)] px-3.5 py-2.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap text-white opacity-85 sm:max-w-[420px]">
+                                                {needsIdentity ? pending : outgoing}
                                             </p>
-                                            {needsIdentity && (
+                                            {needsIdentity ? (
                                                 <span className="flex items-center gap-1.5 text-xs font-medium text-[#9a7330]">
                                                     <Clock3 className="h-3.5 w-3.5" aria-hidden="true" /> Dikirim setelah Anda mengisi nama
+                                                </span>
+                                            ) : (
+                                                <span className="flex items-center gap-1 text-xs text-[#8a96a3]">
+                                                    <Clock3 className="h-3.5 w-3.5" aria-hidden="true" /> Mengirim…
                                                 </span>
                                             )}
                                         </div>
@@ -727,7 +737,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                         />
                                     )}
 
-                                    {sending && !needsIdentity && withAi && <Typing />}
+                                    {outgoing && !needsIdentity && (withAi || awaitingStaff) && <Typing />}
 
                                     {assistant?.butuh_kontak && (
                                         <div className="overflow-hidden rounded-2xl border border-amber-200">

@@ -212,6 +212,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
     const [conversationId, setConversationId] = useState<number | null>(null);
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
+    const [outgoing, setOutgoing] = useState<string | null>(null);
     const waitLabel = useWaitLabel(sending);
     const [error, setError] = useState<string | null>(null);
     const [queued, setQueued] = useState<string | null>(null);
@@ -223,6 +224,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
     openRef.current = open;
 
     const withAi = Boolean(assistant?.aktif && assistant.mode === 'ai');
+    const awaitingStaff = Boolean(assistant?.aktif && !withAi && !messages.some((m) => m.sender_type === 'admin'));
 
     const load = useCallback(async (markRead: boolean) => {
         try {
@@ -302,6 +304,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
             if (!body || sending) return;
 
             setSending(true);
+            setOutgoing(body);
             setError(null);
             setInput('');
 
@@ -335,6 +338,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                 setError('Tidak ada koneksi. Pesan belum terkirim.');
             } finally {
                 setSending(false);
+                setOutgoing(null);
             }
         },
         [sending],
@@ -575,7 +579,15 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                                 ),
                             )}
 
-                            {sending && withAi && (
+                            {outgoing && (
+                                <div className="opacity-85">
+                                    <Bubble mine author="Anda" time="Mengirim…">
+                                        {outgoing}
+                                    </Bubble>
+                                </div>
+                            )}
+
+                            {outgoing && (withAi || awaitingStaff) && (
                                 <p className="text-xs text-gray-500" role="status">
                                     {waitLabel}
                                 </p>

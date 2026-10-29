@@ -204,8 +204,9 @@ class AssistantService
 
     /**
      * Selama menunggu balasan pertama petugas (mis. di luar jam layanan),
-     * pertanyaan informasi umum tetap dijawab dari sumber resmi. Aduan,
-     * urusan pribadi, dan pertanyaan kompleks tetap menunggu petugas.
+     * pertanyaan yang ada di sumber resmi tetap dijawab TARA; penelaahan
+     * kasusnya sudah di antrean petugas. Pesan lain diberi satu tanda terima
+     * agar warga tidak merasa diabaikan.
      *
      * @return list<ChatMessage>
      */
@@ -217,27 +218,46 @@ class AssistantService
 
         $text = trim($incoming->body);
         // Balasan pendek ("baik", "terima kasih", nomor HP) ditujukan ke petugas.
-        if (count($this->retriever->terms($text)) < 2) {
+        $articles = count($this->retriever->terms($text)) >= 2 ? $this->retriever->sources($text) : collect();
+
+        if ($articles->isNotEmpty()) {
+            try {
+                $result = $this->ask($conversation, $text, $articles, $incoming->id);
+                $answerable = in_array($result['jenis'], ['informasi', 'aduan', 'pribadi'], true) && ! $result['perlu_petugas'];
+                if ($answerable && $result['jawaban'] !== '' && $this->citedSources($result, $articles)->isNotEmpty()) {
+                    return [$this->answer($conversation, $text, $result, $articles)];
+                }
+            } catch (AiException) {
+                // Tetap beri tanda terima di bawah.
+            }
+        }
+
+        return $this->waitingNotice($conversation, $incoming->id);
+    }
+
+    /**
+     * Tanda terima sekali per giliran: tidak dikirim bila balasan terakhir
+     * dari sisi layanan sudah memberi tahu bahwa pesan diteruskan.
+     *
+     * @return list<ChatMessage>
+     */
+    private function waitingNotice(ChatConversation $conversation, int $incomingId): array
+    {
+        $lastKind = $conversation->messages()->getQuery()
+            ->whereIn('sender_type', ['ai', 'system'])
+            ->where('id', '<', $incomingId)
+            ->reorder('id', 'desc')
+            ->first()?->meta['kind'] ?? null;
+
+        if (in_array($lastKind, ['menunggu_petugas', 'diteruskan', 'minta_kontak', 'kontak_tersimpan'], true)) {
             return [];
         }
 
-        $articles = $this->retriever->sources($text);
-        if ($articles->isEmpty()) {
-            return [];
-        }
+        $body = $this->hours->isOpen()
+            ? 'Pesan Anda sudah masuk ke petugas dan akan dibalas di percakapan ini. Sambil menunggu, Anda tetap bisa bertanya hal umum seputar transmigrasi kepada saya.'
+            : "Pesan Anda sudah masuk ke petugas dan akan dibalas pada jam layanan ({$this->hours->label()}). Sambil menunggu, Anda tetap bisa bertanya hal umum seputar transmigrasi kepada saya.";
 
-        try {
-            $result = $this->ask($conversation, $text, $articles, $incoming->id);
-        } catch (AiException) {
-            return [];
-        }
-
-        $general = $result['jenis'] === 'informasi' && ! $result['kompleks'] && ! $result['perlu_petugas'];
-        if (! $general || $result['jawaban'] === '' || $this->citedSources($result, $articles)->isEmpty()) {
-            return [];
-        }
-
-        return [$this->answer($conversation, $text, $result, $articles)];
+        return [$this->say($conversation, $body, ['kind' => 'menunggu_petugas'])];
     }
 
     /** Percakapan yang sudah ditutup dibuka lagi saat warga menulis pesan baru. */

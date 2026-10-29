@@ -395,9 +395,12 @@ class AssistantChatTest extends TestCase
             ->assertJsonPath('asisten.mode', 'petugas');
         $this->assertSame(2, $conversation->fresh()->unread_admin);
 
-        // Aduan lanjutan dan balasan pendek menunggu petugas.
-        $this->ask('Jembatan SP3 juga ambruk sejak minggu lalu')->assertJsonCount(0, 'balasan');
+        // Pesan yang tidak bisa dijawab diberi satu tanda terima, tidak diulang.
+        $this->ask('Jembatan SP3 juga ambruk sejak minggu lalu')
+            ->assertJsonCount(1, 'balasan')
+            ->assertJsonPath('balasan.0.jenis', 'menunggu_petugas');
         $this->ask('Baik, terima kasih')->assertJsonCount(0, 'balasan');
+        $this->assertSame(4, $conversation->fresh()->unread_admin);
 
         // Setelah petugas membalas, TARA tidak ikut menjawab.
         $this->actingAs(User::factory()->admin(UserRole::SuperAdmin)->create());
