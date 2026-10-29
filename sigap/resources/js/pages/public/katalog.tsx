@@ -1,13 +1,16 @@
+import { Link } from '@inertiajs/react';
 import { ArrowRight, ArrowUpRight, AtSign, Building2, Database, HandCoins, type LucideIcon, Route, Sprout, Tag } from 'lucide-react';
 import { type ReactNode } from 'react';
 
-import { activeLinks, external, type KanalPublik, KantorInfo, KantorMapPanel, SosmedList } from '@/components/sigap/kanal-resmi';
+import { activeLinks, external, type KanalPublik, SosmedList } from '@/components/sigap/kanal-resmi';
+import { type Kantor } from '@/components/sigap/kantor-direktori';
 import TaraPage, { AskTaraCard, TaraEyebrow } from '@/components/sigap/tara-shell';
 
 interface Props {
     /** Kanal resmi (setting `kanal_publik`), sama dengan strip di beranda. */
     kanal: KanalPublik;
     categories: { id: number; name: string; slug: string }[];
+    kantor: Kantor[];
 }
 
 /** Ikon kategori ditebak dari namanya; kategori baru memakai ikon label. */
@@ -20,7 +23,7 @@ function categoryIcon(name: string): LucideIcon {
     return Tag;
 }
 
-export default function Katalog({ kanal, categories }: Props) {
+export default function Katalog({ kanal, categories, kantor }: Props) {
     const links = activeLinks(kanal);
 
     return (
@@ -52,14 +55,24 @@ export default function Katalog({ kanal, categories }: Props) {
                                     </article>
                                 )}
                                 {kanal.kantor.aktif && (
-                                    <article className="flex flex-col overflow-hidden rounded-[18px] border border-[#e6ebf0] bg-white">
-                                        <KantorMapPanel kantor={kanal.kantor} className="h-56" />
-                                        <div className="flex flex-1 flex-col gap-5 p-6 sm:p-7">
-                                            <CardHeading icon={Building2} title={kanal.kantor.label}>
-                                                {kanal.kantor.nama}
-                                            </CardHeading>
-                                            <KantorInfo kantor={kanal.kantor} />
-                                        </div>
+                                    <article className="flex flex-col gap-5 rounded-[18px] border border-[#e6ebf0] bg-white p-6 sm:p-7">
+                                        <CardHeading icon={Building2} title="Kantor & Balai">
+                                            Kantor Pusat dan balai transmigrasi di daerah.
+                                        </CardHeading>
+                                        <ul className="flex-1 divide-y divide-[#eef1f4] border-y border-[#eef1f4]">
+                                            {kantor.map((k) => (
+                                                <li key={k.kode} className="flex items-baseline justify-between gap-3 py-2.5 text-[15px]">
+                                                    <span className="font-semibold text-[var(--t-deep)]">{k.singkat}</span>
+                                                    <span className="text-right text-sm text-[#5b6b7a]">{k.lokasi}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <Link
+                                            href="/katalog/kantor-balai"
+                                            className="transi-lift font-heading inline-flex h-11 w-fit items-center gap-2 rounded-full bg-[var(--t-navy)] px-5 text-[15px] font-semibold text-white hover:bg-[var(--t-deep)]"
+                                        >
+                                            Lihat alamat &amp; kontak <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                                        </Link>
                                     </article>
                                 )}
                             </div>

@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { MessageCircle } from 'lucide-react';
+import { ChevronRight, MessageCircle } from 'lucide-react';
 import { type ReactNode } from 'react';
 
 import TransiHeader, { type TaraNav } from '@/components/sigap/transi-header';
@@ -203,6 +203,7 @@ export default function TaraPage({
     poseAlt = '',
     heroChildren,
     heroAside,
+    breadcrumb,
     children,
 }: {
     title: string;
@@ -217,6 +218,8 @@ export default function TaraPage({
     heroChildren?: ReactNode;
     /** Pengganti pose di sisi kanan hero (mis. pemilih wilayah di peta). */
     heroAside?: ReactNode;
+    /** Jejak halaman di atas eyebrow; item terakhir = halaman ini. */
+    breadcrumb?: { label: string; href?: string }[];
     children: ReactNode;
 }) {
     const { auth } = usePage<SharedData>().props;
@@ -246,6 +249,26 @@ export default function TaraPage({
                     <div className="relative mx-auto flex max-w-[1312px] items-end gap-8 px-4 sm:px-6 lg:px-16">
                         <div className={cn('min-w-0 flex-1 py-12 lg:py-16', heroAside && 'lg:flex lg:items-end lg:justify-between lg:gap-10')}>
                             <div className="min-w-0">
+                                {breadcrumb && (
+                                    <nav aria-label="Jejak halaman" className="mb-5">
+                                        <ol className="flex flex-wrap items-center gap-1.5 text-[13px] text-[#6b5d4a]">
+                                            {breadcrumb.map((b, i) => (
+                                                <li key={b.label} className="flex items-center gap-1.5">
+                                                    {i > 0 && <ChevronRight className="h-3.5 w-3.5 text-[#a8987f]" aria-hidden="true" />}
+                                                    {b.href ? (
+                                                        <Link href={b.href} className="hover:text-[var(--t-deep)] hover:underline">
+                                                            {b.label}
+                                                        </Link>
+                                                    ) : (
+                                                        <span aria-current="page" className="font-semibold text-[var(--t-deep)]">
+                                                            {b.label}
+                                                        </span>
+                                                    )}
+                                                </li>
+                                            ))}
+                                        </ol>
+                                    </nav>
+                                )}
                                 <TaraEyebrow tone="bronze">{eyebrow}</TaraEyebrow>
                                 <h1 className="font-heading mt-3 text-[34px] leading-[1.08] font-bold text-[var(--t-deep)] sm:text-[44px] lg:text-[52px]">
                                     {heading}

@@ -3,23 +3,20 @@ import {
     AtSign,
     Briefcase,
     Building2,
-    Clock,
     Facebook,
     Globe,
     Instagram,
     Mail,
-    MapPin,
     Megaphone,
     MessageCircle,
     Music2,
-    Navigation,
-    Phone,
     ShieldAlert,
     Youtube,
     type LucideIcon,
 } from 'lucide-react';
-import { lazy, Suspense, useState, type ReactNode, type SVGProps } from 'react';
+import { useState, type SVGProps } from 'react';
 
+import { KantorDirectoryDialog, type Kantor } from '@/components/sigap/kantor-direktori';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 /**
@@ -27,8 +24,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
  * `kanal_publik` (Admin → Pengaturan): Social Media dan Kantor membuka modal,
  * sisanya langsung ke URL. Kanal yang dinonaktifkan tidak ditampilkan.
  */
-
-const KantorMap = lazy(() => import('@/components/sigap/kantor-map'));
 
 export type SosmedPlatform = 'instagram' | 'facebook' | 'x' | 'tiktok' | 'youtube' | 'lainnya';
 
@@ -101,7 +96,7 @@ export const external = (url: string) => (url.startsWith('http') ? { target: '_b
 const chipClass =
     'transi-lift flex items-center gap-2 rounded-[10px] bg-[#f6f8fa] px-3.5 py-2.5 text-sm font-medium text-[#2a3a48] hover:bg-[#eef3f7] hover:text-[var(--t-navy)]';
 
-export default function KanalResmi({ kanal }: { kanal: KanalPublik }) {
+export default function KanalResmi({ kanal, kantor }: { kanal: KanalPublik; kantor: Kantor[] }) {
     const [open, setOpen] = useState<'sosmed' | 'kantor' | null>(null);
 
     const links = activeLinks(kanal);
@@ -157,18 +152,7 @@ export default function KanalResmi({ kanal }: { kanal: KanalPublik }) {
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={open === 'kantor'} onOpenChange={(v) => !v && setOpen(null)}>
-                <DialogContent className="transi-page max-w-[calc(100%-32px)] gap-0 overflow-hidden rounded-[20px] border-[#e8edf2] bg-white p-0 sm:max-w-xl sm:rounded-[20px] [&>button:last-child]:rounded-full [&>button:last-child]:bg-white [&>button:last-child]:p-1.5 [&>button:last-child]:opacity-100 [&>button:last-child]:shadow-md">
-                    <KantorMapPanel kantor={kanal.kantor} className="h-56 sm:h-64" />
-                    <div className="space-y-4 p-6">
-                        <DialogHeader className="text-left">
-                            <DialogTitle className="font-heading text-xl text-[var(--t-deep)]">{kanal.kantor.nama}</DialogTitle>
-                            <DialogDescription className="sr-only">Alamat lengkap dan lokasi kantor.</DialogDescription>
-                        </DialogHeader>
-                        <KantorInfo kantor={kanal.kantor} />
-                    </div>
-                </DialogContent>
-            </Dialog>
+            <KantorDirectoryDialog offices={kantor} open={open === 'kantor'} onOpenChange={(v) => !v && setOpen(null)} />
         </div>
     );
 }
@@ -186,54 +170,6 @@ export function SosmedList({ sosmed, className = 'space-y-2' }: { sosmed: KanalP
                 <ContactRow href={waLink(sosmed.whatsapp)} icon={MessageCircle} title={sosmed.whatsapp} hint="Hotline WhatsApp" highlight />
             )}
         </ul>
-    );
-}
-
-/** Peta pin kantor; tidak tampil bila koordinat kosong. */
-export function KantorMapPanel({ kantor, className }: { kantor: KanalPublik['kantor']; className?: string }) {
-    if (kantor.lat === null || kantor.lng === null) return null;
-
-    return (
-        <div className={`relative z-0 bg-[#eef3f7] ${className ?? ''}`}>
-            <Suspense fallback={null}>
-                <KantorMap lat={kantor.lat} lng={kantor.lng} />
-            </Suspense>
-        </div>
-    );
-}
-
-/** Alamat, telepon, jam layanan, dan tombol Google Maps. */
-export function KantorInfo({ kantor }: { kantor: KanalPublik['kantor'] }) {
-    const query = kantor.lat !== null && kantor.lng !== null ? `${kantor.lat},${kantor.lng}` : kantor.alamat;
-
-    return (
-        <>
-            <dl className="space-y-3 text-[15px] text-[#2a3a48]">
-                <InfoRow icon={MapPin} label="Alamat">
-                    {kantor.alamat}
-                </InfoRow>
-                {kantor.telepon && (
-                    <InfoRow icon={Phone} label="Telepon">
-                        <a href={`tel:${kantor.telepon.replace(/[^\d+]/g, '')}`} className="hover:text-[var(--t-navy)] hover:underline">
-                            {kantor.telepon}
-                        </a>
-                    </InfoRow>
-                )}
-                {kantor.jam && (
-                    <InfoRow icon={Clock} label="Jam layanan">
-                        {kantor.jam}
-                    </InfoRow>
-                )}
-            </dl>
-            <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transi-lift font-heading inline-flex h-11 w-fit items-center gap-2 rounded-full bg-[var(--t-navy)] px-5 text-[15px] font-semibold text-white hover:bg-[var(--t-deep)]"
-            >
-                <Navigation className="h-4 w-4" aria-hidden="true" /> Buka di Google Maps
-            </a>
-        </>
     );
 }
 
@@ -277,17 +213,5 @@ function ContactRow({
                 <ArrowUpRight className="h-4 w-4 shrink-0 text-[#8a96a3] group-hover:text-[var(--t-navy)]" aria-hidden="true" />
             </a>
         </li>
-    );
-}
-
-function InfoRow({ icon: Icon, label, children }: { icon: LucideIcon; label: string; children: ReactNode }) {
-    return (
-        <div className="flex gap-3">
-            <Icon className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[var(--t-navy)]" aria-hidden="true" />
-            <div>
-                <dt className="text-[13px] font-semibold text-[#5b6b7a]">{label}</dt>
-                <dd>{children}</dd>
-            </div>
-        </div>
     );
 }

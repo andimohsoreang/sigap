@@ -38,6 +38,7 @@ Route::redirect('/beranda-absol', '/', 301);
 Route::get('/panduan', [PublicController::class, 'guide'])->name('panduan');
 Route::get('/tentang', [PublicController::class, 'about'])->name('tentang');
 Route::get('/katalog', [PublicController::class, 'catalog'])->name('katalog');
+Route::get('/katalog/kantor-balai', [PublicController::class, 'offices'])->name('katalog.kantor');
 Route::get('/peta', [PublicController::class, 'map'])->name('peta');
 // Lacak tiket publik dibatasi limiter 'lookup' (anti-enumerasi nomor tiket).
 Route::get('/lacak', [PublicController::class, 'track'])->middleware('throttle:lookup')->name('lacak');

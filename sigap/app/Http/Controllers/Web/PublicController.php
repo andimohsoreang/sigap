@@ -56,6 +56,7 @@ class PublicController extends Controller
     {
         return Inertia::render('public/beranda-transi', [
             'kanal' => PublicChannels::get(),
+            'kantor' => PublicChannels::offices(),
         ]);
     }
 
@@ -90,6 +91,16 @@ class PublicController extends Controller
         return Inertia::render('public/katalog', [
             'kanal' => PublicChannels::get(),
             'categories' => Category::query()->where('is_active', true)->get(['id', 'name', 'slug']),
+            'kantor' => PublicChannels::offices(),
+        ]);
+    }
+
+    /** Kantor pusat & balai transmigrasi beserta kanal resmi. */
+    public function offices(): Response
+    {
+        return Inertia::render('public/kantor-balai', [
+            'kanal' => PublicChannels::get(),
+            'kantor' => PublicChannels::offices(),
         ]);
     }
 

@@ -31,6 +31,7 @@ import {
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react';
 
 import KanalResmi, { type KanalPublik } from '@/components/sigap/kanal-resmi';
+import { type Kantor } from '@/components/sigap/kantor-direktori';
 import { TaraFooter, TaraLauncher } from '@/components/sigap/tara-shell';
 import TransiHeader from '@/components/sigap/transi-header';
 import { goToChat } from '@/lib/chat-transition';
@@ -223,7 +224,7 @@ function visible(id: string): HTMLElement | null {
 
 /* ------------------------------------------------------------------- page */
 
-export default function BerandaTransi({ kanal }: { kanal: KanalPublik }) {
+export default function BerandaTransi({ kanal, kantor }: { kanal: KanalPublik; kantor: Kantor[] }) {
     const { auth, assistant } = usePage<SharedData>().props;
     const aiEnabled = Boolean(assistant?.enabled);
     const pageRef = useRef<HTMLDivElement>(null);
@@ -257,7 +258,7 @@ export default function BerandaTransi({ kanal }: { kanal: KanalPublik }) {
                     <JustType />
                     <Journey />
                     <Trust />
-                    <TrackAndPaths kanal={kanal} />
+                    <TrackAndPaths kanal={kanal} kantor={kantor} />
                     <Faq />
                     <ClosingCta />
                 </main>
@@ -706,7 +707,7 @@ function Trust() {
 
 /* --------------------------------------------------------- track & paths */
 
-function TrackAndPaths({ kanal }: { kanal: KanalPublik }) {
+function TrackAndPaths({ kanal, kantor }: { kanal: KanalPublik; kantor: Kantor[] }) {
     const [ticket, setTicket] = useState('');
     const submit = (e: FormEvent) => {
         e.preventDefault();
@@ -778,7 +779,7 @@ function TrackAndPaths({ kanal }: { kanal: KanalPublik }) {
                     </div>
                 </div>
 
-                <KanalResmi kanal={kanal} />
+                <KanalResmi kanal={kanal} kantor={kantor} />
             </div>
         </section>
     );

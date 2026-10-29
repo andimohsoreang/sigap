@@ -45,6 +45,34 @@ class PublicChannelsTest extends TestCase
             ->has('categories'));
     }
 
+    public function test_kantor_balai_page_lists_head_office_and_four_balai(): void
+    {
+        $this->get('/katalog/kantor-balai')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('public/kantor-balai')
+            ->has('kantor', 5)
+            ->where('kantor.0.kode', 'pusat')
+            ->where('kantor.0.alamat', PublicChannels::defaults()['kantor']['alamat'])
+            ->where('kantor.1.singkat', 'BBPPMT Yogyakarta')
+            ->where('kantor.4.singkat', 'BPPMT Banjarmasin')
+            ->where('kanal.kpk.label', 'Whistleblowing KPK'));
+    }
+
+    public function test_head_office_follows_admin_settings(): void
+    {
+        $admin = User::factory()->admin(UserRole::SuperAdmin)->create();
+        $this->actingAs($admin)->put('/admin/pengaturan/kanal-publik', $this->payload([
+            'sosmed' => ['whatsapp' => '0811-1111-2222'],
+            'kantor' => ['alamat' => 'Jl. Contoh No. 1'],
+        ]))->assertSessionHasNoErrors();
+
+        $pusat = PublicChannels::offices()[0];
+        $this->assertSame('Jl. Contoh No. 1', $pusat['alamat']);
+        $this->assertSame('0811-1111-2222', $pusat['whatsapp']);
+        $this->assertStringContainsString(rawurlencode('Jl. Contoh No. 1'), $pusat['maps']);
+
+        $this->get('/beranda-baru')->assertInertia(fn (Assert $page) => $page->has('kantor', 5)->where('kantor.0.alamat', 'Jl. Contoh No. 1'));
+    }
+
     public function test_super_admin_can_update_channels(): void
     {
         $admin = User::factory()->admin(UserRole::SuperAdmin)->create();
