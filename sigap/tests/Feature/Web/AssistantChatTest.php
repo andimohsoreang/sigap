@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\Ai\AiException;
 use App\Services\Ai\FakeLlmClient;
 use App\Services\Ai\LlmClient;
+use App\Services\ChatService;
 use Database\Seeders\MasterSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -310,6 +311,100 @@ class AssistantChatTest extends TestCase
 
         $this->assertStringContainsString('PPID', $reply->json('balasan.0.body'));
         $this->assertSame('ai', $conversation->fresh()->handled_by);
+    }
+
+    /** Model tiruan dengan balasan JSON tetap (kunci yang tidak diisi = bawaan). */
+    private function fixedModel(array $reply): void
+    {
+        $json = json_encode($reply + ['jawaban' => '', 'sumber' => [], 'beda_sumber' => false, 'kebijakan' => false, 'portal' => null, 'perlu_petugas' => false, 'kompleks' => false, 'ringkasan' => '']);
+        $this->app->bind(LlmClient::class, fn () => new class($json) implements LlmClient
+        {
+            public function __construct(private string $json) {}
+
+            public function complete(array $messages, bool $json = false): string
+            {
+                return $this->json;
+            }
+        });
+    }
+
+    public function test_complaint_flagged_for_staff_by_model_still_goes_through_complaint_flow(): void
+    {
+        $this->fixedModel(['jenis' => 'aduan', 'perlu_petugas' => true, 'ringkasan' => 'Jalan poros SP3 rusak sejak 3 bulan.']);
+        $conversation = $this->startGuest();
+
+        $this->ask('Jalan poros SP3 rusak parah sudah 3 bulan')
+            ->assertJsonPath('balasan.0.jenis', 'ringkasan')
+            ->assertJsonPath('balasan.1.jenis', 'diteruskan');
+
+        $this->assertSame('aduan', $conversation->fresh()->handoff_reason);
+    }
+
+    public function test_complaint_with_regulation_question_shows_sourced_answer_before_summary(): void
+    {
+        $this->fixedModel(['jenis' => 'aduan', 'jawaban' => 'Pendaftaran dilakukan di dinas kabupaten/kota [1].', 'sumber' => [1], 'ringkasan' => 'Warga ditolak saat mendaftar program transmigrasi.']);
+        $conversation = $this->startGuest();
+
+        $this->ask('Saya ditolak dinas saat mau daftar program transmigrasi, sebenarnya daftar di mana?')
+            ->assertJsonPath('balasan.0.jenis', 'jawaban')
+            ->assertJsonPath('balasan.0.sumber.0.no', 1)
+            ->assertJsonPath('balasan.1.jenis', 'ringkasan')
+            ->assertJsonPath('asisten.mode', 'petugas');
+
+        $this->assertSame('aduan', $conversation->fresh()->handoff_reason);
+    }
+
+    public function test_complex_regulation_question_is_answered_then_handed_to_staff(): void
+    {
+        $this->fixedModel(['jenis' => 'informasi', 'jawaban' => 'Pendaftaran dilakukan di dinas kabupaten/kota [1].', 'sumber' => [1], 'kompleks' => true, 'ringkasan' => 'Warga kota tanpa dinas transmigrasi menanyakan jalur daftar program transmigrasi.']);
+        $conversation = $this->startGuest();
+
+        $this->ask('Kota saya tidak punya dinas transmigrasi, bagaimana aturan daftar program transmigrasi untuk kasus seperti ini?')
+            ->assertJsonPath('balasan.0.jenis', 'jawaban')
+            ->assertJsonPath('balasan.1.jenis', 'kompleks')
+            ->assertJsonPath('balasan.2.jenis', 'diteruskan')
+            ->assertJsonPath('asisten.mode', 'petugas');
+
+        $conversation->refresh();
+        $this->assertSame('kompleks', $conversation->handoff_reason);
+        $this->assertStringContainsString('tanpa dinas transmigrasi', (string) $conversation->ai_summary);
+    }
+
+    public function test_simple_regulation_question_stays_with_assistant(): void
+    {
+        $this->fixedModel(['jenis' => 'informasi', 'jawaban' => 'Pendaftaran dilakukan di dinas kabupaten/kota [1].', 'sumber' => [1]]);
+        $conversation = $this->startGuest();
+
+        $this->ask('Bagaimana cara daftar program transmigrasi?')
+            ->assertJsonCount(1, 'balasan')
+            ->assertJsonPath('balasan.0.jenis', 'jawaban')
+            ->assertJsonPath('asisten.mode', 'ai');
+
+        $this->assertSame('ai', $conversation->fresh()->handled_by);
+    }
+
+    public function test_general_question_is_answered_while_waiting_for_first_staff_reply(): void
+    {
+        $conversation = $this->startGuest();
+        $this->ask('Jalan poros SP3 rusak parah sudah 3 bulan')->assertJsonPath('asisten.mode', 'petugas');
+
+        // Pertanyaan umum bersumber tetap dijawab; penghitung petugas tetap naik.
+        $this->ask('Bagaimana cara daftar program transmigrasi?')
+            ->assertJsonCount(1, 'balasan')
+            ->assertJsonPath('balasan.0.jenis', 'jawaban')
+            ->assertJsonPath('asisten.mode', 'petugas');
+        $this->assertSame(2, $conversation->fresh()->unread_admin);
+
+        // Aduan lanjutan dan balasan pendek menunggu petugas.
+        $this->ask('Jembatan SP3 juga ambruk sejak minggu lalu')->assertJsonCount(0, 'balasan');
+        $this->ask('Baik, terima kasih')->assertJsonCount(0, 'balasan');
+
+        // Setelah petugas membalas, TARA tidak ikut menjawab.
+        $this->actingAs(User::factory()->admin(UserRole::SuperAdmin)->create());
+        app(ChatService::class)->send($conversation->fresh(), 'Halo, saya petugas.', 'admin', auth()->id());
+        auth()->logout();
+        $this->ask('Bagaimana cara daftar program transmigrasi?')->assertJsonCount(0, 'balasan');
+        $this->assertSame('guest', $conversation->messages()->getQuery()->reorder('id', 'desc')->value('sender_type'));
     }
 
     public function test_complaint_is_never_downgraded_to_policy_question(): void

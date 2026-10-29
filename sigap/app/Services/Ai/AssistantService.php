@@ -39,6 +39,8 @@ class AssistantService
     /** Aduan dengan kata bermakna sesedikit ini ("saya mau melapor masalah") ditanya detailnya dulu. */
     private const MIN_COMPLAINT_TERMS = 3;
 
+    private const COMPLEX_NOTICE = 'Pertanyaan ini perlu ditelaah lebih lanjut terhadap keadaan Anda, jadi saya teruskan ke petugas beserta ringkasannya.';
+
     private const ASK_DETAILS = 'Baik, saya bantu. Ceritakan masalahnya: apa yang terjadi, di kawasan atau SP mana, dan sejak kapan? Bila ada, sebutkan juga dampaknya.';
 
     /** Pertanyaan kebijakan yang tidak dibahas sumber: tetap diarahkan ke kanal resmi, bukan sekadar "tidak tahu". */
@@ -68,8 +70,12 @@ class AssistantService
      */
     public function respond(ChatConversation $conversation, ChatMessage $incoming, ?User $viewer = null): array
     {
-        if (! self::enabled() || ! $conversation->isWithAssistant()) {
+        if (! self::enabled()) {
             return [];
+        }
+
+        if (! $conversation->isWithAssistant()) {
+            return $this->answerWhileWaiting($conversation, $incoming);
         }
 
         $text = trim($incoming->body);
@@ -88,26 +94,45 @@ class AssistantService
         }
 
         $summary = $result['ringkasan'] !== '' ? $result['ringkasan'] : null;
+        $complaint = in_array($result['jenis'], ['aduan', 'pribadi'], true);
+        // Bagian informasi/regulasi yang bersumber selalu ditampilkan lebih dulu,
+        // termasuk di dalam aduan; keputusan kasusnya tetap di tangan petugas.
+        $sourced = $result['jawaban'] !== '' && $this->citedSources($result, $articles)->isNotEmpty();
+        $sourcedAnswer = fn () => $sourced ? [$this->answer($conversation, $text, $result, $articles)] : [];
 
-        if ($result['perlu_petugas']) {
+        // Model kerap menandai setiap aduan "perlu petugas". Aduan dan urusan
+        // pribadi sudah diteruskan oleh alur di bawah (ringkasan/rujukan portal),
+        // jadi tanda itu hanya dipakai untuk pesan lain.
+        if ($result['perlu_petugas'] && ! $complaint) {
             return $this->handoff($conversation, 'diminta', $summary);
         }
 
         // Niat melapor tanpa detail: tanya dulu masalahnya, jangan langsung
         // merujuk ke portal atau mengantrekan ke petugas dengan aduan kosong.
-        if (in_array($result['jenis'], ['aduan', 'pribadi'], true) && count($this->retriever->terms($query)) < self::MIN_COMPLAINT_TERMS) {
+        if ($complaint && count($this->retriever->terms($query)) < self::MIN_COMPLAINT_TERMS) {
             return [$this->say($conversation, self::ASK_DETAILS, ['kind' => 'tanya_detail'])];
         }
 
         // Aduan/urusan pribadi yang dilayani portal lain (mis. lahan → Trans
         // Tuntas): dirujuk dengan pengantar + petugas pendamping, bukan antre.
         $portal = $this->portals->find($result['portal']);
-        if ($portal?->track_completion && in_array($result['jenis'], ['aduan', 'pribadi'], true)) {
-            return $this->refer($conversation, $portal, $summary ?? $this->masker->mask(Str::limit($text, 300)));
+        if ($portal?->track_completion && $complaint) {
+            return [...$sourcedAnswer(), ...$this->refer($conversation, $portal, $summary ?? $this->masker->mask(Str::limit($text, 300)))];
+        }
+
+        // Pertanyaan informasi/regulasi yang tidak tuntas dengan ketentuan umum:
+        // ketentuan umumnya dijawab, penelaahannya diserahkan ke petugas.
+        if ($result['kompleks'] && $result['jenis'] === 'informasi') {
+            return [
+                ...$sourcedAnswer(),
+                $this->say($conversation, self::COMPLEX_NOTICE, ['kind' => 'kompleks']),
+                ...$this->handoff($conversation, 'kompleks', $summary),
+            ];
         }
 
         return match ($result['jenis']) {
             'aduan' => [
+                ...$sourcedAnswer(),
                 $this->say($conversation, 'Terima kasih. Laporan Anda saya ringkas untuk petugas agar bisa langsung ditindaklanjuti.'
                     .($summary ? "\n\nRingkasan: {$summary}" : ''), ['kind' => 'ringkasan']),
                 ...$this->handoff($conversation, 'aduan', $summary),
@@ -115,10 +140,8 @@ class AssistantService
             // Ketentuan umumnya (bila ada sumbernya) tetap ditampilkan; kepastian
             // untuk kasus warga sendiri diserahkan ke petugas.
             'pribadi' => [
-                ...($this->citedSources($result, $articles)->isNotEmpty() && $result['jawaban'] !== ''
-                    ? [$this->answer($conversation, $text, $result, $articles)]
-                    : []),
-                $this->say($conversation, $this->citedSources($result, $articles)->isNotEmpty() && $result['jawaban'] !== ''
+                ...$sourcedAnswer(),
+                $this->say($conversation, $sourced
                     ? 'Untuk memastikan apakah ketentuan di atas berlaku pada kasus Anda, perlu diperiksa langsung oleh petugas. Saya tidak dapat memastikannya.'
                     : 'Pertanyaan ini menyangkut data Anda pribadi, jadi perlu diperiksa langsung oleh petugas. Saya tidak dapat memastikannya.', ['kind' => 'pribadi']),
                 ...$this->handoff($conversation, 'pribadi', $summary),
@@ -179,6 +202,44 @@ class AssistantService
         return $messages;
     }
 
+    /**
+     * Selama menunggu balasan pertama petugas (mis. di luar jam layanan),
+     * pertanyaan informasi umum tetap dijawab dari sumber resmi. Aduan,
+     * urusan pribadi, dan pertanyaan kompleks tetap menunggu petugas.
+     *
+     * @return list<ChatMessage>
+     */
+    private function answerWhileWaiting(ChatConversation $conversation, ChatMessage $incoming): array
+    {
+        if ($conversation->isClosed() || $conversation->messages()->getQuery()->where('sender_type', 'admin')->exists()) {
+            return [];
+        }
+
+        $text = trim($incoming->body);
+        // Balasan pendek ("baik", "terima kasih", nomor HP) ditujukan ke petugas.
+        if (count($this->retriever->terms($text)) < 2) {
+            return [];
+        }
+
+        $articles = $this->retriever->sources($text);
+        if ($articles->isEmpty()) {
+            return [];
+        }
+
+        try {
+            $result = $this->ask($conversation, $text, $articles, $incoming->id);
+        } catch (AiException) {
+            return [];
+        }
+
+        $general = $result['jenis'] === 'informasi' && ! $result['kompleks'] && ! $result['perlu_petugas'];
+        if (! $general || $result['jawaban'] === '' || $this->citedSources($result, $articles)->isEmpty()) {
+            return [];
+        }
+
+        return [$this->answer($conversation, $text, $result, $articles)];
+    }
+
     /** Percakapan yang sudah ditutup dibuka lagi saat warga menulis pesan baru. */
     public function reopenIfClosed(ChatConversation $conversation): void
     {
@@ -217,7 +278,7 @@ class AssistantService
     }
 
     /**
-     * @param  array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, ringkasan: string}  $result
+     * @param  array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, kompleks: bool, ringkasan: string}  $result
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
      */
     private function answer(ChatConversation $conversation, string $question, array $result, Collection $articles, ?Portal $portal = null): ChatMessage
@@ -307,7 +368,7 @@ class AssistantService
 
     /**
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
-     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, ringkasan: string}
+     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, kompleks: bool, ringkasan: string}
      */
     private function ask(ChatConversation $conversation, string $question, Collection $articles, int $incomingId): array
     {
@@ -337,7 +398,7 @@ class AssistantService
      *
      * @param  list<array{dari: string, isi: string}>  $history
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
-     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, ringkasan: string}
+     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, kompleks: bool, ringkasan: string}
      *
      * @throws AiException
      */
@@ -384,6 +445,7 @@ class AssistantService
             'kebijakan' => $policy,
             'portal' => $this->portals->find(is_string($data['portal'] ?? null) ? $data['portal'] : null)?->code,
             'perlu_petugas' => (bool) ($data['perlu_petugas'] ?? false),
+            'kompleks' => ! $policy && (bool) ($data['kompleks'] ?? false),
             'ringkasan' => Str::limit(trim((string) ($data['ringkasan'] ?? '')), 600),
         ];
     }

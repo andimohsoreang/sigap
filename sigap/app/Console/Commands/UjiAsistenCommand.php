@@ -64,7 +64,7 @@ class UjiAsistenCommand extends Command
                 try {
                     $result = $assistant->consult($case['tanya'], [], $articles);
                     $durations[] = microtime(true) - $started;
-                    $type = $result['jenis'].($result['perlu_petugas'] ? '+petugas' : '');
+                    $type = $result['jenis'].($result['perlu_petugas'] ? '+petugas' : '').($result['kompleks'] ? '+kompleks' : '');
                     $typeOk = $result['jenis'] === $case['jenis'];
                     $score['jenis'][0] += (int) $typeOk;
                     $score['jenis'][1]++;
