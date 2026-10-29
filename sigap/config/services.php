@@ -59,6 +59,8 @@ return [
         // Model penalaran: "none" mematikan proses berpikir (jauh lebih cepat).
         // Kosongkan untuk model biasa yang tidak mengenal parameter ini.
         'reasoning_effort' => env('AI_REASONING_EFFORT'),
+        // Retensi catatan panggilan AI (`ai_calls`, tanpa teks) — PRD-AI FR-AI-02.
+        'log_retention_days' => (int) env('AI_LOG_RETENTION_DAYS', 90),
         // Jam layanan petugas (WIB). Di luar jam ini, percakapan yang
         // diteruskan diberi nomor referensi dan warga diminta kontak.
         'service_hours' => [

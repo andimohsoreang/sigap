@@ -6,9 +6,11 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Policies\TicketPolicy;
 use App\Policies\UserPolicy;
+use App\Services\Ai\AiCallContext;
 use App\Services\Ai\FakeLlmClient;
 use App\Services\Ai\LlmClient;
 use App\Services\Ai\OpenAiCompatibleClient;
+use App\Services\Ai\RecordingLlmClient;
 use App\Support\Nik;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -26,6 +28,21 @@ class AppServiceProvider extends ServiceProvider
             return $ai['driver'] === 'openai'
                 ? new OpenAiCompatibleClient($ai['base_url'], $ai['api_key'], $ai['model'], $ai['timeout'], $ai['max_tokens'], $ai['reasoning_effort'] ?? null)
                 : new FakeLlmClient;
+        });
+
+        // PRD-AI Tahap 0: setiap panggilan model dicatat ke `ai_calls` (tanpa teks).
+        // `extend` juga membungkus driver yang diganti lewat bind() (mis. di tes).
+        $this->app->scoped(AiCallContext::class);
+        $this->app->extend(LlmClient::class, function (LlmClient $driver, $app) {
+            $ai = config('services.ai');
+            $openai = $ai['driver'] === 'openai';
+
+            return new RecordingLlmClient(
+                $driver,
+                $app->make(AiCallContext::class),
+                $openai ? (parse_url((string) $ai['base_url'], PHP_URL_HOST) ?: null) : (string) $ai['driver'],
+                $openai ? $ai['model'] : (string) $ai['driver'],
+            );
         });
     }
 

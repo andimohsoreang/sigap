@@ -35,7 +35,11 @@ class TicketSuggester
         'data' => ['data', 'aplikasi', 'website', 'situs', 'sistem', 'login', 'akun', 'internet', 'sinyal'],
     ];
 
-    public function __construct(private readonly LlmClient $llm, private readonly PiiMasker $masker) {}
+    public function __construct(
+        private readonly LlmClient $llm,
+        private readonly PiiMasker $masker,
+        private readonly AiCallContext $callContext,
+    ) {}
 
     /**
      * @return array{judul: string, uraian: string, region_id: int|null, category_id: int|null, impact: string, alasan: string|null, sumber: string}
@@ -58,7 +62,9 @@ class TicketSuggester
             'uraian' => trim(($summary !== '' ? "Ringkasan asisten: {$summary}\n\n" : '')."Pesan warga di live chat:\n- ".$messages->implode("\n- ")),
         ];
 
-        $ai = AssistantService::enabled() ? $this->fromModel($text, $regions, $categories) : null;
+        $ai = AssistantService::enabled()
+            ? $this->callContext->forConversation($conversation->id, fn () => $this->fromModel($text, $regions, $categories))
+            : null;
         $heuristic = $this->fromKeywords($text, $regions, $categories);
 
         $regionId = $fixedRegionId ?? $ai['region_id'] ?? $heuristic['region_id'];

@@ -18,8 +18,14 @@ use Illuminate\Support\Facades\Log;
  * lambat dan bisa menghabiskan jatah token sebelum jawaban keluar. Isi
  * `reasoning_effort` (mis. "none") untuk mematikannya.
  */
-class OpenAiCompatibleClient implements LlmClient
+class OpenAiCompatibleClient implements LlmClient, ReportsUsage
 {
+    /** @var array{prompt: int|null, completion: int|null}|null */
+    private ?array $usage = null;
+
+    /** Alasan galat koneksi terakhir (untuk catatan `ai_calls`). */
+    private ?string $connectionError = null;
+
     public function __construct(
         private readonly string $baseUrl,
         private readonly ?string $apiKey,
@@ -31,6 +37,9 @@ class OpenAiCompatibleClient implements LlmClient
 
     public function complete(array $messages, bool $json = false): string
     {
+        $this->usage = null;
+        $this->connectionError = null;
+
         $payload = [
             'model' => $this->model,
             'messages' => $messages,
@@ -51,13 +60,19 @@ class OpenAiCompatibleClient implements LlmClient
         if ($response === null || ! $response->successful()) {
             Log::warning('AI: permintaan gagal', ['status' => $response?->status(), 'model' => $this->model]);
 
-            throw new AiException('Model AI tidak dapat dihubungi.');
+            throw new AiException('Model AI tidak dapat dihubungi.', $response === null ? $this->connectionError : 'http_'.$response->status());
         }
+
+        $usage = $response->json('usage');
+        $this->usage = is_array($usage) ? [
+            'prompt' => isset($usage['prompt_tokens']) ? (int) $usage['prompt_tokens'] : null,
+            'completion' => isset($usage['completion_tokens']) ? (int) $usage['completion_tokens'] : null,
+        ] : null;
 
         $content = trim((string) $response->json('choices.0.message.content'));
 
         if ($content === '') {
-            throw new AiException('Model AI membalas kosong.');
+            throw new AiException('Model AI membalas kosong.', 'kosong');
         }
 
         return $content;
@@ -72,8 +87,14 @@ class OpenAiCompatibleClient implements LlmClient
                 ->post($this->baseUrl.'/chat/completions', $payload);
         } catch (ConnectionException $e) {
             Log::warning('AI: koneksi gagal — '.$e->getMessage());
+            $this->connectionError = preg_match('/timed out|cURL error 28/i', $e->getMessage()) ? 'timeout' : 'koneksi';
 
             return null;
         }
+    }
+
+    public function lastUsage(): ?array
+    {
+        return $this->usage;
     }
 }

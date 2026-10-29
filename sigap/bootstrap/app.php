@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeaders;
 use App\Models\ActivityLog;
+use App\Models\AiCall;
 use App\Models\ChatConversation;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -34,7 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Retensi data (D-01): hapus percakapan tamu kedaluwarsa & log audit lama.
         $schedule->command('model:prune', [
-            '--model' => [ChatConversation::class, ActivityLog::class],
+            '--model' => [ChatConversation::class, ActivityLog::class, AiCall::class],
         ])->dailyAt('02:00')->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware) {

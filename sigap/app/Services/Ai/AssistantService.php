@@ -58,6 +58,7 @@ class AssistantService
         private readonly ServiceHours $hours,
         private readonly PortalDirectory $portals,
         private readonly ReferralService $referrals,
+        private readonly AiCallContext $callContext,
     ) {}
 
     public static function enabled(): bool
@@ -423,7 +424,7 @@ class AssistantService
             ->values()
             ->all();
 
-        return $this->consult($question, $history, $articles);
+        return $this->callContext->forConversation($conversation->id, fn () => $this->consult($question, $history, $articles));
     }
 
     /**
