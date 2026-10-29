@@ -349,8 +349,9 @@ function HeroMakarti({ mobile = false }: { mobile?: boolean }) {
             height={900}
             className={cn(
                 'absolute max-w-none drop-shadow-[0_18px_30px_rgba(0,10,25,0.35)]',
-                // Desain: 646x1468 px, 64 px dari atas, keluar 77 px di kanan (terlihat sampai pinggang).
-                mobile ? 'top-[6%] right-[-6%] h-[180%] w-auto' : 'top-16 right-[-77px] h-[1468px] w-auto',
+                // Sumber hanya 396x900 px: desktop 1200 px tinggi (1,33x) agar tidak pecah;
+                // desain Wonder memakai 1468 px. Terlihat sampai pinggul.
+                mobile ? 'top-[6%] right-[-6%] h-[180%] w-auto' : 'top-20 right-[-120px] h-[1200px] w-auto',
             )}
         />
     );
@@ -373,7 +374,8 @@ function HeroMakarti({ mobile = false }: { mobile?: boolean }) {
                         'linear-gradient(90deg, rgba(2,43,74,0.97) 0%, rgba(2,43,74,0.93) 38%, rgba(2,43,74,0.6) 54%, rgba(2,43,74,0.15) 70%, rgba(2,43,74,0) 86%)',
                 }}
             />
-            {tara}
+            {/* TARA mengikuti kolom konten (bukan tepi layar) agar seimbang dengan teks di layar lebar. */}
+            <div className="absolute inset-y-0 left-1/2 w-full max-w-[1312px] -translate-x-1/2">{tara}</div>
         </div>
     );
 }
