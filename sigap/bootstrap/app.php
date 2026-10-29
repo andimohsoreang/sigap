@@ -30,8 +30,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('sigap:ews-check')->dailyAt('07:00')->withoutOverlapping();
         $schedule->command('sigap:pantau-rujukan')->weekdays()->hourly()->between('8:00', '17:00')->withoutOverlapping();
         $schedule->command('sigap:cek-portal')->hourly()->withoutOverlapping();
-        // Jawaban TARA macet di antrean `ai` → serah ke petugas (PRD-AI §13).
-        $schedule->command('sigap:ai-macet')->everyMinute()->withoutOverlapping();
+        // Jawaban TARA macet di antrean `ai` → serah ke petugas (PRD-AI §13). Tiap 15 dtk
+        // (schedule:work) agar warga diserahkan 90–105 dtk setelah pesan, bukan hingga 150 dtk.
+        $schedule->command('sigap:ai-macet')->everyFifteenSeconds()->withoutOverlapping();
         // Kutipan Sumber Resmi mengikuti isi terbaru situs Kementerian.
         $schedule->command('sigap:sinkron-sumber')->weeklyOn(1, '02:00')->withoutOverlapping();
 

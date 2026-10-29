@@ -42,7 +42,7 @@ Browser ──HTTPS/WSS──▶ Cloudflare ──Tunnel (koneksi keluar dari se
 | `web` | `sigap-web` (nginx + `public/`) | satu-satunya port yang dipublikasikan: `127.0.0.1:${WEB_PORT}` |
 | `app` | `sigap-app` | PHP-FPM; saat start menjalankan `php artisan optimize` |
 | `queue` | `sigap-app` | `queue:work` — surel notifikasi & broadcast **wajib** jalan |
-| `queue-ai` | `sigap-app` | `queue:work --queue=ai` — jawaban TARA (bila `AI_ASYNC=true`, bawaan) **wajib** jalan; job > 60 dtk gagal → langsung diserahkan ke petugas; penanda menunggu > 90 dtk (worker mati) → diserahkan oleh scheduler. Rollback cepat: `AI_ASYNC=false` |
+| `queue-ai` | `sigap-app` | `queue:work --queue=ai` — jawaban TARA (bila `AI_ASYNC=true`, bawaan) **wajib** jalan; job > 60 dtk gagal → langsung diserahkan ke petugas; penanda menunggu > 90 dtk (worker mati) → diserahkan oleh scheduler (`sigap:ai-macet` tiap 15 dtk, butuh `schedule:work`). Rollback cepat: `AI_ASYNC=false` |
 | `scheduler` | `sigap-app` | `schedule:work` (sync kanal 06:00, EWS 07:00, pembersihan retensi) |
 | `reverb` | `sigap-app` | WebSocket chat & notifikasi realtime |
 | `db` | `postgres:16-alpine` | tidak dipublikasikan ke host |

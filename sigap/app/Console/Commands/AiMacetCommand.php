@@ -9,7 +9,8 @@ use Illuminate\Console\Command;
 /**
  * Penanda "TARA menyiapkan jawaban" yang terlalu lama (worker `queue-ai`
  * mati/macet) → percakapan diserahkan ke petugas dengan pesan `ai_gagal`
- * (PRD-AI §13). Dijadwalkan tiap menit.
+ * (PRD-AI §13). Dijadwalkan tiap 15 detik; ambang `AI_PENDING_TIMEOUT` (90 dtk)
+ * dihitung sejak pesan diterima sehingga sudah mencakup waktu antre.
  */
 class AiMacetCommand extends Command
 {

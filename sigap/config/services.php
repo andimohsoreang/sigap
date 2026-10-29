@@ -73,6 +73,7 @@ return [
         'queue' => env('AI_QUEUE', 'ai'),
         // Penanda "menyiapkan jawaban" lebih lama dari ini dianggap macet → serah ke petugas.
         // Di atas timeout job (60 dtk): biasanya failed() sudah menyerahkan lebih dulu.
+        // Mencakup waktu antre; jangan diturunkan hanya agar serah lebih cepat (antrean ramai).
         'pending_timeout' => (int) env('AI_PENDING_TIMEOUT', 90),
         // Model khusus per tugas (kosong = AI_MODEL) — PRD-AI FR-AI-09.
         'models' => [

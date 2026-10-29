@@ -16,6 +16,7 @@ use App\Services\Ai\LlmClient;
 use App\Services\ChatService;
 use Database\Seeders\MasterSeeder;
 use Database\Seeders\PortalSeeder;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
@@ -271,6 +272,15 @@ class AsyncReplyTest extends TestCase
         // Bila worker pulih belakangan, job lama tidak menjawab lagi.
         $this->runJob($this->lastCitizenMessage());
         $this->assertSame(0, $this->aiReplies($stuck));
+    }
+
+    public function test_stuck_check_runs_every_15_seconds_with_a_90_second_threshold(): void
+    {
+        $events = collect(app(Schedule::class)->events())->filter(fn ($e) => str_contains((string) $e->command, 'sigap:ai-macet'));
+
+        $this->assertCount(1, $events);
+        $this->assertSame(15, $events->first()->repeatSeconds, 'Dicek tiap 15 dtk agar serah ≤ 105 dtk.');
+        $this->assertSame(90, config('services.ai.pending_timeout'), 'Ambang mencakup waktu antre.');
     }
 
     public function test_recent_pending_reply_is_left_alone(): void
