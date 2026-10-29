@@ -8,6 +8,7 @@ import {
     AlertTriangle,
     BookOpen,
     Bot,
+    ChevronDown,
     ExternalLink,
     FileText,
     Globe,
@@ -211,6 +212,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
     const [conversationId, setConversationId] = useState<number | null>(null);
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
+    const waitLabel = useWaitLabel(sending);
     const [error, setError] = useState<string | null>(null);
     const [queued, setQueued] = useState<string | null>(null);
 
@@ -568,14 +570,14 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                                             ) : undefined
                                         }
                                     >
-                                        {m.body}
+                                        {m.sender_type === 'ai' ? <AnswerBody text={m.body} /> : m.body}
                                     </Bubble>
                                 ),
                             )}
 
                             {sending && withAi && (
                                 <p className="text-xs text-gray-500" role="status">
-                                    Asisten sedang menyiapkan jawaban…
+                                    {waitLabel}
                                 </p>
                             )}
                         </div>
@@ -689,18 +691,108 @@ function Bubble({
  * menampilkan potongan teks aslinya + tanggal diambil, agar warga bisa
  * mencocokkan jawaban dengan sumbernya.
  */
-export function SourceList({ sources }: { sources: Source[] }) {
+/**
+ * Isi jawaban TARA: baris berawalan "• ", "- ", atau "1." ditampilkan sebagai
+ * daftar dengan indentasi gantung agar mudah dipindai di layar ponsel.
+ */
+export function AnswerBody({ text }: { text: string }) {
+    const blocks: ({ type: 'p'; text: string } | { type: 'ul' | 'ol'; items: string[] })[] = [];
+    for (const line of text.split('\n')) {
+        const bullet = line.match(/^\s*[•\-–*]\s+(.*)$/);
+        const numbered = line.match(/^\s*\d{1,2}[.)]\s+(.*)$/);
+        const type = bullet ? 'ul' : numbered ? 'ol' : null;
+        const last = blocks[blocks.length - 1];
+        if (type) {
+            const item = (bullet ?? numbered)![1];
+            if (last && last.type === type) last.items.push(item);
+            else blocks.push({ type, items: [item] });
+        } else if (line.trim() !== '') {
+            if (last && last.type === 'p') last.text += `\n${line}`;
+            else blocks.push({ type: 'p', text: line });
+        } else {
+            blocks.push({ type: 'p', text: '' });
+        }
+    }
+
     return (
-        <div className="mt-2 flex flex-col gap-2 border-t border-dashed border-gray-200 pt-2 whitespace-normal">
-            <span className="text-[10px] font-bold tracking-wide text-gray-500 uppercase">Sumber resmi</span>
-            {sources.map((s, i) => {
+        <span className="flex flex-col gap-2 whitespace-normal">
+            {blocks
+                .filter((b) => b.type !== 'p' || b.text !== '')
+                .map((b, i) =>
+                    b.type === 'p' ? (
+                        <span key={i} className="whitespace-pre-wrap">
+                            {b.text}
+                        </span>
+                    ) : b.type === 'ul' ? (
+                        <ul key={i} className="flex list-disc flex-col gap-1 pl-5 marker:text-current/60">
+                            {b.items.map((it, j) => (
+                                <li key={j}>{it}</li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <ol key={i} className="flex list-decimal flex-col gap-1 pl-5 marker:text-current/60">
+                            {b.items.map((it, j) => (
+                                <li key={j}>{it}</li>
+                            ))}
+                        </ol>
+                    ),
+                )}
+        </span>
+    );
+}
+
+/**
+ * Label tunggu bertahap: jawaban AI butuh beberapa detik, jadi warga diberi
+ * tahu apa yang sedang terjadi alih-alih titik-titik saja.
+ */
+export function useWaitLabel(active: boolean): string {
+    const [stage, setStage] = useState(0);
+
+    useEffect(() => {
+        if (!active) return;
+        const timers = [setTimeout(() => setStage(1), 3000), setTimeout(() => setStage(2), 9000)];
+        return () => {
+            timers.forEach(clearTimeout);
+            setStage(0);
+        };
+    }, [active]);
+
+    return ['TARA sedang mengetik…', 'TARA sedang mencari di sumber resmi…', 'Masih menyusun jawaban, mohon tunggu sebentar…'][stage];
+}
+
+/**
+ * Daftar sumber jawaban. Ringkas secara bawaan (judul saja) agar jawaban
+ * tetap mudah dibaca di layar ponsel; kutipan dibuka bila diminta.
+ */
+export function SourceList({ sources }: { sources: Source[] }) {
+    const [open, setOpen] = useState(false);
+    const sorted = [...sources].sort((a, b) => (a.no ?? 0) - (b.no ?? 0));
+    const hasQuotes = sorted.some((s) => s.jenis === 'kutipan' && (s.kutipan || s.label));
+
+    return (
+        <div className="mt-2 flex flex-col gap-1.5 border-t border-dashed border-gray-200 pt-2 whitespace-normal">
+            <span className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-bold tracking-wide text-gray-500 uppercase">Sumber resmi ({sorted.length})</span>
+                {hasQuotes && (
+                    <button
+                        type="button"
+                        onClick={() => setOpen((v) => !v)}
+                        aria-expanded={open}
+                        className="flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold text-gray-600 hover:bg-gray-50"
+                    >
+                        {open ? 'Sembunyikan kutipan' : 'Lihat kutipan'}
+                        <ChevronDown className={cn('h-3 w-3 transition-transform', open && 'rotate-180')} aria-hidden="true" />
+                    </button>
+                )}
+            </span>
+            {sorted.map((s, i) => {
                 const no = s.no ?? i + 1;
                 const Icon = s.jenis === 'kutipan' ? (s.url?.startsWith('/sumber/') || !s.url ? FileText : Globe) : BookOpen;
                 const title = s.jenis === 'kutipan' ? s.judul : (s.label ?? s.judul);
                 const head = (
                     <>
                         <Icon className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
-                        <span>
+                        <span className={cn(!open && 'line-clamp-2')}>
                             [{no}] {title}
                         </span>
                         {s.url && (
@@ -719,14 +811,17 @@ export function SourceList({ sources }: { sources: Source[] }) {
                                 href={s.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                title={title}
                                 className="text-primary flex items-start gap-1 text-[11px] font-semibold hover:underline"
                             >
                                 {head}
                             </a>
                         ) : (
-                            <span className="text-primary flex items-start gap-1 text-[11px] font-semibold">{head}</span>
+                            <span title={title} className="text-primary flex items-start gap-1 text-[11px] font-semibold">
+                                {head}
+                            </span>
                         )}
-                        {s.jenis === 'kutipan' && (
+                        {open && s.jenis === 'kutipan' && (
                             <>
                                 {s.kutipan && (
                                     <blockquote className="line-clamp-3 border-l-2 border-gray-300 pl-2 text-[11px] leading-snug text-gray-600 italic">

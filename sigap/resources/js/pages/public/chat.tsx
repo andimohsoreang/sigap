@@ -38,6 +38,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type
 import { external, waLink, type KanalPublik } from '@/components/sigap/kanal-resmi';
 import {
     AiExtras,
+    AnswerBody,
     ContactForm,
     SystemNotice,
     csrfToken,
@@ -45,6 +46,7 @@ import {
     jam,
     merge,
     postJson,
+    useWaitLabel,
     type Assistant,
     type ChatAttachment,
     type ChatConfirmation,
@@ -1457,7 +1459,11 @@ function MessageRow({
                     <span className="text-[#8a96a3]">{jam(m.pada)}</span>
                 </p>
                 <div className="rounded-2xl rounded-tl-[4px] border border-[#e6ebf0] bg-white px-3.5 py-2.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap text-[#1f2d3a]">
-                    {m.konfirmasi ? <ConfirmationCard card={m.konfirmasi} onAnswer={onAnswer} /> : !(m.lampiran && m.body.startsWith('📎')) && m.body}
+                    {m.konfirmasi ? (
+                        <ConfirmationCard card={m.konfirmasi} onAnswer={onAnswer} />
+                    ) : (
+                        !(m.lampiran && m.body.startsWith('📎')) && (fromStaff ? m.body : <AnswerBody text={m.body} />)
+                    )}
                     {m.lampiran && (
                         <span className="mt-2 block">
                             <AttachmentView a={m.lampiran} />
@@ -1596,8 +1602,10 @@ function ConfirmationCard({
 }
 
 function Typing() {
+    const label = useWaitLabel(true);
+
     return (
-        <div className="flex items-center gap-2.5" aria-label="TARA sedang mengetik">
+        <div className="flex items-center gap-2.5" role="status" aria-label={label}>
             <span
                 className="h-8 w-8 shrink-0 rounded-full bg-[var(--t-cream)] bg-cover bg-center"
                 style={{ backgroundImage: `url(${AVATAR})` }}
@@ -1608,7 +1616,7 @@ function Typing() {
                 <span className="h-1.5 w-1.5 rounded-full bg-[#8a96a3]" />
                 <span className="h-1.5 w-1.5 rounded-full bg-[#8a96a3]" />
             </span>
-            <span className="text-xs text-[#8a96a3]">TARA sedang mengetik…</span>
+            <span className="text-xs text-[#8a96a3]">{label}</span>
         </div>
     );
 }
