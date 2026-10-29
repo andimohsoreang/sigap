@@ -21,7 +21,7 @@ class AiMacetCommand extends Command
     {
         $stuck = ChatConversation::query()
             ->whereNotNull('ai_pending_at')
-            ->where('ai_pending_at', '<', now()->subSeconds(max(15, (int) config('services.ai.pending_timeout', 60))))
+            ->where('ai_pending_at', '<', now()->subSeconds(max(15, (int) config('services.ai.pending_timeout', 90))))
             ->get();
 
         foreach ($stuck as $conversation) {

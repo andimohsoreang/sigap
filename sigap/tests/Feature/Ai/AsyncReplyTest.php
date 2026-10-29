@@ -5,6 +5,7 @@ namespace Tests\Feature\Ai;
 use App\Enums\UserRole;
 use App\Events\ChatMessageSent;
 use App\Jobs\RespondToMessage;
+use App\Models\AiCall;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\KnowledgeArticle;
@@ -16,10 +17,14 @@ use App\Services\ChatService;
 use Database\Seeders\MasterSeeder;
 use Database\Seeders\PortalSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
+use Illuminate\Queue\TimeoutExceededException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Sleep;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -195,6 +200,59 @@ class AsyncReplyTest extends TestCase
         $this->assertSame('ai_gagal', $conversation->handoff_reason);
         $this->assertNull($conversation->ai_pending_at);
         $this->assertTrue($conversation->messages()->getQuery()->where('body', 'Maaf, asisten sedang tidak dapat menjawab. Pesan Anda kami teruskan ke petugas.')->exists());
+    }
+
+    public function test_provider_time_budget_fits_inside_the_job_timeout(): void
+    {
+        $job = new RespondToMessage(1, 1);
+        $providerTimeout = (int) config('services.ai.timeout');
+        $maxRetryPauseSeconds = 0.8;
+
+        $this->assertSame(25, $providerTimeout, 'AI_TIMEOUT bawaan 25 dtk.');
+        $this->assertTrue($job->failOnTimeout, 'Job yang dihentikan karena timeout harus memanggil failed().');
+        $this->assertLessThan($job->timeout, 2 * $providerTimeout + $maxRetryPauseSeconds, 'Dua percobaan + jeda harus selesai sebelum job dihentikan.');
+        $this->assertGreaterThan($job->timeout, (int) config('services.ai.pending_timeout'), 'ai-macet hanya cadangan setelah failed().');
+    }
+
+    public function test_job_killed_by_timeout_hands_over_immediately_via_failed(): void
+    {
+        Queue::fake();
+        $conversation = $this->startGuest();
+        $this->postJson('/chat/pesan', ['body' => self::QUESTION])->assertJsonPath('asisten.mengetik', true);
+        $message = $this->lastCitizenMessage();
+
+        // Worker menghentikan job yang melewati $timeout; dengan failOnTimeout ia memanggil failed().
+        (new RespondToMessage($conversation->id, $message->id))->failed(new TimeoutExceededException('RespondToMessage has timed out.'));
+
+        $conversation->refresh();
+        $this->assertSame('ai_gagal', $conversation->handoff_reason);
+        $this->assertTrue($conversation->handoff_at->equalTo(now()), 'Diserahkan saat itu juga, bukan menunggu ai-macet.');
+        $this->assertNull($conversation->ai_pending_at);
+        $this->getJson('/chat/pesan')
+            ->assertJsonPath('asisten.mengetik', false)
+            ->assertJsonPath('asisten.mode', 'petugas');
+        $this->assertTrue($conversation->messages()->getQuery()->where('body', 'Maaf, asisten sedang tidak dapat menjawab. Pesan Anda kami teruskan ke petugas.')->exists());
+
+        $this->artisan('sigap:ai-macet')->expectsOutputToContain('0 percakapan macet')->assertSuccessful();
+    }
+
+    public function test_hanging_provider_times_out_twice_then_citizen_gets_ai_gagal(): void
+    {
+        Queue::fake();
+        Sleep::fake();
+        config(['services.ai.driver' => 'openai', 'services.ai.base_url' => 'https://ai.contoh.test/v1']);
+        Http::fake(fn () => throw new ConnectionException('cURL error 28: Operation timed out after 25001 milliseconds'));
+        $conversation = $this->startGuest();
+        $this->postJson('/chat/pesan', ['body' => self::QUESTION]);
+
+        $this->runJob($this->lastCitizenMessage());
+
+        $conversation->refresh();
+        $this->assertSame('ai_gagal', $conversation->handoff_reason);
+        $this->assertNull($conversation->ai_pending_at);
+        // Dua percobaan (coba ulang sekali), keduanya habis waktu.
+        $this->assertSame(['timeout', 'timeout'], AiCall::query()->orderBy('id')->pluck('status')->all());
+        Sleep::assertSleptTimes(1);
     }
 
     public function test_stuck_pending_reply_is_handed_to_staff_by_the_scheduler(): void

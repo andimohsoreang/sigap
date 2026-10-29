@@ -44,8 +44,48 @@ import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useStat
 const XSRF_COOKIE = 'XSRF-TOKEN';
 const POLL_OPEN_MS = 8000;
 const POLL_CLOSED_MS = 30000;
-/** Selama TARA menyiapkan jawaban: polling rapat sebagai cadangan Reverb (tamu tidak ikut kanal privat). */
-export const POLL_TYPING_MS = 1500;
+/**
+ * Selama TARA menyiapkan jawaban, polling dirapatkan sebagai cadangan Reverb
+ * (tamu tidak ikut kanal privat): 1,5 dtk selama 15 dtk pertama, lalu 4 dtk —
+ * tetap di bawah batas `chat-baca` 30 permintaan/menit per sesi.
+ */
+export const POLL_TYPING_FAST_MS = 1500;
+export const POLL_TYPING_SLOW_MS = 4000;
+export const POLL_TYPING_FAST_FOR_MS = 15000;
+
+/** Jeda polling berikutnya setelah `elapsedMs` sejak TARA mulai menyiapkan jawaban. */
+export function typingPollInterval(elapsedMs: number): number {
+    return elapsedMs < POLL_TYPING_FAST_FOR_MS ? POLL_TYPING_FAST_MS : POLL_TYPING_SLOW_MS;
+}
+
+/**
+ * Polling percakapan: jeda `idleMs`, atau jeda bertahap {@see typingPollInterval}
+ * selama `typing`. Dijeda saat tab tersembunyi. Hitungan 15 dtk mulai ulang
+ * setiap kali TARA mulai menyiapkan jawaban.
+ */
+export function useChatPolling(enabled: boolean, typing: boolean, idleMs: number, tick: () => void): void {
+    const tickRef = useRef(tick);
+    useEffect(() => {
+        tickRef.current = tick;
+    }, [tick]);
+
+    useEffect(() => {
+        if (!enabled) return;
+        const since = Date.now();
+        let timer: number | undefined;
+        const schedule = () => {
+            timer = window.setTimeout(
+                () => {
+                    if (document.visibilityState === 'visible') tickRef.current();
+                    schedule();
+                },
+                typing ? typingPollInterval(Date.now() - since) : idleMs,
+            );
+        };
+        schedule();
+        return () => window.clearTimeout(timer);
+    }, [enabled, typing, idleMs]);
+}
 export const ASK_EVENT = 'sigap:tanya';
 
 /** Buka widget chat dan kirim pertanyaan (dipakai kotak tanya beranda). */
@@ -267,16 +307,8 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
 
     // Polling: tamu selalu (kanal privat tidak bisa diikuti tanpa akun);
     // pengguna login sebagai cadangan bila WebSocket putus. Jeda saat tab tersembunyi.
-    useEffect(() => {
-        if (!conversationId) return;
-        const timer = window.setInterval(
-            () => {
-                if (document.visibilityState === 'visible') void load(openRef.current);
-            },
-            open ? (assistant?.mengetik ? POLL_TYPING_MS : POLL_OPEN_MS) : POLL_CLOSED_MS,
-        );
-        return () => window.clearInterval(timer);
-    }, [conversationId, open, load, assistant?.mengetik]);
+    const pollTick = useCallback(() => void load(openRef.current), [load]);
+    useChatPolling(conversationId !== null, open && Boolean(assistant?.mengetik), open ? POLL_OPEN_MS : POLL_CLOSED_MS, pollTick);
 
     // Reverb: pesan baru realtime untuk pengguna login.
     useEffect(() => {

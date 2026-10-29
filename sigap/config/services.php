@@ -54,7 +54,9 @@ return [
         'base_url' => rtrim((string) env('AI_BASE_URL', 'https://opencode.ai/inference/openai/v1'), '/'),
         'api_key' => env('AI_API_KEY'),
         'model' => env('AI_MODEL', 'deepseek-v4.1-flash'),
-        'timeout' => (int) env('AI_TIMEOUT', 45),
+        // Batas waktu per panggilan penyedia. 2 percobaan × 25 dtk + jeda < timeout
+        // job RespondToMessage (60 dtk), agar galat sampai ke failed() — PRD-AI FR-AI-04.
+        'timeout' => (int) env('AI_TIMEOUT', 25),
         'max_tokens' => (int) env('AI_MAX_TOKENS', 900),
         // Model penalaran: "none" mematikan proses berpikir (jauh lebih cepat).
         // Kosongkan untuk model biasa yang tidak mengenal parameter ini.
@@ -70,7 +72,8 @@ return [
         'async' => (bool) env('AI_ASYNC', true),
         'queue' => env('AI_QUEUE', 'ai'),
         // Penanda "menyiapkan jawaban" lebih lama dari ini dianggap macet → serah ke petugas.
-        'pending_timeout' => (int) env('AI_PENDING_TIMEOUT', 60),
+        // Di atas timeout job (60 dtk): biasanya failed() sudah menyerahkan lebih dulu.
+        'pending_timeout' => (int) env('AI_PENDING_TIMEOUT', 90),
         // Model khusus per tugas (kosong = AI_MODEL) — PRD-AI FR-AI-09.
         'models' => [
             'saran_tiket' => env('AI_MODEL_SARAN_TIKET'),

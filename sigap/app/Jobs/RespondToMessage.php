@@ -35,7 +35,14 @@ final class RespondToMessage implements ShouldBeUnique, ShouldQueue
 
     public int $maxExceptions = 1;
 
+    /**
+     * Penyedia menggantung → worker menghentikan job pada batas ini dan, karena
+     * failOnTimeout, memanggil failed() sehingga warga langsung diserahkan ke
+     * petugas (tidak menunggu sigap:ai-macet). AI_TIMEOUT × 2 + jeda < nilai ini.
+     */
     public int $timeout = 60;
+
+    public bool $failOnTimeout = true;
 
     public int $uniqueFor = 600;
 

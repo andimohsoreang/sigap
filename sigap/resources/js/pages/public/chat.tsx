@@ -44,10 +44,10 @@ import {
     isMine,
     jam,
     merge,
-    POLL_TYPING_MS,
     postJson,
     staffActive,
     SystemNotice,
+    useChatPolling,
     useWaitLabel,
     type Assistant,
     type ChatAttachment,
@@ -209,16 +209,8 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
     }, [load]);
 
     // Polling saat tab terlihat (tamu tidak bisa ikut kanal privat; pengguna login sebagai cadangan).
-    useEffect(() => {
-        if (!conversationId) return;
-        const timer = window.setInterval(
-            () => {
-                if (document.visibilityState === 'visible') void load();
-            },
-            assistant?.mengetik ? POLL_TYPING_MS : POLL_MS,
-        );
-        return () => window.clearInterval(timer);
-    }, [conversationId, load, assistant?.mengetik]);
+    const pollTick = useCallback(() => void load(), [load]);
+    useChatPolling(conversationId !== null, Boolean(assistant?.mengetik), POLL_MS, pollTick);
 
     // Realtime (Reverb) untuk pengguna login.
     useEffect(() => {

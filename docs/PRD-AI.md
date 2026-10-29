@@ -360,7 +360,7 @@ refaktor selesai, karena T1 paling berdampak ke warga.
 | Risiko | Mitigasi |
 |---|---|
 | Refaktor mengubah perilaku TARA tanpa sengaja | Tahap 0 dulu (pengaman), tes lama sebagai jaring; perubahan teks dilarang di tahap refaktor |
-| Worker `queue-ai` mati → jawaban tidak terkirim | Health check Compose; `ai_pending_at` > 60 dtk dianggap macet → pesan serah ke petugas oleh scheduler; `AI_ASYNC=false` sebagai jalan pintas |
+| Worker `queue-ai` mati → jawaban tidak terkirim | Health check Compose; `ai_pending_at` > 90 dtk dianggap macet (job yang melewati timeout 60 dtk gagal lebih dulu lewat `failOnTimeout`) → pesan serah ke petugas oleh scheduler; `AI_ASYNC=false` sebagai jalan pintas |
 | Urutan jawaban kacau saat warga mengirim beruntun | Kunci per percakapan + jawab pesan terbaru dengan riwayat lengkap |
 | Biaya melonjak (spam, model mahal) | Anggaran harian, batas per percakapan, model per tugas |
 | Kebijakan data penyedia luar | Penyamaran wajib + keputusan penyedia oleh pemilik/Pusdatin (§14) |
