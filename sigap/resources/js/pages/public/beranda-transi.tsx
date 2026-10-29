@@ -342,16 +342,18 @@ function HeroMakarti({ mobile = false }: { mobile?: boolean }) {
     );
     const tara = (
         <img
-            src={`${IMG}/menyambut.webp`}
+            src={`${IMG}/menyambut-hd.webp`}
+            srcSet={`${IMG}/menyambut-md.webp 792w, ${IMG}/menyambut-hd.webp 1584w`}
+            sizes={mobile ? '260px' : '646px'}
             alt=""
             aria-hidden="true"
-            width={396}
-            height={900}
+            width={1584}
+            height={3600}
             className={cn(
                 'absolute max-w-none drop-shadow-[0_18px_30px_rgba(0,10,25,0.35)]',
-                // Sumber hanya 396x900 px: desktop 1200 px tinggi (1,33x) agar tidak pecah;
-                // desain Wonder memakai 1468 px. Terlihat sampai pinggul.
-                mobile ? 'top-[6%] right-[-6%] h-[180%] w-auto' : 'top-20 right-[-120px] h-[1200px] w-auto',
+                // Versi HD hasil upscale 4x (1584x3600) sehingga ukuran desain Wonder
+                // (1468 px, terlihat sampai pinggang) tetap tajam di layar retina.
+                mobile ? 'top-[6%] right-[-6%] h-[180%] w-auto' : 'top-16 right-[-141px] h-[1468px] w-auto',
             )}
         />
     );
