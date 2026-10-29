@@ -2,15 +2,19 @@
 
 namespace App\Console\Commands;
 
+use App\Models\KnowledgeArticle;
+use App\Models\KnowledgePassage;
 use App\Services\Ai\AiException;
 use App\Services\Ai\AssistantService;
 use App\Services\Knowledge\KnowledgeRetriever;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
  * Uji kualitas Asisten SIGAP terhadap paket uji database/data/uji-asisten.php
- * memakai Basis Pengetahuan TERBIT dan model yang sedang dikonfigurasi
+ * memakai sumber yang SAMA dengan TARA — artikel terbit + kutipan Sumber Resmi
+ * (KnowledgeRetriever::sources) — dan model yang sedang dikonfigurasi
  * (AI_DRIVER / AI_MODEL). Tidak menyimpan percakapan apa pun.
  *
  * Yang dinilai per pertanyaan:
@@ -49,20 +53,23 @@ class UjiAsistenCommand extends Command
         }
 
         $rows = [];
-        $score = ['cari' => [0, 0], 'jenis' => [0, 0], 'tebak' => 0, 'gagal' => 0];
+        $score = ['cari' => [0, 0], 'artikel' => [0, 0], 'jenis' => [0, 0], 'tebak' => 0, 'gagal' => 0];
         $durations = [];
 
         foreach ($cases as $i => $case) {
-            $articles = $retriever->search($case['tanya']);
-            $titles = $articles->pluck('title')->all();
+            // Sama seperti TARA: artikel terbit + kutipan Sumber Resmi (AssistantService::respond).
+            $sources = $retriever->sources($case['tanya']);
+            $articles = $sources->filter(fn ($s) => $s instanceof KnowledgeArticle)->values();
+            $titles = $sources->map(fn ($s) => $s instanceof KnowledgePassage ? $s->displayTitle() : $s->title)->all();
 
             $found = null;
             if ($case['artikel'] !== false) {
-                $found = $case['artikel'] === null
-                    ? $titles === []
-                    : collect($titles)->contains(fn (string $t) => str_contains(mb_strtolower($t), mb_strtolower($case['artikel'])));
+                $found = $this->matches($case['artikel'], $sources);
                 $score['cari'][0] += (int) $found;
                 $score['cari'][1]++;
+                // Informasi: pencarian artikel terbit saja (cara lama, tanpa Sumber Resmi).
+                $score['artikel'][0] += (int) $this->matches($case['artikel'], $articles);
+                $score['artikel'][1]++;
             }
 
             $type = '';
@@ -71,14 +78,14 @@ class UjiAsistenCommand extends Command
             if ($withModel) {
                 $started = microtime(true);
                 try {
-                    $result = $assistant->consult($case['tanya'], [], $articles);
+                    $result = $assistant->consult($case['tanya'], [], $sources);
                     $durations[] = microtime(true) - $started;
                     $type = $result['jenis'].($result['perlu_petugas'] ? '+petugas' : '').($result['kompleks'] ? '+kompleks' : '');
                     $typeOk = $result['jenis'] === $case['jenis'];
                     $score['jenis'][0] += (int) $typeOk;
                     $score['jenis'][1]++;
 
-                    $validSources = array_filter($result['sumber'], fn (int $no) => $no >= 1 && $no <= $articles->count());
+                    $validSources = array_filter($result['sumber'], fn (int $no) => $no >= 1 && $no <= $sources->count());
                     if ($result['jenis'] === 'informasi' && $result['jawaban'] !== '' && $validSources === []) {
                         $score['tebak']++;
                         $type .= ' ⚠ tanpa sumber';
@@ -111,7 +118,8 @@ class UjiAsistenCommand extends Command
 
         $pct = fn (array $pair) => $pair[1] === 0 ? '—' : round($pair[0] / $pair[1] * 100).'% ('.$pair[0].'/'.$pair[1].')';
         $this->newLine();
-        $this->line('Pencarian tepat     : '.$pct($score['cari']));
+        $this->line('Pencarian tepat     : '.$pct($score['cari']).'  (sumber TARA: artikel + Sumber Resmi)');
+        $this->line('  artikel saja      : '.$pct($score['artikel']).'  (informasi; artikel terbit tanpa Sumber Resmi)');
         if ($withModel) {
             $this->line('Klasifikasi tepat   : '.$pct($score['jenis']));
             $this->line('Jawaban tanpa sumber: '.$score['tebak'].' (ditolak sistem, warga melihat "belum menemukan informasi resmi")');
@@ -187,6 +195,26 @@ class UjiAsistenCommand extends Command
         $this->info('Gerbang kualitas LULUS.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Apakah sumber memuat jawaban yang diharapkan paket uji? `null` = pertanyaan
+     * di luar layanan (tidak boleh ada sumber). Teks harapan dicari di judul
+     * artikel, atau judul & isi kutipan Sumber Resmi.
+     *
+     * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $sources
+     */
+    private function matches(?string $expected, Collection $sources): bool
+    {
+        if ($expected === null) {
+            return $sources->isEmpty();
+        }
+
+        $needle = mb_strtolower($expected);
+
+        return $sources->contains(fn ($s) => $s instanceof KnowledgePassage
+            ? str_contains(mb_strtolower($s->displayTitle().' '.$s->body), $needle)
+            : str_contains(mb_strtolower($s->title), $needle));
     }
 
     private function threshold(string $option): ?float
