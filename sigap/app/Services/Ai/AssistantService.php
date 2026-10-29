@@ -9,6 +9,10 @@ use App\Models\KnowledgePassage;
 use App\Models\KnowledgeSource;
 use App\Models\Portal;
 use App\Models\User;
+use App\Modules\Ai\AiContext;
+use App\Modules\Ai\AiGateway;
+use App\Modules\Ai\AiResult;
+use App\Modules\Ai\AiTask;
 use App\Services\ChatService;
 use App\Services\Knowledge\KnowledgeRetriever;
 use App\Services\PortalDirectory;
@@ -50,7 +54,7 @@ class AssistantService
     private const POLICY_NO_SOURCE = 'Pertanyaan ini menyangkut kebijakan Kementerian Transmigrasi. Saya belum menemukan sumber resmi yang membahasnya, jadi saya tidak akan berspekulasi. Untuk pernyataan resmi atau data kinerja program, Bapak/Ibu dapat mengajukan permohonan informasi publik ke PPID Kementerian Transmigrasi atau menghubungi Humas Kementerian.';
 
     public function __construct(
-        private readonly LlmClient $llm,
+        private readonly AiGateway $gateway,
         private readonly KnowledgeRetriever $retriever,
         private readonly PiiMasker $masker,
         private readonly ChatService $chat,
@@ -58,7 +62,6 @@ class AssistantService
         private readonly ServiceHours $hours,
         private readonly PortalDirectory $portals,
         private readonly ReferralService $referrals,
-        private readonly AiCallContext $callContext,
     ) {}
 
     public static function enabled(): bool
@@ -419,12 +422,12 @@ class AssistantService
                     'admin' => 'petugas',
                     default => 'asisten',
                 },
-                'isi' => $this->masker->mask(Str::limit($m->body, 400)),
+                'isi' => Str::limit($m->body, 400),
             ])
             ->values()
             ->all();
 
-        return $this->callContext->forConversation($conversation->id, fn () => $this->consult($question, $history, $articles));
+        return $this->consult($question, $history, $articles, $conversation->id);
     }
 
     /**
@@ -437,10 +440,11 @@ class AssistantService
      *
      * @throws AiException
      */
-    public function consult(string $question, array $history, Collection $articles): array
+    public function consult(string $question, array $history, Collection $articles, ?int $conversationId = null): array
     {
+        // Penyamaran teks warga dilakukan AiGateway (PRD-AI FR-AI-10).
         $input = [
-            'pertanyaan' => $this->masker->mask($question),
+            'pertanyaan' => $question,
             'riwayat' => $history,
             'portal' => $this->portals->forAssistant($question),
             'sumber' => $articles->values()->map(fn (KnowledgeArticle|KnowledgePassage $s, int $i) => $s instanceof KnowledgePassage
@@ -460,12 +464,12 @@ class AssistantService
                 ])->all(),
         ];
 
-        $content = $this->llm->complete([
-            ['role' => 'system', 'content' => Prompts::answer()],
-            ['role' => 'user', 'content' => json_encode($input, JSON_UNESCAPED_UNICODE)],
-        ], json: true);
-
-        $data = Prompts::decodeJson($content) ?? throw new AiException('Balasan AI bukan JSON.');
+        $result = $this->gateway->run(AiTask::Jawab, $input, AiContext::conversation($conversationId));
+        if (! $result->isOk()) {
+            // Jalur cadangan tetap sama: pemanggil menyerahkan ke petugas (ai_gagal).
+            throw new AiException($result->status === AiResult::FALLBACK ? 'Balasan AI bukan JSON.' : 'Model AI tidak dapat dipakai.', $result->reason);
+        }
+        $data = $result->data;
 
         $type = in_array($data['jenis'] ?? null, self::TYPES, true) ? $data['jenis'] : 'informasi';
         // Pertanyaan kebijakan dijawab sebagai informasi: "hak warga" di

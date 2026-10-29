@@ -6,9 +6,10 @@ use App\Models\KnowledgeArticle;
 use App\Models\KnowledgeDocument;
 use App\Models\KnowledgeSource;
 use App\Models\User;
+use App\Modules\Ai\AiGateway;
+use App\Modules\Ai\AiResult;
+use App\Modules\Ai\AiTask;
 use App\Services\Ai\AiException;
-use App\Services\Ai\LlmClient;
-use App\Services\Ai\Prompts;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -31,7 +32,7 @@ class KnowledgeDocumentService
     public function __construct(
         private readonly PdfTextExtractor $extractor,
         private readonly DocxTextExtractor $docx,
-        private readonly LlmClient $llm,
+        private readonly AiGateway $gateway,
         private readonly KnowledgeRetriever $retriever,
         private readonly SourceIngestor $ingestor,
     ) {}
@@ -188,12 +189,11 @@ class KnowledgeDocumentService
      */
     private function propose(array $chunk): array
     {
-        $content = $this->llm->complete([
-            ['role' => 'system', 'content' => Prompts::propose()],
-            ['role' => 'user', 'content' => json_encode(['halaman' => $chunk], JSON_UNESCAPED_UNICODE)],
-        ], json: true);
-
-        $data = Prompts::decodeJson($content) ?? throw new AiException('Usulan AI bukan JSON.');
+        $result = $this->gateway->run(AiTask::UsulArtikel, ['halaman' => $chunk]);
+        if (! $result->isOk()) {
+            throw new AiException($result->status === AiResult::FALLBACK ? 'Usulan AI bukan JSON.' : 'Model AI tidak dapat dipakai.', $result->reason);
+        }
+        $data = $result->data;
         $validPages = array_column($chunk, 'no');
 
         return collect($data['usulan'] ?? [])

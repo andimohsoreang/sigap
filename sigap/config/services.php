@@ -61,6 +61,16 @@ return [
         'reasoning_effort' => env('AI_REASONING_EFFORT'),
         // Retensi catatan panggilan AI (`ai_calls`, tanpa teks) — PRD-AI FR-AI-02.
         'log_retention_days' => (int) env('AI_LOG_RETENTION_DAYS', 90),
+        // Ketahanan & kendali biaya (PRD-AI FR-AI-03).
+        'daily_token_budget' => (int) env('AI_DAILY_TOKEN_BUDGET', 0),
+        'breaker_threshold' => (int) env('AI_BREAKER_THRESHOLD', 5),
+        'breaker_cooldown' => (int) env('AI_BREAKER_COOLDOWN', 300),
+        'max_calls_per_conversation_hour' => (int) env('AI_MAX_CALLS_PER_CONVERSATION_HOUR', 20),
+        // Model khusus per tugas (kosong = AI_MODEL) — PRD-AI FR-AI-09.
+        'models' => [
+            'saran_tiket' => env('AI_MODEL_SARAN_TIKET'),
+            'usul_artikel' => env('AI_MODEL_USUL_ARTIKEL'),
+        ],
         // Jam layanan petugas (WIB). Di luar jam ini, percakapan yang
         // diteruskan diberi nomor referensi dan warga diminta kontak.
         'service_hours' => [

@@ -6,6 +6,9 @@ use App\Enums\TicketImpact;
 use App\Models\Category;
 use App\Models\ChatConversation;
 use App\Models\Region;
+use App\Modules\Ai\AiContext;
+use App\Modules\Ai\AiGateway;
+use App\Modules\Ai\AiTask;
 use App\Services\Knowledge\IndonesianText;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -36,9 +39,8 @@ class TicketSuggester
     ];
 
     public function __construct(
-        private readonly LlmClient $llm,
+        private readonly AiGateway $gateway,
         private readonly PiiMasker $masker,
-        private readonly AiCallContext $callContext,
     ) {}
 
     /**
@@ -62,9 +64,7 @@ class TicketSuggester
             'uraian' => trim(($summary !== '' ? "Ringkasan asisten: {$summary}\n\n" : '')."Pesan warga di live chat:\n- ".$messages->implode("\n- ")),
         ];
 
-        $ai = AssistantService::enabled()
-            ? $this->callContext->forConversation($conversation->id, fn () => $this->fromModel($text, $regions, $categories))
-            : null;
+        $ai = AssistantService::enabled() ? $this->fromModel($text, $regions, $categories, $conversation->id) : null;
         $heuristic = $this->fromKeywords($text, $regions, $categories);
 
         $regionId = $fixedRegionId ?? $ai['region_id'] ?? $heuristic['region_id'];
@@ -85,25 +85,18 @@ class TicketSuggester
      * @param  Collection<int, Category>  $categories
      * @return array{judul: string, region_id: int|null, category_id: int|null, impact: string, alasan: string|null}|null
      */
-    private function fromModel(string $text, Collection $regions, Collection $categories): ?array
+    private function fromModel(string $text, Collection $regions, Collection $categories, int $conversationId): ?array
     {
-        try {
-            $content = $this->llm->complete([
-                ['role' => 'system', 'content' => Prompts::ticket()],
-                ['role' => 'user', 'content' => json_encode([
-                    'aduan' => $this->masker->mask(Str::limit($text, 3000)),
-                    'kawasan' => $regions->map(fn (Region $r) => ['id' => $r->id, 'nama' => $r->name])->values(),
-                    'kategori' => $categories->map(fn (Category $c) => ['id' => $c->id, 'nama' => $c->name])->values(),
-                ], JSON_UNESCAPED_UNICODE)],
-            ], json: true);
-        } catch (AiException) {
+        // Penyamaran 'aduan' dilakukan AiGateway; nama kawasan/kategori adalah data master.
+        $result = $this->gateway->run(AiTask::SaranTiket, [
+            'aduan' => Str::limit($text, 3000),
+            'kawasan' => $regions->map(fn (Region $r) => ['id' => $r->id, 'nama' => $r->name])->values()->all(),
+            'kategori' => $categories->map(fn (Category $c) => ['id' => $c->id, 'nama' => $c->name])->values()->all(),
+        ], AiContext::conversation($conversationId));
+        if (! $result->isOk()) {
             return null;
         }
-
-        $data = Prompts::decodeJson($content);
-        if ($data === null) {
-            return null;
-        }
+        $data = $result->data;
 
         $impact = TicketImpact::tryFrom((string) ($data['dampak'] ?? ''));
         $regionId = (int) ($data['kawasan_id'] ?? 0);

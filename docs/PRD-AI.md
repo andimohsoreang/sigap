@@ -5,7 +5,7 @@
 > **batas modul**, **urutan tahap**, dan **kriteria selesai**. Rincian deploy tetap di
 > [`DEPLOY.md`](DEPLOY.md) §13; PRD produk utama di [`PRD.md`](PRD.md).
 >
-> Versi 1.0 · 30 Oktober 2026 · Pemilik: Andi · Basis kode: branch `feat/contact-center-ai` (`b7f9525`)
+> Versi 1.1 · 30 Oktober 2026 (1.1: FR-AI-10 — Sumber Resmi tidak disamarkan) · Pemilik: Andi · Basis kode: branch `feat/contact-center-ai` (`b7f9525`)
 >
 > **Keputusan: SIGAP tetap satu aplikasi Laravel (monolith modular).** Yang dipisah hanya **mesin model
 > AI** (penyedia API atau server GPU) di balik satu pintu, yaitu API kompatibel OpenAI. Tidak ada
@@ -142,7 +142,7 @@ lang/id/asisten.php   ← semua teks balasan TARA
 - `AiTask` (enum) untuk tugas yang ada: `Jawab`, `UsulArtikel`, `SaranTiket`. Setiap tugas menetapkan:
   prompt + **versi**, model (bawaan `AI_MODEL`, boleh ditimpa per tugas), `max_tokens`, batas waktu,
   validator keluaran (skema JSON), dan **cadangan** bila gagal.
-- Urutan kerja: periksa pemutus sirkuit & anggaran → **samarkan** seluruh teks masukan → susun prompt →
+- Urutan kerja: periksa pemutus sirkuit & anggaran → **samarkan** teks masukan (kecuali konten resmi, FR-AI-10) → susun prompt →
   panggil penyedia → urai & validasi JSON → catat (`ai_calls`) → kembalikan `AiResult`
   (`ok|fallback|skipped|error`, data tervalidasi, alasan).
 - Coba ulang **1 kali** untuk galat jaringan/5xx/batas waktu (jeda acak 300–800 ms). Galat 4xx tidak
@@ -236,7 +236,16 @@ lang/id/asisten.php   ← semua teks balasan TARA
 
 - Penyamaran dipindahkan ke Gateway, sehingga semua tugas terlindungi tanpa bergantung pada pemanggil.
   Pola saat ini (NIK, nomor HP, surel, deret angka panjang) dipertahankan.
-- Tes wajib: untuk setiap `AiTask`, masukan berisi NIK/HP/surel tidak pernah sampai ke driver.
+- **Yang disamarkan: teks dari warga dan teks dokumen** — pertanyaan & riwayat percakapan (`Jawab`),
+  isi aduan (`SaranTiket`), dan teks halaman dokumen yang diunggah (`UsulArtikel`).
+- **Yang tidak disamarkan: konten resmi/terkurasi** — kutipan **Sumber Resmi** dan artikel terbit
+  (`sumber`), daftar portal (`portal`), serta data master kawasan/kategori (`kawasan`, `kategori`).
+  Alasannya: kutipan resmi memuat nomor hotline/kontak resmi yang harus tetap utuh di jawaban TARA.
+  Daftar kunci yang dikecualikan ditetapkan per tugas di `AiTask::trustedInput()`.
+- Akibat pada `UsulArtikel`: nomor kontak di dokumen ikut tersamar (mis. `[NOMOR HP]`) pada usulan
+  artikel; petugas melengkapinya saat meninjau sebelum terbit.
+- Tes wajib: untuk setiap `AiTask`, teks warga/dokumen berisi NIK/HP/surel tidak pernah sampai ke driver;
+  kutipan Sumber Resmi pada `Jawab` sampai ke driver tanpa diubah.
 - `ai_calls` tidak menyimpan teks; log aplikasi tidak mencetak isi prompt/jawaban.
 
 ## 6. Non-Functional Requirements

@@ -26,21 +26,19 @@ final class ModuleBoundariesTest extends TestCase
         'App\\Services\\Ai\\LlmClient',
         'App\\Services\\Ai\\OpenAiCompatibleClient',
         'App\\Services\\Ai\\FakeLlmClient',
-        'App\\Services\\Ai\\RecordingLlmClient',
-        'App\\Services\\Ai\\AiCallContext',
         'App\\Services\\Ai\\AiException',
         'App\\Services\\Ai\\ReportsUsage',
         'App\\Services\\Ai\\PiiMasker',
         'App\\Services\\Ai\\Prompts',
     ];
 
-    /** Pemakai `LlmClient` di luar modul Ai saat Tahap 0 — dihapus di Tahap 1 (Gateway). */
-    private const LLM_CLIENT_BASELINE = [
-        'App\\Providers\\AppServiceProvider',
-        'App\\Services\\Ai\\AssistantService',
-        'App\\Services\\Ai\\TicketSuggester',
-        'App\\Services\\Knowledge\\KnowledgeDocumentService',
-    ];
+    /**
+     * Pemakai `LlmClient` di luar modul Ai yang masih ditoleransi. Kosong sejak
+     * Tahap 1: semua tugas AI lewat AiGateway.
+     *
+     * @var list<string>
+     */
+    private const LLM_CLIENT_BASELINE = [];
 
     /** §4.2: modul → modul yang DILARANG ia pakai (`*` = semua modul lain). */
     private const FORBIDDEN = [

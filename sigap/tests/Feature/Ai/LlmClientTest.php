@@ -8,7 +8,6 @@ use App\Services\Ai\LlmClient;
 use App\Services\Ai\OpenAiCompatibleClient;
 use App\Services\Ai\PiiMasker;
 use App\Services\Ai\Prompts;
-use App\Services\Ai\RecordingLlmClient;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -66,14 +65,11 @@ class LlmClientTest extends TestCase
 
     public function test_driver_is_chosen_from_config(): void
     {
-        // Driver selalu dibungkus pencatat `ai_calls` (PRD-AI Tahap 0).
         config(['services.ai.driver' => 'fake']);
-        $client = app(LlmClient::class);
-        $this->assertInstanceOf(RecordingLlmClient::class, $client);
-        $this->assertInstanceOf(FakeLlmClient::class, $client->driver());
+        $this->assertInstanceOf(FakeLlmClient::class, app(LlmClient::class));
 
         config(['services.ai.driver' => 'openai']);
-        $this->assertInstanceOf(OpenAiCompatibleClient::class, app(LlmClient::class)->driver());
+        $this->assertInstanceOf(OpenAiCompatibleClient::class, app(LlmClient::class));
     }
 
     public function test_masker_hides_nik_phone_email_and_long_numbers(): void
