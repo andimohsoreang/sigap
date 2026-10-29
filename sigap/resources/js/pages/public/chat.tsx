@@ -2,12 +2,15 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { echo, echoIsConfigured } from '@laravel/echo-react';
 import {
     ArrowLeft,
+    ArrowUpRight,
     BookOpen,
     Bot,
+    Briefcase,
     Camera,
     Check,
     CheckCheck,
     ChevronRight,
+    ClipboardList,
     Clock3,
     Copy,
     Download,
@@ -17,6 +20,8 @@ import {
     Loader2,
     LogIn,
     LogOut,
+    Megaphone,
+    MessageCircle,
     MoreVertical,
     Paperclip,
     Search,
@@ -30,6 +35,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 
+import { external, waLink, type KanalPublik } from '@/components/sigap/kanal-resmi';
 import {
     AiExtras,
     ContactForm,
@@ -57,8 +63,8 @@ import { type SharedData } from '@/types';
  * Chat TARA layar penuh (/chat) — desain pen.dev "Publik / Chat TARA".
  *
  * Memakai endpoint yang sama dengan widget (/chat/pesan, /chat/mulai, …),
- * jadi riwayat percakapan satu. Tamu mengisi nama langsung di kolom chat;
- * pertanyaan dari landing ditahan lalu terkirim setelah nama terisi.
+ * jadi riwayat percakapan satu. Tamu mengisi nama lewat kartu "Kenalan dulu"
+ * di utas; pertanyaan dari landing ditahan lalu terkirim setelah nama terisi.
  */
 
 const AVATAR = '/images/tara/avatar.webp';
@@ -110,6 +116,18 @@ const TOPICS: { icon: LucideIcon; label: string; question: string }[] = [
     { icon: UserPlus, label: 'Buatkan akun', question: 'Saya mau dibuatkan akun SIGAP' },
 ];
 
+/** Tombol kanal lain di atas kolom pesan; tautan ikut Admin → Pengaturan (kanal_publik). */
+function channelLinks(kanal: KanalPublik): { key: string; label: string; href: string; icon: LucideIcon }[] {
+    const links: { key: string; label: string; href: string; icon: LucideIcon }[] = [];
+    if (kanal.lapor.aktif && kanal.lapor.url) links.push({ key: 'lapor', label: 'SP4N-LAPOR!', href: kanal.lapor.url, icon: Megaphone });
+    if (kanal.sosmed.whatsapp) links.push({ key: 'wa', label: 'Hotline WA', href: waLink(kanal.sosmed.whatsapp), icon: MessageCircle });
+    if (kanal.internal.aktif && kanal.internal.url) {
+        links.push({ key: 'internal', label: 'Form Pengaduan Internal Pegawai', href: kanal.internal.url, icon: Briefcase });
+    }
+    links.push({ key: 'masyarakat', label: 'Form Pengaduan Masyarakat', href: '/pengaduan/baru', icon: ClipboardList });
+    return links;
+}
+
 function tanggal(value: string | null): string {
     if (!value) return '';
     const d = new Date(value);
@@ -126,7 +144,7 @@ function tanggalPendek(value: string | null): string {
     return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
 }
 
-export default function ChatPage({ layanan }: { layanan: Layanan }) {
+export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: KanalPublik }) {
     const { auth } = usePage<SharedData>().props;
     const loggedIn = Boolean(auth?.user);
     const recaptcha = useRecaptcha('chat');
@@ -158,6 +176,7 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
     const needsIdentity = loaded && !loggedIn && !identity;
     const staff = panel?.petugas ?? null;
     const closed = Boolean(panel?.ditutup);
+    const links = useMemo(() => channelLinks(kanal), [kanal]);
 
     const load = useCallback(async () => {
         try {
@@ -206,6 +225,11 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
         }
         return () => cleanup?.();
     }, [conversationId, loggedIn, load]);
+
+    // Kolom pesan nonaktif selama kartu nama tampil; fokuskan begitu nama tersimpan.
+    useEffect(() => {
+        if (loaded && !needsIdentity) inputRef.current?.focus();
+    }, [loaded, needsIdentity]);
 
     useEffect(() => {
         threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight, behavior: 'smooth' });
@@ -285,7 +309,6 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
                     if (res.ok && data.identitas) {
                         setIdentity(data.identitas);
                         setConversationId(data.conversation_id ?? null);
-                        setInput('');
                         void load();
                     } else if (res.status === 429) {
                         setError('Terlalu banyak percobaan. Tunggu beberapa menit.');
@@ -386,10 +409,7 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        if (needsIdentity) {
-            startWithName(input);
-            return;
-        }
+        if (needsIdentity) return;
         if (file) {
             void upload();
             return;
@@ -404,7 +424,7 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
     const askTopic = (question: string) => {
         if (needsIdentity) {
             setPending(question);
-            inputRef.current?.focus();
+            document.getElementById(NAME_INPUT_ID)?.focus();
             return;
         }
         void send(question);
@@ -521,7 +541,7 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
                     className="hidden lg:block"
                 />
 
-                <div className="grid min-h-0 flex-1 lg:grid-cols-[264px_minmax(0,1fr)_300px] xl:grid-cols-[300px_minmax(0,1fr)_340px]">
+                <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] lg:grid-cols-[264px_minmax(0,1fr)_300px] xl:grid-cols-[300px_minmax(0,1fr)_340px]">
                     <LeftPanel layanan={layanan} onTopic={askTopic} />
 
                     {/* Percakapan */}
@@ -657,8 +677,8 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
                                     {needsIdentity && (
                                         <AiBubble time={null}>
                                             {pending
-                                                ? 'Sebelum saya bantu, boleh tahu nama Anda? Pertanyaan Anda langsung saya proses setelah itu.'
-                                                : 'Supaya petugas tahu siapa yang bertanya, boleh tahu nama Anda dulu?'}
+                                                ? 'Sebelum saya bantu, boleh kenalan dulu? Pertanyaan Anda langsung saya proses setelah itu.'
+                                                : 'Sebelum mulai, boleh kenalan dulu? Supaya petugas tahu siapa yang bertanya.'}
                                             <span className="mt-3 flex flex-wrap gap-2">
                                                 <Link
                                                     href="/masuk"
@@ -676,6 +696,16 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
                                                 </button>
                                             </span>
                                         </AiBubble>
+                                    )}
+
+                                    {needsIdentity && (
+                                        <IdentityCard
+                                            busy={sending || recaptcha.verifying}
+                                            error={error}
+                                            recaptcha={recaptcha}
+                                            onEdit={() => setError(null)}
+                                            onSubmit={startWithName}
+                                        />
                                     )}
 
                                     {resumeOpen && !loggedIn && (
@@ -744,12 +774,41 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
                             </div>
                         )}
 
+                        {/* Kanal pengaduan lain */}
+                        {links.length > 0 && (
+                            <nav
+                                aria-label="Kanal pengaduan lain"
+                                className={cn(
+                                    'transi-chips flex gap-2 overflow-x-auto bg-white px-3.5 pt-2 sm:px-6 lg:px-10',
+                                    quickReplies.length === 0 && 'border-t border-[#eef2f6] pt-2.5',
+                                )}
+                            >
+                                {links.map((l) => (
+                                    <a
+                                        key={l.key}
+                                        href={l.href}
+                                        {...external(l.href)}
+                                        className="flex shrink-0 items-center gap-1.5 rounded-full border border-[#e6d6b4] bg-[#fbf7ee] px-3 py-1.5 text-xs font-semibold text-[var(--t-deep)] transition-colors hover:border-[var(--t-gold)] hover:bg-[#f7efdc]"
+                                    >
+                                        <l.icon className="h-3.5 w-3.5 text-[#9a7330]" aria-hidden="true" />
+                                        {l.label}
+                                        {l.href.startsWith('http') && (
+                                            <>
+                                                <ArrowUpRight className="h-3.5 w-3.5 text-[#9a7330]" aria-hidden="true" />
+                                                <span className="sr-only">(tab baru)</span>
+                                            </>
+                                        )}
+                                    </a>
+                                ))}
+                            </nav>
+                        )}
+
                         {/* Penulis pesan */}
                         <form
                             onSubmit={submit}
                             className="border-t border-transparent bg-white px-3 pt-2.5 pb-[max(env(safe-area-inset-bottom),12px)] sm:px-6 lg:px-10 lg:pb-4"
                         >
-                            {error && (
+                            {error && !needsIdentity && (
                                 <p role="alert" className="mb-2 text-xs font-semibold text-rose-600">
                                     {error}
                                 </p>
@@ -798,9 +857,8 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
                             <div
                                 className={cn(
                                     'flex h-14 items-center gap-1 rounded-full border bg-[#f6f8fa] pr-1.5 pl-2 transition-colors focus-within:bg-white',
-                                    needsIdentity
-                                        ? 'border-[var(--t-gold)] bg-white ring-2 ring-[#c29642]/20'
-                                        : 'border-[#d5dee7] focus-within:border-[var(--t-navy)]',
+                                    'border-[#d5dee7] focus-within:border-[var(--t-navy)]',
+                                    needsIdentity && 'opacity-60',
                                 )}
                             >
                                 {!needsIdentity && (
@@ -828,19 +886,19 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
                                 )}
                                 {needsIdentity && <span className="w-3" aria-hidden="true" />}
                                 <label htmlFor="pesan-chat" className="sr-only">
-                                    {needsIdentity ? 'Nama Anda' : 'Pesan'}
+                                    Pesan
                                 </label>
                                 <input
                                     id="pesan-chat"
                                     ref={inputRef}
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
-                                    autoComplete={needsIdentity ? 'name' : 'off'}
-                                    autoFocus
-                                    maxLength={needsIdentity ? 100 : 2000}
+                                    autoComplete="off"
+                                    disabled={needsIdentity}
+                                    maxLength={2000}
                                     placeholder={
                                         needsIdentity
-                                            ? 'Tulis nama Anda, mis. Siti Aminah'
+                                            ? 'Isi nama di atas untuk mulai chat'
                                             : staff && !closed
                                               ? `Balas ke ${staff.nama.split(' ')[0]} atau tanya TARA…`
                                               : 'Tulis pertanyaan atau keluhan Anda…'
@@ -849,28 +907,21 @@ export default function ChatPage({ layanan }: { layanan: Layanan }) {
                                 />
                                 <button
                                     type="submit"
-                                    disabled={sending || recaptcha.verifying || (input.trim() === '' && !file)}
+                                    disabled={needsIdentity || sending || (input.trim() === '' && !file)}
                                     className="font-heading flex h-11 shrink-0 items-center gap-2 rounded-full bg-[var(--t-gold)] px-4 text-sm font-bold text-[var(--t-deep)] transition-[background-color,opacity] hover:bg-[#d0a552] disabled:opacity-50 sm:px-5"
                                 >
-                                    <span className="hidden sm:inline">{needsIdentity ? 'Simpan nama' : 'Kirim'}</span>
+                                    <span className="hidden sm:inline">Kirim</span>
                                     {sending && file ? (
                                         <Loader2 className="h-[18px] w-[18px] animate-spin" aria-hidden="true" />
                                     ) : (
                                         <SendHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />
                                     )}
-                                    <span className="sr-only sm:hidden">{needsIdentity ? 'Simpan nama' : 'Kirim'}</span>
+                                    <span className="sr-only sm:hidden">Kirim</span>
                                 </button>
                             </div>
-                            {needsIdentity ? (
-                                <div className="mt-2 text-xs text-[#5b6b7a]">
-                                    <RecaptchaNotice enabled={recaptcha.enabled} error={recaptcha.error} />
-                                    <p>Nama dipakai agar petugas tahu siapa yang bertanya. Jangan tulis NIK atau nomor rekening di sini.</p>
-                                </div>
-                            ) : (
-                                <p className="mt-2 hidden text-xs text-[#8a96a3] sm:block">
-                                    TARA bisa keliru. Keputusan resmi selalu disampaikan petugas melalui tiket Anda.
-                                </p>
-                            )}
+                            <p className="mt-2 hidden text-xs text-[#8a96a3] sm:block">
+                                TARA bisa keliru. Keputusan resmi selalu disampaikan petugas melalui tiket Anda.
+                            </p>
                         </form>
                     </section>
 
@@ -1566,6 +1617,111 @@ function ThreadSkeleton() {
                 />
             ))}
         </div>
+    );
+}
+
+/* ------------------------------------------------------------ identity card */
+
+const NAME_INPUT_ID = 'nama-tamu';
+
+/** Sama dengan aturan StartChatRequest agar salah ketik terlihat sebelum dikirim. */
+function nameError(value: string): string | null {
+    const name = value.trim().replace(/\s+/g, ' ');
+    if (name === '') return 'Nama wajib diisi.';
+    if (name.length < 2) return 'Nama minimal 2 huruf.';
+    if (!/^[\p{L}\p{M}][\p{L}\p{M} .,'’-]*$/u.test(name)) {
+        return 'Nama hanya boleh berisi huruf, spasi, titik, koma, apostrof, dan tanda hubung.';
+    }
+    return null;
+}
+
+function IdentityCard({
+    busy,
+    error,
+    recaptcha,
+    onEdit,
+    onSubmit,
+}: {
+    busy: boolean;
+    error: string | null;
+    recaptcha: { enabled: boolean; error: string | null };
+    onEdit: () => void;
+    onSubmit: (nama: string) => void;
+}) {
+    const [nama, setNama] = useState('');
+    const [touched, setTouched] = useState(false);
+    const invalid = nameError(nama);
+    const valid = invalid === null;
+    const message = (touched ? invalid : null) ?? error;
+
+    const submit = (e: FormEvent) => {
+        e.preventDefault();
+        setTouched(true);
+        if (invalid) {
+            document.getElementById(NAME_INPUT_ID)?.focus();
+            return;
+        }
+        onSubmit(nama);
+    };
+
+    return (
+        <form
+            onSubmit={submit}
+            noValidate
+            className="transi-msg-in flex w-full max-w-[460px] flex-col gap-3 self-start rounded-2xl border border-[#e6ebf0] bg-white p-4 shadow-[0_10px_30px_rgba(2,43,74,0.06)] sm:ml-[42px] sm:p-5"
+        >
+            <div className="flex items-baseline justify-between gap-3">
+                <p className="font-heading text-[17px] font-bold text-[var(--t-deep)]">Kenalan dulu, yuk</p>
+                <span className={cn('font-mono text-xs', valid ? 'text-[#0d7a5f]' : 'text-[#8a96a3]')}>{valid ? '1/1' : '0/1'} valid</span>
+            </div>
+            <span className={cn('h-1 rounded-full transition-colors', valid ? 'bg-[#0d7a5f]' : 'bg-[#e1e7ed]')} aria-hidden="true" />
+            <label htmlFor={NAME_INPUT_ID} className="mt-1 text-sm font-semibold text-[#3d4b59]">
+                Nama lengkap <span className="text-[#d92d20]">*</span>
+            </label>
+            <input
+                id={NAME_INPUT_ID}
+                value={nama}
+                onChange={(e) => {
+                    setNama(e.target.value);
+                    if (error) onEdit();
+                }}
+                onBlur={() => nama.trim() !== '' && setTouched(true)}
+                autoFocus
+                autoComplete="name"
+                maxLength={100}
+                required
+                aria-invalid={Boolean(message)}
+                aria-describedby={`${NAME_INPUT_ID}-info`}
+                placeholder="Nama Anda"
+                className={cn(
+                    'h-12 w-full rounded-xl border bg-white px-3.5 text-[15px] text-[#1f2d3a] transition-[border-color,box-shadow] outline-none placeholder:text-[#8a96a3]',
+                    message
+                        ? 'border-[#d92d20] ring-4 ring-[#d92d20]/10'
+                        : valid
+                          ? 'border-[#0d7a5f] focus:ring-4 focus:ring-[#0d7a5f]/10'
+                          : 'border-[#d5dee6] focus:border-[var(--t-navy)] focus:ring-4 focus:ring-[#0b5a8c]/10',
+                )}
+            />
+            <p
+                id={`${NAME_INPUT_ID}-info`}
+                role={message ? 'alert' : undefined}
+                className={cn('text-xs leading-relaxed', message ? 'font-semibold text-[#b42318]' : 'text-[#5b6b7a]')}
+            >
+                {message ?? 'Agar petugas tahu siapa yang bertanya. Jangan tulis NIK atau nomor rekening di sini.'}
+            </p>
+            <button
+                type="submit"
+                disabled={busy}
+                className="font-heading flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--t-gold)] text-sm font-bold text-[var(--t-deep)] transition-[background-color,opacity] hover:bg-[#d0a552] disabled:opacity-50"
+            >
+                {busy ? <Loader2 className="h-[18px] w-[18px] animate-spin" aria-hidden="true" /> : null}
+                Mulai chat
+                {!busy && <SendHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />}
+            </button>
+            <div className="text-xs text-[#5b6b7a]">
+                <RecaptchaNotice enabled={recaptcha.enabled} error={recaptcha.error} />
+            </div>
+        </form>
     );
 }
 

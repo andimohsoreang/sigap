@@ -32,7 +32,10 @@ class ChatPageTest extends TestCase
         $this->get('/chat')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('public/chat')
             ->has('layanan.jam_label')
-            ->has('layanan.petugas_tersedia'));
+            ->has('layanan.petugas_tersedia')
+            ->where('kanal.lapor.url', 'https://sp4n.lapor.go.id/instansi/kementerian-transmigrasi')
+            ->has('kanal.sosmed.whatsapp')
+            ->where('kanal.internal.url', '/pengaduan/internal'));
     }
 
     public function test_guest_cookie_restores_conversation_after_session_expires(): void

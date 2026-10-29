@@ -80,7 +80,7 @@ export const PLATFORMS: Record<SosmedPlatform, { label: string; icon: LucideIcon
 };
 
 /** 0812-9001-9358 → https://wa.me/6281290019358 */
-function waLink(phone: string): string {
+export function waLink(phone: string): string {
     const digits = phone.replace(/\D/g, '');
     return `https://wa.me/${digits.startsWith('0') ? `62${digits.slice(1)}` : digits}`;
 }

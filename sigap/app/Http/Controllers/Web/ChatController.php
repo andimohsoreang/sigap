@@ -11,6 +11,7 @@ use App\Services\Ai\ServiceHours;
 use App\Services\ChatAttachmentService;
 use App\Services\ChatService;
 use App\Services\ContactCenterStats;
+use App\Services\PublicChannels;
 use App\Services\ReferralService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -220,6 +221,8 @@ class ChatController extends Controller
                 'tutup_pukul' => str_replace(':', '.', (string) config('services.ai.service_hours.end')),
                 'median_menit' => $median !== null ? (int) round($median) : null,
             ],
+            // Tombol kanal lain di chat (SP4N-LAPOR!, Hotline WA, form internal) ikut Pengaturan.
+            'kanal' => PublicChannels::get(),
         ]);
     }
 
