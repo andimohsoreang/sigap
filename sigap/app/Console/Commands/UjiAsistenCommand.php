@@ -208,7 +208,7 @@ class UjiAsistenCommand extends Command
     /**
      * Apakah salah satu sumber memuat frasa fakta `harus_memuat`? Dicari di
      * judul & isi artikel atau kutipan Sumber Resmi, tanpa membedakan huruf
-     * besar/kecil dan spasi. `null` = pertanyaan di luar layanan (tidak boleh
+     * besar/kecil, spasi, dan jenis tanda hubung ("19 - 53" = "19–53"). `null` = pertanyaan di luar layanan (tidak boleh
      * ada sumber). Dipakai juga oleh RetrievalQualityTest.
      *
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $sources
@@ -219,7 +219,7 @@ class UjiAsistenCommand extends Command
             return $sources->isEmpty();
         }
 
-        $normalize = fn (string $text) => preg_replace('/\s+/u', ' ', mb_strtolower($text));
+        $normalize = fn (string $text) => preg_replace(['/\s*[-‐‑‒–—]\s*/u', '/\s+/u'], ['-', ' '], mb_strtolower($text));
         $needle = $normalize($fact);
 
         return $sources->contains(fn ($s) => str_contains($normalize(

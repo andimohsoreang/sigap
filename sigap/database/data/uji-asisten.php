@@ -13,9 +13,12 @@
  *             Dipakai metrik "artikel saja".
  * - harus_memuat : frasa fakta yang WAJIB ada di salah satu dari 3 sumber
  *             teratas TARA (judul/isi artikel atau kutipan Sumber Resmi),
- *             tanpa membedakan huruf besar/kecil dan spasi. Ambil dari
- *             teks resmi yang memang ada (artikel Basis Pengetahuan DAN
- *             naskah Sumber Resmi bila memuatnya) — jangan mengarang.
+ *             tanpa membedakan huruf besar/kecil, spasi, dan jenis tanda
+ *             hubung ("19 - 53" = "19–53"). Isinya fakta jawaban yang BENAR
+ *             dari teks resmi (artikel Basis Pengetahuan DAN naskah Sumber
+ *             Resmi bila memuatnya) — bukan frasa yang kebetulan sudah
+ *             ditemukan sistem, dan jangan mengarang. Kasus yang belum
+ *             ditemukan dicatat di RetrievalQualityTest::DIKETAHUI_GAGAL.
  *             null/false: sama seperti `artikel`.
  *
  * Dipakai oleh tests/Feature/Ai/RetrievalQualityTest (pencarian, tanpa
@@ -37,9 +40,9 @@ return [
     ['tanya' => 'Ada pejabat minta pungli, saya mau lapor penyalahgunaan wewenang', 'jenis' => 'aduan', 'artikel' => 'penyalahgunaan wewenang', 'harus_memuat' => 'inspektur jenderal'],
 
     // Ketentuan pokok ketransmigrasian
-    ['tanya' => 'Apa saja syarat untuk menjadi peserta program transmigrasi?', 'jenis' => 'informasi', 'artikel' => 'boleh menjadi transmigran', 'harus_memuat' => 'kepala keluarga'],
+    ['tanya' => 'Apa saja syarat untuk menjadi peserta program transmigrasi?', 'jenis' => 'informasi', 'artikel' => 'boleh menjadi transmigran', 'harus_memuat' => 'KTP-el'],
     ['tanya' => 'gimana caranya daftar jadi transmigran?', 'jenis' => 'informasi', 'artikel' => 'boleh menjadi transmigran', 'harus_memuat' => 'kantor desa'],
-    ['tanya' => 'Nuwun sewu, kulo badhe nderek transmigrasi, syaratipun menapa?', 'jenis' => 'informasi', 'artikel' => 'boleh menjadi transmigran', 'harus_memuat' => 'kepala keluarga'],
+    ['tanya' => 'Nuwun sewu, kulo badhe nderek transmigrasi, syaratipun menapa?', 'jenis' => 'informasi', 'artikel' => 'boleh menjadi transmigran', 'harus_memuat' => '19 - 53 tahun'],
     ['tanya' => 'umur berapa batas maksimal untuk ikut transmigrasi?', 'jenis' => 'informasi', 'artikel' => 'persyaratan calon transmigran', 'harus_memuat' => '53 tahun'],
     ['tanya' => 'saya belum menikah, boleh ikut transmigrasi?', 'jenis' => 'informasi', 'artikel' => 'persyaratan calon transmigran', 'harus_memuat' => 'belum berkeluarga'],
     ['tanya' => 'daftar transmigrasi bisa di kantor desa?', 'jenis' => 'informasi', 'artikel' => 'cara mendaftar sebagai calon transmigran', 'harus_memuat' => 'kantor desa'],
