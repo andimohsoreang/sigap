@@ -2,7 +2,10 @@
 
 namespace Tests\Feature\Ai;
 
+use App\Console\Commands\UjiAsistenCommand;
 use App\Models\KnowledgeArticle;
+use App\Models\KnowledgePassage;
+use App\Models\KnowledgeSource;
 use App\Services\Knowledge\IndonesianText;
 use App\Services\Knowledge\KnowledgeRetriever;
 use Database\Seeders\KnowledgeSeeder;
@@ -50,6 +53,36 @@ class RetrievalQualityTest extends TestCase
 
         $this->assertSame([], $misses, "Pertanyaan yang tidak menemukan artikelnya:\n".implode("\n", $misses));
         $this->assertGreaterThanOrEqual(0.85, $first / $total, "Artikel benar di peringkat 1 hanya {$first}/{$total}.");
+    }
+
+    public function test_every_answerable_question_has_its_fact_in_top_three_sources(): void
+    {
+        $retriever = app(KnowledgeRetriever::class);
+        $misses = [];
+
+        foreach (require database_path('data/uji-asisten.php') as $case) {
+            if (! is_string($case['harus_memuat'])) {
+                continue;
+            }
+            $top = $retriever->sources($case['tanya'])->take(3);
+            if (! UjiAsistenCommand::containsFact($case['harus_memuat'], $top)) {
+                $misses[] = "{$case['tanya']} ⇢ \"{$case['harus_memuat']}\" → [".$top->pluck('title')->implode(' | ').']';
+            }
+        }
+
+        $this->assertSame([], $misses, "Fakta harus_memuat tidak ada di 3 sumber teratas:\n".implode("\n", $misses));
+    }
+
+    public function test_fact_check_ignores_case_and_whitespace_and_reads_passages(): void
+    {
+        $passage = new KnowledgePassage(['heading' => 'Pasal 10', 'body' => "Transmigrasi Umum diutamakan bagi\n  wilayah yang tingkat KEPADATAN penduduknya tinggi."]);
+        $passage->setRelation('source', new KnowledgeSource(['name' => 'UU 15/1997']));
+
+        $this->assertTrue(UjiAsistenCommand::containsFact('kepadatan penduduk', collect([$passage])));
+        $this->assertTrue(UjiAsistenCommand::containsFact('diutamakan bagi wilayah', collect([$passage])));
+        $this->assertFalse(UjiAsistenCommand::containsFact('bencana alam', collect([$passage])));
+        $this->assertTrue(UjiAsistenCommand::containsFact(null, collect()));
+        $this->assertFalse(UjiAsistenCommand::containsFact(null, collect([$passage])));
     }
 
     public function test_out_of_scope_questions_find_nothing(): void

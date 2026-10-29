@@ -18,8 +18,11 @@ use Illuminate\Support\Str;
  * (AI_DRIVER / AI_MODEL). Tidak menyimpan percakapan apa pun.
  *
  * Yang dinilai per pertanyaan:
- * - Pencarian : artikel yang diharapkan masuk 3 besar (atau tidak ada artikel
- *               untuk pertanyaan di luar layanan).
+ * - Pencarian : frasa fakta `harus_memuat` ada di salah satu dari 3 sumber
+ *               teratas — artikel ATAU kutipan Sumber Resmi (atau tidak ada
+ *               sumber sama sekali untuk pertanyaan di luar layanan).
+ *               Metrik "artikel saja" tetap menilai judul artikel `artikel`
+ *               pada pencarian artikel terbit.
  * - Jenis     : klasifikasi model sama dengan harapan.
  * - Sumber    : jawaban informasi selalu menyebut sumber yang benar-benar
  *               dikirim (jawaban tanpa sumber = tebakan, ditolak sistem).
@@ -63,12 +66,16 @@ class UjiAsistenCommand extends Command
             $titles = $sources->map(fn ($s) => $s instanceof KnowledgePassage ? $s->displayTitle() : $s->title)->all();
 
             $found = null;
-            if ($case['artikel'] !== false) {
-                $found = $this->matches($case['artikel'], $sources);
+            if ($case['harus_memuat'] !== false) {
+                $found = self::containsFact($case['harus_memuat'], $sources->take(3));
                 $score['cari'][0] += (int) $found;
                 $score['cari'][1]++;
+            }
+            $articleFound = null;
+            if ($case['artikel'] !== false) {
                 // Informasi: pencarian artikel terbit saja (cara lama, tanpa Sumber Resmi).
-                $score['artikel'][0] += (int) $this->matches($case['artikel'], $articles);
+                $articleFound = $this->hasArticleTitle($case['artikel'], $articles);
+                $score['artikel'][0] += (int) $articleFound;
                 $score['artikel'][1]++;
             }
 
@@ -104,13 +111,14 @@ class UjiAsistenCommand extends Command
                 Str::limit($case['tanya'], 48),
                 $titles === [] ? '—' : Str::limit($titles[0], 44),
                 $found === null ? '·' : ($found ? '✓' : '✗'),
+                $articleFound === null ? '·' : ($articleFound ? '✓' : '✗'),
                 $withModel ? $case['jenis'].' → '.$type.($typeOk ? ' ✓' : ' ✗') : null,
                 $withModel && $this->option('rinci') ? Str::limit(str_replace("\n", ' ', $answer), 80) : null,
             ], fn ($v) => $v !== null));
         }
 
         $headers = array_values(array_filter([
-            '#', 'Pertanyaan', 'Sumber teratas', 'Cari',
+            '#', 'Pertanyaan', 'Sumber teratas', 'Cari', 'Artikel',
             $withModel ? 'Jenis (harap → dapat)' : null,
             $withModel && $this->option('rinci') ? 'Jawaban' : null,
         ]));
@@ -118,8 +126,8 @@ class UjiAsistenCommand extends Command
 
         $pct = fn (array $pair) => $pair[1] === 0 ? '—' : round($pair[0] / $pair[1] * 100).'% ('.$pair[0].'/'.$pair[1].')';
         $this->newLine();
-        $this->line('Pencarian tepat     : '.$pct($score['cari']).'  (sumber TARA: artikel + Sumber Resmi)');
-        $this->line('  artikel saja      : '.$pct($score['artikel']).'  (informasi; artikel terbit tanpa Sumber Resmi)');
+        $this->line('Pencarian tepat     : '.$pct($score['cari']).'  (fakta ada di 3 sumber teratas TARA: artikel + Sumber Resmi)');
+        $this->line('  artikel saja      : '.$pct($score['artikel']).'  (judul artikel di pencarian artikel terbit, tanpa Sumber Resmi)');
         if ($withModel) {
             $this->line('Klasifikasi tepat   : '.$pct($score['jenis']));
             $this->line('Jawaban tanpa sumber: '.$score['tebak'].' (ditolak sistem, warga melihat "belum menemukan informasi resmi")');
@@ -198,23 +206,40 @@ class UjiAsistenCommand extends Command
     }
 
     /**
-     * Apakah sumber memuat jawaban yang diharapkan paket uji? `null` = pertanyaan
-     * di luar layanan (tidak boleh ada sumber). Teks harapan dicari di judul
-     * artikel, atau judul & isi kutipan Sumber Resmi.
+     * Apakah salah satu sumber memuat frasa fakta `harus_memuat`? Dicari di
+     * judul & isi artikel atau kutipan Sumber Resmi, tanpa membedakan huruf
+     * besar/kecil dan spasi. `null` = pertanyaan di luar layanan (tidak boleh
+     * ada sumber). Dipakai juga oleh RetrievalQualityTest.
      *
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $sources
      */
-    private function matches(?string $expected, Collection $sources): bool
+    public static function containsFact(?string $fact, Collection $sources): bool
     {
-        if ($expected === null) {
+        if ($fact === null) {
             return $sources->isEmpty();
         }
 
-        $needle = mb_strtolower($expected);
+        $normalize = fn (string $text) => preg_replace('/\s+/u', ' ', mb_strtolower($text));
+        $needle = $normalize($fact);
 
-        return $sources->contains(fn ($s) => $s instanceof KnowledgePassage
-            ? str_contains(mb_strtolower($s->displayTitle().' '.$s->body), $needle)
-            : str_contains(mb_strtolower($s->title), $needle));
+        return $sources->contains(fn ($s) => str_contains($normalize(
+            ($s instanceof KnowledgePassage ? $s->displayTitle() : $s->title).' '.$s->body
+        ), $needle));
+    }
+
+    /**
+     * Metrik "artikel saja": judul artikel harapan ada di hasil pencarian
+     * artikel terbit; `null` = tidak boleh ada artikel.
+     *
+     * @param  Collection<int, KnowledgeArticle>  $articles
+     */
+    private function hasArticleTitle(?string $expected, Collection $articles): bool
+    {
+        if ($expected === null) {
+            return $articles->isEmpty();
+        }
+
+        return $articles->contains(fn (KnowledgeArticle $a) => str_contains(mb_strtolower($a->title), mb_strtolower($expected)));
     }
 
     private function threshold(string $option): ?float
