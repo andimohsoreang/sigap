@@ -265,10 +265,10 @@ function Hero({ aiEnabled }: { aiEnabled: boolean }) {
     return (
         <section className="relative overflow-hidden bg-[var(--t-deep)] text-white">
             <HeroMakarti />
-            <div className="relative mx-auto max-w-[1312px] px-4 pt-8 pb-6 sm:px-6 sm:pt-12 lg:px-16 xl:pt-[96px] xl:pb-[104px]">
+            <div className="relative mx-auto max-w-[1312px] px-4 pt-8 pb-6 sm:px-6 sm:pt-12 lg:px-16 xl:flex xl:min-h-[822px] xl:items-center xl:py-24">
                 <div className="flex max-w-[600px] flex-col gap-6 pb-2 lg:gap-7">
                     <span
-                        className="transi-rise inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/[0.08] px-3.5 py-1.5 text-[13px] text-[#e6eef5] sm:text-sm"
+                        className="transi-rise inline-flex min-h-[34px] w-fit items-center gap-2 rounded-full border border-white/[0.18] bg-white/[0.06] px-3.5 py-1.5 text-[13px] text-white sm:text-sm"
                         style={delay(0.05)}
                     >
                         <span className="transi-live-dot h-2 w-2 rounded-full bg-[#4ade80]" aria-hidden="true" />
@@ -282,12 +282,12 @@ function Hero({ aiEnabled }: { aiEnabled: boolean }) {
                         )}
                     </span>
                     <h1
-                        className="transi-rise font-heading text-[40px] leading-[1.06] font-bold tracking-[-0.02em] text-balance sm:text-5xl lg:text-[60px] lg:leading-[1.08]"
+                        className="transi-rise font-heading max-w-[580px] text-[40px] leading-[1.06] font-bold tracking-[-0.02em] text-balance sm:text-5xl lg:text-[58px] lg:leading-[1.1] lg:tracking-[-1.74px]"
                         style={delay(0.15)}
                     >
                         Semua urusan transmigrasi, cukup mulai dari chat.
                     </h1>
-                    <p className="transi-rise max-w-[58ch] text-[17px] leading-[1.55] text-[#c9d6e2] sm:text-[19px]" style={delay(0.28)}>
+                    <p className="transi-rise max-w-[540px] text-[17px] leading-[1.58] text-[#b8c8d6] sm:text-[19px]" style={delay(0.28)}>
                         Tanya, lapor, cek status tiket, sampai dibuatkan akun. TARA dan petugas kami membantu dalam satu percakapan: tanpa formulir
                         panjang, tanpa harus punya email.
                     </p>
@@ -295,18 +295,18 @@ function Hero({ aiEnabled }: { aiEnabled: boolean }) {
                         <button
                             type="button"
                             onClick={(e) => goToChat({ source: e.currentTarget })}
-                            className="transi-lift font-heading flex h-14 items-center justify-center gap-2.5 rounded-full bg-[var(--t-gold)] px-[26px] text-[17px] font-bold text-[var(--t-deep)] shadow-[0_10px_28px_rgba(194,150,66,0.35)] hover:bg-[#d0a552] hover:shadow-[0_14px_34px_rgba(194,150,66,0.45)]"
+                            className="transi-lift font-heading flex h-14 items-center justify-center gap-2.5 rounded-full bg-[var(--t-gold)] px-[26px] text-[17px] font-bold text-[var(--t-deep)] shadow-[0_10px_30px_rgba(194,150,66,0.35)] hover:bg-[#d0a552] hover:shadow-[0_14px_34px_rgba(194,150,66,0.45)]"
                         >
                             <MessageCircle className="h-5 w-5" aria-hidden="true" /> Mulai chat dengan TARA
                         </button>
                         <Link
                             href="/lacak"
-                            className="transi-lift flex h-14 items-center justify-center gap-2 rounded-full border-[1.5px] border-white/30 px-[22px] text-base font-medium text-white hover:border-white/60 hover:bg-white/[0.06]"
+                            className="transi-lift flex h-14 items-center justify-center gap-2.5 rounded-full border border-white/30 px-6 text-[17px] font-semibold text-white hover:border-white/60 hover:bg-white/[0.06]"
                         >
-                            <Search className="h-[18px] w-[18px]" aria-hidden="true" /> Lacak tiket
+                            <Search className="h-5 w-5" aria-hidden="true" /> Lacak tiket
                         </Link>
                     </div>
-                    <ul className="transi-rise flex flex-col gap-3 pt-1 text-sm text-[#c9d6e2] sm:pt-2" style={delay(0.52)}>
+                    <ul className="transi-rise flex flex-col gap-2.5 pt-1 text-[15px] text-[#b8c8d6]" style={delay(0.52)}>
                         {[
                             [BookCheck, 'Jawaban dari sumber resmi'],
                             [UserRoundCheck, 'Petugas Sen–Jum 08.00–16.00 WIB'],
@@ -315,7 +315,7 @@ function Hero({ aiEnabled }: { aiEnabled: boolean }) {
                             const I = Icon as LucideIcon;
                             return (
                                 <li key={text as string} className="flex items-center gap-2">
-                                    <I className="h-[18px] w-[18px] text-[var(--t-gold)]" aria-hidden="true" />
+                                    <I className="h-[17px] w-[17px] text-[var(--t-gold)]" aria-hidden="true" />
                                     {text as string}
                                 </li>
                             );
@@ -330,8 +330,9 @@ function Hero({ aiEnabled }: { aiEnabled: boolean }) {
 
 /**
  * Gedung Grand Makarti Kementerian Transmigrasi dengan TARA menyambut di
- * depannya (setinggi pinggang). Desktop (>=1280 px): latar penuh yang memudar
- * ke navy di bawah teks. Layar lebih kecil: gambar di bawah teks.
+ * depannya (ukuran & posisi dari desain Wonder "SIGAP Beranda Hero Makarti").
+ * Desktop (>=1280 px): latar penuh yang memudar ke navy di bawah teks. Layar
+ * lebih kecil: gambar di bawah teks.
  */
 function HeroMakarti({ mobile = false }: { mobile?: boolean }) {
     const gedung = (
@@ -342,25 +343,22 @@ function HeroMakarti({ mobile = false }: { mobile?: boolean }) {
             height={736}
             fetchPriority={mobile ? 'auto' : 'high'}
             loading={mobile ? 'lazy' : 'eager'}
-            className="absolute inset-0 h-full w-full object-cover object-[62%_center]"
+            className="absolute inset-0 h-full w-full object-cover object-center"
         />
     );
-    // Lebar wadah mengikuti proporsi gambar (396x900 ditampilkan 160% tinggi
-    // wadah) agar tangan TARA yang menyambut tidak terpotong.
     const tara = (
-        <div
+        <img
+            src={`${IMG}/menyambut.webp`}
+            alt=""
             aria-hidden="true"
-            className={cn('absolute bottom-0 overflow-hidden', mobile ? 'top-[6%] right-0' : 'top-[9%] right-[3%]')}
-            style={{ aspectRatio: (396 * 1.6) / 900 }}
-        >
-            <img
-                src={`${IMG}/menyambut.webp`}
-                alt=""
-                width={396}
-                height={900}
-                className="absolute top-0 right-0 h-[160%] w-auto max-w-none drop-shadow-[0_18px_30px_rgba(0,10,25,0.35)]"
-            />
-        </div>
+            width={396}
+            height={900}
+            className={cn(
+                'absolute max-w-none drop-shadow-[0_18px_30px_rgba(0,10,25,0.35)]',
+                // Desain: 646x1468 px, 64 px dari atas, keluar 77 px di kanan (terlihat sampai pinggang).
+                mobile ? 'top-[6%] right-[-6%] h-[180%] w-auto' : 'top-16 right-[-77px] h-[1468px] w-auto',
+            )}
+        />
     );
 
     return mobile ? (
@@ -370,12 +368,16 @@ function HeroMakarti({ mobile = false }: { mobile?: boolean }) {
             {tara}
         </div>
     ) : (
-        <div className="absolute inset-0 hidden xl:block">
+        <div className="absolute inset-0 hidden overflow-hidden xl:block">
             {gedung}
+            <div aria-hidden="true" className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[rgba(2,43,74,0.35)] to-transparent" />
             <div
                 aria-hidden="true"
                 className="absolute inset-0"
-                style={{ background: 'linear-gradient(90deg, var(--t-deep) 0%, rgba(2,43,74,0.9) 30%, rgba(2,43,74,0.45) 48%, rgba(2,43,74,0) 66%)' }}
+                style={{
+                    background:
+                        'linear-gradient(90deg, rgba(2,43,74,0.97) 0%, rgba(2,43,74,0.93) 38%, rgba(2,43,74,0.6) 54%, rgba(2,43,74,0.15) 70%, rgba(2,43,74,0) 86%)',
+                }}
             />
             {tara}
         </div>

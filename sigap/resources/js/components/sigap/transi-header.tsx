@@ -78,7 +78,10 @@ export default function TransiHeader({
                             aria-current={n.key === active ? 'page' : undefined}
                             className={cn(
                                 'relative text-[15px] whitespace-nowrap transition-colors after:absolute after:-bottom-1.5 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-[var(--t-gold)] after:transition-transform after:duration-300 hover:text-[var(--t-navy)] hover:after:scale-x-100',
-                                n.key === active ? 'font-semibold text-[var(--t-navy)]' : 'text-[#4a5565]',
+                                // Aktif: garis emas pendek di tengah (desain Wonder); lainnya garis penuh saat hover.
+                                n.key === active
+                                    ? 'font-semibold text-[var(--t-navy)] after:left-1/2 after:w-5 after:-translate-x-1/2 after:scale-x-100 after:rounded-full'
+                                    : 'font-medium text-[#4a5a68]',
                             )}
                         >
                             {n.label}
