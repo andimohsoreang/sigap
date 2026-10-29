@@ -15,7 +15,7 @@ import { router } from '@inertiajs/react';
 
 export const PENDING_KEY = 'sigap-chat-pending';
 export const CHAT_URL = '/chat';
-export const LANDING_URL = '/beranda-baru';
+export const LANDING_URL = '/';
 
 export function setPendingQuestion(question: string): void {
     try {

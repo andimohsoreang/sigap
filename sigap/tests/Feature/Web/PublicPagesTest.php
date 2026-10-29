@@ -10,9 +10,9 @@ class PublicPagesTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_beranda_utama_uses_absol_design(): void
+    public function test_beranda_lama_keeps_absol_design(): void
     {
-        $this->get('/')
+        $this->get('/beranda-lama')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('public/beranda-absol')
@@ -34,9 +34,10 @@ class PublicPagesTest extends TestCase
             );
     }
 
-    public function test_beranda_baru_transi_renders_with_its_assets(): void
+    public function test_beranda_utama_is_tara_contact_center(): void
     {
-        $this->get('/beranda-baru')
+        $this->get('/beranda-baru')->assertRedirect('/')->assertStatus(301);
+        $this->get('/')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('public/beranda-transi'));
 
@@ -45,9 +46,9 @@ class PublicPagesTest extends TestCase
         }
     }
 
-    public function test_old_absol_url_redirects_to_home(): void
+    public function test_old_absol_url_redirects_to_beranda_lama(): void
     {
-        $this->get('/beranda-absol')->assertRedirect('/')->assertStatus(301);
+        $this->get('/beranda-absol')->assertRedirect('/beranda-lama')->assertStatus(301);
     }
 
     public function test_public_static_pages_render(): void

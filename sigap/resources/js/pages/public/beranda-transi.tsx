@@ -39,7 +39,7 @@ import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 
 /**
- * Beranda baru (/beranda-baru) — contact center yang semuanya dimulai dari
+ * Beranda utama (/) — contact center yang semuanya dimulai dari
  * chat, dengan maskot TARA. Desain: pen.dev "Publik / Beranda — Contact
  * Center TARA" (desktop) dan varian Mobile 320–430.
  *

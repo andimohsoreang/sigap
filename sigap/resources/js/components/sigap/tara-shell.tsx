@@ -155,7 +155,7 @@ export function TaraFooter() {
                 <div className="flex flex-col gap-2 border-t border-white/10 pt-6 text-[13px] text-[#6f8496] sm:flex-row sm:items-center sm:justify-between">
                     <span>© 2026 Kementerian Transmigrasi Republik Indonesia. Seluruh hak cipta dilindungi.</span>
                     <span className="flex items-center gap-4">
-                        <Link href="/" className="transition-colors hover:text-white">
+                        <Link href="/beranda-lama" className="transition-colors hover:text-white">
                             Kembali ke tampilan lama
                         </Link>
                         <span aria-hidden="true">·</span>

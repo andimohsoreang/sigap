@@ -123,7 +123,7 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
 
                     <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center px-4 sm:px-6 lg:px-8">
                         <Link
-                            href="/beranda-baru"
+                            href="/"
                             className="group mb-6 inline-flex items-center gap-2.5 rounded-full border border-white/25 bg-white/10 py-1.5 pr-4 pl-1.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/50 hover:bg-white/15"
                         >
                             <span className="bg-secondary text-brand rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wide uppercase">

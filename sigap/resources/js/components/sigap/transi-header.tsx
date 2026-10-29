@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 export type TaraNav = 'beranda' | 'chat' | 'lacak' | 'katalog' | 'peta' | 'data' | 'panduan';
 
 const NAV: { key: TaraNav; label: string; href: string }[] = [
-    { key: 'beranda', label: 'Beranda', href: '/beranda-baru' },
+    { key: 'beranda', label: 'Beranda', href: '/' },
     { key: 'lacak', label: 'Lacak Tiket', href: '/lacak' },
     { key: 'katalog', label: 'Katalog Pengaduan', href: '/katalog' },
     { key: 'peta', label: 'Peta Wilayah', href: '/peta' },
@@ -53,7 +53,7 @@ export default function TransiHeader({
             )}
         >
             <div className="mx-auto flex h-16 max-w-[1312px] items-center justify-between gap-4 px-4 sm:px-6 lg:h-[76px] lg:px-16">
-                <Link href="/beranda-baru" className="flex min-w-0 items-center gap-3">
+                <Link href="/" className="flex min-w-0 items-center gap-3">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[var(--t-navy)] text-white">
                         <Headset className="h-[22px] w-[22px]" aria-hidden="true" />
                     </span>

@@ -33,31 +33,28 @@ class PublicController extends Controller
         private readonly SurveyService $surveys,
     ) {}
 
-    /** Beranda utama (tampilan gaya absol.id). */
+    /** Beranda utama: contact center TARA, semua dimulai dari chat. */
     public function home(): Response
+    {
+        return Inertia::render('public/beranda-transi', [
+            'kanal' => PublicChannels::get(),
+            'kantor' => PublicChannels::offices(),
+        ]);
+    }
+
+    /** Beranda lama (tampilan gaya absol.id) sebagai pembanding. */
+    public function homeAbsol(): Response
     {
         return Inertia::render('public/beranda-absol', $this->homeProps());
     }
 
     /**
      * Beranda tampilan standar (lama) sebagai pembanding — data SAMA dengan
-     * {@see home()}, hanya komponen tampilannya yang berbeda.
+     * {@see homeAbsol()}, hanya komponen tampilannya yang berbeda.
      */
     public function homeStandard(): Response
     {
         return Inertia::render('public/beranda', $this->homeProps());
-    }
-
-    /**
-     * Beranda baru (uji coba): contact center TARA, semua dimulai dari chat.
-     * Beranda utama tetap yang lama dan menautkan ke sini lewat "Coba Desain Baru".
-     */
-    public function homeTransi(): Response
-    {
-        return Inertia::render('public/beranda-transi', [
-            'kanal' => PublicChannels::get(),
-            'kantor' => PublicChannels::offices(),
-        ]);
     }
 
     /** @return array<string, mixed> */

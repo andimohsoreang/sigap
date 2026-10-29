@@ -27,7 +27,7 @@ class PublicChannelsTest extends TestCase
 
     public function test_beranda_shows_default_channels(): void
     {
-        $this->get('/beranda-baru')->assertOk()->assertInertia(fn (Assert $page) => $page
+        $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('public/beranda-transi')
             ->where('kanal.sosmed.label', 'Social Media')
             ->where('kanal.kantor.label', 'Kantor')
@@ -70,7 +70,7 @@ class PublicChannelsTest extends TestCase
         $this->assertSame('0811-1111-2222', $pusat['whatsapp']);
         $this->assertStringContainsString(rawurlencode('Jl. Contoh No. 1'), $pusat['maps']);
 
-        $this->get('/beranda-baru')->assertInertia(fn (Assert $page) => $page->has('kantor', 5)->where('kantor.0.alamat', 'Jl. Contoh No. 1'));
+        $this->get('/')->assertInertia(fn (Assert $page) => $page->has('kantor', 5)->where('kantor.0.alamat', 'Jl. Contoh No. 1'));
     }
 
     public function test_super_admin_can_update_channels(): void
@@ -91,7 +91,7 @@ class PublicChannelsTest extends TestCase
         $this->assertSame('https://intra.example.go.id/aduan', $kanal['internal']['url']);
         $this->assertFalse($kanal['lapor']['aktif']);
 
-        $this->get('/beranda-baru')->assertInertia(fn (Assert $page) => $page->where('kanal.kantor.alamat', 'Jl. Contoh No. 1'));
+        $this->get('/')->assertInertia(fn (Assert $page) => $page->where('kanal.kantor.alamat', 'Jl. Contoh No. 1'));
     }
 
     public function test_rejects_unsafe_urls(): void

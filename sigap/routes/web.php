@@ -26,14 +26,14 @@ use Illuminate\Support\Facades\Route;
 | Tampilan lama dipertahankan; data dilayani Service yang sama dengan API.
 */
 
-// Beranda utama memakai tampilan gaya absol.id (keputusan 12 Okt 2026).
+// Beranda utama: contact center TARA, semua dimulai dari chat (keputusan 29 Okt 2026).
 Route::get('/', [PublicController::class, 'home'])->name('home');
 // Tampilan beranda lama tetap tersedia sebagai pembanding.
+Route::get('/beranda-lama', [PublicController::class, 'homeAbsol'])->name('beranda.lama');
 Route::get('/beranda-standar', [PublicController::class, 'homeStandard'])->name('beranda.standar');
-// Beranda baru: contact center TARA yang semuanya dimulai dari chat (uji coba).
-Route::get('/beranda-baru', [PublicController::class, 'homeTransi'])->name('beranda.baru');
-// Alamat lama versi absol diarahkan ke beranda utama agar tautan lama tidak 404.
-Route::redirect('/beranda-absol', '/', 301);
+// Alamat lama diarahkan agar tautan yang sudah tersebar tidak 404.
+Route::redirect('/beranda-baru', '/', 301);
+Route::redirect('/beranda-absol', '/beranda-lama', 301);
 // Panduan lengkap pengaduan & penanganan tiket.
 Route::get('/panduan', [PublicController::class, 'guide'])->name('panduan');
 Route::get('/tentang', [PublicController::class, 'about'])->name('tentang');

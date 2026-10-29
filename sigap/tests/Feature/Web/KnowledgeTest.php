@@ -137,7 +137,7 @@ class KnowledgeTest extends TestCase
         $this->article();
         $this->article(['title' => 'Draf tersembunyi', 'status' => KnowledgeArticle::STATUS_DRAFT]);
 
-        $this->get('/')->assertInertia(fn (Assert $page) => $page
+        $this->get('/beranda-lama')->assertInertia(fn (Assert $page) => $page
             ->has('faqs', 1)
             ->where('faqs.0.question', 'Apa syarat menjadi peserta transmigrasi?'));
     }
