@@ -19,6 +19,13 @@ namespace App\Services\Knowledge;
  */
 final class IndonesianText
 {
+    /**
+     * Kata domain yang ada di hampir semua dokumen ("Kementerian
+     * Transmigrasi"), jadi tidak membedakan apa pun. Dipakai pencocokan
+     * portal (PortalDirectory) dan syarat cakupan pencarian (KnowledgeRetriever).
+     */
+    public const GENERIC_WORDS = ['transmigrasi', 'transmigran', 'kementerian', 'kementrans', 'republik', 'indonesia', 'portal', 'layanan', 'online', 'daring', 'resmi', 'web', 'situs', 'aplikasi'];
+
     /** Kata tanya, sapaan, dan pengisi (termasuk bahasa daerah yang umum) yang tidak dicari. */
     private const STOPWORDS = [
         'yang', 'dan', 'di', 'ke', 'dari', 'untuk', 'dengan', 'apa', 'apakah', 'bagaimana', 'gimana', 'cara',
@@ -122,6 +129,16 @@ final class IndonesianText
         $base = self::stripEnd(self::stripEnd($word, self::PARTICLES), self::POSSESSIVES);
 
         return in_array($word, self::STOPWORDS, true) || in_array($base, self::STOPWORDS, true);
+    }
+
+    /**
+     * Apakah satu kata (kunci hasil {@see words()}) termasuk kata domain umum?
+     *
+     * @param  list<string>  $keys
+     */
+    public static function isGeneric(array $keys): bool
+    {
+        return array_intersect($keys, self::GENERIC_WORDS) !== [];
     }
 
     /** @return list<string> */

@@ -78,7 +78,9 @@ class KnowledgeDocumentTest extends TestCase
 
     public function test_uploaded_pdf_is_read_page_by_page_into_proposals(): void
     {
-        KnowledgeArticle::create(['title' => 'Syarat pendaftaran calon transmigran', 'body' => 'Isi.', 'status' => 'terbit']);
+        // Isi artikel ikut dicocokkan: kata "transmigran" saja tidak dihitung
+        // untuk syarat cakupan (IndonesianText::GENERIC_WORDS).
+        KnowledgeArticle::create(['title' => 'Syarat pendaftaran calon transmigran', 'body' => 'Calon transmigran adalah kepala keluarga yang berusia produktif.', 'status' => 'terbit']);
 
         $document = $this->upload([
             'Daftar isi dokumen.',

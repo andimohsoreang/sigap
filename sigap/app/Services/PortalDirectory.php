@@ -18,9 +18,6 @@ use Illuminate\Support\Str;
  */
 class PortalDirectory
 {
-    /** Kata umum yang tidak dipakai untuk mencocokkan portal. */
-    private const GENERIC_WORDS = ['transmigrasi', 'transmigran', 'kementerian', 'kementrans', 'republik', 'indonesia', 'portal', 'layanan', 'online', 'daring', 'resmi', 'web', 'situs', 'aplikasi'];
-
     /** @return Collection<int, Portal> */
     public function publicPortals(): Collection
     {
@@ -61,7 +58,7 @@ class PortalDirectory
         // tidak membedakan apa pun; tanpa disaring, PPID/JDIH selalu menang
         // untuk pertanyaan seperti "cara daftar transmigrasi".
         $all = IndonesianText::words($question);
-        $words = array_values(array_filter($all, fn (array $keys) => array_intersect($keys, self::GENERIC_WORDS) === []));
+        $words = array_values(array_filter($all, fn (array $keys) => ! IndonesianText::isGeneric($keys)));
         if ($words === []) {
             return null;
         }

@@ -249,7 +249,18 @@ class KnowledgeRetriever
         // menenggelamkan kata kunci yang cocok ("kapan jadup cair?").
         $rarest = log(1 + ($n - 0.5) / 1.5);
         $wordWeights = array_map(fn (array $keys) => min($rarest, max(array_map($idf, $keys))), $words);
-        $totalWeight = array_sum($wordWeights) ?: 1.0;
+
+        // Kata domain umum ("transmigrasi", "kementerian") tetap menambah skor,
+        // tetapi tidak dihitung untuk syarat cakupan: tanpa ini, satu artikel
+        // yang kebetulan menyebut "Kementerian Transmigrasi" lolos cakupan untuk
+        // hampir semua pertanyaan karena kata itu jarang di artikel lain dan
+        // berbobot tinggi. Pertanyaan yang hanya berisi kata umum
+        // ("transmigrasi itu apa?") tetap memakai semua katanya.
+        $counted = array_map(fn (array $keys) => ! IndonesianText::isGeneric($keys), $words);
+        if (! in_array(true, $counted, true)) {
+            $counted = array_fill(0, count($words), true);
+        }
+        $totalWeight = array_sum(array_filter($wordWeights, fn (int $w) => $counted[$w], ARRAY_FILTER_USE_KEY)) ?: 1.0;
 
         $hits = [];
         foreach ($docs as $i => $doc) {
@@ -267,7 +278,7 @@ class KnowledgeRetriever
                 }
                 if ($best > 0) {
                     $score += $best;
-                    $covered += $wordWeights[$w];
+                    $covered += $counted[$w] ? $wordWeights[$w] : 0.0;
                 }
             }
 
