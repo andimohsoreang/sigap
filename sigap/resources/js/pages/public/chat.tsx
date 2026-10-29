@@ -634,8 +634,15 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                     <div className="flex-1" />
                                     {messages.length === 0 && (
                                         <AiBubble time={null}>
-                                            Halo{identity ? `, ${identity.nama.split(' ')[0]}` : ''}! Saya TARA 👋 Saya membantu urusan transmigrasi
-                                            dari sumber resmi, dan memanggil petugas bila perlu.
+                                            Halo{identity ? `, ${identity.nama.split(' ')[0]}` : ''}! Saya TARA 👋 saya mendengar dan menindaklanjuti
+                                            setiap keluhan, masukan, maupun laporan Anda terkait pelayanan publik, fasilitas umum, maupun hal-hal lain
+                                            yang memerlukan perhatian kami
+                                        </AiBubble>
+                                    )}
+                                    {messages.length === 0 && (
+                                        <AiBubble time={null}>
+                                            Kami menjamin kerahasiaan data pribadi Anda. Laporan yang masuk akan diproses dan tindak lanjut pengaduan
+                                            akan diselesaikan maksimal 7 hari kerja.
                                             {!needsIdentity && !pending && (
                                                 <span className="mt-3 flex flex-wrap gap-2">
                                                     {TOPICS.map((t) => (
