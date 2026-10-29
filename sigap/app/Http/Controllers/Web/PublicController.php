@@ -11,6 +11,7 @@ use App\Models\Channel;
 use App\Models\KnowledgeArticle;
 use App\Models\Region;
 use App\Models\Ticket;
+use App\Services\OfficialNews;
 use App\Services\PublicChannels;
 use App\Services\StatsService;
 use App\Services\SurveyService;
@@ -33,12 +34,18 @@ class PublicController extends Controller
         private readonly SurveyService $surveys,
     ) {}
 
-    /** Beranda utama: contact center TARA, semua dimulai dari chat. */
-    public function home(): Response
+    /**
+     * Beranda utama: contact center TARA, semua dimulai dari chat. Berita resmi
+     * dimuat setelah halaman tampil agar situs transmigrasi.go.id yang lambat
+     * tidak menahan beranda.
+     */
+    public function home(OfficialNews $news): Response
     {
         return Inertia::render('public/beranda-transi', [
             'kanal' => PublicChannels::get(),
             'kantor' => PublicChannels::offices(),
+            'berita' => Inertia::defer(fn () => $news->latest()),
+            'beritaSemua' => OfficialNews::ALL_URL,
         ]);
     }
 

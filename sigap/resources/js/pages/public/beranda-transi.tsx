@@ -1,4 +1,4 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Deferred, Head, Link, usePage } from '@inertiajs/react';
 import {
     ArrowRight,
     ArrowUp,
@@ -6,18 +6,17 @@ import {
     BellRing,
     BookCheck,
     BookOpen,
-    ChartColumn,
+    CalendarDays,
+    ChevronLeft,
+    ChevronRight,
     ClipboardList,
-    FilePenLine,
     FileText,
     Hash,
     Headset,
     KeyRound,
-    Map as MapIcon,
     MapPinned,
     MessageCircle,
     Minus,
-    Phone,
     Plus,
     Search,
     ShieldCheck,
@@ -99,13 +98,6 @@ const TRUST: { icon: LucideIcon; title: string; desc: string }[] = [
     { icon: ShieldCheck, title: 'Data pribadi disamarkan', desc: 'NIK dan nomor HP yang Anda ketik disamarkan sebelum diproses asisten.' },
     { icon: Timer, title: 'Dipantau sampai selesai', desc: 'Setiap tiket punya target waktu selesai, diakhiri survei kepuasan dari Anda.' },
     { icon: BellRing, title: 'Kabar langsung ke Anda', desc: 'Nomor tiket, perubahan status, dan tanggapan petugas dikirim ke chat dan email.' },
-];
-
-const OTHER_PATHS: { icon: LucideIcon; title: string; desc: string; href: string }[] = [
-    { icon: FilePenLine, title: 'Isi formulir pengaduan', desc: 'Untuk laporan panjang dengan lampiran dan titik lokasi.', href: '/pengaduan/baru' },
-    { icon: MapIcon, title: 'Peta aduan kawasan', desc: 'Lihat sebaran aduan di setiap kawasan transmigrasi.', href: '/peta' },
-    { icon: ChartColumn, title: 'Data SIGAP', desc: 'Statistik penanganan dan kepuasan layanan.', href: '/tentang' },
-    { icon: Phone, title: 'Kontak kantor', desc: 'Alamat dan telepon kantor pusat serta kawasan.', href: '/tentang-kami' },
 ];
 
 const FAQS = [
@@ -214,7 +206,9 @@ const delay = (s: number) => ({ '--d': `${s}s` }) as CSSProperties;
 
 /* ------------------------------------------------------------------- page */
 
-export default function BerandaTransi({ kanal, kantor }: { kanal: KanalPublik; kantor: Kantor[] }) {
+type BeritaResmi = { judul: string; ringkasan: string; lokasi: string | null; tanggal: string; gambar: string | null; url: string };
+
+export default function BerandaTransi({ kanal, kantor, beritaSemua }: { kanal: KanalPublik; kantor: Kantor[]; beritaSemua: string }) {
     const { auth, assistant } = usePage<SharedData>().props;
     const aiEnabled = Boolean(assistant?.enabled);
     const pageRef = useRef<HTMLDivElement>(null);
@@ -248,9 +242,9 @@ export default function BerandaTransi({ kanal, kantor }: { kanal: KanalPublik; k
                     <JustType />
                     <Journey />
                     <Trust />
-                    <TrackAndPaths kanal={kanal} kantor={kantor} />
+                    <Berita all={beritaSemua} />
+                    <KanalResmi kanal={kanal} kantor={kantor} />
                     <Faq />
-                    <ClosingCta />
                 </main>
                 <TaraFooter />
                 <TaraLauncher />
@@ -638,79 +632,157 @@ function Trust() {
 
 /* --------------------------------------------------------- track & paths */
 
-function TrackAndPaths({ kanal, kantor }: { kanal: KanalPublik; kantor: Kantor[] }) {
-    const [ticket, setTicket] = useState('');
-    const submit = (e: FormEvent) => {
-        e.preventDefault();
-        const t = ticket.trim().toUpperCase();
-        router.get('/lacak', t ? { ticket: t } : {});
+/* ----------------------------------------------------------------- berita */
+
+const tanggalBerita = (iso: string) => new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
+/**
+ * Berita resmi terbaru dari transmigrasi.go.id (dimuat tertunda). Kartu
+ * bergulir mendatar; tombol panah menggeser satu kartu. Bila situs resmi
+ * tidak dapat diakses dan belum ada salinan, bagian ini tidak tampil.
+ */
+function Berita({ all }: { all: string }) {
+    return (
+        <Deferred data="berita" fallback={<BeritaSection all={all} items={null} />}>
+            <BeritaFromProps all={all} />
+        </Deferred>
+    );
+}
+
+function BeritaFromProps({ all }: { all: string }) {
+    const { berita } = usePage<{ berita?: BeritaResmi[] }>().props;
+    if (!berita || berita.length === 0) return null;
+    return <BeritaSection all={all} items={berita} />;
+}
+
+function BeritaSection({ all, items }: { all: string; items: BeritaResmi[] | null }) {
+    const track = useRef<HTMLUListElement>(null);
+    const [edge, setEdge] = useState({ start: true, end: false });
+
+    const update = () => {
+        const el = track.current;
+        if (!el) return;
+        setEdge({ start: el.scrollLeft < 8, end: el.scrollLeft + el.clientWidth > el.scrollWidth - 8 });
+    };
+    useEffect(update, [items]);
+
+    const geser = (dir: 1 | -1) => {
+        const el = track.current;
+        const card = el?.querySelector('li');
+        if (el && card) el.scrollBy({ left: dir * (card.getBoundingClientRect().width + 24), behavior: 'smooth' });
     };
 
     return (
-        <section className="bg-white py-12 sm:py-24">
-            <div className="mx-auto flex max-w-[1312px] flex-col gap-10 px-4 sm:gap-14 sm:px-6 lg:px-16">
-                <div className="grid gap-10 lg:grid-cols-[640px_minmax(0,1fr)]">
-                    <form data-reveal onSubmit={submit} className="flex flex-col gap-[18px] rounded-[20px] bg-[var(--t-cream)] p-6 sm:p-9">
-                        <Eyebrow tone="bronze">Sudah punya nomor tiket?</Eyebrow>
-                        <h2 className="font-heading text-[26px] leading-[1.2] font-bold text-[var(--t-deep)] sm:text-[30px]">
-                            Lacak perkembangan laporan Anda
+        <section aria-labelledby="berita-transmigrasi" className="overflow-x-clip bg-white py-14 sm:py-24">
+            <div className="mx-auto flex max-w-[1312px] flex-col gap-8 px-4 sm:px-6 lg:px-16">
+                <div className="flex items-end justify-between gap-8">
+                    <div className="flex flex-col gap-3">
+                        <Eyebrow tone="bronze">Berita</Eyebrow>
+                        <h2
+                            id="berita-transmigrasi"
+                            className="font-heading text-[30px] leading-[1.2] font-bold tracking-[-0.015em] text-[var(--t-deep)] sm:text-[40px]"
+                        >
+                            Berita Transmigrasi
                         </h2>
-                        <div className="flex flex-col gap-3 sm:h-[60px] sm:flex-row sm:items-center sm:gap-3 sm:rounded-full sm:border sm:border-[#e3d9cf] sm:bg-white sm:pr-2 sm:pl-[18px]">
-                            <label htmlFor="nomor-tiket" className="sr-only">
-                                Nomor tiket
-                            </label>
-                            <div className="flex h-14 flex-1 items-center gap-3 rounded-full border border-[#e3d9cf] bg-white px-[18px] sm:h-auto sm:border-0 sm:bg-transparent sm:px-0">
-                                <Ticket className="h-5 w-5 shrink-0 text-[#8a96a3]" aria-hidden="true" />
-                                <input
-                                    id="nomor-tiket"
-                                    value={ticket}
-                                    onChange={(e) => setTicket(e.target.value)}
-                                    placeholder="TKT-261012-7KQ4MZ"
-                                    autoComplete="off"
-                                    className="w-full min-w-0 bg-transparent font-mono text-base text-[#1f2d3a] uppercase outline-none placeholder:text-[#8a96a3] placeholder:normal-case sm:text-[17px]"
-                                />
-                            </div>
+                        <p className="max-w-[660px] text-base leading-[1.65] text-[#4a5a68] sm:text-[17px]">
+                            Kabar resmi dari Kementerian Transmigrasi.
+                        </p>
+                    </div>
+                    {items && (
+                        <div className="hidden shrink-0 items-center gap-3 sm:flex">
                             <button
-                                type="submit"
-                                className="transi-lift font-heading flex h-12 items-center justify-center rounded-full bg-[var(--t-navy)] px-[22px] text-base font-bold text-white hover:bg-[#00508a] sm:h-[46px]"
+                                type="button"
+                                onClick={() => geser(-1)}
+                                disabled={edge.start}
+                                aria-label="Berita sebelumnya"
+                                className="flex h-12 w-12 items-center justify-center rounded-full border border-[#e8edf2] text-[#5b6b7a] transition-colors hover:border-[var(--t-navy)] hover:text-[var(--t-navy)] disabled:cursor-default disabled:opacity-40 disabled:hover:border-[#e8edf2] disabled:hover:text-[#5b6b7a]"
                             >
-                                Lacak
+                                <ChevronLeft className="h-[22px] w-[22px]" aria-hidden="true" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => geser(1)}
+                                disabled={edge.end}
+                                aria-label="Berita berikutnya"
+                                className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--t-navy)] text-white transition-colors hover:bg-[var(--t-deep)] disabled:cursor-default disabled:opacity-40"
+                            >
+                                <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
                             </button>
                         </div>
-                        <p className="text-[15px] leading-[1.55] text-[#6b5a45]">
-                            Lupa nomornya? Tanyakan saja ke TARA. Bila Anda masuk dengan akun, semua tiket tampil di Portal Warga.
-                        </p>
-                    </form>
-
-                    <div className="flex flex-col gap-1.5">
-                        <div data-reveal>
-                            <Eyebrow>Lebih suka jalur lain?</Eyebrow>
-                        </div>
-                        {OTHER_PATHS.map((p, i) => (
-                            <Link
-                                key={p.title}
-                                href={p.href}
-                                data-reveal
-                                style={delay(0.06 * (i + 1))}
-                                className="group flex items-center gap-4 border-b border-[#e8edf2] px-1 py-4"
-                            >
-                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#eef3f7] transition-colors group-hover:bg-[var(--t-navy)]">
-                                    <p.icon className="h-5 w-5 text-[var(--t-navy)] transition-colors group-hover:text-white" aria-hidden="true" />
-                                </span>
-                                <span className="min-w-0 flex-1">
-                                    <span className="font-heading block text-[17px] font-semibold text-[var(--t-deep)]">{p.title}</span>
-                                    <span className="block text-sm text-[#5b6b7a]">{p.desc}</span>
-                                </span>
-                                <ArrowRight
-                                    className="h-[18px] w-[18px] shrink-0 text-[#8a96a3] transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[var(--t-navy)]"
-                                    aria-hidden="true"
-                                />
-                            </Link>
-                        ))}
-                    </div>
+                    )}
                 </div>
 
-                <KanalResmi kanal={kanal} kantor={kantor} />
+                <ul
+                    ref={track}
+                    onScroll={update}
+                    aria-busy={items === null}
+                    className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-6 overflow-x-auto px-4 pb-4 [scrollbar-width:none] sm:-mx-6 sm:scroll-px-6 sm:px-6 lg:mr-[calc(50%-50vw)] lg:-ml-16 lg:scroll-px-16 lg:pr-16 lg:pl-16 [&::-webkit-scrollbar]:hidden"
+                >
+                    {items === null
+                        ? [0, 1, 2, 3].map((i) => (
+                              <li
+                                  key={i}
+                                  className="w-[300px] shrink-0 overflow-hidden rounded-[20px] border border-[#e8edf2] sm:w-[340px]"
+                                  aria-hidden="true"
+                              >
+                                  <div className="h-[196px] animate-pulse bg-[#eef2f6]" />
+                                  <div className="flex flex-col gap-3 p-6">
+                                      <div className="h-5 w-4/5 animate-pulse rounded bg-[#eef2f6]" />
+                                      <div className="h-4 w-full animate-pulse rounded bg-[#f2f5f8]" />
+                                      <div className="h-4 w-2/3 animate-pulse rounded bg-[#f2f5f8]" />
+                                  </div>
+                              </li>
+                          ))
+                        : items.map((b) => (
+                              <li key={b.url} className="w-[300px] shrink-0 snap-start sm:w-[340px]">
+                                  <a
+                                      href={b.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="group relative flex h-full flex-col overflow-hidden rounded-[20px] border border-[#e8edf2] bg-white shadow-[0_8px_24px_rgba(2,43,74,0.06)] transition-shadow hover:shadow-[0_14px_32px_rgba(2,43,74,0.12)]"
+                                  >
+                                      <span className="block h-[196px] overflow-hidden bg-[#eef2f6]">
+                                          {b.gambar && (
+                                              <img
+                                                  src={b.gambar}
+                                                  alt=""
+                                                  loading="lazy"
+                                                  decoding="async"
+                                                  referrerPolicy="no-referrer"
+                                                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                                              />
+                                          )}
+                                      </span>
+                                      <span className="flex flex-1 flex-col gap-3 p-6">
+                                          <span className="font-heading line-clamp-2 min-h-[52px] text-[19px] leading-[1.37] font-bold tracking-[-0.19px] text-[var(--t-deep)]">
+                                              {b.judul}
+                                          </span>
+                                          <span className="line-clamp-3 text-[15px] leading-[1.6] text-[#4a5a68]">{b.ringkasan}</span>
+                                          <span className="mt-auto flex items-center justify-between border-t border-[#e8edf2] pt-3">
+                                              <span className="flex items-center gap-1.5 text-[13.5px] text-[#5b6b7a]">
+                                                  <CalendarDays className="h-[15px] w-[15px]" aria-hidden="true" />
+                                                  {tanggalBerita(b.tanggal)}
+                                                  {b.lokasi && ` · ${b.lokasi}`}
+                                              </span>
+                                              <ArrowUpRight className="h-[18px] w-[18px] text-[var(--t-navy)]" aria-hidden="true" />
+                                              <span className="sr-only">(membuka berita di situs Kementerian, tab baru)</span>
+                                          </span>
+                                      </span>
+                                  </a>
+                              </li>
+                          ))}
+                </ul>
+
+                {items && (
+                    <a
+                        href={all}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex h-11 w-fit items-center gap-2 text-[15px] font-semibold text-[var(--t-navy)] hover:underline"
+                    >
+                        Lihat semua berita <ArrowRight className="h-[18px] w-[18px]" aria-hidden="true" />
+                    </a>
+                )}
             </div>
         </section>
     );
@@ -844,45 +916,3 @@ function Faq() {
         </section>
     );
 }
-
-/* ------------------------------------------------------------ closing cta */
-
-function ClosingCta() {
-    return (
-        <section className="bg-white px-4 py-12 sm:px-6 sm:py-[72px] lg:px-16">
-            <div
-                data-reveal="zoom"
-                className="relative mx-auto flex max-w-[1312px] flex-col items-center gap-6 overflow-hidden rounded-[24px] px-6 pt-8 pb-8 text-center text-white sm:rounded-[28px] lg:h-[300px] lg:flex-row lg:gap-8 lg:py-0 lg:pr-16 lg:pl-6 lg:text-left"
-                style={{ background: 'radial-gradient(60% 140% at 20% 60%, rgba(194,150,66,0.25) 0%, rgba(0,61,104,0) 70%), var(--t-navy)' }}
-            >
-                <img
-                    src={`${IMG}/menyapa.webp`}
-                    alt="TARA melambaikan tangan"
-                    width={278}
-                    height={900}
-                    loading="lazy"
-                    decoding="async"
-                    className="transi-float h-56 w-36 shrink-0 object-contain sm:h-72 sm:w-44 lg:h-[340px] lg:w-[220px]"
-                />
-                <div className="flex flex-1 flex-col gap-3.5">
-                    <h2 className="font-heading text-[26px] leading-[1.15] font-bold tracking-[-0.015em] text-balance sm:text-[38px]">
-                        Halo, saya TARA. Ada yang bisa saya bantu hari ini?
-                    </h2>
-                    <p className="text-[15px] leading-[1.6] text-[#c9d6e2] sm:text-[17px]">
-                        Petugas siap Senin–Jumat, 08.00–16.00 WIB. Di luar jam itu, pesan Anda tetap dicatat dan petugas menghubungi Anda pada hari
-                        kerja berikutnya.
-                    </p>
-                </div>
-                <button
-                    type="button"
-                    onClick={(e) => goToChat({ source: e.currentTarget })}
-                    className="transi-lift font-heading flex h-14 w-full shrink-0 items-center justify-center gap-2.5 rounded-full bg-[var(--t-gold)] px-7 text-[17px] font-bold text-[var(--t-deep)] shadow-[0_10px_28px_rgba(0,0,0,0.25)] hover:bg-[#d0a552] sm:w-auto lg:h-[60px]"
-                >
-                    <MessageCircle className="h-5 w-5" aria-hidden="true" /> Mulai chat sekarang
-                </button>
-            </div>
-        </section>
-    );
-}
-
-/* ----------------------------------------------------------------- footer */

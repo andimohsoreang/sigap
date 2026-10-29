@@ -88,7 +88,8 @@ class SecurityHeaders
             "object-src 'none'",
             'script-src '.implode(' ', $script),
             'style-src '.implode(' ', $style),
-            "img-src 'self' data: blob: https://*.tile.openstreetmap.org",
+            // Gambar berita resmi di beranda dimuat langsung dari situs Kementerian.
+            "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://www.transmigrasi.go.id",
             "font-src 'self' data: https://fonts.bunny.net",
             'connect-src '.implode(' ', array_unique($connect)),
             'frame-src '.($frame === [] ? "'none'" : implode(' ', $frame)),
