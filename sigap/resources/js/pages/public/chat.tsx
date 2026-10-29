@@ -46,6 +46,7 @@ import {
     jam,
     merge,
     postJson,
+    staffActive,
     useWaitLabel,
     type Assistant,
     type ChatAttachment,
@@ -180,8 +181,8 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
     const needsIdentity = loaded && !loggedIn && !identity;
     const staff = panel?.petugas ?? null;
     const closed = Boolean(panel?.ditutup);
-    // Diteruskan tetapi petugas belum membalas: TARA masih menjawab pertanyaan umum.
-    const awaitingStaff = Boolean(assistant?.aktif && !withAi && !closed && !messages.some((m) => m.sender_type === 'admin'));
+    // Diteruskan tetapi petugas tidak sedang membalas: TARA masih menjawab pertanyaan umum.
+    const awaitingStaff = Boolean(assistant?.aktif && !withAi && !closed && !staffActive(messages));
     const links = useMemo(() => channelLinks(kanal), [kanal]);
 
     const load = useCallback(async () => {

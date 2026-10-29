@@ -130,8 +130,8 @@ class AssistantChatTest extends TestCase
         $this->assertMatchesRegularExpression('/^REF-\d{6}-[A-Z0-9]{4}$/', (string) $conversation->reference);
         $this->assertSame(1, $conversation->unread_admin);
 
-        // Setelah diteruskan, AI diam dan pesan warga masuk ke petugas.
-        $this->ask('Halo, ada petugas?')->assertJsonCount(0, 'balasan');
+        // Setelah diteruskan, pesan warga masuk ke petugas; TARA hanya memberi tanda terima.
+        $this->ask('Halo, ada petugas?')->assertJsonCount(1, 'balasan')->assertJsonPath('balasan.0.jenis', 'menunggu_petugas');
         $this->assertSame(2, $conversation->fresh()->unread_admin);
     }
 
@@ -402,12 +402,18 @@ class AssistantChatTest extends TestCase
         $this->ask('Baik, terima kasih')->assertJsonCount(0, 'balasan');
         $this->assertSame(4, $conversation->fresh()->unread_admin);
 
-        // Setelah petugas membalas, TARA tidak ikut menjawab.
+        // Selama petugas aktif membalas, TARA tidak ikut menjawab.
         $this->actingAs(User::factory()->admin(UserRole::SuperAdmin)->create());
         app(ChatService::class)->send($conversation->fresh(), 'Halo, saya petugas.', 'admin', auth()->id());
         auth()->logout();
         $this->ask('Bagaimana cara daftar program transmigrasi?')->assertJsonCount(0, 'balasan');
         $this->assertSame('guest', $conversation->messages()->getQuery()->reorder('id', 'desc')->value('sender_type'));
+
+        // Balasan petugas yang sudah lama (mis. percakapan lama yang dibuka lagi) tidak membungkam TARA.
+        Carbon::setTestNow(now()->addMinutes(31));
+        $this->ask('Bagaimana cara daftar program transmigrasi?')
+            ->assertJsonCount(1, 'balasan')
+            ->assertJsonPath('balasan.0.jenis', 'jawaban');
     }
 
     public function test_complaint_is_never_downgraded_to_policy_question(): void

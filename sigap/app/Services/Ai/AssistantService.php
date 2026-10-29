@@ -39,6 +39,9 @@ class AssistantService
     /** Aduan dengan kata bermakna sesedikit ini ("saya mau melapor masalah") ditanya detailnya dulu. */
     private const MIN_COMPLAINT_TERMS = 3;
 
+    /** Petugas dianggap sedang menangani percakapan bila membalas dalam rentang ini. */
+    private const STAFF_ACTIVE_MINUTES = 30;
+
     private const COMPLEX_NOTICE = 'Pertanyaan ini perlu ditelaah lebih lanjut terhadap keadaan Anda, jadi saya teruskan ke petugas beserta ringkasannya.';
 
     private const ASK_DETAILS = 'Baik, saya bantu. Ceritakan masalahnya: apa yang terjadi, di kawasan atau SP mana, dan sejak kapan? Bila ada, sebutkan juga dampaknya.';
@@ -75,7 +78,7 @@ class AssistantService
         }
 
         if (! $conversation->isWithAssistant()) {
-            return $this->answerWhileWaiting($conversation, $incoming);
+            return $this->answerWhileWaiting($conversation, $incoming, $viewer);
         }
 
         $text = trim($incoming->body);
@@ -203,29 +206,40 @@ class AssistantService
     }
 
     /**
-     * Selama menunggu balasan pertama petugas (mis. di luar jam layanan),
-     * pertanyaan yang ada di sumber resmi tetap dijawab TARA; penelaahan
-     * kasusnya sudah di antrean petugas. Pesan lain diberi satu tanda terima
-     * agar warga tidak merasa diabaikan.
+     * Selama petugas tidak sedang aktif membalas (belum membalas, atau balasan
+     * terakhirnya sudah lama, mis. di luar jam layanan), pertanyaan yang ada di
+     * sumber resmi tetap dijawab TARA; penelaahan kasusnya sudah di antrean
+     * petugas. Pesan lain diberi tanda terima agar warga tidak merasa diabaikan.
      *
      * @return list<ChatMessage>
      */
-    private function answerWhileWaiting(ChatConversation $conversation, ChatMessage $incoming): array
+    private function answerWhileWaiting(ChatConversation $conversation, ChatMessage $incoming, ?User $viewer): array
     {
-        if ($conversation->isClosed() || $conversation->messages()->getQuery()->where('sender_type', 'admin')->exists()) {
+        $staffActive = $conversation->messages()->getQuery()
+            ->where('sender_type', 'admin')
+            ->where('created_at', '>=', now()->subMinutes(self::STAFF_ACTIVE_MINUTES))
+            ->exists();
+        if ($conversation->isClosed() || $staffActive) {
             return [];
         }
 
         $text = trim($incoming->body);
-        // Balasan pendek ("baik", "terima kasih", nomor HP) ditujukan ke petugas.
-        $articles = count($this->retriever->terms($text)) >= 2 ? $this->retriever->sources($text) : collect();
+        if ($ticketNo = $this->ticketNumber($text)) {
+            return [$this->ticketStatus($conversation, $ticketNo, $viewer)];
+        }
 
-        if ($articles->isNotEmpty()) {
+        // Balasan pendek ("baik", "terima kasih", nomor HP) ditujukan ke petugas.
+        if (count($this->retriever->terms($text)) >= 2) {
+            $articles = $this->retriever->sources($text);
             try {
                 $result = $this->ask($conversation, $text, $articles, $incoming->id);
                 $answerable = in_array($result['jenis'], ['informasi', 'aduan', 'pribadi'], true) && ! $result['perlu_petugas'];
                 if ($answerable && $result['jawaban'] !== '' && $this->citedSources($result, $articles)->isNotEmpty()) {
                     return [$this->answer($conversation, $text, $result, $articles)];
+                }
+                // Sapaan atau pertanyaan balik ("masalahnya apa?") tidak butuh sumber.
+                if ($result['jenis'] === 'lainnya' && $result['jawaban'] !== '') {
+                    return [$this->say($conversation, $result['jawaban'], ['kind' => 'lainnya'])];
                 }
             } catch (AiException) {
                 // Tetap beri tanda terima di bawah.
@@ -236,8 +250,8 @@ class AssistantService
     }
 
     /**
-     * Tanda terima sekali per giliran: tidak dikirim bila balasan terakhir
-     * dari sisi layanan sudah memberi tahu bahwa pesan diteruskan.
+     * Tanda terima tidak diulang bila balasan terakhir dari sisi layanan sudah
+     * berupa tanda terima yang sama.
      *
      * @return list<ChatMessage>
      */
@@ -249,7 +263,7 @@ class AssistantService
             ->reorder('id', 'desc')
             ->first()?->meta['kind'] ?? null;
 
-        if (in_array($lastKind, ['menunggu_petugas', 'diteruskan', 'minta_kontak', 'kontak_tersimpan'], true)) {
+        if ($lastKind === 'menunggu_petugas') {
             return [];
         }
 

@@ -224,7 +224,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
     openRef.current = open;
 
     const withAi = Boolean(assistant?.aktif && assistant.mode === 'ai');
-    const awaitingStaff = Boolean(assistant?.aktif && !withAi && !messages.some((m) => m.sender_type === 'admin'));
+    const awaitingStaff = Boolean(assistant?.aktif && !withAi && !staffActive(messages));
 
     const load = useCallback(async (markRead: boolean) => {
         try {
@@ -703,6 +703,12 @@ function Bubble({
  * menampilkan potongan teks aslinya + tanggal diambil, agar warga bisa
  * mencocokkan jawaban dengan sumbernya.
  */
+/** Petugas sedang aktif bila membalas dalam 30 menit terakhir (selaras dengan server). */
+export function staffActive(messages: ChatMessage[]): boolean {
+    const since = Date.now() - 30 * 60 * 1000;
+    return messages.some((m) => m.sender_type === 'admin' && m.pada !== null && Date.parse(m.pada) >= since);
+}
+
 /**
  * Isi jawaban TARA: baris berawalan "• ", "- ", atau "1." ditampilkan sebagai
  * daftar dengan indentasi gantung agar mudah dipindai di layar ponsel.
