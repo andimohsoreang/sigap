@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Headset, Menu, MessageCircle, X } from 'lucide-react';
+import { Menu, MessageCircle, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
@@ -53,27 +53,31 @@ export default function TransiHeader({
             )}
         >
             <div className="mx-auto flex h-16 max-w-[1312px] items-center justify-between gap-4 px-4 sm:px-6 lg:h-[76px] lg:px-16">
-                <Link href="/" className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[var(--t-navy)] text-white">
-                        <Headset className="h-[22px] w-[22px]" aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0">
-                        <span className="font-heading block text-xl leading-tight font-bold text-[var(--t-navy)]">SIGAP</span>
-                        <span className="block truncate text-xs text-[#5b6b7a]">
-                            <span className="hidden sm:inline">Contact Center Kementerian Transmigrasi</span>
-                            <span className="sm:hidden">Contact Center Transmigrasi</span>
+                <Link href="/" aria-label="SIGAP, Contact Center Kementerian Transmigrasi" className="flex min-w-0 shrink-0 items-center gap-3">
+                    <img
+                        src="/images/brand/logo-kementrans.png"
+                        alt=""
+                        width={44}
+                        height={44}
+                        className="h-10 w-10 shrink-0 rounded-full lg:h-11 lg:w-11"
+                    />
+                    {/* 1024–1279 px: lambang saja agar menu tidak bertumpuk. */}
+                    <span className="min-w-0 lg:hidden xl:block">
+                        <span className="font-heading block text-lg leading-tight font-bold tracking-[0.01em] whitespace-nowrap text-[var(--t-navy)] uppercase xl:text-xl">
+                            Contact Center
                         </span>
+                        <span className="block truncate text-xs text-[#5b6b7a]">Kementerian Transmigrasi</span>
                     </span>
                 </Link>
 
-                <nav aria-label="Navigasi utama" className="hidden items-center gap-8 lg:flex">
+                <nav aria-label="Navigasi utama" className="hidden items-center gap-5 lg:flex xl:gap-8">
                     {NAV.map((n) => (
                         <Link
                             key={n.href}
                             href={n.href}
                             aria-current={n.key === active ? 'page' : undefined}
                             className={cn(
-                                'relative text-[15px] transition-colors after:absolute after:-bottom-1.5 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-[var(--t-gold)] after:transition-transform after:duration-300 hover:text-[var(--t-navy)] hover:after:scale-x-100',
+                                'relative text-[15px] whitespace-nowrap transition-colors after:absolute after:-bottom-1.5 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-[var(--t-gold)] after:transition-transform after:duration-300 hover:text-[var(--t-navy)] hover:after:scale-x-100',
                                 n.key === active ? 'font-semibold text-[var(--t-navy)]' : 'text-[#4a5565]',
                             )}
                         >

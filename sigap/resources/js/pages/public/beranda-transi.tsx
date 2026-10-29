@@ -212,16 +212,6 @@ function useTypewriter(phrases: string[], active: boolean): string {
 
 const delay = (s: number) => ({ '--d': `${s}s` }) as CSSProperties;
 
-const HERO_CARD_ID = 'transi-kartu-hero';
-
-/** Elemen sumber transisi hanya dipakai bila sedang terlihat di layar. */
-function visible(id: string): HTMLElement | null {
-    const el = document.getElementById(id);
-    if (!el) return null;
-    const r = el.getBoundingClientRect();
-    return r.bottom > 0 && r.top < window.innerHeight ? el : null;
-}
-
 /* ------------------------------------------------------------------- page */
 
 export default function BerandaTransi({ kanal, kantor }: { kanal: KanalPublik; kantor: Kantor[] }) {
@@ -274,13 +264,9 @@ export default function BerandaTransi({ kanal, kantor }: { kanal: KanalPublik; k
 function Hero({ aiEnabled }: { aiEnabled: boolean }) {
     return (
         <section className="relative overflow-hidden bg-[var(--t-deep)] text-white">
-            <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0"
-                style={{ background: 'radial-gradient(70% 90% at 78% 45%, rgba(11,90,140,0.8) 0%, rgba(2,43,74,0) 70%)' }}
-            />
-            <div className="relative mx-auto grid max-w-[1312px] gap-6 px-4 pt-8 sm:px-6 sm:pt-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:px-16 lg:pt-[72px] lg:pb-10">
-                <div className="flex flex-col gap-6 pb-2 lg:gap-7 lg:pt-6 lg:pb-16">
+            <HeroMakarti />
+            <div className="relative mx-auto max-w-[1312px] px-4 pt-8 pb-6 sm:px-6 sm:pt-12 lg:px-16 xl:pt-[96px] xl:pb-[104px]">
+                <div className="flex max-w-[600px] flex-col gap-6 pb-2 lg:gap-7">
                     <span
                         className="transi-rise inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/[0.08] px-3.5 py-1.5 text-[13px] text-[#e6eef5] sm:text-sm"
                         style={delay(0.05)}
@@ -308,7 +294,7 @@ function Hero({ aiEnabled }: { aiEnabled: boolean }) {
                     <div className="transi-rise flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3.5" style={delay(0.4)}>
                         <button
                             type="button"
-                            onClick={() => goToChat({ source: visible(HERO_CARD_ID) })}
+                            onClick={(e) => goToChat({ source: e.currentTarget })}
                             className="transi-lift font-heading flex h-14 items-center justify-center gap-2.5 rounded-full bg-[var(--t-gold)] px-[26px] text-[17px] font-bold text-[var(--t-deep)] shadow-[0_10px_28px_rgba(194,150,66,0.35)] hover:bg-[#d0a552] hover:shadow-[0_14px_34px_rgba(194,150,66,0.45)]"
                         >
                             <MessageCircle className="h-5 w-5" aria-hidden="true" /> Mulai chat dengan TARA
@@ -320,10 +306,7 @@ function Hero({ aiEnabled }: { aiEnabled: boolean }) {
                             <Search className="h-[18px] w-[18px]" aria-hidden="true" /> Lacak tiket
                         </Link>
                     </div>
-                    <ul
-                        className="transi-rise flex flex-col gap-3 pt-1 text-sm text-[#c9d6e2] sm:flex-row sm:flex-wrap sm:gap-6 sm:pt-2"
-                        style={delay(0.52)}
-                    >
+                    <ul className="transi-rise flex flex-col gap-3 pt-1 text-sm text-[#c9d6e2] sm:pt-2" style={delay(0.52)}>
                         {[
                             [BookCheck, 'Jawaban dari sumber resmi'],
                             [UserRoundCheck, 'Petugas Sen–Jum 08.00–16.00 WIB'],
@@ -339,116 +322,62 @@ function Hero({ aiEnabled }: { aiEnabled: boolean }) {
                         })}
                     </ul>
                 </div>
-
-                <HeroVisual />
             </div>
+            <HeroMakarti mobile />
         </section>
     );
 }
 
-/** TARA menyapa + kartu chat yang memutar alur nyata secara berurutan. */
-function HeroVisual() {
-    return (
-        <div className="relative mx-auto w-full max-w-[460px] pb-10 lg:mx-0 lg:aspect-square lg:max-w-[648px] lg:self-end lg:pb-0">
-            {/* Maskot & lingkar cahaya */}
-            <div className="relative mx-auto aspect-square w-[78%] max-w-[360px] lg:absolute lg:top-[4%] lg:left-[34%] lg:w-[66%] lg:max-w-none">
-                <div aria-hidden="true" className="transi-halo absolute inset-[-2%] rounded-full border-2 border-[#c29642]/25" />
-                <div aria-hidden="true" className="absolute inset-[9%] rounded-full bg-white/[0.05]" />
-                <img
-                    src={`${IMG}/menyambut.webp`}
-                    alt="TARA, maskot contact center SIGAP, menyambut warga"
-                    width={396}
-                    height={900}
-                    fetchPriority="high"
-                    className="transi-float transi-rise relative h-full w-full object-contain drop-shadow-[0_24px_40px_rgba(0,10,25,0.35)]"
-                    style={delay(0.3)}
-                />
-            </div>
+/**
+ * Gedung Grand Makarti Kementerian Transmigrasi dengan TARA menyambut di
+ * depannya (setinggi pinggang). Desktop (>=1280 px): latar penuh yang memudar
+ * ke navy di bawah teks. Layar lebih kecil: gambar di bawah teks.
+ */
+function HeroMakarti({ mobile = false }: { mobile?: boolean }) {
+    const gedung = (
+        <img
+            src="/images/brand/gedung-grand-makarti.webp"
+            alt="Gedung Grand Makarti Kementerian Transmigrasi"
+            width={1434}
+            height={736}
+            fetchPriority={mobile ? 'auto' : 'high'}
+            loading={mobile ? 'lazy' : 'eager'}
+            className="absolute inset-0 h-full w-full object-cover object-[62%_center]"
+        />
+    );
+    // Lebar wadah mengikuti proporsi gambar (396x900 ditampilkan 160% tinggi
+    // wadah) agar tangan TARA yang menyambut tidak terpotong.
+    const tara = (
+        <div
+            aria-hidden="true"
+            className={cn('absolute bottom-0 overflow-hidden', mobile ? 'top-[6%] right-0' : 'top-[9%] right-[3%]')}
+            style={{ aspectRatio: (396 * 1.6) / 900 }}
+        >
+            <img
+                src={`${IMG}/menyambut.webp`}
+                alt=""
+                width={396}
+                height={900}
+                className="absolute top-0 right-0 h-[160%] w-auto max-w-none drop-shadow-[0_18px_30px_rgba(0,10,25,0.35)]"
+            />
+        </div>
+    );
 
-            {/* Kartu chat */}
+    return mobile ? (
+        <div className="relative h-[320px] overflow-hidden sm:h-[440px] xl:hidden">
+            {gedung}
+            <div aria-hidden="true" className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[var(--t-deep)] to-transparent" />
+            {tara}
+        </div>
+    ) : (
+        <div className="absolute inset-0 hidden xl:block">
+            {gedung}
             <div
-                id={HERO_CARD_ID}
-                className="vt-chat-target transi-pop relative z-10 -mt-[18%] w-full overflow-hidden rounded-[18px] bg-white text-left shadow-[0_24px_48px_rgba(0,18,36,0.45)] sm:mx-auto sm:max-w-[380px] lg:absolute lg:top-[39%] lg:left-0 lg:mt-0 lg:w-[340px]"
-                style={delay(0.55)}
-            >
-                <div className="flex items-center gap-2.5 bg-[var(--t-navy)] px-3.5 py-3">
-                    <span
-                        className="h-[34px] w-[34px] shrink-0 rounded-full bg-[var(--t-cream)] bg-cover bg-center"
-                        style={{ backgroundImage: `url(${IMG}/avatar.webp)` }}
-                        aria-hidden="true"
-                    />
-                    <span className="min-w-0">
-                        <span className="font-heading block text-sm font-bold text-white">TARA</span>
-                        <span className="block truncate text-[11px] text-[#bcd0e0]">Asisten SIGAP · menjawab dari sumber resmi</span>
-                    </span>
-                </div>
-                <div className="flex flex-col gap-2.5 bg-[#f6f8fa] p-3.5 text-[13px] leading-[1.45]" aria-hidden="true">
-                    <p
-                        className="transi-pop w-fit max-w-[85%] rounded-[14px] rounded-bl-[4px] border border-[#e6ebf0] bg-white px-3 py-2 text-[#1f2d3a]"
-                        style={delay(0.9)}
-                    >
-                        Halo, saya TARA 👋 Ceritakan saja kebutuhan Anda.
-                    </p>
-                    <p
-                        className="transi-pop ml-auto w-fit max-w-[80%] rounded-[14px] rounded-br-[4px] bg-[var(--t-navy)] px-3 py-2 text-white"
-                        style={delay(1.6)}
-                    >
-                        Sertifikat lahan saya di SP2 belum keluar.
-                    </p>
-                    <div className="transi-typing flex w-fit gap-1 rounded-[14px] border border-[#e6ebf0] bg-white px-3 py-2.5" style={delay(2.2)}>
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#8a96a3]" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#8a96a3]" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#8a96a3]" />
-                    </div>
-                    <div
-                        className="transi-pop flex w-fit max-w-[90%] flex-col gap-2 rounded-[14px] rounded-bl-[4px] border border-[#e6ebf0] bg-white px-3 py-2 text-[#1f2d3a]"
-                        style={delay(3.3)}
-                    >
-                        <span>Saya teruskan ke petugas, ya. Nomor referensi Anda REF-261025-NMAJ.</span>
-                        <span className="flex items-center gap-1.5 text-xs font-semibold text-[#0d7a5f]">
-                            <UserRoundCheck className="h-[13px] w-[13px]" /> Rina (petugas) bergabung
-                        </span>
-                    </div>
-                </div>
-                <div className="flex flex-wrap gap-1.5 bg-[#f6f8fa] px-3.5 pt-1 pb-3.5">
-                    {['Lapor masalah', 'Cek tiket', 'Buat akun'].map((c, i) => (
-                        <button
-                            key={c}
-                            type="button"
-                            onClick={() =>
-                                goToChat({
-                                    question:
-                                        c === 'Cek tiket'
-                                            ? 'Saya mau cek status tiket'
-                                            : c === 'Buat akun'
-                                              ? 'Saya mau dibuatkan akun'
-                                              : 'Saya mau melapor masalah',
-                                    source: document.getElementById(HERO_CARD_ID),
-                                })
-                            }
-                            className="transi-pop transi-lift rounded-full border border-[#c8d4df] bg-white px-2.5 py-1.5 text-xs font-medium text-[var(--t-navy)] hover:border-[var(--t-navy)]"
-                            style={delay(4 + i * 0.12)}
-                        >
-                            {c}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Lencana tiket */}
-            <div
-                className="transi-pop absolute right-0 bottom-[7%] z-20 hidden items-center gap-2.5 rounded-[14px] bg-white px-3.5 py-2.5 shadow-[0_14px_30px_rgba(0,18,36,0.4)] lg:flex"
-                style={delay(4.6)}
                 aria-hidden="true"
-            >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e7f6ef]">
-                    <TicketCheck className="h-4 w-4 text-[#0d7a5f]" />
-                </span>
-                <span>
-                    <span className="block text-[13px] font-semibold text-[#1f2d3a]">Tiket terbit dari chat</span>
-                    <span className="block font-mono text-xs text-[#5b6b7a]">TKT-261025-7KQ4MZ</span>
-                </span>
-            </div>
+                className="absolute inset-0"
+                style={{ background: 'linear-gradient(90deg, var(--t-deep) 0%, rgba(2,43,74,0.9) 30%, rgba(2,43,74,0.45) 48%, rgba(2,43,74,0) 66%)' }}
+            />
+            {tara}
         </div>
     );
 }
