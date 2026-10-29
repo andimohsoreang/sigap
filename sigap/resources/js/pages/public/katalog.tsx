@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpRight, AtSign, Briefcase, Landmark, type LucideIcon, MessageCircle } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, AtSign, Briefcase, Globe, type LucideIcon, MessageCircle, UserRound } from 'lucide-react';
 
 import { activeLinks, external, type KanalPublik, type KanalTautan, SosmedList } from '@/components/sigap/kanal-resmi';
 import { DIRECTORY_TITLE, type Kantor, KantorAccordion } from '@/components/sigap/kantor-direktori';
@@ -33,7 +33,8 @@ export default function Katalog({ kanal, kantor }: Props) {
             title="Katalog Pengaduan"
             description="Kanal pengaduan resmi serta alamat dan kontak Kantor Pusat Kementerian Transmigrasi dan balai transmigrasi di daerah."
             active="katalog"
-            breadcrumb={[{ label: 'Beranda', href: '/' }, { label: 'Katalog Pengaduan' }]}
+            breadcrumb={[{ label: 'Beranda', href: '/' }, { label: 'Katalog Pengaduan', href: '/katalog' }, { label: 'Kantor & Balai' }]}
+            compact
             eyebrow="Kantor & Balai Layanan"
             heading={DIRECTORY_TITLE}
             subtitle="Datang langsung atau hubungi kantor terdekat dari lokasi Anda. Setiap kantor menerima pertanyaan dan aduan warga di wilayahnya."
@@ -66,7 +67,7 @@ export default function Katalog({ kanal, kantor }: Props) {
                                 {nasional.length > 0 && (
                                     <article className="flex flex-col gap-5 rounded-[18px] bg-[#f1f5f9] p-5 sm:p-6">
                                         <Heading
-                                            icon={Landmark}
+                                            icon={Globe}
                                             title="Kanal Nasional"
                                             desc="Dikelola instansi nasional dan terhubung ke Kementerian Transmigrasi."
                                             solid
@@ -93,7 +94,7 @@ export default function Katalog({ kanal, kantor }: Props) {
                                             desc="Hanya untuk pegawai kementerian."
                                             tone="bronze"
                                         />
-                                        <LinkCard icon={internal.icon} item={internal.item} cta="Ajukan aduan" tone="bronze" />
+                                        <LinkCard icon={UserRound} item={internal.item} cta="Ajukan aduan" tone="bronze" />
                                     </article>
                                 )}
                             </div>
@@ -101,19 +102,19 @@ export default function Katalog({ kanal, kantor }: Props) {
                     </section>
                 )}
 
-                <section aria-labelledby="kantor-balai" className="flex flex-col gap-6">
+                <section aria-labelledby="kantor-balai" className="flex flex-col gap-8 lg:gap-14">
                     <div>
                         <TaraEyebrow>Kantor &amp; balai</TaraEyebrow>
-                        <h2 id="kantor-balai" className="font-heading mt-2 text-[26px] font-bold text-[var(--t-deep)] sm:text-[30px]">
+                        <h2 id="kantor-balai" className="font-heading mt-2 text-[22px] leading-[1.33] font-bold text-[var(--t-deep)] sm:text-2xl">
                             Datang langsung ke kantor terdekat
                         </h2>
                     </div>
                     <KantorAccordion
                         offices={kantor}
                         aside={
-                            <div className="hidden flex-col items-start gap-3 rounded-[18px] border border-[#ece6dc] bg-white p-5 lg:flex">
+                            <div className="hidden flex-col items-start gap-3 rounded-[20px] border border-[#ece6dc] bg-white p-5 lg:flex">
                                 <TaraAvatar className="h-12 w-12" />
-                                <p className="font-heading text-lg font-bold text-[var(--t-deep)]">Tidak perlu datang langsung?</p>
+                                <p className="font-heading text-[17px] leading-[1.41] font-bold text-[var(--t-deep)]">Tidak perlu datang langsung?</p>
                                 <p className="text-sm leading-relaxed text-[#4a5868]">
                                     Sebagian besar urusan bisa selesai lewat chat. TARA akan meneruskan ke balai yang tepat.
                                 </p>
@@ -135,9 +136,9 @@ export default function Katalog({ kanal, kantor }: Props) {
 
 function Stat({ value, label }: { value: number; label: string }) {
     return (
-        <div className="flex min-w-[108px] flex-col-reverse rounded-[14px] border border-[#ece6dc] bg-white px-4 py-3">
-            <dt className="mt-1.5 text-[13px] text-[#6b5d4a]">{label}</dt>
-            <dd className="font-heading text-[28px] leading-none font-bold text-[var(--t-deep)]">{value}</dd>
+        <div className="flex w-[120px] flex-col-reverse gap-0.5 rounded-2xl border border-[#e3dccf] bg-white px-[18px] py-3.5">
+            <dt className="text-[13.5px] leading-normal text-[#5b6b7a]">{label}</dt>
+            <dd className="font-heading text-[30px] leading-tight font-bold text-[var(--t-deep)]">{value}</dd>
         </div>
     );
 }
@@ -159,22 +160,24 @@ function Heading({
     tone?: 'navy' | 'bronze';
 }) {
     return (
-        <div className="flex items-center gap-3">
+        <div className={'flex gap-3 ' + (solid || emblem ? 'items-center' : 'items-start gap-4')}>
             {emblem ? (
                 <img src={emblem} alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-full" />
             ) : (
                 <span
                     className={
-                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-full ' +
-                        (solid ? 'bg-[var(--t-navy)] text-white' : 'bg-[#eef3f8] text-[var(--t-navy)]')
+                        'flex shrink-0 items-center justify-center ' +
+                        (solid ? 'h-9 w-9 rounded-full bg-[var(--t-navy)] text-white' : 'h-11 w-11 rounded-[10px] bg-[#eef3f8] text-[var(--t-navy)]')
                     }
                 >
-                    <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                    <Icon className={solid ? 'h-[18px] w-[18px]' : 'h-5 w-5'} aria-hidden="true" />
                 </span>
             )}
             <div>
                 <h3 className="font-heading text-lg leading-[1.33] font-bold text-[var(--t-deep)]">{title}</h3>
-                <p className={'text-[13.5px] ' + (tone === 'bronze' ? 'text-[#4b3f30]' : 'text-[#5b6b7a]')}>{desc}</p>
+                <p className={(solid || emblem ? 'text-[13.5px] ' : 'mt-0.5 text-sm ') + (tone === 'bronze' ? 'text-[#4b3f30]' : 'text-[#5b6b7a]')}>
+                    {desc}
+                </p>
             </div>
         </div>
     );

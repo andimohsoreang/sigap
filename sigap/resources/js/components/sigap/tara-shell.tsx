@@ -204,6 +204,7 @@ export default function TaraPage({
     heroChildren,
     heroAside,
     breadcrumb,
+    compact = false,
     children,
 }: {
     title: string;
@@ -220,6 +221,8 @@ export default function TaraPage({
     heroAside?: ReactNode;
     /** Jejak halaman di atas eyebrow; item terakhir = halaman ini. */
     breadcrumb?: { label: string; href?: string }[];
+    /** Hero lebih rapat dengan judul 44 px (halaman direktori, mis. Katalog). */
+    compact?: boolean;
     children: ReactNode;
 }) {
     const { auth } = usePage<SharedData>().props;
@@ -247,14 +250,20 @@ export default function TaraPage({
 
                 <section className="bg-[#f7f3ee]">
                     <div className="relative mx-auto flex max-w-[1312px] items-end gap-8 px-4 sm:px-6 lg:px-16">
-                        <div className={cn('min-w-0 flex-1 py-12 lg:py-16', heroAside && 'lg:flex lg:items-end lg:justify-between lg:gap-10')}>
+                        <div
+                            className={cn(
+                                'min-w-0 flex-1',
+                                compact ? 'py-10 lg:pt-[58px] lg:pb-14' : 'py-12 lg:py-16',
+                                heroAside && 'lg:flex lg:items-end lg:justify-between lg:gap-12',
+                            )}
+                        >
                             <div className="min-w-0">
                                 {breadcrumb && (
                                     <nav aria-label="Jejak halaman" className="mb-5">
-                                        <ol className="flex flex-wrap items-center gap-1.5 text-[13px] text-[#6b5d4a]">
+                                        <ol className="flex flex-wrap items-center gap-2 text-sm text-[#4a5565]">
                                             {breadcrumb.map((b, i) => (
                                                 <li key={b.label} className="flex items-center gap-1.5">
-                                                    {i > 0 && <ChevronRight className="h-3.5 w-3.5 text-[#a8987f]" aria-hidden="true" />}
+                                                    {i > 0 && <ChevronRight className="h-3.5 w-3.5 text-[#8a96a3]" aria-hidden="true" />}
                                                     {b.href ? (
                                                         <Link href={b.href} className="hover:text-[var(--t-deep)] hover:underline">
                                                             {b.label}
@@ -270,7 +279,12 @@ export default function TaraPage({
                                     </nav>
                                 )}
                                 <TaraEyebrow tone="bronze">{eyebrow}</TaraEyebrow>
-                                <h1 className="font-heading mt-3 text-[34px] leading-[1.08] font-bold text-[var(--t-deep)] sm:text-[44px] lg:text-[52px]">
+                                <h1
+                                    className={cn(
+                                        'font-heading mt-3 text-[34px] leading-[1.08] font-bold text-[var(--t-deep)] sm:text-[44px]',
+                                        compact ? 'lg:max-w-[760px] lg:leading-[1.18]' : 'lg:text-[52px]',
+                                    )}
+                                >
                                     {heading}
                                 </h1>
                                 {subtitle && (

@@ -45,9 +45,9 @@ function ringkasan(k: Kantor): string {
     return [k.lokasi, kontak, k.whatsapp && k.telepon !== k.whatsapp ? 'WhatsApp tersedia' : null].filter(Boolean).join(' · ');
 }
 
-export function KantorEyebrow({ kantor }: { kantor: Kantor }) {
+export function KantorEyebrow({ kantor, small = false }: { kantor: Kantor; small?: boolean }) {
     return (
-        <p className="text-[11px] font-semibold tracking-[0.14em] text-[#9a7330] uppercase">
+        <p className={cn('font-semibold text-[#9a7330] uppercase', small ? 'text-xs tracking-[1.4px]' : 'text-[12.5px] tracking-[1.5px]')}>
             {kantor.jenis} · {kantor.provinsi}
         </p>
     );
@@ -57,7 +57,7 @@ export function KantorEyebrow({ kantor }: { kantor: Kantor }) {
 export function KantorList({ offices, selected, onSelect }: { offices: Kantor[]; selected: string | null; onSelect: (kode: string) => void }) {
     return (
         <div className="flex min-w-0 flex-col gap-3">
-            <p className="px-1 text-[11px] font-semibold tracking-[0.14em] text-[#5b6b7a] uppercase">{offices.length} lokasi</p>
+            <p className="px-1 text-[12.5px] font-semibold tracking-[1.5px] text-[#5b6b7a] uppercase">{offices.length} lokasi</p>
             <ul className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-col sm:overflow-visible sm:pb-0">
                 {offices.map((k) => {
                     const active = k.kode === selected;
@@ -81,7 +81,7 @@ export function KantorList({ offices, selected, onSelect }: { offices: Kantor[];
                                     <Building2 className="h-[18px] w-[18px]" aria-hidden="true" />
                                 </span>
                                 <span className="min-w-0 flex-1">
-                                    <span className="block font-semibold whitespace-nowrap text-[var(--t-deep)] sm:whitespace-normal">
+                                    <span className="block text-[15px] font-semibold whitespace-nowrap text-[var(--t-deep)] sm:whitespace-normal">
                                         {k.singkat}
                                     </span>
                                     <span className="block text-[13px] whitespace-nowrap text-[#5b6b7a] sm:whitespace-normal">{k.lokasi}</span>
@@ -151,7 +151,7 @@ export function KantorDetail({ kantor }: { kantor: Kantor }) {
 
             {kantor.sosmed.length > 0 && (
                 <div className="flex flex-col gap-2.5">
-                    <p className="text-[13px] font-semibold text-[#5b6b7a]">Media sosial</p>
+                    <p className="text-[13.5px] font-semibold text-[#5b6b7a]">Media sosial</p>
                     <ul className="flex flex-wrap gap-2">
                         {kantor.sosmed.map((a) => {
                             const p = PLATFORMS[a.platform] ?? PLATFORMS.lainnya;
@@ -201,10 +201,10 @@ export function KantorDetail({ kantor }: { kantor: Kantor }) {
 
 function Row({ icon: Icon, label, children }: { icon: LucideIcon; label: string; children: ReactNode }) {
     return (
-        <div className="grid grid-cols-[20px_1fr] gap-x-3 gap-y-0.5 py-3.5 sm:grid-cols-[20px_96px_1fr]">
-            <Icon className="mt-0.5 h-[18px] w-[18px] text-[#3d4f61]" aria-hidden="true" />
-            <dt className="text-[14px] font-medium text-[#3d4f61]">{label}</dt>
-            <dd className="col-start-2 min-w-0 leading-relaxed sm:col-start-3">{children}</dd>
+        <div className="grid grid-cols-[18px_1fr] gap-x-3 gap-y-0.5 py-3.5 sm:grid-cols-[18px_104px_1fr]">
+            <Icon className="mt-0.5 h-[18px] w-[18px] text-[var(--t-navy)]" aria-hidden="true" />
+            <dt className="text-[13.5px] leading-[1.63] font-semibold text-[#5b6b7a]">{label}</dt>
+            <dd className="col-start-2 min-w-0 text-[15px] leading-[1.47] text-[#2a3a48] sm:col-start-3">{children}</dd>
         </div>
     );
 }
@@ -272,7 +272,7 @@ export function KantorAccordion({ offices, aside }: { offices: Kantor[]; aside?:
     return (
         <div className="grid items-start gap-6 lg:grid-cols-[300px_1fr]">
             <div className="flex min-w-0 flex-col gap-5 lg:sticky lg:top-24">
-                <div className="rounded-[18px] bg-[#f3f5f8] p-4">
+                <div className="rounded-[20px] border border-[#e6ebf0] bg-[#f2f5f8] p-4">
                     <KantorList offices={offices} selected={open} onSelect={pick} />
                 </div>
                 {aside}
@@ -289,17 +289,17 @@ export function KantorAccordion({ offices, aside }: { offices: Kantor[]; aside?:
                                 refs.current[k.kode] = el;
                             }}
                             className={cn(
-                                'scroll-mt-24 overflow-hidden rounded-[18px] border bg-white transition-shadow',
-                                expanded ? 'border-[#9fb4c8] shadow-[0_10px_30px_rgba(2,43,74,0.08)]' : 'border-[#e6ebf0]',
+                                'scroll-mt-24 overflow-hidden rounded-[20px] border bg-white transition-shadow',
+                                expanded ? 'border-[var(--t-navy)] shadow-[0_8px_24px_rgba(2,43,74,0.08)]' : 'border-[#e6ebf0]',
                             )}
                         >
                             {expanded ? (
-                                <div id={panelId} className="grid lg:grid-cols-[1fr_320px]">
-                                    <div className="flex min-w-0 flex-col gap-4 p-6 sm:p-7">
+                                <div id={panelId} className="grid lg:grid-cols-[1fr_300px]">
+                                    <div className="flex min-w-0 flex-col gap-5 p-6 sm:p-8">
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="min-w-0">
                                                 <KantorEyebrow kantor={k} />
-                                                <h3 className="font-heading mt-1.5 text-[22px] leading-snug font-bold text-[var(--t-deep)]">
+                                                <h3 className="font-heading mt-1.5 text-[22px] leading-[1.25] font-bold text-[var(--t-deep)] sm:text-2xl">
                                                     {judul(k)}
                                                 </h3>
                                                 {k.kode !== 'pusat' && <p className="mt-1 text-sm text-[#5b6b7a]">{k.nama}</p>}
@@ -309,31 +309,33 @@ export function KantorAccordion({ offices, aside }: { offices: Kantor[]; aside?:
                                                 onClick={() => setOpen(null)}
                                                 aria-expanded="true"
                                                 aria-controls={panelId}
-                                                className="flex shrink-0 items-center gap-1 rounded-full bg-[var(--t-navy)] px-3.5 py-1.5 text-[13px] font-semibold text-white hover:bg-[var(--t-deep)]"
+                                                className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-[var(--t-navy)] pr-3 pl-4 text-sm font-semibold text-white hover:bg-[var(--t-deep)]"
                                             >
                                                 Tutup <ChevronDown className="h-3.5 w-3.5 rotate-180" aria-hidden="true" />
                                             </button>
                                         </div>
                                         <KantorDetail kantor={k} />
                                     </div>
-                                    <KantorPeta kantor={k} className="h-64 lg:h-auto lg:min-h-full" />
+                                    <KantorPeta kantor={k} className="h-64 lg:h-auto lg:min-h-[522px]" />
                                 </div>
                             ) : (
                                 <button
                                     type="button"
                                     onClick={() => pick(k.kode)}
                                     aria-expanded="false"
-                                    className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-[#fafbfc] sm:px-6"
+                                    className="flex w-full items-center gap-4 px-5 py-5 text-left hover:bg-[#fafbfc] sm:px-6"
                                 >
-                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#eef3f8] text-[var(--t-navy)]">
+                                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#eef3f8] text-[var(--t-navy)]">
                                         <Building2 className="h-5 w-5" aria-hidden="true" />
                                     </span>
-                                    <span className="min-w-0 flex-1">
-                                        <KantorEyebrow kantor={k} />
-                                        <span className="font-heading mt-0.5 block text-lg font-bold text-[var(--t-deep)]">{judul(k)}</span>
-                                        <span className="mt-0.5 block text-sm text-[#5b6b7a]">{ringkasan(k)}</span>
+                                    <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+                                        <KantorEyebrow kantor={k} small />
+                                        <span className="font-heading block text-lg leading-[1.3] font-bold text-[var(--t-deep)] sm:text-xl">
+                                            {judul(k)}
+                                        </span>
+                                        <span className="block text-sm text-[#5b6b7a]">{ringkasan(k)}</span>
                                     </span>
-                                    <span className="hidden shrink-0 items-center gap-1 rounded-full border border-[#cfd8e1] px-3.5 py-1.5 text-[13px] font-semibold text-[var(--t-deep)] sm:flex">
+                                    <span className="hidden h-10 shrink-0 items-center gap-1.5 rounded-full border border-[var(--t-navy)] pr-2.5 pl-3.5 text-sm font-semibold text-[var(--t-navy)] sm:flex">
                                         Lihat detail <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
                                     </span>
                                     <ChevronDown className="h-5 w-5 shrink-0 text-[#5b6b7a] sm:hidden" aria-hidden="true" />
