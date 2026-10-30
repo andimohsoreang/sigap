@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\KnowledgeArticle;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -26,6 +28,10 @@ return new class extends Migration
                 ]);
             }
         }
+
+        // Pembaruan lewat query builder tidak memicu event model: indeks
+        // pencarian artikel yang ter-cache dibuang agar TARA memakai judul baru.
+        Cache::forget(KnowledgeArticle::CACHE_KEY);
     }
 
     public function down(): void
