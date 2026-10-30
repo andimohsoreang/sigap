@@ -3,11 +3,13 @@
 namespace Tests\Feature\Ai;
 
 use App\Models\KnowledgeArticle;
+use App\Models\KnowledgeSource;
 use App\Services\Ai\AiException;
 use App\Services\Ai\LlmClient;
 use Database\Seeders\KnowledgeSeeder;
 use Database\Seeders\OfficialKnowledgeSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
@@ -67,6 +69,50 @@ class UjiAsistenGateTest extends TestCase
         $this->artisan('sigap:uji-asisten', ['--min-klasifikasi' => 85, '--maks-p95' => 12])
             ->expectsOutputToContain('Gerbang kualitas GAGAL: klasifikasi 0% < 85%; P95 tidak terukur')
             ->assertFailed();
+    }
+
+    /** Sumber Resmi dengan batas usia lain untuk kasus "umur berapa batas maksimal…". */
+    private function oldAgeSource(array $basis = []): void
+    {
+        $source = KnowledgeSource::create($basis + ['kind' => 'situs', 'name' => 'Persyaratan lama', 'url' => 'https://www.transmigrasi.go.id/layanan/persyaratan-transmigrasi', 'status' => 'siap']);
+        $source->passages()->create(['url' => $source->url, 'title' => 'Persyaratan Transmigrasi', 'heading' => 'Syarat Mendaftar', 'body' => 'Berusia produktif, yaitu usia antara 19 s/d 49 tahun, batas umur maksimal ikut transmigrasi.', 'position' => 0]);
+        Cache::flush();
+    }
+
+    private function answering(array $answer): void
+    {
+        $this->app->bind(LlmClient::class, fn () => new class($answer) implements LlmClient
+        {
+            public function __construct(private array $answer) {}
+
+            public function complete(array $messages, bool $json = false): string
+            {
+                return (string) json_encode($this->answer + ['jenis' => 'informasi', 'portal' => null, 'ringkasan' => '']);
+            }
+        });
+    }
+
+    public function test_conflict_case_without_deciding_labels_must_go_to_staff(): void
+    {
+        $this->oldAgeSource();
+
+        $this->answering(['jawaban' => 'Batas usia 19–53 tahun [1].', 'sumber' => [1], 'beda_sumber' => false, 'perlu_petugas' => false]);
+        $this->artisan('sigap:uji-asisten')->expectsOutputToContain('Sumber berbeda tepat: 0% (0/1)')->assertSuccessful();
+
+        $this->answering(['jawaban' => 'Menurut [1] 19–53 tahun. Menurut [2] 19–49 tahun.', 'sumber' => [1, 2], 'beda_sumber' => true, 'perlu_petugas' => true, 'alasan_petugas' => 'sumber_berbeda']);
+        $this->artisan('sigap:uji-asisten')->expectsOutputToContain('Sumber berbeda tepat: 100% (1/1)')->assertSuccessful();
+    }
+
+    public function test_conflict_case_with_deciding_labels_must_name_current_and_old_rule(): void
+    {
+        $this->oldAgeSource(['dasar_hukum' => 'Peraturan Lama 11/2017', 'status_dasar' => 'diganti', 'diganti_oleh' => 'Peraturan Baru 2/2024']);
+        KnowledgeArticle::query()->update(['dasar_hukum' => 'Peraturan Baru 2/2024', 'status_dasar' => 'berlaku']);
+
+        $this->answering(['jawaban' => 'Batas usia 19–53 tahun [1]. Ketentuan 19–49 tahun [2] adalah aturan lama yang sudah diganti.', 'sumber' => [1, 2], 'beda_sumber' => true, 'perlu_petugas' => false]);
+        $this->artisan('sigap:uji-asisten')->expectsOutputToContain('Sumber berbeda tepat: 100% (1/1)')->assertSuccessful();
+
+        $this->answering(['jawaban' => 'Menurut [1] 19–53 tahun. Menurut [2] 19–49 tahun.', 'sumber' => [1, 2], 'beda_sumber' => true, 'perlu_petugas' => true, 'alasan_petugas' => 'sumber_berbeda']);
+        $this->artisan('sigap:uji-asisten')->expectsOutputToContain('Sumber berbeda tepat: 0% (0/1)')->assertSuccessful();
     }
 
     public function test_answers_without_sources_fail_the_gate(): void

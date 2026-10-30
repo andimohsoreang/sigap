@@ -26,6 +26,9 @@ use Illuminate\Support\Str;
  * - Jenis     : klasifikasi model sama dengan harapan.
  * - Sumber    : jawaban informasi selalu menyebut sumber yang benar-benar
  *               dikirim (jawaban tanpa sumber = tebakan, ditolak sistem).
+ * - Konflik   : kasus bertanda `konflik` mengikuti label dasar hukum sumber
+ *               (PRD-AI FR-AI-11): aturan yang berlaku + aturan lama disebut,
+ *               atau diteruskan ke petugas bila label belum memutuskan.
  *
  * Jalankan sebelum mengganti model atau setelah menambah banyak artikel.
  *
@@ -56,7 +59,7 @@ class UjiAsistenCommand extends Command
         }
 
         $rows = [];
-        $score = ['cari' => [0, 0], 'artikel' => [0, 0], 'jenis' => [0, 0], 'tebak' => 0, 'gagal' => 0];
+        $score = ['cari' => [0, 0], 'artikel' => [0, 0], 'jenis' => [0, 0], 'konflik' => [0, 0], 'tebak' => 0, 'gagal' => 0];
         $durations = [];
 
         foreach ($cases as $i => $case) {
@@ -98,6 +101,19 @@ class UjiAsistenCommand extends Command
                         $type .= ' ⚠ tanpa sumber';
                     }
                     $answer = $result['jawaban'] !== '' ? $result['jawaban'] : $result['ringkasan'];
+
+                    if (isset($case['konflik'])) {
+                        [$ok, $note] = $this->conflictHandled($case['konflik'], $result, $sources, $assistant);
+                        if ($ok !== null) {
+                            $score['konflik'][0] += (int) $ok;
+                            $score['konflik'][1]++;
+                        }
+                        $type .= " · konflik: {$note}".match ($ok) {
+                            true => ' ✓',
+                            false => ' ✗',
+                            null => '',
+                        };
+                    }
                 } catch (AiException $e) {
                     $score['gagal']++;
                     $type = 'GAGAL: '.Str::limit($e->getMessage(), 40);
@@ -130,6 +146,7 @@ class UjiAsistenCommand extends Command
         $this->line('  artikel saja      : '.$pct($score['artikel']).'  (judul artikel di pencarian artikel terbit, tanpa Sumber Resmi)');
         if ($withModel) {
             $this->line('Klasifikasi tepat   : '.$pct($score['jenis']));
+            $this->line('Sumber berbeda tepat: '.$pct($score['konflik']).'  (aturan berlaku + lama, atau ke petugas bila label belum memutuskan)');
             $this->line('Jawaban tanpa sumber: '.$score['tebak'].' (ditolak sistem, warga melihat "belum menemukan informasi resmi")');
             $this->line('Panggilan gagal     : '.$score['gagal']);
             if ($durations !== []) {
@@ -225,6 +242,35 @@ class UjiAsistenCommand extends Command
         return $sources->contains(fn ($s) => str_contains($normalize(
             ($s instanceof KnowledgePassage ? $s->displayTitle() : $s->title).' '.$s->body
         ), $needle));
+    }
+
+    /**
+     * Kasus sumber bertentangan (PRD-AI FR-AI-11). Sumber yang memuat salah
+     * satu angka menentukan apakah label dasar hukum memutuskan.
+     *
+     * @param  array{berlaku: string, lama: string}  $conflict
+     * @param  array<string, mixed>  $result  hasil AssistantService::consult()
+     * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $sources
+     * @return array{0: bool|null, 1: string} null = tidak dinilai (sumber lama tidak ikut terambil)
+     */
+    private function conflictHandled(array $conflict, array $result, Collection $sources, AssistantService $assistant): array
+    {
+        $number = fn (string $n) => '/(?<!\d)'.preg_quote($n, '/').'(?!\d)/u';
+        $relevant = $sources->filter(fn ($s) => preg_match($number($conflict['berlaku']), $s->body) === 1 || preg_match($number($conflict['lama']), $s->body) === 1);
+        if (! $relevant->contains(fn ($s) => preg_match($number($conflict['lama']), $s->body) === 1)) {
+            return [null, 'sumber lama tidak terambil'];
+        }
+
+        if (AssistantService::basisDecides($relevant)) {
+            $ok = preg_match($number($conflict['berlaku']), $result['jawaban']) === 1
+                && preg_match($number($conflict['lama']), $result['jawaban']) === 1
+                && preg_match('/sudah diganti|aturan lama/iu', $result['jawaban']) === 1
+                && ! $result['perlu_petugas'];
+
+            return [$ok, 'label memutuskan'];
+        }
+
+        return [$assistant->unresolvedConflict($result, $sources), 'label belum memutuskan → petugas'];
     }
 
     /**

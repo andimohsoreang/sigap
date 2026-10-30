@@ -20,6 +20,11 @@
  *             ditemukan sistem, dan jangan mengarang. Kasus yang belum
  *             ditemukan dicatat di RetrievalQualityTest::DIKETAHUI_GAGAL.
  *             null/false: sama seperti `artikel`.
+ * - konflik : (opsional) dua angka yang ditulis berbeda oleh dua Sumber Resmi
+ *             (PRD-AI FR-AI-11). Bila label dasar hukum sumbernya memutuskan,
+ *             jawaban wajib memuat angka yang berlaku dan menyebut angka lama
+ *             sebagai aturan yang sudah diganti; bila tidak, percakapan wajib
+ *             diteruskan ke petugas dengan alasan "sumber berbeda".
  *
  * Dipakai oleh tests/Feature/Ai/RetrievalQualityTest (pencarian, tanpa
  * model) dan `php artisan sigap:uji-asisten` (alur lengkap dengan model).
@@ -43,7 +48,7 @@ return [
     ['tanya' => 'Apa saja syarat untuk menjadi peserta program transmigrasi?', 'jenis' => 'informasi', 'artikel' => 'boleh menjadi transmigran', 'harus_memuat' => 'KTP-el'],
     ['tanya' => 'gimana caranya daftar jadi transmigran?', 'jenis' => 'informasi', 'artikel' => 'boleh menjadi transmigran', 'harus_memuat' => 'kantor desa'],
     ['tanya' => 'Nuwun sewu, kulo badhe nderek transmigrasi, syaratipun menapa?', 'jenis' => 'informasi', 'artikel' => 'boleh menjadi transmigran', 'harus_memuat' => '19 - 53 tahun'],
-    ['tanya' => 'umur berapa batas maksimal untuk ikut transmigrasi?', 'jenis' => 'informasi', 'artikel' => 'persyaratan calon transmigran', 'harus_memuat' => '53 tahun'],
+    ['tanya' => 'umur berapa batas maksimal untuk ikut transmigrasi?', 'jenis' => 'informasi', 'artikel' => 'persyaratan calon transmigran', 'harus_memuat' => '53 tahun', 'konflik' => ['berlaku' => '53', 'lama' => '49']],
     ['tanya' => 'saya belum menikah, boleh ikut transmigrasi?', 'jenis' => 'informasi', 'artikel' => 'persyaratan calon transmigran', 'harus_memuat' => 'belum berkeluarga'],
     ['tanya' => 'daftar transmigrasi bisa di kantor desa?', 'jenis' => 'informasi', 'artikel' => 'cara mendaftar sebagai calon transmigran', 'harus_memuat' => 'kantor desa'],
     ['tanya' => 'seleksi calon transmigran ada tes kesehatan?', 'jenis' => 'informasi', 'artikel' => 'cara mendaftar sebagai calon transmigran', 'harus_memuat' => 'pemeriksaan kesehatan'],
