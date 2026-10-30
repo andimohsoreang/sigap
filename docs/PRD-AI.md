@@ -304,6 +304,11 @@ sumber yang tidak memuatnya. Di server (`Modules\Ai\NumberGuard`):
   (aduan/urusan pribadi tetap dengan alasannya sendiri, tanpa jawaban); baris `ai_calls` ditandai
   `status = ditolak`, `error_code = angka_tanpa_dasar`.
 - `sigap:uji-asisten` melaporkan tolakan per kasus. Jawaban yang benar tidak boleh ditolak.
+- **Katalog portal = petunjuk arah, bukan sumber fakta aturan.** `purpose`/`description` portal dikirim ke model
+  hanya untuk memilih rujukan, jadi tidak boleh memuat ketentuan (usia, jangka waktu, biaya, pasal); kontak
+  ditulis di kolom `contact`. Pengaman angka tidak memakai katalog portal sebagai dasar angka. Dijaga
+  `KoreksiPortalTest` (seeder tanpa angka) dan `KnowledgeSourceTest` (angka dari katalog ditolak); koreksi data
+  produksi lewat `sigap:koreksi-portal` (pratinjau → `--terapkan`).
 
 ### Prosedur artikel resmi (Basis Pengetahuan)
 
