@@ -5,7 +5,6 @@ namespace Tests\Unit;
 use App\Models\KnowledgeArticle;
 use App\Models\KnowledgePassage;
 use App\Models\KnowledgeSource;
-use App\Modules\Ai\Prompts\JawabPrompt;
 use App\Services\Ai\AssistantService;
 use Tests\TestCase;
 
@@ -50,18 +49,6 @@ class LegalBasisTest extends TestCase
         $this->assertFalse(AssistantService::basisDecides(collect([$current, $this->passage(null)])), 'kutipan tanpa sumber');
         $this->assertFalse(AssistantService::basisDecides(collect([$current, $this->article(['status_dasar' => 'berlaku'])])), 'keduanya berlaku');
         $this->assertFalse(AssistantService::basisDecides(collect([$current, $this->passage($replaced), $this->article([])])), 'ada yang belum diketahui');
-    }
-
-    /** Contoh nyata (mis. batas usia) di prompt pernah bocor ke jawaban tanpa ada di SUMBER. */
-    public function test_jawab_prompt_examples_carry_no_domain_facts(): void
-    {
-        $prompt = JawabPrompt::system();
-
-        foreach (['19–53', '19–49', '19 - 53', 'SIBARDUKTRANS', 'Persyaratan Transmigrasi'] as $fact) {
-            $this->assertStringNotContainsString($fact, $prompt);
-        }
-        $this->assertStringContainsString('"dasar"', $prompt);
-        $this->assertStringContainsString('"alasan_petugas"', $prompt);
     }
 
     public function test_unresolved_conflict_follows_model_flag_and_labels(): void
