@@ -5,7 +5,7 @@
 > **batas modul**, **urutan tahap**, dan **kriteria selesai**. Rincian deploy tetap di
 > [`DEPLOY.md`](DEPLOY.md) §13; PRD produk utama di [`PRD.md`](PRD.md).
 >
-> Versi 1.1 · 30 Oktober 2026 (1.1: FR-AI-10 — Sumber Resmi tidak disamarkan) · Pemilik: Andi · Basis kode: branch `feat/contact-center-ai` (`b7f9525`)
+> Versi 1.2 · 30 Oktober 2026 (1.1: FR-AI-10 — Sumber Resmi tidak disamarkan; 1.2: FR-AI-11 — Sumber berbeda & aturan lama) · Pemilik: Andi · Basis kode: branch `feat/contact-center-ai` (`b7f9525`)
 >
 > **Keputusan: SIGAP tetap satu aplikasi Laravel (monolith modular).** Yang dipisah hanya **mesin model
 > AI** (penyedia API atau server GPU) di balik satu pintu, yaitu API kompatibel OpenAI. Tidak ada
@@ -251,6 +251,37 @@ lang/id/asisten.php   ← semua teks balasan TARA
   kutipan Sumber Resmi pada `Jawab` sampai ke driver tanpa diubah.
 - `ai_calls` tidak menyimpan teks; log aplikasi tidak mencetak isi prompt/jawaban.
 
+### FR-AI-11 Sumber berbeda & aturan lama
+
+Sumber Resmi lama tidak dinonaktifkan (mis. halaman yang masih menulis batas usia 19–49 tahun di samping
+SIBARDUKTRANS 19–53 tahun). TARA harus membedakan aturan yang berlaku dari aturan lama **berdasarkan data
+yang diisi petugas**, bukan tebakan model.
+
+- **Data** (migrasi hanya menambah kolom): `knowledge_sources` dan `knowledge_articles` mendapat
+  `dasar_hukum` (teks), `tanggal_dasar` (tanggal penetapan), `status_dasar`
+  (`berlaku` | `diganti` | `belum_diketahui`, bawaan `belum_diketahui`), dan `diganti_oleh` (teks; wajib bila
+  `diganti`). Formulir Sumber Resmi dan artikel dapat mengisinya; perubahan dasar hukum Sumber Resmi
+  tercatat di audit log (`knowledge.source_basis`).
+- **Konteks**: setiap sumber yang dikirim ke model membawa label
+  `Dasar: <peraturan> (<tahun>) — BERLAKU | DIGANTI oleh <peraturan> | BELUM DIKETAHUI`. Kutipan memakai
+  label Sumber Resminya. Urutan sumber tidak diubah.
+- **Prompt Jawab** (versi `jawab@2026-10-30b`, tercatat di `ai_calls.prompt_version`): bila sumber berbeda
+  tentang fakta yang sama —
+  - label memutuskan (ada yang BERLAKU dan ada yang DIGANTI): jawab dengan yang BERLAKU, sebut yang lain
+    sebagai aturan lama yang "sudah diganti", kutip keduanya;
+  - label tidak memutuskan: jangan memilih, sebut kedua versi beserta sumbernya, `perlu_petugas: true`
+    dengan `alasan_petugas: "sumber_berbeda"`;
+  - model **tidak boleh** menyimpulkan aturan mana yang lebih baru dari tahun, nomor, atau isi teks.
+- **Pengaman di server**: bila model menandai `beda_sumber` tetapi label sumber yang dikutipnya tidak
+  memutuskan (ada yang `belum_diketahui`, atau tidak ada pasangan berlaku–diganti), jawaban kedua versi
+  tetap ditampilkan lalu percakapan diserahkan ke petugas dengan alasan `sumber_berbeda`.
+- **Label hanya dari naskah resmi yang terbaca** (JDIH Kementerian, peraturan.bpk.go.id). Bila naskah tidak
+  dapat dibaca, status tetap `belum_diketahui`. Ringkasan pihak ketiga dan berita bukan dasar pengisian.
+- **Uji**: label per status, aturan "label memutuskan", alur ke petugas vs tetap dijawab, label ikut
+  terkirim ke model (termasuk artikel dari indeks pencarian). Paket uji `sigap:uji-asisten` memberi kasus
+  batas usia tanda `konflik`: jawaban wajib memuat 53 dan menyebut 49 sebagai aturan lama bila label
+  memutuskan, atau diteruskan ke petugas bila belum.
+
 ## 6. Non-Functional Requirements
 
 | Aspek | Sasaran |
@@ -270,7 +301,8 @@ lang/id/asisten.php   ← semua teks balasan TARA
 |---|---|---|
 | Tabel `ai_calls` | 0 | Indeks `(task, created_at)`, `(status, created_at)`; dapat dipangkas |
 | Kolom `chat_conversations.ai_pending_at` (nullable) | 2 | Menandai TARA sedang menyiapkan jawaban (indikator mengetik, deteksi macet) |
-| Tidak ada perubahan tabel lain | — | Tabel Knowledge/Referral/ContactCenter tetap; hanya kepemilikannya yang ditegaskan |
+| Kolom `dasar_hukum`, `tanggal_dasar`, `status_dasar`, `diganti_oleh` di `knowledge_sources` & `knowledge_articles` | FR-AI-11 | Label aturan berlaku/lama untuk jawaban TARA |
+| Tidak ada perubahan tabel lain | — | Tabel Referral/ContactCenter tetap; tabel Knowledge hanya bertambah kolom FR-AI-11; kepemilikannya ditegaskan |
 
 ## 8. Kontrak antarmodul (sketsa)
 
