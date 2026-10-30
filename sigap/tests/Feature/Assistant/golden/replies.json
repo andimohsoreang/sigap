@@ -37,7 +37,7 @@
             {
                 "dari": "ai",
                 "jenis": "rujukan",
-                "teks": "Masalah ini ditangani langsung oleh Trans Tuntas (Kementerian Transmigrasi). Saya sudah menyiapkan pengantar berisi langkah, hal yang perlu disiapkan, dan ringkasan aduan Anda. Rina dari SIGAP mendampingi Anda sampai aduan tercatat.",
+                "teks": "Masalah ini ditangani langsung oleh Trans Tuntas (Kementerian Transmigrasi). Saya sudah menyiapkan pengantar berisi langkah, hal yang perlu disiapkan, dan ringkasan aduan Anda. Rina dari Contact Center mendampingi Anda sampai aduan tercatat.",
                 "portal": "trans-tuntas",
                 "rujukan": {
                     "pendamping": "Rina"
@@ -68,7 +68,7 @@
             {
                 "dari": "ai",
                 "jenis": "rujukan",
-                "teks": "Masalah ini ditangani langsung oleh SIBARDUKTRANS (Kementerian Transmigrasi). Saya sudah menyiapkan pengantar berisi langkah, hal yang perlu disiapkan, dan ringkasan aduan Anda. Rina dari SIGAP mendampingi Anda sampai aduan tercatat.",
+                "teks": "Masalah ini ditangani langsung oleh SIBARDUKTRANS (Kementerian Transmigrasi). Saya sudah menyiapkan pengantar berisi langkah, hal yang perlu disiapkan, dan ringkasan aduan Anda. Rina dari Contact Center mendampingi Anda sampai aduan tercatat.",
                 "portal": "sibarduktrans",
                 "rujukan": {
                     "pendamping": "Rina"

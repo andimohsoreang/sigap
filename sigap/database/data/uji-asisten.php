@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Paket uji Asisten SIGAP: pertanyaan bergaya warga beserta harapannya.
+ * Paket uji Asisten Contact Center: pertanyaan bergaya warga beserta harapannya.
  *
  * - jenis   : klasifikasi yang diharapkan dari model (informasi, aduan,
  *             pribadi, lainnya, tidak_jelas).
@@ -77,8 +77,8 @@ return [
     ['tanya' => 'transmigrasi patriot itu program apa?', 'jenis' => 'informasi', 'artikel' => 'Transmigrasi Patriot', 'harus_memuat' => 'kader pembangunan'],
     ['tanya' => 'Trans Gotong Royong tujuannya apa?', 'jenis' => 'informasi', 'artikel' => 'Trans Gotong Royong', 'harus_memuat' => 'harmoni sosial'],
 
-    // Layanan SIGAP (KnowledgeSeeder)
-    ['tanya' => 'bagaimana cara membuat pengaduan di sigap?', 'jenis' => 'informasi', 'artikel' => 'membuat pengaduan di SIGAP', 'harus_memuat' => 'buat pengaduan'],
+    // Layanan Contact Center (KnowledgeSeeder)
+    ['tanya' => 'bagaimana cara membuat pengaduan di contact center?', 'jenis' => 'informasi', 'artikel' => 'membuat pengaduan di Contact Center', 'harus_memuat' => 'buat pengaduan'],
     ['tanya' => 'cara lacak tiket pengaduan saya', 'jenis' => 'informasi', 'artikel' => 'melacak tiket', 'harus_memuat' => 'lacak tiket'],
 
     // Harus diteruskan ke petugas / tidak boleh dijawab dari artikel

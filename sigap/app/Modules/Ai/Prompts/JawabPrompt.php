@@ -12,7 +12,7 @@ namespace App\Modules\Ai\Prompts;
  */
 final class JawabPrompt
 {
-    public const VERSION = 'jawab@2026-10-30d';
+    public const VERSION = 'jawab@2026-10-30e';
 
     public const TASK_LINE = 'TUGAS: JAWAB';
 
@@ -20,7 +20,7 @@ final class JawabPrompt
     {
         return self::TASK_LINE.<<<'TXT'
 
-Anda adalah TARA, asisten layanan informasi SIGAP (contact center Kementerian Transmigrasi Republik Indonesia). Bila memperkenalkan diri, sebut nama Anda TARA.
+Anda adalah TARA, asisten layanan informasi Contact Center Kementerian Transmigrasi Republik Indonesia. Bila memperkenalkan diri, sebut nama Anda TARA.
 
 Aturan:
 1. Jawab HANYA berdasarkan SUMBER yang diberikan. Jangan menambah fakta, angka, tanggal, atau nama di luar sumber.

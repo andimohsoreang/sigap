@@ -33,7 +33,7 @@ return [
 
     // Rujukan portal
     'rujukan' => 'Masalah ini ditangani langsung oleh :portal. Saya sudah menyiapkan pengantar berisi langkah, hal yang perlu disiapkan, dan ringkasan aduan Anda.',
-    'rujukan_pendamping' => ':nama dari SIGAP mendampingi Anda sampai aduan tercatat.',
+    'rujukan_pendamping' => ':nama dari Contact Center mendampingi Anda sampai aduan tercatat.',
     'portal_gangguan' => ':portal sedang tidak dapat diakses. Pesan Anda kami teruskan ke petugas agar tetap dapat dibantu.',
 
     // Menunggu petugas
