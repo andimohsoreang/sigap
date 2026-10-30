@@ -9,6 +9,7 @@ use App\Models\ChatConversation;
 use App\Models\KnowledgeDocument;
 use App\Models\KnowledgePassage;
 use App\Models\KnowledgeSource;
+use App\Models\Portal;
 use App\Models\Region;
 use App\Models\User;
 use App\Services\Ai\LlmClient;
@@ -390,6 +391,21 @@ class KnowledgeSourceTest extends TestCase
 
         $this->assertSame('ai', ChatConversation::query()->sole()->handled_by);
         $this->assertSame(AiCall::STATUS_OK, AiCall::query()->latest('id')->value('status'));
+    }
+
+    public function test_portal_catalog_is_not_a_basis_for_numbers(): void
+    {
+        config(['services.ai.enabled' => true]);
+        $this->twoConflictingSites();
+        // Katalog portal ikut dikirim ke model, tetapi bukan sumber fakta aturan.
+        Portal::query()->create(['code' => 'contoh', 'name' => 'Portal Contoh', 'url' => 'https://www.transmigrasi.go.id/', 'audience' => Portal::AUDIENCE_PUBLIC, 'purpose' => 'Layanan dengan batas usia 77 tahun', 'is_active' => true]);
+        $this->citingFiftyThreeSource('Batas usia 19–53 tahun [:no], atau 77 tahun menurut Portal Contoh.');
+
+        $this->postJson('/chat/mulai', ['nama' => 'Bu Sri'])->assertCreated();
+        $reply = $this->postJson('/chat/pesan', ['body' => 'Berapa batas usia ikut transmigrasi?'])->assertCreated();
+
+        $this->assertNotContains('jawaban', $reply->json('balasan.*.jenis'));
+        $this->assertSame('angka_tanpa_dasar', ChatConversation::query()->sole()->handoff_reason);
     }
 
     public function test_complaint_with_unsupported_number_drops_the_answer_but_keeps_its_reason(): void

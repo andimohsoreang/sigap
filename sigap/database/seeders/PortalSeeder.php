@@ -11,6 +11,11 @@ use Illuminate\Database\Seeder;
  *
  * Aman dijalankan ulang: portal yang kodenya sudah ada tidak ditimpa, agar
  * suntingan Super Admin (tautan, langkah, status aktif) tetap terjaga.
+ *
+ * Katalog portal = petunjuk arah, BUKAN sumber fakta aturan (PRD-AI FR-AI-12):
+ * `purpose` dan `description` dikirim ke asisten AI, jadi tidak boleh memuat
+ * angka atau ketentuan (usia, jangka waktu, biaya, pasal). Ketentuan ada di
+ * artikel/Sumber Resmi yang berdasar hukum. Kontak boleh di `contact`.
  */
 class PortalSeeder extends Seeder
 {
@@ -118,7 +123,7 @@ class PortalSeeder extends Seeder
                 'action_label' => 'Ajukan permohonan informasi',
                 'audience' => Portal::AUDIENCE_PUBLIC,
                 'purpose' => 'Permohonan informasi publik dan salinan dokumen resmi, pengajuan keberatan, serta daftar informasi publik',
-                'description' => 'Layanan keterbukaan informasi publik sesuai UU 14/2008.',
+                'description' => 'Layanan keterbukaan informasi publik Kementerian Transmigrasi.',
                 'keywords' => 'permohonan informasi, minta data, minta dokumen, salinan dokumen, keterbukaan informasi, keberatan, PPID, laporan kinerja, anggaran',
                 'steps' => implode("\n", [
                     'Tekan tombol di bawah. Formulir Permohonan Informasi PPID terbuka di tab baru.',
@@ -176,7 +181,7 @@ class PortalSeeder extends Seeder
                 'action_url' => 'https://sibarduktrans.transmigrasi.go.id/tataCaraBertransmigrasi',
                 'action_label' => 'Baca tata cara bertransmigrasi',
                 'audience' => Portal::AUDIENCE_PUBLIC,
-                'purpose' => 'Syarat menjadi transmigran: WNI ber-KTP, sudah berkeluarga, usia 19–49 tahun, sehat, punya sertifikat pelatihan, belum pernah bertransmigrasi, dan lulus seleksi',
+                'purpose' => 'Syarat dan tata cara menjadi transmigran dari Kementerian Transmigrasi',
                 'description' => 'Halaman resmi persyaratan dan panduan tata cara bertransmigrasi.',
                 'keywords' => 'syarat, persyaratan, syarat transmigran, umur, usia, berkeluarga, surat nikah, surat keterangan dokter, sertifikat pelatihan, seleksi, tata cara',
                 'steps' => null,
@@ -194,7 +199,7 @@ class PortalSeeder extends Seeder
                 'action_label' => 'Baca tata cara pengaduan',
                 'audience' => Portal::AUDIENCE_PUBLIC,
                 'purpose' => 'Laporan dugaan penyalahgunaan wewenang, pungutan liar, atau pelanggaran oleh pegawai/pejabat Kementerian Transmigrasi; ditindaklanjuti Inspektorat Jenderal',
-                'description' => 'Pengaduan diterima PPID (datang langsung, email, formulir, atau kotak pengaduan) lalu diteruskan ke Menteri dan Inspektur Jenderal, paling lambat 30 hari kerja.',
+                'description' => 'Pengaduan diterima PPID (datang langsung, email, formulir, atau kotak pengaduan) lalu diteruskan ke Menteri dan Inspektur Jenderal.',
                 'keywords' => 'pungli, pungutan liar, minta uang, suap, pejabat, pegawai nakal, penyalahgunaan wewenang, pelanggaran, korupsi, inspektorat, itjen, whistleblowing',
                 'steps' => implode("\n", [
                     'Siapkan identitas Anda dan identitas pihak yang dilaporkan.',
