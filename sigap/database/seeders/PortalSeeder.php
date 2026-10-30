@@ -101,7 +101,7 @@ class PortalSeeder extends Seeder
                     'Buat akun dengan nomor telepon, email, dan kata sandi.',
                     'Masuk, lalu lengkapi data calon transmigran sesuai panduan.',
                     'Pendaftaran juga dapat dilakukan di kantor desa/kelurahan atau perangkat daerah kabupaten/kota yang menangani transmigrasi sesuai KTP Anda.',
-                    'Kesulitan membuat akun atau belum punya email? Tekan "Butuh bantuan" di halaman ini; petugas SIGAP mendampingi Anda lewat chat sampai nomor pendaftaran didapat.',
+                    'Kesulitan membuat akun atau belum punya email? Tekan "Butuh bantuan" di halaman ini; petugas Contact Center mendampingi Anda lewat chat sampai nomor pendaftaran didapat.',
                     'Setelah berhasil, masukkan nomor pendaftaran Anda di halaman ini.',
                 ]),
                 'prepare' => implode("\n", [

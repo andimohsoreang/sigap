@@ -54,7 +54,7 @@ class OfficialKnowledgeSeeder extends Seeder
             // ---------------------------------------------------------------
             [
                 'title' => 'Bagaimana cara meminta informasi publik dari Kementerian Transmigrasi?',
-                'body' => "Permohonan informasi publik dilayani PPID Kementerian Transmigrasi, bukan melalui SIGAP.\n1. Isi formulir Permohonan Informasi di ppid.transmigrasi.go.id, atau datang langsung ke ruang layanan PPID pada jam layanan.\n2. Siapkan identitas (KTP), rincian informasi yang diminta, tujuan penggunaan, serta cara memperoleh dan cara pengiriman informasi yang diinginkan.\n3. Simpan nomor registrasi yang diberikan untuk melacak status permohonan.\n4. PPID memeriksa kelengkapan, menelusuri informasi ke unit kerja terkait, lalu memberi tanggapan tertulis.",
+                'body' => "Permohonan informasi publik dilayani PPID Kementerian Transmigrasi, bukan melalui Contact Center.\n1. Isi formulir Permohonan Informasi di ppid.transmigrasi.go.id, atau datang langsung ke ruang layanan PPID pada jam layanan.\n2. Siapkan identitas (KTP), rincian informasi yang diminta, tujuan penggunaan, serta cara memperoleh dan cara pengiriman informasi yang diinginkan.\n3. Simpan nomor registrasi yang diberikan untuk melacak status permohonan.\n4. PPID memeriksa kelengkapan, menelusuri informasi ke unit kerja terkait, lalu memberi tanggapan tertulis.",
                 'category' => 'Informasi Publik',
                 'keywords' => 'permohonan informasi, minta data, dokumen, salinan, PPID, keterbukaan informasi',
                 'source' => self::PPID.' — Prosedur Permohonan',
@@ -81,7 +81,7 @@ class OfficialKnowledgeSeeder extends Seeder
             ],
             [
                 'title' => 'Bagaimana cara melacak status permohonan informasi di PPID?',
-                'body' => 'Buka menu Cek Status Pengajuan di portal PPID Kementerian Transmigrasi, lalu masukkan nomor registrasi dan email yang Anda gunakan saat mengajukan permohonan. Nomor tiket SIGAP tidak berlaku untuk permohonan informasi PPID.',
+                'body' => 'Buka menu Cek Status Pengajuan di portal PPID Kementerian Transmigrasi, lalu masukkan nomor registrasi dan email yang Anda gunakan saat mengajukan permohonan. Nomor tiket Contact Center tidak berlaku untuk permohonan informasi PPID.',
                 'category' => 'Informasi Publik',
                 'keywords' => 'lacak permohonan, nomor registrasi, cek status PPID',
                 'source' => self::PPID.' — FAQ',
