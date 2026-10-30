@@ -449,6 +449,7 @@ class AdminController extends Controller
         'pribadi' => 'Hak pribadi',
         'diminta' => 'Diminta warga',
         'kompleks' => 'Pertanyaan kompleks',
+        'sumber_berbeda' => 'Sumber resmi berbeda',
         'ai_gagal' => 'AI gagal menjawab',
         'diambil_petugas' => 'Diambil petugas',
         'rujukan' => 'Kendala rujukan',

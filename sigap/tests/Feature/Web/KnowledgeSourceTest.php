@@ -246,27 +246,124 @@ class KnowledgeSourceTest extends TestCase
         $this->assertStringContainsString('19 s/d 49', $bodies);
     }
 
-    public function test_conflicting_sources_are_both_shown_and_flagged(): void
+    /**
+     * Model palsu yang menjawab dua versi batas usia dan merekam pesan yang
+     * dikirim kepadanya (untuk memeriksa label dasar hukum).
+     *
+     * @param  array<string, mixed>  $answer
+     */
+    private function conflictModel(array $answer): object
+    {
+        $model = new class implements LlmClient
+        {
+            public array $answer = [];
+
+            /** @var list<string> label "dasar" tiap sumber yang dikirim ke model */
+            public array $bases = [];
+
+            public function complete(array $messages, bool $json = false): string
+            {
+                $this->bases = array_column(json_decode((string) end($messages)['content'], true)['sumber'] ?? [], 'dasar');
+
+                return (string) json_encode($this->answer);
+            }
+        };
+        $model->answer = $answer + ['jenis' => 'informasi', 'portal' => null, 'ringkasan' => ''];
+        $this->app->instance(LlmClient::class, $model);
+
+        return $model;
+    }
+
+    /** Beri label dasar hukum: sumber 19–53 berlaku, sumber 19–49 diganti. */
+    private function labelConflictingSites(): void
+    {
+        KnowledgeSource::query()->where('url', self::PAGE)->update(['dasar_hukum' => 'Peraturan Baru 2/2024', 'tanggal_dasar' => '2024-03-01', 'status_dasar' => 'berlaku']);
+        KnowledgeSource::query()->where('url', '!=', self::PAGE)->update(['dasar_hukum' => 'Peraturan Lama 11/2017', 'tanggal_dasar' => '2017-06-01', 'status_dasar' => 'diganti', 'diganti_oleh' => 'Peraturan Baru 2/2024']);
+    }
+
+    public function test_conflict_without_deciding_labels_shows_both_versions_then_hands_off(): void
     {
         config(['services.ai.enabled' => true]);
         Carbon::setTestNow(Carbon::parse('2026-10-27 10:00', 'Asia/Jakarta'));
         $this->twoConflictingSites();
-        $this->app->bind(LlmClient::class, fn () => new class implements LlmClient
-        {
-            public function complete(array $messages, bool $json = false): string
-            {
-                return json_encode(['jenis' => 'informasi', 'jawaban' => 'Menurut SIBARDUKTRANS 19–53 tahun [1]. Menurut halaman Persyaratan 19–49 tahun [2].', 'sumber' => [1, 2], 'beda_sumber' => true, 'portal' => null, 'perlu_petugas' => false, 'ringkasan' => '']);
-            }
-        });
+        // Model hanya menandai beda sumber; label "belum diketahui" → sistem tetap meneruskan ke petugas.
+        $model = $this->conflictModel(['jawaban' => 'Menurut SIBARDUKTRANS 19–53 tahun [1]. Menurut halaman Persyaratan 19–49 tahun [2].', 'sumber' => [1, 2], 'beda_sumber' => true, 'perlu_petugas' => false]);
 
         $this->postJson('/chat/mulai', ['nama' => 'Bu Sri'])->assertCreated();
         $reply = $this->postJson('/chat/pesan', ['body' => 'Berapa batas usia ikut transmigrasi?'])->assertCreated();
 
-        $reply->assertJsonPath('balasan.0.beda_sumber', true)
+        $reply->assertJsonPath('balasan.0.jenis', 'jawaban')
+            ->assertJsonPath('balasan.0.beda_sumber', true)
             ->assertJsonPath('balasan.0.sumber.0.no', 1)
             ->assertJsonPath('balasan.0.sumber.1.no', 2)
-            ->assertJsonCount(2, 'balasan.0.sumber');
+            ->assertJsonCount(2, 'balasan.0.sumber')
+            ->assertJsonPath('balasan.1.jenis', 'sumber_berbeda');
+        $this->assertSame(['Dasar: tidak dicatat — BELUM DIKETAHUI', 'Dasar: tidak dicatat — BELUM DIKETAHUI'], $model->bases);
+        $conversation = ChatConversation::query()->sole();
+        $this->assertSame(ChatConversation::HANDLED_STAFF, $conversation->handled_by);
+        $this->assertSame('sumber_berbeda', $conversation->handoff_reason);
         Carbon::setTestNow();
+    }
+
+    public function test_conflict_flagged_by_model_hands_off_with_reason(): void
+    {
+        config(['services.ai.enabled' => true]);
+        $this->twoConflictingSites();
+        $this->conflictModel(['jawaban' => 'Menurut SIBARDUKTRANS 19–53 tahun [1]. Menurut halaman Persyaratan 19–49 tahun [2].', 'sumber' => [1, 2], 'beda_sumber' => true, 'perlu_petugas' => true, 'alasan_petugas' => 'sumber_berbeda']);
+
+        $this->postJson('/chat/mulai', ['nama' => 'Bu Sri'])->assertCreated();
+        $this->postJson('/chat/pesan', ['body' => 'Berapa batas usia ikut transmigrasi?'])
+            ->assertCreated()
+            ->assertJsonPath('balasan.0.jenis', 'jawaban')
+            ->assertJsonPath('balasan.1.jenis', 'sumber_berbeda');
+
+        $this->assertSame('sumber_berbeda', ChatConversation::query()->sole()->handoff_reason);
+    }
+
+    public function test_conflict_decided_by_labels_answers_with_current_rule_and_stays_with_assistant(): void
+    {
+        config(['services.ai.enabled' => true]);
+        $this->twoConflictingSites();
+        $this->labelConflictingSites();
+        $model = $this->conflictModel(['jawaban' => 'Batas usia 19–53 tahun [1]. Ketentuan 19–49 tahun [2] adalah aturan lama yang sudah diganti.', 'sumber' => [1, 2], 'beda_sumber' => true, 'perlu_petugas' => false]);
+
+        $this->postJson('/chat/mulai', ['nama' => 'Bu Sri'])->assertCreated();
+        $reply = $this->postJson('/chat/pesan', ['body' => 'Berapa batas usia ikut transmigrasi?'])->assertCreated();
+
+        $reply->assertJsonPath('balasan.0.jenis', 'jawaban')
+            ->assertJsonPath('balasan.0.beda_sumber', true)
+            ->assertJsonCount(1, 'balasan');
+        $this->assertContains('Dasar: Peraturan Baru 2/2024 (2024) — BERLAKU', $model->bases);
+        $this->assertContains('Dasar: Peraturan Lama 11/2017 (2017) — DIGANTI oleh Peraturan Baru 2/2024', $model->bases);
+        $this->assertSame('ai', ChatConversation::query()->sole()->handled_by);
+    }
+
+    public function test_admin_sets_legal_basis_of_a_source_and_it_is_audited(): void
+    {
+        $source = $this->site();
+
+        $this->actingAs($this->admin)->put("/admin/pengetahuan/sumber/{$source->id}", ['status_dasar' => 'diganti', 'dasar_hukum' => 'Peraturan Lama 11/2017'])
+            ->assertSessionHasErrors(['diganti_oleh' => 'Isi peraturan pengganti bila status dasarnya "diganti".']);
+
+        $this->actingAs($this->admin)->put("/admin/pengetahuan/sumber/{$source->id}", [
+            'dasar_hukum' => 'Peraturan Lama 11/2017',
+            'tanggal_dasar' => '2017-06-01',
+            'status_dasar' => 'diganti',
+            'diganti_oleh' => 'Peraturan Baru 2/2024',
+        ])->assertSessionHasNoErrors();
+
+        $source->refresh();
+        $this->assertSame('Dasar: Peraturan Lama 11/2017 (2017) — DIGANTI oleh Peraturan Baru 2/2024', $source->legalBasisLabel());
+        $this->assertTrue($source->is_active, 'sumber lama tetap aktif');
+        $this->assertDatabaseHas('activity_logs', ['action' => 'knowledge.source_basis', 'subject_id' => (string) $source->id]);
+
+        // Dasar hukum dapat dikosongkan lagi.
+        $this->actingAs($this->admin)->put("/admin/pengetahuan/sumber/{$source->id}", ['dasar_hukum' => null, 'tanggal_dasar' => null, 'status_dasar' => 'belum_diketahui', 'diganti_oleh' => null])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('Dasar: tidak dicatat — BELUM DIKETAHUI', $source->fresh()->legalBasisLabel());
+
+        $this->actingAs($this->admin)->get("/admin/pengetahuan/sumber?sumber={$source->id}")
+            ->assertInertia(fn (Assert $page) => $page->where('selected.status_dasar', 'belum_diketahui')->where('selected.dasar_hukum', null));
     }
 
     public function test_personal_question_still_shows_general_rule_then_hands_off(): void

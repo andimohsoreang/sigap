@@ -48,6 +48,9 @@ class AssistantService
 
     private const COMPLEX_NOTICE = 'Pertanyaan ini perlu ditelaah lebih lanjut terhadap keadaan Anda, jadi saya teruskan ke petugas beserta ringkasannya.';
 
+    /** Sumber resmi berbeda dan label dasar hukum tidak memutuskan (PRD-AI FR-AI-11). */
+    private const CONFLICT_NOTICE = 'Sumber resmi yang saya temukan berbeda, dan belum dapat dipastikan mana yang berlaku. Pertanyaan Anda saya teruskan ke petugas untuk dipastikan.';
+
     private const ASK_DETAILS = 'Baik, saya bantu. Ceritakan masalahnya: apa yang terjadi, di kawasan atau SP mana, dan sejak kapan? Bila ada, sebutkan juga dampaknya.';
 
     /** Pertanyaan kebijakan yang tidak dibahas sumber: tetap diarahkan ke kanal resmi, bukan sekadar "tidak tahu". */
@@ -132,6 +135,18 @@ class AssistantService
         // termasuk di dalam aduan; keputusan kasusnya tetap di tangan petugas.
         $sourced = $result['jawaban'] !== '' && $this->citedSources($result, $articles)->isNotEmpty();
         $sourcedAnswer = fn () => $sourced ? [$this->answer($conversation, $text, $result, $articles)] : [];
+
+        // Sumber resmi berbeda dan label dasar hukum tidak memutuskan mana yang
+        // berlaku (PRD-AI FR-AI-11): kedua versi tetap ditampilkan bersama
+        // sumbernya, lalu dipastikan petugas. Aduan/urusan pribadi sudah
+        // diteruskan oleh alurnya sendiri di bawah.
+        if (! $complaint && $this->unresolvedConflict($result, $articles)) {
+            return [
+                ...$sourcedAnswer(),
+                $this->say($conversation, self::CONFLICT_NOTICE, ['kind' => 'sumber_berbeda']),
+                ...$this->handoff($conversation, 'sumber_berbeda', $summary),
+            ];
+        }
 
         // Model kerap menandai setiap aduan "perlu petugas". Aduan dan urusan
         // pribadi sudah diteruskan oleh alur di bawah (ringkasan/rujukan portal),
@@ -347,7 +362,7 @@ class AssistantService
     }
 
     /**
-     * @param  array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, kompleks: bool, ringkasan: string}  $result
+     * @param  array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, alasan_petugas: string|null, kompleks: bool, ringkasan: string}  $result
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
      */
     private function answer(ChatConversation $conversation, string $question, array $result, Collection $articles, ?Portal $portal = null): ChatMessage
@@ -420,6 +435,42 @@ class AssistantService
     }
 
     /**
+     * Sumber berbeda yang belum terputuskan: model menyatakannya, atau model
+     * menandai beda sumber padahal label dasar hukum sumber yang dikutip tidak
+     * memutuskan. Pengaman ini memastikan model tidak memilih sendiri. Dipakai
+     * juga `sigap:uji-asisten`.
+     *
+     * @param  array{sumber: list<int>, beda_sumber: bool, perlu_petugas: bool, alasan_petugas: string|null}  $result
+     * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
+     */
+    public function unresolvedConflict(array $result, Collection $articles): bool
+    {
+        if ($result['perlu_petugas'] && $result['alasan_petugas'] === 'sumber_berbeda') {
+            return true;
+        }
+
+        $cited = $this->citedSources($result, $articles);
+
+        return $result['beda_sumber'] && $cited->count() > 1 && ! self::basisDecides($cited);
+    }
+
+    /**
+     * Label dasar hukum memutuskan bila setiap sumber berlabel dan ada yang
+     * BERLAKU sekaligus yang DIGANTI. Kutipan memakai label Sumber Resminya.
+     *
+     * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $sources
+     */
+    public static function basisDecides(Collection $sources): bool
+    {
+        $statuses = $sources->map(fn (KnowledgeArticle|KnowledgePassage $s) => ($s instanceof KnowledgePassage ? $s->source : $s)?->status_dasar
+            ?? KnowledgeArticle::DASAR_BELUM_DIKETAHUI);
+
+        return ! $statuses->contains(KnowledgeArticle::DASAR_BELUM_DIKETAHUI)
+            && $statuses->contains(KnowledgeArticle::DASAR_BERLAKU)
+            && $statuses->contains(KnowledgeArticle::DASAR_DIGANTI);
+    }
+
+    /**
      * Sumber yang benar-benar dikutip AI, dengan nomor seperti di jawaban
      * (agar [n] cocok dengan daftar sumber). Nomor di luar yang dikirim dibuang.
      *
@@ -437,7 +488,7 @@ class AssistantService
 
     /**
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
-     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, kompleks: bool, ringkasan: string}
+     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, alasan_petugas: string|null, kompleks: bool, ringkasan: string}
      */
     private function ask(ChatConversation $conversation, string $question, Collection $articles, int $incomingId): array
     {
@@ -467,7 +518,7 @@ class AssistantService
      *
      * @param  list<array{dari: string, isi: string}>  $history
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
-     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, kompleks: bool, ringkasan: string}
+     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, alasan_petugas: string|null, kompleks: bool, ringkasan: string}
      *
      * @throws AiException
      */
@@ -485,6 +536,8 @@ class AssistantService
                     'judul' => $s->displayTitle(),
                     'isi' => Str::limit($s->body, 1500),
                     'rujukan' => $s->label(),
+                    // Label dasar hukum Sumber Resmi (PRD-AI FR-AI-11).
+                    'dasar' => $s->source?->legalBasisLabel() ?? (new KnowledgeSource)->legalBasisLabel(),
                 ]
                 : [
                     'no' => $i + 1,
@@ -492,6 +545,7 @@ class AssistantService
                     'judul' => $s->title,
                     'isi' => Str::limit($s->body, 2500),
                     'rujukan' => $s->sourceLabel(),
+                    'dasar' => $s->legalBasisLabel(),
                 ])->all(),
         ];
 
@@ -515,6 +569,7 @@ class AssistantService
             'kebijakan' => $policy,
             'portal' => $this->portals->find(is_string($data['portal'] ?? null) ? $data['portal'] : null)?->code,
             'perlu_petugas' => (bool) ($data['perlu_petugas'] ?? false),
+            'alasan_petugas' => in_array($data['alasan_petugas'] ?? null, ['diminta', 'sumber_berbeda'], true) ? $data['alasan_petugas'] : null,
             'kompleks' => ! $policy && (bool) ($data['kompleks'] ?? false),
             'ringkasan' => Str::limit(trim((string) ($data['ringkasan'] ?? '')), 600),
         ];
