@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasLegalBasis;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Cache;
  */
 class KnowledgeArticle extends Model
 {
+    use HasLegalBasis;
+
     public const STATUS_DRAFT = 'draf';
 
     public const STATUS_REVIEW = 'ditinjau';

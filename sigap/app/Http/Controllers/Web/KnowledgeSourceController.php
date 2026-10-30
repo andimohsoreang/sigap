@@ -101,7 +101,9 @@ class KnowledgeSourceController extends Controller
             'aktif' => ['sometimes', 'boolean'],
             'ikuti_tautan' => ['sometimes', 'boolean'],
             'tampil_berkas' => ['sometimes', 'boolean'],
-        ]);
+            // `diganti_oleh` tanpa "sometimes" agar required_if tetap diperiksa saat kolomnya tidak dikirim.
+            ...collect(KnowledgeSource::legalBasisRules())->map(fn (array $rules, string $field) => $field === 'diganti_oleh' ? $rules : ['sometimes', ...$rules])->all(),
+        ], KnowledgeController::LEGAL_BASIS_MESSAGES);
 
         $source->fill(array_filter([
             'name' => isset($data['nama']) ? trim($data['nama']) : null,
@@ -109,6 +111,13 @@ class KnowledgeSourceController extends Controller
             'follow_links' => $source->isSite() ? ($data['ikuti_tautan'] ?? null) : null,
             'public_file' => $source->isSite() ? null : ($data['tampil_berkas'] ?? null),
         ], fn ($v) => $v !== null))->save();
+
+        // Dasar hukum boleh dikosongkan, jadi tidak ikut disaring nilai null di atas.
+        $basis = array_intersect_key($data, array_flip(KnowledgeSource::LEGAL_BASIS_FIELDS));
+        if ($basis !== []) {
+            $source->fill($basis)->save();
+            $this->audit->safe('knowledge.source_basis', $source, "Dasar hukum Sumber Resmi \"{$source->name}\": {$source->legalBasisLabel()}.");
+        }
 
         if (array_key_exists('aktif', $data)) {
             $this->audit->safe('knowledge.source_toggled', $source, "Sumber Resmi \"{$source->name}\" ".($source->is_active ? 'diaktifkan' : 'dinonaktifkan').'.');
@@ -184,6 +193,7 @@ class KnowledgeSourceController extends Controller
             'dipakai' => $s->used_count,
             'diambil' => $s->fetched_at?->toIso8601String(),
             'berubah' => $s->changed_at?->toIso8601String(),
+            ...$s->legalBasisRow(),
         ];
     }
 

@@ -48,6 +48,7 @@ class KnowledgeController extends Controller
                 'source_url' => $a->source_url,
                 'status' => $a->status,
                 'review_at' => $a->review_at?->toDateString(),
+                ...$a->legalBasisRow(),
                 'review_overdue' => $a->isOverdueForReview(),
                 'used_count' => $a->used_count,
                 'helpful_rate' => $this->helpfulRate($a),
@@ -164,6 +165,8 @@ class KnowledgeController extends Controller
         return back()->with('success', 'Artikel dihapus.');
     }
 
+    public const LEGAL_BASIS_MESSAGES = ['diganti_oleh.required_if' => 'Isi peraturan pengganti bila status dasarnya "diganti".'];
+
     /** @return array<string, mixed> */
     private function validated(Request $request): array
     {
@@ -177,7 +180,8 @@ class KnowledgeController extends Controller
             'source_url' => ['nullable', 'url:https,http', 'max:500'],
             'status' => ['required', Rule::in(KnowledgeArticle::STATUSES)],
             'review_at' => ['nullable', 'date'],
-        ]);
+            ...KnowledgeArticle::legalBasisRules(),
+        ], self::LEGAL_BASIS_MESSAGES);
     }
 
     /** Admin kawasan tidak dapat menerbitkan: permintaan "terbit" menjadi "ditinjau". */

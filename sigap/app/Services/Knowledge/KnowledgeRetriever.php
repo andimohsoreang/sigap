@@ -330,7 +330,8 @@ class KnowledgeRetriever
     {
         return Cache::remember(KnowledgeArticle::CACHE_KEY, now()->addMinutes(10), function () {
             $articles = KnowledgeArticle::query()->published()
-                ->get(['id', 'title', 'body', 'category', 'keywords', 'source', 'source_ref', 'source_url'])
+                // Kolom dasar hukum ikut dimuat: labelnya dikirim ke model (PRD-AI FR-AI-11).
+                ->get(['id', 'title', 'body', 'category', 'keywords', 'source', 'source_ref', 'source_url', ...KnowledgeArticle::LEGAL_BASIS_FIELDS])
                 ->all();
 
             $docs = [];

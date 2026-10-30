@@ -18,6 +18,7 @@ import {
 import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
 
 import { DataTable, type DataTableColumn } from '@/components/sigap/data-table';
+import { EMPTY_LEGAL_BASIS, LegalBasisFields, legalBasisFrom, type StatusDasar } from '@/components/sigap/legal-basis-fields';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -40,6 +41,10 @@ interface Article {
     source_url: string | null;
     status: Status;
     review_at: string | null;
+    dasar_hukum: string | null;
+    tanggal_dasar: string | null;
+    status_dasar: StatusDasar | null;
+    diganti_oleh: string | null;
     review_overdue: boolean;
     used_count: number;
     helpful_rate: number | null;
@@ -81,6 +86,7 @@ const EMPTY = {
     source_url: '',
     status: 'draf' as Status,
     review_at: '',
+    ...EMPTY_LEGAL_BASIS,
 };
 
 export default function Pengetahuan({ articles, stats, categories, unanswered, probe, can_publish: canPublish }: Props) {
@@ -110,6 +116,7 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, p
             source_url: a.source_url ?? '',
             status: a.status,
             review_at: a.review_at ?? '',
+            ...legalBasisFrom(a),
         });
         setFormOpen(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -357,6 +364,12 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, p
                                     placeholder="https://jdih.transmigrasi.go.id/…"
                                 />
                             </Field>
+                            <LegalBasisFields
+                                className="md:col-span-2"
+                                value={form.data}
+                                onChange={(field, value) => form.setData((data) => ({ ...data, [field]: value }))}
+                                errors={form.errors}
+                            />
                             <Field label="Kata kunci tambahan" error={form.errors.keywords}>
                                 <Input
                                     value={form.data.keywords}

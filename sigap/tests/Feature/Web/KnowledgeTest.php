@@ -180,6 +180,42 @@ class KnowledgeTest extends TestCase
                 ->where('probe.results.0.id', $article->id));
     }
 
+    public function test_legal_basis_is_saved_validated_and_listed(): void
+    {
+        $admin = User::factory()->admin(UserRole::SuperAdmin)->create();
+
+        $this->actingAs($admin)->post('/admin/pengetahuan', $this->payload(['status_dasar' => 'diganti', 'diganti_oleh' => '']))
+            ->assertSessionHasErrors('diganti_oleh');
+        $this->actingAs($admin)->post('/admin/pengetahuan', $this->payload(['status_dasar' => 'asal']))
+            ->assertSessionHasErrors('status_dasar');
+
+        // Tanpa isian dasar hukum: status "belum diketahui".
+        $this->actingAs($admin)->post('/admin/pengetahuan', $this->payload(['title' => 'Tanpa dasar']))->assertSessionHas('success');
+        $this->assertSame('belum_diketahui', KnowledgeArticle::query()->where('title', 'Tanpa dasar')->sole()->fresh()->status_dasar);
+
+        $this->actingAs($admin)->post('/admin/pengetahuan', $this->payload([
+            'dasar_hukum' => 'Peraturan Baru 2/2024',
+            'tanggal_dasar' => '2024-03-01',
+            'status_dasar' => 'berlaku',
+        ]))->assertSessionHas('success');
+
+        $article = KnowledgeArticle::query()->where('dasar_hukum', 'Peraturan Baru 2/2024')->sole();
+        $this->assertSame('Dasar: Peraturan Baru 2/2024 (2024) — BERLAKU', $article->legalBasisLabel());
+        $this->actingAs($admin)->get('/admin/pengetahuan')->assertInertia(fn (Assert $page) => $page
+            ->where('articles', fn ($articles) => collect($articles)->contains(fn ($a) => $a['id'] === $article->id
+                && $a['tanggal_dasar'] === '2024-03-01' && $a['status_dasar'] === 'berlaku' && $a['diganti_oleh'] === null)));
+    }
+
+    public function test_articles_from_search_index_carry_their_legal_basis(): void
+    {
+        $this->article(['status' => KnowledgeArticle::STATUS_PUBLISHED, 'dasar_hukum' => 'Peraturan Baru 2/2024', 'tanggal_dasar' => '2024-12-09', 'status_dasar' => 'berlaku']);
+
+        $found = app(KnowledgeRetriever::class)->sources('apa syarat menjadi peserta transmigrasi?')->first();
+
+        $this->assertInstanceOf(KnowledgeArticle::class, $found);
+        $this->assertSame('Dasar: Peraturan Baru 2/2024 (2024) — BERLAKU', $found->legalBasisLabel());
+    }
+
     public function test_keywords_and_source_url_are_saved_and_validated(): void
     {
         $admin = User::factory()->admin(UserRole::SuperAdmin)->create();

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasLegalBasis;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Cache;
  */
 class KnowledgeSource extends Model
 {
+    use HasLegalBasis;
+
     public const KIND_SITE = 'situs';
 
     public const KIND_FILE = 'berkas';

@@ -2,6 +2,7 @@ import { Link, router, useForm } from '@inertiajs/react';
 import { AlertTriangle, ExternalLink, FileText, Globe, LoaderCircle, Plus, RefreshCw, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import { type FormEvent, useEffect, useState } from 'react';
 
+import { LegalBasisFields, legalBasisFrom, STATUS_DASAR_LABEL, type StatusDasar } from '@/components/sigap/legal-basis-fields';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -29,6 +30,10 @@ interface SourceRow {
     dipakai: number;
     diambil: string | null;
     berubah: string | null;
+    dasar_hukum: string | null;
+    tanggal_dasar: string | null;
+    status_dasar: StatusDasar | null;
+    diganti_oleh: string | null;
 }
 
 interface Passage {
@@ -239,6 +244,37 @@ function SourceList({
     );
 }
 
+function LegalBasisForm({ source }: { source: Selected }) {
+    const form = useForm(legalBasisFrom(source));
+    useEffect(() => {
+        form.setDefaults(legalBasisFrom(source));
+        form.reset();
+        form.clearErrors();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [source.id, source.dasar_hukum, source.tanggal_dasar, source.status_dasar, source.diganti_oleh]);
+
+    const submit = (e: FormEvent) => {
+        e.preventDefault();
+        form.put(`/admin/pengetahuan/sumber/${source.id}`, { preserveScroll: true });
+    };
+
+    return (
+        <form onSubmit={submit} className="space-y-3 border-b border-gray-100 pb-4">
+            <p className="text-xs font-bold text-gray-600">
+                Dasar hukum · <span className="font-normal">{STATUS_DASAR_LABEL[source.status_dasar ?? 'belum_diketahui']}</span>
+            </p>
+            <LegalBasisFields
+                value={form.data}
+                onChange={(field, value) => form.setData((data) => ({ ...data, [field]: value }))}
+                errors={form.errors}
+            />
+            <Button type="submit" size="sm" variant="outline" disabled={form.processing || !form.isDirty}>
+                {form.processing && <LoaderCircle className="h-4 w-4 animate-spin" />} Simpan dasar hukum
+            </Button>
+        </form>
+    );
+}
+
 function SourceDetail({ source, canDelete }: { source: Selected; canDelete: boolean }) {
     const [confirmDelete, setConfirmDelete] = useState(false);
     useEffect(() => setConfirmDelete(false), [source.id]);
@@ -339,6 +375,8 @@ function SourceDetail({ source, canDelete }: { source: Selected; canDelete: bool
                         </label>
                     )}
                 </div>
+
+                <LegalBasisForm source={source} />
 
                 <div>
                     <p className="mb-2 text-xs font-bold text-gray-600">
