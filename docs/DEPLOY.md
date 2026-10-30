@@ -276,7 +276,7 @@ bash scripts/deploy.sh
 ```
 
 Urutan skrip: `git pull --ff-only` → tag image lama `:prev` → `docker compose build --pull` →
-**backup DB pra-migrasi** (`deploy/docker/backups/pre-migrate-*.dump`, simpan 10) → `migrate --force` →
+**tag image dengan SHA commit** (`sigap-app:<sha>`, `sigap-web:<sha>`) → **backup DB pra-migrasi** (`deploy/docker/backups/pre-migrate-*.dump`, simpan 10) → `migrate --force` →
 `docker compose up -d --wait` (container diganti image baru) → cek `/up` → `docker image prune`.
 
 Sebelum rilis besar: uji di staging, pastikan backup terakhir sukses.
@@ -285,7 +285,14 @@ Sebelum rilis besar: uji di staging, pastikan backup terakhir sukses.
 
 ```bash
 bash scripts/deploy.sh --rollback          # kembali ke image :prev
+bash scripts/deploy.sh --versi             # daftar tag SHA yang masih ada di server
+bash scripts/deploy.sh --rollback=<sha>    # kembali ke image versi commit <sha>
 ```
+
+Tag SHA dibuat setiap build, sehingga rollback tidak terbatas pada satu rilis sebelumnya. Server yang dirilis
+manual (checkout ref tertentu, lalu `docker compose build`) wajib memberi tag yang sama sebelum `up -d`:
+`docker tag sigap-app:latest sigap-app:$(git rev-parse --short=7 HEAD)` (dan `sigap-web`). Jangan mengandalkan
+`docker commit` container yang berjalan: image lamanya bisa sudah tidak lengkap setelah build berikutnya.
 
 **Rollback dengan migrasi:**
 

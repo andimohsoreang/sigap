@@ -5,18 +5,25 @@
 #   bash scripts/deploy.sh               # rilis biasa (git pull → build → backup DB → migrate → up)
 #   bash scripts/deploy.sh --no-pull     # pakai kode yang sudah ada di folder (tanpa git pull)
 #   bash scripts/deploy.sh --rollback    # kembali ke image rilis sebelumnya (tag :prev)
+#   bash scripts/deploy.sh --rollback=<sha>  # kembali ke image versi commit <sha> (tag SHA, lihat --versi)
+#   bash scripts/deploy.sh --versi       # daftar tag SHA yang tersedia untuk rollback
+#
+# Setiap build diberi tag SHA commit pendek (sigap-app:<sha>, sigap-web:<sha>) di samping :latest,
+# sehingga rollback dapat ke versi mana pun yang image-nya masih ada di server.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIR="$ROOT/deploy/docker"
 cd "$DIR"
 
-PERTAMA=0; PULL=1; ROLLBACK=0
+PERTAMA=0; PULL=1; ROLLBACK=0; ROLLBACK_TO=prev; VERSI=0
 for a in "$@"; do
   case "$a" in
     --pertama) PERTAMA=1 ;;
     --no-pull) PULL=0 ;;
     --rollback) ROLLBACK=1 ;;
+    --rollback=*) ROLLBACK=1; ROLLBACK_TO="${a#--rollback=}" ;;
+    --versi) VERSI=1 ;;
     *) echo "Opsi tidak dikenal: $a"; exit 2 ;;
   esac
 done
@@ -53,11 +60,22 @@ health() {
   die "aplikasi tidak sehat"
 }
 
+versions() {
+  docker images --format '{{.Repository}}:{{.Tag}}  {{.CreatedSince}}' "$IMG_APP" | grep -E ":[0-9a-f]{7,40} " || true
+}
+
+if [[ $VERSI -eq 1 ]]; then
+  echo "Tag SHA yang tersedia (terbaru di atas):"; versions; exit 0
+fi
+
 if [[ $ROLLBACK -eq 1 ]]; then
-  docker image inspect "$IMG_APP:prev" >/dev/null 2>&1 || die "tidak ada image $IMG_APP:prev"
-  echo "==> Rollback ke image :prev (migrasi database TIDAK dibatalkan — lihat DEPLOY.md §8)"
-  docker tag "$IMG_APP:prev" "$IMG_APP:latest"
-  docker tag "$IMG_WEB:prev" "$IMG_WEB:latest"
+  [[ "$ROLLBACK_TO" =~ ^(prev|[0-9a-f]{7,40})$ ]] || die "tag rollback tidak sah: $ROLLBACK_TO"
+  for img in "$IMG_APP" "$IMG_WEB"; do
+    docker image inspect "$img:$ROLLBACK_TO" >/dev/null 2>&1 || { versions; die "tidak ada image $img:$ROLLBACK_TO"; }
+  done
+  echo "==> Rollback ke image :$ROLLBACK_TO (migrasi database TIDAK dibatalkan — lihat DEPLOY.md §8)"
+  docker tag "$IMG_APP:$ROLLBACK_TO" "$IMG_APP:latest"
+  docker tag "$IMG_WEB:$ROLLBACK_TO" "$IMG_WEB:latest"
   "${DC[@]}" up -d --no-build --remove-orphans
   health
   exit 0
@@ -76,6 +94,12 @@ done
 
 echo "==> Build image"
 "${DC[@]}" build --pull
+SHA="$(git -C "$ROOT" rev-parse --short=7 HEAD 2>/dev/null || true)"
+if [[ -n "$SHA" ]]; then
+  echo "==> Tag image dengan SHA commit: :$SHA"
+  docker tag "$IMG_APP:latest" "$IMG_APP:$SHA"
+  docker tag "$IMG_WEB:latest" "$IMG_WEB:$SHA"
+fi
 
 echo "==> Database"
 "${DC[@]}" up -d --wait db
@@ -109,4 +133,4 @@ echo "==> Bersihkan image & backup lama"
 docker image prune -f >/dev/null
 ls -1t "$DIR"/backups/pre-migrate-*.dump 2>/dev/null | tail -n +11 | xargs -r rm -f
 
-echo "Selesai. Rollback bila perlu: bash scripts/deploy.sh --rollback"
+echo "Selesai (${SHA:-tanpa SHA}). Rollback bila perlu: bash scripts/deploy.sh --rollback  atau  --rollback=<sha> (lihat --versi)"
