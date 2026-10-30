@@ -1,0 +1,624 @@
+{
+    "aduan_bersumber": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "jawaban",
+                "teks": "Pendaftaran di dinas kabupaten/kota [1].",
+                "sumber": [
+                    [
+                        1,
+                        "artikel",
+                        "Bagaimana cara mendaftar program transmigrasi?",
+                        "Pedoman Seleksi · Hal. 12"
+                    ]
+                ]
+            },
+            {
+                "dari": "ai",
+                "jenis": "ringkasan",
+                "teks": "Terima kasih. Laporan Anda saya ringkas untuk petugas agar bisa langsung ditindaklanjuti.\n\nRingkasan: Warga ditolak dinas saat mendaftar."
+            },
+            {
+                "dari": "system",
+                "jenis": "diteruskan",
+                "teks": "Pesan Anda kami teruskan ke petugas beserta ringkasannya. Mohon tunggu, petugas akan membalas di percakapan ini.",
+                "referensi": "ada"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "aduan",
+            "ringkasan": "Warga ditolak dinas saat mendaftar."
+        }
+    },
+    "aduan_dirujuk_portal": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "rujukan",
+                "teks": "Masalah ini ditangani langsung oleh Trans Tuntas (Kementerian Transmigrasi). Saya sudah menyiapkan pengantar berisi langkah, hal yang perlu disiapkan, dan ringkasan aduan Anda. Rina dari SIGAP mendampingi Anda sampai aduan tercatat.",
+                "portal": "trans-tuntas",
+                "rujukan": {
+                    "pendamping": "Rina"
+                }
+            }
+        ],
+        "percakapan": {
+            "ditangani": "ai",
+            "alasan": null,
+            "ringkasan": null
+        }
+    },
+    "aduan_dirujuk_portal_bersumber": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "jawaban",
+                "teks": "Pendaftaran di dinas kabupaten/kota [1].",
+                "sumber": [
+                    [
+                        1,
+                        "artikel",
+                        "Bagaimana cara mendaftar program transmigrasi?",
+                        "Pedoman Seleksi · Hal. 12"
+                    ]
+                ]
+            },
+            {
+                "dari": "ai",
+                "jenis": "rujukan",
+                "teks": "Masalah ini ditangani langsung oleh SIBARDUKTRANS (Kementerian Transmigrasi). Saya sudah menyiapkan pengantar berisi langkah, hal yang perlu disiapkan, dan ringkasan aduan Anda. Rina dari SIGAP mendampingi Anda sampai aduan tercatat.",
+                "portal": "sibarduktrans",
+                "rujukan": {
+                    "pendamping": "Rina"
+                }
+            }
+        ],
+        "percakapan": {
+            "ditangani": "ai",
+            "alasan": null,
+            "ringkasan": null
+        }
+    },
+    "aduan_kurang_detail": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "tanya_detail",
+                "teks": "Baik, saya bantu. Ceritakan masalahnya: apa yang terjadi, di kawasan atau SP mana, dan sejak kapan? Bila ada, sebutkan juga dampaknya."
+            }
+        ],
+        "percakapan": {
+            "ditangani": "ai",
+            "alasan": null,
+            "ringkasan": null
+        }
+    },
+    "aduan_portal_gangguan": {
+        "balasan": [
+            {
+                "dari": "system",
+                "jenis": "info",
+                "teks": "Trans Tuntas sedang tidak dapat diakses. Pesan Anda kami teruskan ke petugas agar tetap dapat dibantu."
+            },
+            {
+                "dari": "system",
+                "jenis": "diteruskan",
+                "teks": "Pesan Anda kami teruskan ke petugas beserta ringkasannya. Mohon tunggu, petugas akan membalas di percakapan ini.",
+                "referensi": "ada"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "portal_gangguan",
+            "ringkasan": "Lahan usaha diserobot perusahaan."
+        }
+    },
+    "aduan_portal_rujukan_kedua": {
+        "balasan": [
+            {
+                "dari": "system",
+                "jenis": "diteruskan",
+                "teks": "Kendala Anda sudah kami terima. Petugas penanggung jawab akan membantu di percakapan ini.",
+                "referensi": "ada"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "rujukan",
+            "ringkasan": "Kendala rujukan RJK-<…> ke Trans Tuntas: Lahan usaha diserobot perusahaan."
+        }
+    },
+    "aduan_tanpa_sumber": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "ringkasan",
+                "teks": "Terima kasih. Laporan Anda saya ringkas untuk petugas agar bisa langsung ditindaklanjuti.\n\nRingkasan: Jalan poros SP1 rusak sejak Juli."
+            },
+            {
+                "dari": "system",
+                "jenis": "diteruskan",
+                "teks": "Pesan Anda kami teruskan ke petugas beserta ringkasannya. Mohon tunggu, petugas akan membalas di percakapan ini.",
+                "referensi": "ada"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "aduan",
+            "ringkasan": "Jalan poros SP1 rusak sejak Juli."
+        }
+    },
+    "ai_gagal": {
+        "balasan": [
+            {
+                "dari": "system",
+                "jenis": "info",
+                "teks": "Maaf, asisten sedang tidak dapat menjawab. Pesan Anda kami teruskan ke petugas."
+            },
+            {
+                "dari": "system",
+                "jenis": "diteruskan",
+                "teks": "Pesan Anda kami teruskan ke petugas beserta ringkasannya. Mohon tunggu, petugas akan membalas di percakapan ini.",
+                "referensi": "ada"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "ai_gagal",
+            "ringkasan": "Warga menulis: Bagaimana cara daftar program transmigrasi?"
+        }
+    },
+    "ai_mati_tanpa_balasan": {
+        "balasan": [],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": null,
+            "ringkasan": null
+        }
+    },
+    "angka_tanpa_dasar_aduan": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "ringkasan",
+                "teks": "Terima kasih. Laporan Anda saya ringkas untuk petugas agar bisa langsung ditindaklanjuti.\n\nRingkasan: Warga ditolak karena usia."
+            },
+            {
+                "dari": "system",
+                "jenis": "diteruskan",
+                "teks": "Pesan Anda kami teruskan ke petugas beserta ringkasannya. Mohon tunggu, petugas akan membalas di percakapan ini.",
+                "referensi": "ada"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "aduan",
+            "ringkasan": "Warga ditolak karena usia."
+        }
+    },
+    "angka_tanpa_dasar_informasi": {
+        "balasan": [
+            {
+                "dari": "system",
+                "jenis": "info",
+                "teks": "Saya belum dapat memastikan jawaban untuk pertanyaan ini dari sumber resmi, jadi pertanyaan Anda saya teruskan ke petugas."
+            },
+            {
+                "dari": "system",
+                "jenis": "diteruskan",
+                "teks": "Pesan Anda kami teruskan ke petugas beserta ringkasannya. Mohon tunggu, petugas akan membalas di percakapan ini.",
+                "referensi": "ada"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "angka_tanpa_dasar",
+            "ringkasan": "Warga menulis: Bagaimana cara daftar program transmigrasi?"
+        }
+    },
+    "diminta_petugas_di_luar_jam": {
+        "balasan": [
+            {
+                "dari": "system",
+                "jenis": "minta_kontak",
+                "teks": "Saat ini di luar jam layanan petugas (Senin–Jumat, 08.00–16.00 WIB). Pesan Anda sudah kami catat dengan nomor referensi REF-<…>. Tinggalkan nomor WhatsApp atau surel agar petugas dapat menghubungi Anda pada hari kerja berikutnya.",
+                "referensi": "ada"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "diminta",
+            "ringkasan": "Warga menulis: Saya mau bicara dengan petugas saja"
+        }
+    },
+    "diminta_petugas_jam_layanan": {
+        "balasan": [
+            {
+                "dari": "system",
+                "jenis": "diteruskan",
+                "teks": "Pesan Anda kami teruskan ke petugas beserta ringkasannya. Mohon tunggu, petugas akan membalas di percakapan ini.",
+                "referensi": "ada"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "diminta",
+            "ringkasan": "Warga minta bicara dengan petugas."
+        }
+    },
+    "informasi_bersumber": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "jawaban",
+                "teks": "Daftar di dinas kabupaten/kota [1].",
+                "sumber": [
+                    [
+                        1,
+                        "artikel",
+                        "Bagaimana cara mendaftar program transmigrasi?",
+                        "Pedoman Seleksi · Hal. 12"
+                    ]
+                ]
+            }
+        ],
+        "percakapan": {
+            "ditangani": "ai",
+            "alasan": null,
+            "ringkasan": null
+        }
+    },
+    "informasi_dengan_portal_bersumber": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "jawaban",
+                "teks": "Daftar di dinas kabupaten/kota [1].",
+                "sumber": [
+                    [
+                        1,
+                        "artikel",
+                        "Bagaimana cara mendaftar program transmigrasi?",
+                        "Pedoman Seleksi · Hal. 12"
+                    ]
+                ],
+                "portal": "sibarduktrans"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "ai",
+            "alasan": null,
+            "ringkasan": null
+        }
+    },
+    "informasi_tanpa_sumber": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "tidak_tahu",
+                "teks": "Maaf, saya belum menemukan informasi resmi untuk pertanyaan tersebut, jadi saya tidak akan menebak. Anda dapat menanyakannya langsung ke petugas."
+            }
+        ],
+        "percakapan": {
+            "ditangani": "ai",
+            "alasan": null,
+            "ringkasan": null
+        }
+    },
+    "kebijakan_bersumber": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "jawaban",
+                "teks": "Pendaftaran di dinas kabupaten/kota [1].",
+                "sumber": [
+                    [
+                        1,
+                        "artikel",
+                        "Bagaimana cara mendaftar program transmigrasi?",
+                        "Pedoman Seleksi · Hal. 12"
+                    ]
+                ],
+                "kebijakan": true
+            }
+        ],
+        "percakapan": {
+            "ditangani": "ai",
+            "alasan": null,
+            "ringkasan": null
+        }
+    },
+    "kebijakan_tanpa_sumber": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "tidak_tahu",
+                "teks": "Pertanyaan ini menyangkut kebijakan Kementerian Transmigrasi. Saya belum menemukan sumber resmi yang membahasnya, jadi saya tidak akan berspekulasi. Untuk pernyataan resmi atau data kinerja program, Bapak/Ibu dapat mengajukan permohonan informasi publik ke PPID Kementerian Transmigrasi atau menghubungi Humas Kementerian.",
+                "kebijakan": true
+            }
+        ],
+        "percakapan": {
+            "ditangani": "ai",
+            "alasan": null,
+            "ringkasan": null
+        }
+    },
+    "kompleks": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "jawaban",
+                "teks": "Pendaftaran di dinas kabupaten/kota [1].",
+                "sumber": [
+                    [
+                        1,
+                        "artikel",
+                        "Bagaimana cara mendaftar program transmigrasi?",
+                        "Pedoman Seleksi · Hal. 12"
+                    ]
+                ]
+            },
+            {
+                "dari": "ai",
+                "jenis": "kompleks",
+                "teks": "Pertanyaan ini perlu ditelaah lebih lanjut terhadap keadaan Anda, jadi saya teruskan ke petugas beserta ringkasannya."
+            },
+            {
+                "dari": "system",
+                "jenis": "diteruskan",
+                "teks": "Pesan Anda kami teruskan ke petugas beserta ringkasannya. Mohon tunggu, petugas akan membalas di percakapan ini.",
+                "referensi": "ada"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "kompleks",
+            "ringkasan": "Kota tanpa dinas transmigrasi."
+        }
+    },
+    "lainnya_dengan_jawaban": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "lainnya",
+                "teks": "Halo, saya TARA. Ada yang bisa saya bantu?"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "ai",
+            "alasan": null,
+            "ringkasan": null
+        }
+    },
+    "lainnya_tanpa_jawaban": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "lainnya",
+                "teks": "Mohon maaf, saya hanya dapat membantu informasi seputar layanan Kementerian Transmigrasi."
+            }
+        ],
+        "percakapan": {
+            "ditangani": "ai",
+            "alasan": null,
+            "ringkasan": null
+        }
+    },
+    "menunggu_petugas_angka_tanpa_dasar": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "menunggu_petugas",
+                "teks": "Pesan Anda sudah masuk ke petugas dan akan dibalas di percakapan ini. Sambil menunggu, Anda tetap bisa bertanya hal umum seputar transmigrasi kepada saya."
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "diminta",
+            "ringkasan": "Warga menulis: Saya mau bicara dengan petugas saja"
+        }
+    },
+    "menunggu_petugas_dijawab": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "jawaban",
+                "teks": "Daftar di dinas kabupaten/kota [1].",
+                "sumber": [
+                    [
+                        1,
+                        "artikel",
+                        "Bagaimana cara mendaftar program transmigrasi?",
+                        "Pedoman Seleksi · Hal. 12"
+                    ]
+                ]
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "diminta",
+            "ringkasan": "Warga menulis: Saya mau bicara dengan petugas saja"
+        }
+    },
+    "menunggu_petugas_tanda_terima": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "menunggu_petugas",
+                "teks": "Pesan Anda sudah masuk ke petugas dan akan dibalas di percakapan ini. Sambil menunggu, Anda tetap bisa bertanya hal umum seputar transmigrasi kepada saya."
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "diminta",
+            "ringkasan": "Warga menulis: Saya mau bicara dengan petugas saja"
+        }
+    },
+    "portal_tanpa_sumber": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "jawaban",
+                "teks": "Layanan ini tersedia di PPID Kementerian Transmigrasi: Permohonan informasi publik dan salinan dokumen resmi, pengajuan keberatan, serta daftar informasi publik.",
+                "portal": "ppid"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "ai",
+            "alasan": null,
+            "ringkasan": null
+        }
+    },
+    "pribadi_bersumber": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "jawaban",
+                "teks": "Ketentuan umumnya usia 19 - 53 tahun [1].",
+                "sumber": [
+                    [
+                        1,
+                        "artikel",
+                        "Bagaimana cara mendaftar program transmigrasi?",
+                        "Pedoman Seleksi · Hal. 12"
+                    ]
+                ]
+            },
+            {
+                "dari": "ai",
+                "jenis": "pribadi",
+                "teks": "Untuk memastikan apakah ketentuan di atas berlaku pada kasus Anda, perlu diperiksa langsung oleh petugas. Saya tidak dapat memastikannya."
+            },
+            {
+                "dari": "system",
+                "jenis": "diteruskan",
+                "teks": "Pesan Anda kami teruskan ke petugas beserta ringkasannya. Mohon tunggu, petugas akan membalas di percakapan ini.",
+                "referensi": "ada"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "pribadi",
+            "ringkasan": "Warga 50 tahun menanyakan kelayakan."
+        }
+    },
+    "pribadi_tanpa_sumber": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "pribadi",
+                "teks": "Pertanyaan ini menyangkut data Anda pribadi, jadi perlu diperiksa langsung oleh petugas. Saya tidak dapat memastikannya."
+            },
+            {
+                "dari": "system",
+                "jenis": "diteruskan",
+                "teks": "Pesan Anda kami teruskan ke petugas beserta ringkasannya. Mohon tunggu, petugas akan membalas di percakapan ini.",
+                "referensi": "ada"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "pribadi",
+            "ringkasan": "Warga menanyakan bantuan untuk keluarganya."
+        }
+    },
+    "status_tiket_tidak_ditemukan": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "info",
+                "teks": "Tiket TKT-261012-ABCDEF tidak ditemukan. Periksa kembali nomornya. Tiket bernomor format lama memerlukan kode akses di halaman Lacak Tiket."
+            }
+        ],
+        "percakapan": {
+            "ditangani": "ai",
+            "alasan": null,
+            "ringkasan": null
+        }
+    },
+    "sumber_berbeda_belum_diputuskan": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "jawaban",
+                "teks": "Menurut sumber [1] dan sumber [2] ketentuannya berbeda.",
+                "sumber": [
+                    [
+                        1,
+                        "artikel",
+                        "Berapa batas usia mendaftar program transmigrasi?",
+                        null
+                    ],
+                    [
+                        2,
+                        "artikel",
+                        "Bagaimana cara mendaftar program transmigrasi?",
+                        "Pedoman Seleksi · Hal. 12"
+                    ]
+                ],
+                "beda_sumber": true
+            },
+            {
+                "dari": "ai",
+                "jenis": "sumber_berbeda",
+                "teks": "Sumber resmi yang saya temukan berbeda, dan belum dapat dipastikan mana yang berlaku. Pertanyaan Anda saya teruskan ke petugas untuk dipastikan."
+            },
+            {
+                "dari": "system",
+                "jenis": "diteruskan",
+                "teks": "Pesan Anda kami teruskan ke petugas beserta ringkasannya. Mohon tunggu, petugas akan membalas di percakapan ini.",
+                "referensi": "ada"
+            }
+        ],
+        "percakapan": {
+            "ditangani": "petugas",
+            "alasan": "sumber_berbeda",
+            "ringkasan": "Warga menulis: Berapa usia untuk daftar program transmigrasi?"
+        }
+    },
+    "sumber_berbeda_diputuskan_label": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "jawaban",
+                "teks": "Ketentuan yang berlaku ada di sumber [1]; ketentuan di sumber [2] adalah aturan lama yang sudah diganti.",
+                "sumber": [
+                    [
+                        1,
+                        "artikel",
+                        "Berapa batas usia mendaftar program transmigrasi?",
+                        null
+                    ],
+                    [
+                        2,
+                        "artikel",
+                        "Bagaimana cara mendaftar program transmigrasi?",
+                        "Pedoman Seleksi · Hal. 12"
+                    ]
+                ],
+                "beda_sumber": true
+            }
+        ],
+        "percakapan": {
+            "ditangani": "ai",
+            "alasan": null,
+            "ringkasan": null
+        }
+    },
+    "tidak_jelas": {
+        "balasan": [
+            {
+                "dari": "ai",
+                "jenis": "tidak_jelas",
+                "teks": "Mohon maaf, saya belum dapat memahami pesan Bapak/Ibu dengan baik. Bisakah pertanyaannya disampaikan dalam Bahasa Indonesia? Bapak/Ibu juga dapat langsung berbicara dengan petugas."
+            }
+        ],
+        "percakapan": {
+            "ditangani": "ai",
+            "alasan": null,
+            "ringkasan": null
+        }
+    }
+}
