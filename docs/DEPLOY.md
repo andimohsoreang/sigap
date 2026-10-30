@@ -458,6 +458,11 @@ tanpa menyimpan percakapan. Hasilnya: ketepatan pencarian (frasa fakta `harus_me
 (ditolak sistem), dan waktu jawab median. Jalankan setiap kali mengganti `AI_MODEL` atau setelah menambah
 banyak artikel. `--hanya-pencarian` melewati model (tanpa biaya API).
 
+**Gerbang wajib sebelum deploy perubahan prompt/model** (PRD-AI §0.8): build image baru tanpa `up`, lalu
+jalankan 3 kali `docker compose run --rm -T --no-deps app php artisan sigap:uji-asisten --rinci --min-pencarian=95`
+dan bandingkan dengan versi yang sedang berjalan (tolakan `angka_tanpa_dasar` per kasus, kasus batas usia,
+klasifikasi). Perintah keluar dengan kode gagal bila pencarian < 95%. Deploy (`up -d`) hanya bila lulus.
+
 Bila warga bertanya dengan istilah yang tidak ditemukan, isi **Kata kunci tambahan** pada artikel terkait
 dan periksa dengan kotak **Uji pencarian** di halaman Basis Pengetahuan.
 

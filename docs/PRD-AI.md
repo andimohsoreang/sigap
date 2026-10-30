@@ -31,7 +31,7 @@
    eslint, pint) → laporkan ke pemilik → baru lanjut.
 8. **Perubahan prompt wajib lulus gerbang `sigap:uji-asisten` SEBELUM deploy** (FR-AI-06/07): naikkan
    `VERSION`, build image baru tanpa mengganti layanan yang berjalan, jalankan
-   `docker compose run --rm app php artisan sigap:uji-asisten --rinci` dengan model produksi (paling sedikit
+   `docker compose run --rm app php artisan sigap:uji-asisten --rinci --min-pencarian=95` dengan model produksi (paling sedikit
    3 kali bila menyangkut aturan jawaban), bandingkan dengan hasil versi sebelumnya, baru `up -d`. Prompt
    yang memperburuk satu kasus pun tidak di-deploy.
 9. **Contoh di prompt tidak boleh memakai fakta domain sungguhan** — angka, pasal/nomor peraturan, nama
@@ -221,6 +221,9 @@ lang/id/asisten.php   ← semua teks balasan TARA
 - `php artisan sigap:uji-asisten` menerima ambang dan keluar dengan kode gagal bila tidak terpenuhi:
   `--min-pencarian=95 --min-klasifikasi=85 --maks-tanpa-sumber=0 --maks-p95=12`.
 - CI (tanpa model) selalu menjalankan bagian pencarian (`--hanya-pencarian`).
+- Ambang pencarian produksi: **`--min-pencarian=95`**, terpasang 30-10-2026 setelah 41 artikel resmi terbit
+  (pencarian 100% di 3 run). Penyetelan pencarian (`KnowledgeRetriever`) dihentikan; kasus baru yang gagal
+  dicatat di `DIKETAHUI_GAGAL` (`RetrievalQualityTest`), bukan dengan menyetel bobot.
 - Pencarian dinilai berbasis isi: tiap kasus punya `harus_memuat`, frasa fakta dari teks resmi yang wajib
   ada di salah satu dari 3 sumber teratas `sources()` (artikel ATAU kutipan Sumber Resmi). Judul artikel
   (`artikel`) tetap dipakai untuk metrik terpisah "artikel saja".
