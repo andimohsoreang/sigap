@@ -27,6 +27,9 @@ class OfficialKnowledgeSeeder extends Seeder
 
     private const URL_UU = 'https://jdih.transmigrasi.go.id/web/regulations/category/undang-undang';
 
+    /** Dasar hukum persyaratan calon transmigran (FR-AI-11), terverifikasi dari naskah JDIH read/814. */
+    private const PERMENTRANS_2_2024 = 'Permentrans 2/2024 tentang Penataan Persebaran Penduduk di Kawasan Transmigrasi';
+
     public function run(): void
     {
         foreach ($this->articles() as $article) {
@@ -41,7 +44,7 @@ class OfficialKnowledgeSeeder extends Seeder
     }
 
     /**
-     * @return list<array{title: string, body: string, category: string, keywords: string, source: string, source_ref: string, source_url: string}>
+     * @return list<array{title: string, body: string, category: string, keywords: string, source: string, source_ref: string, source_url: string, dasar_hukum?: string, tanggal_dasar?: string, status_dasar?: string}>
      */
     public function articles(): array
     {
@@ -190,21 +193,27 @@ class OfficialKnowledgeSeeder extends Seeder
             ],
             [
                 'title' => 'Apa saja persyaratan calon transmigran dari daerah asal?',
-                'body' => "Persyaratan calon Transmigran Karya Nusantara (TKN) daerah asal:\n1. Warga negara Indonesia yang memiliki KTP-el.\n2. Berkeluarga, dibuktikan dengan surat nikah dan KK. Boleh belum berkeluarga bila memiliki keahlian tertentu yang dibuktikan sertifikat (mis. tenaga kesehatan, tenaga pendidikan, jasa konstruksi, perbengkelan, las, kerajinan, pengolahan hasil pertanian).\n3. Berusia 19–53 tahun (48–53 tahun bagi purnabakti TNI/Polri).\n4. Diutamakan minimal lulusan SMP/sederajat.\n5. Sehat, dibuktikan surat keterangan dokter.\n6. Menyatakan tekad mengembangkan kehidupan di permukiman transmigrasi dengan surat pernyataan.\n7. Belum pernah bertransmigrasi, dibuktikan surat keterangan perangkat daerah bidang ketransmigrasian.\n8. Mengikuti seleksi dan pelatihan komponen cadangan (Komcad), dan lulus seleksi.",
+                'body' => "Persyaratan calon Transmigran Karya Nusantara (TKN) daerah asal:\n1. Warga negara Indonesia yang memiliki KTP-el.\n2. Berkeluarga, dibuktikan dengan surat nikah dan KK. Boleh belum berkeluarga bila memiliki keahlian tertentu yang dibuktikan sertifikat (mis. tenaga kesehatan, tenaga pendidikan, jasa konstruksi, perbengkelan, las, kerajinan, pengolahan hasil pertanian).\n3. Berusia 19–53 tahun (48–53 tahun bagi purnabakti TNI/Polri).\n4. Diutamakan minimal lulusan SMP/sederajat.\n5. Sehat, dibuktikan surat keterangan dokter.\n6. Menyatakan tekad mengembangkan kehidupan di permukiman transmigrasi dengan surat pernyataan.\n7. Memiliki kemampuan mengembangkan usaha dan/atau budi daya di kawasan transmigrasi, dibuktikan sertifikat pelatihan dari lembaga pelatihan yang berwenang.\n8. Belum pernah bertransmigrasi, dibuktikan surat keterangan perangkat daerah bidang ketransmigrasian.\n9. Mengikuti seleksi dan pelatihan komponen cadangan (Komcad), dan lulus seleksi.",
                 'category' => 'Pendaftaran Transmigran',
-                'keywords' => 'syarat transmigran, persyaratan calon transmigran, usia transmigran, umur, KTP, KK, surat nikah, surat sehat, belum berkeluarga, lajang, TKN, Komcad',
+                'keywords' => 'syarat transmigran, persyaratan calon transmigran, usia transmigran, umur, KTP, KK, surat nikah, surat sehat, belum berkeluarga, lajang, TKN, Komcad, sertifikat pelatihan, syarat peserta, syarat ikut transmigrasi, syarat menjadi transmigran',
                 'source' => 'SIBARDUKTRANS — Tata Cara Bertransmigrasi',
                 'source_ref' => 'Persyaratan TKN daerah asal',
                 'source_url' => 'https://sibarduktrans.transmigrasi.go.id/tataCaraBertransmigrasi',
+                'dasar_hukum' => self::PERMENTRANS_2_2024.' (Pasal 6 ayat (3))',
+                'tanggal_dasar' => '2024-12-09',
+                'status_dasar' => 'berlaku',
             ],
             [
                 'title' => 'Apa syarat penduduk setempat untuk menjadi transmigran lokal?',
-                'body' => "Penduduk yang tinggal di Satuan Permukiman (SP) Pugar dapat memperoleh perlakuan sebagai transmigran, baik yang memiliki tanah dan rumah, memiliki tanah tanpa rumah, maupun tidak memiliki keduanya. Syaratnya:\n1. Terdaftar dalam dokumen RTSP-Pugar.\n2. Memiliki KTP di permukiman yang akan dikembangkan menjadi SP-Pugar tersebut.\n3. Berkeluarga.\n4. Sudah tinggal menetap dan memanfaatkan tanah di permukiman itu paling singkat 2 tahun.\n5. Berusia 19–53 tahun, diutamakan minimal lulusan SMP/sederajat, dan sehat (surat keterangan dokter).\n6. Membuat surat pernyataan tekad, belum pernah bertransmigrasi, dan lulus seleksi.",
+                'body' => "Penduduk yang tinggal di Satuan Permukiman (SP) Pugar dapat memperoleh perlakuan sebagai transmigran, baik yang memiliki tanah dan rumah, memiliki tanah tanpa rumah, maupun tidak memiliki keduanya. Syaratnya:\n1. Terdaftar dalam dokumen RTSP-Pugar.\n2. Memiliki KTP di permukiman yang akan dikembangkan menjadi SP-Pugar tersebut.\n3. Berkeluarga.\n4. Sudah tinggal menetap dan memanfaatkan tanah di permukiman itu paling singkat 2 tahun.\n5. Diutamakan minimal lulusan SMP/sederajat, dan sehat (surat keterangan dokter).\n6. Membuat surat pernyataan tekad, belum pernah bertransmigrasi, dan lulus seleksi.",
                 'category' => 'Pendaftaran Transmigran',
                 'keywords' => 'transmigran lokal, penduduk setempat, TPS, SP Pugar, RTSP, warga sekitar kawasan',
                 'source' => 'SIBARDUKTRANS — Tata Cara Bertransmigrasi',
                 'source_ref' => 'Persyaratan transmigran penduduk setempat',
                 'source_url' => 'https://sibarduktrans.transmigrasi.go.id/tataCaraBertransmigrasi',
+                'dasar_hukum' => self::PERMENTRANS_2_2024.' (Pasal 9 ayat (3))',
+                'tanggal_dasar' => '2024-12-09',
+                'status_dasar' => 'berlaku',
             ],
             [
                 'title' => 'Di mana dan bagaimana cara mendaftar sebagai calon transmigran?',

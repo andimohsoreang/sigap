@@ -31,11 +31,7 @@ class RetrievalQualityTest extends TestCase
      *
      * @var list<string>
      */
-    private const DIKETAHUI_GAGAL = [
-        // "KTP-el" ada di artikel persyaratan TKN, tetapi pertanyaan umum soal
-        // syarat menemukan artikel "Siapa yang boleh menjadi transmigran".
-        'Apa saja syarat untuk menjadi peserta program transmigrasi?',
-    ];
+    private const DIKETAHUI_GAGAL = [];
 
     protected function setUp(): void
     {

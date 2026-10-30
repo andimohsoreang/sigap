@@ -96,6 +96,44 @@ class KoreksiArtikelResmiTest extends TestCase
         $this->assertSame(0, ActivityLog::query()->where('action', 'knowledge.corrected')->count());
     }
 
+    public function test_second_batch_adds_training_certificate_and_drops_unfounded_age_rule(): void
+    {
+        $batch = require database_path('data/koreksi-artikel-2026-10-30b.php');
+        $tkn = 'Apa saja persyaratan calon transmigran dari daerah asal?';
+        $tps = 'Apa syarat penduduk setempat untuk menjadi transmigran lokal?';
+        $this->assertSame([$tkn, $tps], array_keys($batch));
+        foreach ($batch as $title => $old) {
+            // Kolom lain (sumber, dsb.) seperti seeder; kolom yang dikoreksi versi lama.
+            KnowledgeArticle::create(['status' => KnowledgeArticle::STATUS_REVIEW] + $old + $this->after($title));
+        }
+
+        $this->artisan('sigap:koreksi-artikel-resmi', ['--berkas' => 'koreksi-artikel-2026-10-30b', '--terapkan' => true])
+            ->expectsOutputToContain('2 artikel diperbarui, 0 dilewati. Tidak ada artikel yang diterbitkan.')
+            ->assertSuccessful();
+
+        $first = KnowledgeArticle::query()->where('title', $tkn)->sole();
+        $this->assertStringContainsString('sertifikat pelatihan dari lembaga pelatihan yang berwenang', $first->body);
+        $this->assertStringContainsString('syarat ikut transmigrasi', $first->keywords);
+        $this->assertSame(KnowledgeArticle::STATUS_REVIEW, $first->status);
+
+        $local = KnowledgeArticle::query()->where('title', $tps)->sole();
+        $this->assertStringNotContainsString('19–53', $local->body);
+        $this->assertStringContainsString('(Pasal 9 ayat (3)) (2024) — BERLAKU', $local->legalBasisLabel());
+        $this->assertSame(KnowledgeArticle::STATUS_REVIEW, $local->status);
+        $this->assertSame(2, ActivityLog::query()->where('action', 'knowledge.corrected')->count());
+
+        $this->artisan('sigap:koreksi-artikel-resmi', ['--berkas' => 'koreksi-artikel-2026-10-30b', '--terapkan' => true])
+            ->expectsOutputToContain('0 artikel diperbarui, 2 dilewati.')
+            ->assertSuccessful();
+    }
+
+    public function test_unknown_batch_file_fails(): void
+    {
+        $this->artisan('sigap:koreksi-artikel-resmi', ['--berkas' => '../../.env'])
+            ->expectsOutputToContain('Berkas koreksi tidak ditemukan')
+            ->assertFailed();
+    }
+
     public function test_without_apply_only_previews_the_diff(): void
     {
         $article = $this->oldArticle(self::KEWAJIBAN);
