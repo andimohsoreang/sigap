@@ -33,7 +33,7 @@ COPY sigap/ ./
 # laravel-vite-plugin memetakan `ziggy-js` ke vendor/tightenco/ziggy
 COPY --from=vendor /var/www/html/vendor ./vendor
 # Variabel VITE_* DITANAM ke JavaScript saat build — harus nilai produksi.
-ARG VITE_APP_NAME=SIGAP
+ARG VITE_APP_NAME="Contact Center"
 ARG VITE_REVERB_APP_KEY=
 ARG VITE_REVERB_HOST=
 ARG VITE_REVERB_PORT=443
