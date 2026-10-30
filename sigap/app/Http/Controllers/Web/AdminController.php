@@ -21,8 +21,8 @@ use App\Models\Region;
 use App\Models\Setting;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Modules\Assistant\Assistant;
 use App\Services\AccountService;
-use App\Services\Ai\AssistantService;
 use App\Services\Ai\TicketSuggester;
 use App\Services\AttachmentService;
 use App\Services\AuditService;
@@ -380,7 +380,7 @@ class AdminController extends Controller
         ];
         $tab = $request->string('tab')->toString();
         if (! array_key_exists($tab, $tabs)) {
-            $tab = AssistantService::enabled() ? 'menunggu' : 'semua';
+            $tab = Assistant::enabled() ? 'menunggu' : 'semua';
         }
         $scoped = fn () => $tabs[$tab](ChatConversation::query());
 
@@ -422,8 +422,8 @@ class AdminController extends Controller
             'active' => $activeId ? $this->conversationThread((int) $activeId) : null,
             'tab' => $tab,
             'tab_counts' => collect($tabs)->map(fn ($scope) => $scope(ChatConversation::query())->count()),
-            'ai_enabled' => AssistantService::enabled(),
-            'kpi' => AssistantService::enabled() ? $this->contactCenterStats->overview() : null,
+            'ai_enabled' => Assistant::enabled(),
+            'kpi' => Assistant::enabled() ? $this->contactCenterStats->overview() : null,
             'outcomes' => collect(ChatConversation::OUTCOMES)->only(['terjawab_petugas', 'lapor', 'wbs', 'tidak_selesai']),
             // Pilihan untuk "Terbitkan tiket" langsung dari Kotak Masuk.
             'ticket_options' => [

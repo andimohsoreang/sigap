@@ -9,6 +9,7 @@ use App\Models\Region;
 use App\Modules\Ai\AiContext;
 use App\Modules\Ai\AiGateway;
 use App\Modules\Ai\AiTask;
+use App\Modules\Assistant\Assistant;
 use App\Services\Knowledge\IndonesianText;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -64,7 +65,7 @@ class TicketSuggester
             'uraian' => trim(($summary !== '' ? "Ringkasan asisten: {$summary}\n\n" : '')."Pesan warga di live chat:\n- ".$messages->implode("\n- ")),
         ];
 
-        $ai = AssistantService::enabled() ? $this->fromModel($text, $regions, $categories, $conversation->id) : null;
+        $ai = Assistant::enabled() ? $this->fromModel($text, $regions, $categories, $conversation->id) : null;
         $heuristic = $this->fromKeywords($text, $regions, $categories);
 
         $regionId = $fixedRegionId ?? $ai['region_id'] ?? $heuristic['region_id'];

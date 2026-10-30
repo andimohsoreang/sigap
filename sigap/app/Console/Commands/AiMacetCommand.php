@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\ChatConversation;
+use App\Modules\Assistant\Assistant;
 use App\Modules\Assistant\AssistantText;
-use App\Services\Ai\AssistantService;
 use Illuminate\Console\Command;
 
 /**
@@ -19,7 +19,7 @@ class AiMacetCommand extends Command
 
     protected $description = 'Serahkan ke petugas percakapan yang jawaban TARA-nya macet di antrean';
 
-    public function handle(AssistantService $assistant): int
+    public function handle(Assistant $assistant): int
     {
         $stuck = ChatConversation::query()
             ->whereNotNull('ai_pending_at')

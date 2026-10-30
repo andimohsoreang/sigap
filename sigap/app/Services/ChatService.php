@@ -107,7 +107,7 @@ class ChatService
 
     /**
      * Warga/tamu mengakhiri percakapan sendiri. Riwayat tidak dihapus; pesan
-     * baru akan membuka percakapan lagi (AssistantService::reopenIfClosed).
+     * baru akan membuka percakapan lagi (Assistant::reopenIfClosed).
      */
     public function endByParticipant(ChatConversation $conversation, ?int $userId): ?ChatMessage
     {

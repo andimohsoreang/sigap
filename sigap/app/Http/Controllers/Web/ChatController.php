@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StartChatRequest;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
-use App\Services\Ai\AssistantService;
+use App\Modules\Assistant\Assistant;
 use App\Services\Ai\ServiceHours;
 use App\Services\ChatAttachmentService;
 use App\Services\ChatService;
@@ -53,7 +53,7 @@ class ChatController extends Controller
 
     public function __construct(
         private readonly ChatService $chat,
-        private readonly AssistantService $assistant,
+        private readonly Assistant $assistant,
         private readonly ServiceHours $hours,
         private readonly ReferralService $referrals,
     ) {}
@@ -227,7 +227,7 @@ class ChatController extends Controller
 
         return Inertia::render('public/chat', [
             'layanan' => [
-                'ai_aktif' => AssistantService::enabled(),
+                'ai_aktif' => Assistant::enabled(),
                 'jam_label' => $this->hours->label(),
                 'petugas_tersedia' => $this->hours->isOpen(),
                 'tutup_pukul' => str_replace(':', '.', (string) config('services.ai.service_hours.end')),
@@ -455,7 +455,7 @@ class ChatController extends Controller
         $withStaff = $conversation !== null && ! $conversation->isWithAssistant();
 
         return [
-            'aktif' => AssistantService::enabled(),
+            'aktif' => Assistant::enabled(),
             'mode' => $conversation === null ? ChatService::initialHandler() : $conversation->handled_by,
             'jam_layanan' => $this->hours->label(),
             'petugas_tersedia' => $this->hours->isOpen(),

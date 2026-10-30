@@ -4,8 +4,9 @@ namespace App\Console\Commands;
 
 use App\Models\KnowledgeArticle;
 use App\Models\KnowledgePassage;
+use App\Modules\Assistant\Consultation;
+use App\Modules\Assistant\ResponsePolicy;
 use App\Services\Ai\AiException;
-use App\Services\Ai\AssistantService;
 use App\Services\Knowledge\KnowledgeRetriever;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
@@ -52,7 +53,7 @@ class UjiAsistenCommand extends Command
 
     protected $description = 'Uji pencarian dan jawaban Asisten SIGAP dengan paket pertanyaan warga';
 
-    public function handle(KnowledgeRetriever $retriever, AssistantService $assistant): int
+    public function handle(KnowledgeRetriever $retriever, Consultation $consultation, ResponsePolicy $policy): int
     {
         $cases = require database_path('data/uji-asisten.php');
         $withModel = ! $this->option('hanya-pencarian');
@@ -66,7 +67,7 @@ class UjiAsistenCommand extends Command
         $durations = [];
 
         foreach ($cases as $i => $case) {
-            // Sama seperti TARA: artikel terbit + kutipan Sumber Resmi (AssistantService::respond).
+            // Sama seperti TARA: artikel terbit + kutipan Sumber Resmi (Assistant::respond).
             $sources = $retriever->sources($case['tanya']);
             $articles = $sources->filter(fn ($s) => $s instanceof KnowledgeArticle)->values();
             $titles = $sources->map(fn ($s) => $s instanceof KnowledgePassage ? $s->displayTitle() : $s->title)->all();
@@ -91,7 +92,7 @@ class UjiAsistenCommand extends Command
             if ($withModel) {
                 $started = microtime(true);
                 try {
-                    $result = $assistant->consult($case['tanya'], [], $sources);
+                    $result = $consultation->consult($case['tanya'], [], $sources);
                     $durations[] = microtime(true) - $started;
                     $type = $result['jenis'].($result['perlu_petugas'] ? '+petugas' : '').($result['kompleks'] ? '+kompleks' : '');
                     $typeOk = $result['jenis'] === $case['jenis'];
@@ -117,7 +118,7 @@ class UjiAsistenCommand extends Command
                     }
 
                     if (isset($case['konflik'])) {
-                        [$ok, $note] = $this->conflictHandled($case['konflik'], $result, $sources, $assistant);
+                        [$ok, $note] = $this->conflictHandled($case['konflik'], $result, $sources, $policy);
                         if ($ok !== null) {
                             $score['konflik'][0] += (int) $ok;
                             $score['konflik'][1]++;
@@ -265,11 +266,11 @@ class UjiAsistenCommand extends Command
      * satu angka menentukan apakah label dasar hukum memutuskan.
      *
      * @param  array{berlaku: string, lama: string}  $conflict
-     * @param  array<string, mixed>  $result  hasil AssistantService::consult()
+     * @param  array<string, mixed>  $result  hasil Consultation::consult()
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $sources
      * @return array{0: bool|null, 1: string} null = tidak dinilai (sumber lama tidak ikut terambil)
      */
-    private function conflictHandled(array $conflict, array $result, Collection $sources, AssistantService $assistant): array
+    private function conflictHandled(array $conflict, array $result, Collection $sources, ResponsePolicy $policy): array
     {
         $number = fn (string $n) => '/(?<!\d)'.preg_quote($n, '/').'(?!\d)/u';
         $relevant = $sources->filter(fn ($s) => preg_match($number($conflict['berlaku']), $s->body) === 1 || preg_match($number($conflict['lama']), $s->body) === 1);
@@ -277,7 +278,7 @@ class UjiAsistenCommand extends Command
             return [null, 'sumber lama tidak terambil'];
         }
 
-        if (AssistantService::basisDecides($relevant)) {
+        if (ResponsePolicy::basisDecides($relevant)) {
             $ok = preg_match($number($conflict['berlaku']), $result['jawaban']) === 1
                 && preg_match($number($conflict['lama']), $result['jawaban']) === 1
                 && preg_match('/sudah diganti|aturan lama/iu', $result['jawaban']) === 1
@@ -286,7 +287,7 @@ class UjiAsistenCommand extends Command
             return [$ok, 'label memutuskan'];
         }
 
-        return [$assistant->unresolvedConflict($result, $sources), 'label belum memutuskan → petugas'];
+        return [$policy->unresolvedConflict($result, ResponsePolicy::cited($result, $sources)), 'label belum memutuskan → petugas'];
     }
 
     /**
