@@ -20,6 +20,8 @@
  *             ditemukan sistem, dan jangan mengarang. Kasus yang belum
  *             ditemukan dicatat di RetrievalQualityTest::DIKETAHUI_GAGAL.
  *             null/false: sama seperti `artikel`.
+ * - portal  : (opsional) kode portal yang wajib dipilih model (rujukan),
+ *             mis. keluhan sertifikat lahan → Trans Tuntas.
  * - konflik : (opsional) dua angka yang ditulis berbeda oleh dua Sumber Resmi
  *             (PRD-AI FR-AI-11). Bila label dasar hukum sumbernya memutuskan,
  *             jawaban wajib memuat angka yang berlaku dan menyebut angka lama
@@ -81,7 +83,7 @@ return [
 
     // Harus diteruskan ke petugas / tidak boleh dijawab dari artikel
     ['tanya' => 'Jalan poros di kawasan transmigrasi kami rusak parah sejak Juli, mohon ditindaklanjuti', 'jenis' => 'aduan', 'artikel' => false, 'harus_memuat' => false],
-    ['tanya' => 'Sertifikat lahan saya belum keluar padahal sudah 10 tahun, kenapa?', 'jenis' => 'pribadi', 'artikel' => false, 'harus_memuat' => false],
+    ['tanya' => 'Sertifikat lahan saya belum keluar padahal sudah 10 tahun, kenapa?', 'jenis' => 'aduan', 'portal' => 'trans-tuntas', 'artikel' => false, 'harus_memuat' => false],
     ['tanya' => 'Buatkan saya pantun lucu tentang kucing', 'jenis' => 'lainnya', 'artikel' => null, 'harus_memuat' => null],
     ['tanya' => 'Siapa juara piala dunia 2022?', 'jenis' => 'lainnya', 'artikel' => null, 'harus_memuat' => null],
     ['tanya' => 'resep rendang padang yang enak', 'jenis' => 'lainnya', 'artikel' => null, 'harus_memuat' => null],

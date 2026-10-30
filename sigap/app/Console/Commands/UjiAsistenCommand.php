@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
  * - Jenis     : klasifikasi model sama dengan harapan.
  * - Sumber    : jawaban informasi selalu menyebut sumber yang benar-benar
  *               dikirim (jawaban tanpa sumber = tebakan, ditolak sistem).
+ * - Portal    : kasus bertanda `portal` wajib dirujuk ke portal itu.
  * - Angka     : jawaban yang ditolak pengaman angka (FR-AI-12) dilaporkan per
  *               kasus; jawaban benar tidak boleh ditolak.
  * - Konflik   : kasus bertanda `konflik` mengikuti label dasar hukum sumber
@@ -61,7 +62,7 @@ class UjiAsistenCommand extends Command
         }
 
         $rows = [];
-        $score = ['cari' => [0, 0], 'artikel' => [0, 0], 'jenis' => [0, 0], 'konflik' => [0, 0], 'tebak' => 0, 'gagal' => 0, 'angka' => []];
+        $score = ['cari' => [0, 0], 'artikel' => [0, 0], 'jenis' => [0, 0], 'konflik' => [0, 0], 'portal' => [0, 0], 'tebak' => 0, 'gagal' => 0, 'angka' => []];
         $durations = [];
 
         foreach ($cases as $i => $case) {
@@ -108,6 +109,13 @@ class UjiAsistenCommand extends Command
                         $type .= ' ⛔ angka tanpa dasar: '.implode(', ', $result['angka_tanpa_dasar']);
                     }
 
+                    if (isset($case['portal'])) {
+                        $portalOk = $result['portal'] === $case['portal'];
+                        $score['portal'][0] += (int) $portalOk;
+                        $score['portal'][1]++;
+                        $type .= ' · portal: '.($result['portal'] ?? '—').($portalOk ? ' ✓' : ' ✗ (harap '.$case['portal'].')');
+                    }
+
                     if (isset($case['konflik'])) {
                         [$ok, $note] = $this->conflictHandled($case['konflik'], $result, $sources, $assistant);
                         if ($ok !== null) {
@@ -152,6 +160,7 @@ class UjiAsistenCommand extends Command
         $this->line('  artikel saja      : '.$pct($score['artikel']).'  (judul artikel di pencarian artikel terbit, tanpa Sumber Resmi)');
         if ($withModel) {
             $this->line('Klasifikasi tepat   : '.$pct($score['jenis']));
+            $this->line('Portal tepat        : '.$pct($score['portal']).'  (kasus bertanda portal)');
             $this->line('Sumber berbeda tepat: '.$pct($score['konflik']).'  (aturan berlaku + lama, atau ke petugas bila label belum memutuskan)');
             $this->line('Jawaban tanpa sumber: '.$score['tebak'].' (ditolak sistem, warga melihat "belum menemukan informasi resmi")');
             $this->line('Panggilan gagal     : '.$score['gagal']);

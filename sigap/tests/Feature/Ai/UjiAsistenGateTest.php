@@ -4,6 +4,7 @@ namespace Tests\Feature\Ai;
 
 use App\Models\KnowledgeArticle;
 use App\Models\KnowledgeSource;
+use App\Models\Portal;
 use App\Services\Ai\AiException;
 use App\Services\Ai\LlmClient;
 use Database\Seeders\KnowledgeSeeder;
@@ -113,6 +114,17 @@ class UjiAsistenGateTest extends TestCase
 
         $this->answering(['jawaban' => 'Menurut [1] 19–53 tahun. Menurut [2] 19–49 tahun.', 'sumber' => [1, 2], 'beda_sumber' => true, 'perlu_petugas' => true, 'alasan_petugas' => 'sumber_berbeda']);
         $this->artisan('sigap:uji-asisten')->expectsOutputToContain('Sumber berbeda tepat: 0% (0/1)')->assertSuccessful();
+    }
+
+    public function test_portal_choice_is_checked_for_marked_cases(): void
+    {
+        Portal::query()->create(['code' => 'trans-tuntas', 'name' => 'Trans Tuntas', 'url' => 'https://tuntas-trans.transmigrasi.go.id/', 'audience' => Portal::AUDIENCE_PUBLIC, 'purpose' => 'Pengaduan masalah lahan transmigrasi', 'is_active' => true]);
+
+        $this->answering(['jenis' => 'aduan', 'jawaban' => '', 'sumber' => [], 'portal' => 'trans-tuntas', 'beda_sumber' => false, 'perlu_petugas' => false]);
+        $this->artisan('sigap:uji-asisten')->expectsOutputToContain('Portal tepat        : 100% (1/1)')->assertSuccessful();
+
+        $this->answering(['jenis' => 'aduan', 'jawaban' => '', 'sumber' => [], 'portal' => null, 'beda_sumber' => false, 'perlu_petugas' => false]);
+        $this->artisan('sigap:uji-asisten')->expectsOutputToContain('Portal tepat        : 0% (0/1)')->assertSuccessful();
     }
 
     public function test_number_guard_rejections_are_reported_per_case(): void
