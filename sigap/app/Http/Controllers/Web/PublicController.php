@@ -15,6 +15,7 @@ use App\Services\PublicChannels;
 use App\Services\StatsService;
 use App\Services\SurveyService;
 use App\Services\TicketService;
+use App\Support\TicketFilters;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -110,7 +111,38 @@ class PublicController extends Controller
                 ->whereNotNull('latitude')
                 ->whereNotNull('longitude')
                 ->get(['id', 'code', 'name', 'province', 'latitude', 'longitude', 'infrastructure_status', 'kk_count']),
+            'provinsi' => $this->complaintsByProvince(),
         ]);
+    }
+
+    /**
+     * Total pengaduan publik per provinsi untuk peta (hanya angka agregat;
+     * tiket internal tidak dihitung). Nama provinsi seperti di data kawasan.
+     *
+     * @return list<array{provinsi: string, total: int, selesai: int, berjalan: int, kawasan: list<array{nama: string, total: int}>}>
+     */
+    private function complaintsByProvince(): array
+    {
+        $done = TicketStatus::Selesai->value;
+        $open = "'".implode("', '", TicketFilters::openStatuses())."'";
+        $rows = Ticket::query()->public()->whereNotNull('region_id')->toBase()
+            ->selectRaw("region_id, COUNT(*) as total, SUM(CASE WHEN status = '{$done}' THEN 1 ELSE 0 END) as selesai, SUM(CASE WHEN status IN ({$open}) THEN 1 ELSE 0 END) as berjalan")
+            ->groupBy('region_id')
+            ->get()
+            ->keyBy('region_id');
+        $regions = Region::query()->whereKey($rows->keys()->all())->whereNotNull('province')->get(['id', 'name', 'province']);
+
+        return $regions->groupBy(fn (Region $r) => trim($r->province))
+            ->map(fn ($group, string $province) => [
+                'provinsi' => $province,
+                'total' => (int) $group->sum(fn (Region $r) => $rows[$r->id]->total),
+                'selesai' => (int) $group->sum(fn (Region $r) => $rows[$r->id]->selesai),
+                'berjalan' => (int) $group->sum(fn (Region $r) => $rows[$r->id]->berjalan),
+                'kawasan' => $group->map(fn (Region $r) => ['nama' => $r->name, 'total' => (int) $rows[$r->id]->total])->sortByDesc('total')->values()->all(),
+            ])
+            ->sortByDesc('total')
+            ->values()
+            ->all();
     }
 
     /**

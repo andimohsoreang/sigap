@@ -696,6 +696,31 @@ html[data-vt='back-sheet']::view-transition-new(root) {
 /* --------------------------------------------------------------------------
    Peta Kawasan (TARA): pin bundar navy berlabel, pin terpilih emas, kartu info.
    -------------------------------------------------------------------------- */
+/* Peta provinsi (ProvinceMap): latar laut tanpa tile, label provinsi berdata. */
+.province-map {
+    background: linear-gradient(180deg, #eef5fb 0%, #e3eef8 100%);
+}
+.province-map .leaflet-container {
+    background: transparent;
+    font: inherit;
+}
+.leaflet-tooltip.prov-label {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: #17232f;
+    text-shadow:
+        0 0 3px #fff,
+        0 0 3px #fff,
+        0 0 3px #fff;
+}
+.leaflet-tooltip.prov-label::before {
+    display: none;
+}
+
 .tara-pin {
     background: none;
     border: 0;

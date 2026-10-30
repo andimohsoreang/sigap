@@ -323,4 +323,72 @@ class MatriksTest extends TestCase
                 ->has('tickets.data', 1)
                 ->where('tickets.data.0.nomor', 'TKT-261012-BBBBBB'));
     }
+
+    public function test_rekap_has_province_category_and_trend_data(): void
+    {
+        $admin = $this->superAdmin();
+        $this->seedTickets($admin);
+
+        $this->actingAs($admin)
+            ->get('/admin/matriks')
+            ->assertInertia(function (Assert $page) {
+                $provinsi = collect($page->toArray()['props']['rekap']['provinsi'])->keyBy('provinsi');
+                $this->assertSame(3, $provinsi['Papua Selatan']['total']);
+                $this->assertSame(2, $provinsi['Papua Selatan']['ews']);
+                $this->assertSame(['id' => $this->merauke->id, 'nama' => 'SP1 Merauke', 'total' => 3], $provinsi['Papua Selatan']['kawasan'][0]);
+                $this->assertSame(3, $provinsi['Kalimantan Utara']['total']);
+                $this->assertSame(2, $provinsi['Kalimantan Utara']['counts']['selesai']);
+                $this->assertEquals(50, $provinsi['Kalimantan Utara']['sla_pct']);
+
+                $kategori = collect($page->toArray()['props']['rekap']['kategori'])->pluck('total', 'label')->all();
+                $this->assertSame(['Infrastruktur Dasar' => 4, 'Tata Kelola Lahan' => 2], $kategori);
+
+                $tren = $page->toArray()['props']['rekap']['tren'];
+                $this->assertSame('hari', $tren['satuan']);
+                $this->assertCount(15, $tren['titik']); // 1–15 Oktober (hari ini)
+                $byDay = collect($tren['titik'])->keyBy('key');
+                $this->assertSame(6, $byDay['2026-10-12']['masuk']);
+                $this->assertSame(2, $byDay['2026-10-14']['selesai']);
+                $this->assertSame(6, collect($tren['titik'])->sum('masuk'));
+            });
+
+        $this->actingAs($admin)
+            ->get('/admin/matriks?periode=semua')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('rekap.tren.satuan', 'bulan')
+                ->where('rekap.tren.titik.0.key', '2026-09')
+                ->where('rekap.tren.titik.0.masuk', 1)
+                ->where('rekap.tren.titik.1.masuk', 6));
+    }
+
+    public function test_province_filter_narrows_rekap_list_and_chip(): void
+    {
+        $admin = $this->superAdmin();
+        $this->seedTickets($admin);
+
+        $this->actingAs($admin)
+            ->get('/admin/matriks?provinsi=Kalimantan%20Utara')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('rekap.total', 3)
+                ->has('tickets.data', 3)
+                ->where('filters.provinsi', 'Kalimantan Utara')
+                ->where('chips', fn ($chips) => collect($chips)->contains(fn ($c) => $c['key'] === 'provinsi' && $c['label'] === 'Provinsi: Kalimantan Utara'))
+                ->where('rekap.kawasan', fn ($rows) => collect($rows)->pluck('label')->all() === ['SP3 Bulungan'])
+                ->where('rekap.provinsi', fn ($rows) => collect($rows)->pluck('provinsi')->all() === ['Kalimantan Utara']));
+    }
+
+    public function test_public_map_shows_complaints_per_province_without_internal_tickets(): void
+    {
+        $this->seedTickets($this->superAdmin());
+        $this->ticket(['ticket_no' => 'TKT-261012-HHHHHH', 'status' => TicketStatus::Baru, 'is_internal' => true]);
+
+        $this->get('/peta')->assertInertia(function (Assert $page) {
+            $provinsi = collect($page->toArray()['props']['provinsi'])->keyBy('provinsi');
+            // Merauke: 3 bulan ini + 1 bulan lalu (semua waktu); tiket internal tidak dihitung.
+            $this->assertSame(['provinsi' => 'Papua Selatan', 'total' => 4, 'selesai' => 0, 'berjalan' => 4, 'kawasan' => [['nama' => 'SP1 Merauke', 'total' => 4]]], $provinsi['Papua Selatan']);
+            $this->assertSame(3, $provinsi['Kalimantan Utara']['total']);
+            $this->assertSame(2, $provinsi['Kalimantan Utara']['selesai']);
+            $this->assertArrayNotHasKey('Sulawesi Selatan', $provinsi->all());
+        });
+    }
 }

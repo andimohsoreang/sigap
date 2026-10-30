@@ -89,6 +89,9 @@ class MatrixService
             'dampak' => $this->impactRows($period, $now),
             'kanal' => $this->kanalRows($byKanal),
             'kawasan' => $this->regionRows($byRegion, $regionIds),
+            'provinsi' => $this->provinceRows($byRegion),
+            'kategori' => $this->categoryRows($this->aggregate($period, 'tickets.category_id', $now)),
+            'tren' => $this->trend($scope, $range),
             'survei' => $this->survey($period, $counts['selesai']),
             'perlu_tindakan' => [
                 'total' => $all['ews'],
@@ -427,6 +430,105 @@ class MatrixService
         }
 
         return $rows->sortByDesc('total')->values()->all();
+    }
+
+    /**
+     * Sebaran per provinsi untuk peta (dijumlah dari agregat per kawasan).
+     * Nama provinsi seperti di data kawasan; tiket tanpa kawasan/provinsi
+     * dikumpulkan di "Tanpa provinsi" (tidak tampil di peta).
+     *
+     * @param  Collection<string, array<string, mixed>>  $byRegion
+     * @return list<array{provinsi: string, total: int, counts: array<string, int>, ews: int, sla_pct: float|null, kawasan: list<array{id: int, nama: string, total: int}>}>
+     */
+    private function provinceRows(Collection $byRegion): array
+    {
+        $regions = Region::query()->whereKey($byRegion->keys()->filter()->map(fn ($id) => (int) $id)->all())->get(['id', 'name', 'province'])->keyBy('id');
+
+        return $byRegion
+            ->groupBy(fn (array $m, string $id) => trim((string) ($regions[(int) $id]->province ?? '')) ?: 'Tanpa provinsi', true)
+            ->map(function (Collection $group, string $province) use ($regions) {
+                $sum = fn (string $key) => (int) $group->sum($key);
+                $finished = $sum('selesai_sla');
+
+                return [
+                    'provinsi' => $province,
+                    'total' => $sum('total'),
+                    'counts' => collect(TicketStatus::cases())->mapWithKeys(fn (TicketStatus $st) => [$st->value => (int) $group->sum(fn ($m) => $m['counts'][$st->value])])->all(),
+                    'ews' => $sum('ews'),
+                    'sla_pct' => $finished > 0 ? round($sum('tepat') / $finished * 100, 1) : null,
+                    'kawasan' => $group->map(fn (array $m, string $id) => ['id' => (int) $id, 'nama' => (string) ($regions[(int) $id]->name ?? 'Tanpa kawasan'), 'total' => $m['total']])
+                        ->sortByDesc('total')->values()->all(),
+                ];
+            })
+            ->sortByDesc('total')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Jumlah tiket per kategori (diagram batang).
+     *
+     * @param  Collection<string, array<string, mixed>>  $byCategory
+     * @return list<array{key: string, label: string, total: int}>
+     */
+    private function categoryRows(Collection $byCategory): array
+    {
+        $names = Category::query()->whereKey($byCategory->keys()->filter()->map(fn ($id) => (int) $id)->all())->pluck('name', 'id');
+
+        return $byCategory
+            ->map(fn (array $m, string $id) => ['key' => $id, 'label' => $id === '' ? 'Tanpa kategori' : (string) ($names[(int) $id] ?? '—'), 'total' => $m['total']])
+            ->sortByDesc('total')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Tren tiket masuk vs selesai: per hari untuk satu bulan, per bulan untuk
+     * "semua waktu" (maks. {@see MONTH_OPTIONS} bulan). Selesai dihitung dari
+     * `resolved_at` di dalam rentang, termasuk tiket yang masuk sebelumnya.
+     * Dikelompokkan di PHP agar sama di SQLite dan PostgreSQL.
+     *
+     * @param  array{0: CarbonImmutable, 1: CarbonImmutable}|null  $range
+     * @return array{satuan: string, titik: list<array{key: string, label: string, masuk: int, selesai: int}>}
+     */
+    private function trend(Builder $scope, ?array $range): array
+    {
+        $today = CarbonImmutable::now()->endOfDay();
+        if ($range) {
+            [$from, $to] = [$range[0]->startOfDay(), $range[1]->min($today)];
+            $unit = 'hari';
+            $format = 'Y-m-d';
+        } else {
+            $first = (clone $scope)->reorder()->min('created_at');
+            $from = CarbonImmutable::parse($first ?? $today)->startOfMonth()->max($today->subMonths(self::MONTH_OPTIONS - 1)->startOfMonth());
+            $to = $today;
+            $unit = 'bulan';
+            $format = 'Y-m';
+        }
+
+        $points = [];
+        for ($d = $from; $d <= $to; $d = $unit === 'hari' ? $d->addDay() : $d->addMonth()) {
+            $points[$d->format($format)] = [
+                'key' => $d->format($format),
+                'label' => $unit === 'hari' ? $d->format('j') : TicketFilters::monthLabel($d),
+                'masuk' => 0,
+                'selesai' => 0,
+            ];
+        }
+
+        $count = function (string $column, string $field) use ($scope, $from, $to, $format, &$points): void {
+            (clone $scope)->reorder()->whereNotNull($column)->whereBetween($column, [$from, $to])->pluck($column)
+                ->each(function ($at) use ($field, $format, &$points) {
+                    $key = CarbonImmutable::parse($at)->format($format);
+                    if (isset($points[$key])) {
+                        $points[$key][$field]++;
+                    }
+                });
+        };
+        $count('created_at', 'masuk');
+        $count('resolved_at', 'selesai');
+
+        return ['satuan' => $unit, 'titik' => array_values($points)];
     }
 
     /** @return array{rata: float|null, responden: int, selesai: int} */

@@ -13,7 +13,8 @@ use Illuminate\Http\Request;
 /**
  * Saringan daftar tiket panel admin (Matriks Rekapitulasi & Manajemen Tiket).
  *
- * Parameter query: status, region_id, category_id, impact, q, periode
+ * Parameter query: status, region_id, provinsi (nama provinsi kawasan),
+ * category_id, impact, q, periode
  * (`YYYY-MM` atau `semua`), kanal (kunci {@see TicketIntake::KANAL}),
  * petugas (id petugas atau `none`), ews (`1` = lewat tenggat SLA).
  */
@@ -60,6 +61,9 @@ final class TicketFilters
         if ($request->filled('region_id')) {
             $query->where('region_id', $request->integer('region_id'));
         }
+        if ($request->filled('provinsi')) {
+            self::applyProvince($query, $request->string('provinsi')->toString());
+        }
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->integer('category_id'));
         }
@@ -94,6 +98,7 @@ final class TicketFilters
             'q' => $request->string('q')->toString(),
             'status' => $request->string('status')->toString(),
             'region_id' => $request->string('region_id')->toString(),
+            'provinsi' => $request->string('provinsi')->toString(),
             'category_id' => $request->string('category_id')->toString(),
             'impact' => $request->string('impact')->toString(),
             'kanal' => $request->string('kanal')->toString(),
@@ -121,6 +126,9 @@ final class TicketFilters
             $name = Region::query()->whereKey($request->integer('region_id'))->value('name');
             $chips[] = ['key' => 'region_id', 'label' => 'Kawasan: '.($name ?? '—')];
         }
+        if ($request->filled('provinsi')) {
+            $chips[] = ['key' => 'provinsi', 'label' => 'Provinsi: '.$request->string('provinsi')->toString()];
+        }
         if ($request->filled('category_id')) {
             $name = Category::query()->whereKey($request->integer('category_id'))->value('name');
             $chips[] = ['key' => 'category_id', 'label' => 'Kategori: '.($name ?? '—')];
@@ -145,6 +153,12 @@ final class TicketFilters
     }
 
     /** @return list<string> */
+    /** Tiket yang kawasannya berada di provinsi ini (nama seperti di data kawasan). */
+    public static function applyProvince($query, string $province): void
+    {
+        $query->whereHas('region', fn ($q) => $q->where('province', $province));
+    }
+
     public static function openStatuses(): array
     {
         return [TicketStatus::Baru->value, TicketStatus::Verifikasi->value, TicketStatus::Diproses->value];

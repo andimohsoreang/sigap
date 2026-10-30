@@ -46,7 +46,9 @@ import {
 } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 
+import { DonutChart, TrendChart, type TrendPoint } from '@/components/sigap/charts';
 import { DataTable, type DataTableColumn } from '@/components/sigap/data-table';
+import ProvinceMap, { TooltipRow } from '@/components/sigap/province-map';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AdminLayout, { AdminStat, ImpactBadge, StatusBadge } from '@/layouts/admin-layout';
@@ -133,8 +135,20 @@ interface Rekap {
     }[];
     kanal: { key: string; label: string; total: number }[];
     kawasan: { id: number | null; label: string; total: number; ews: number }[];
+    provinsi: ProvinceRow[];
+    kategori: { key: string; label: string; total: number }[];
+    tren: { satuan: 'hari' | 'bulan'; titik: TrendPoint[] };
     survei: { rata: number | null; responden: number; selesai: number };
     perlu_tindakan: { total: number; items: OverdueItem[] };
+}
+
+interface ProvinceRow {
+    provinsi: string;
+    total: number;
+    counts: Record<StatusKey, number>;
+    ews: number;
+    sla_pct: number | null;
+    kawasan: { id: number; nama: string; total: number }[];
 }
 
 interface Options {
@@ -261,7 +275,7 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
         ? (own_region?.name ?? '—')
         : (options.regions.find((r) => String(r.id) === filters.region_id)?.name ?? 'Semua kawasan');
 
-    const extraChips = chips.filter((c) => ['kanal', 'petugas', 'ews'].includes(c.key));
+    const extraChips = chips.filter((c) => ['provinsi', 'kanal', 'petugas', 'ews'].includes(c.key));
 
     const columns: DataTableColumn<TicketRow>[] = [
         {
@@ -395,6 +409,47 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
                 />
 
                 <KpiRow kpi={rekap.kpi} counts={rekap.matriks.total.counts} periodeSemua={periode.value === 'semua'} />
+
+                <ProvinceMapCard
+                    rows={rekap.provinsi}
+                    periode={periode.label}
+                    selected={filters.provinsi || null}
+                    onSelect={region_locked ? undefined : (p) => visit({ provinsi: p === filters.provinsi ? '' : p, region_id: '' })}
+                    onReset={() => visit({ provinsi: '' })}
+                />
+
+                {!isEmpty && (
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-[1.6fr_1fr_1fr]">
+                        <Card className="p-5 md:p-6 lg:col-span-2 xl:col-span-1">
+                            <CardHeading eyebrow="Tren" title={`Tiket masuk vs selesai per ${rekap.tren.satuan}`} />
+                            <div className="mt-4">
+                                <TrendChart points={rekap.tren.titik} unit={rekap.tren.satuan} />
+                            </div>
+                        </Card>
+                        <Card className="p-5 md:p-6">
+                            <CardHeading eyebrow="Komposisi" title="Status tiket" />
+                            <div className="mt-4">
+                                <DonutChart
+                                    centerLabel="tiket"
+                                    segments={STATUSES.map((st) => ({
+                                        key: st,
+                                        label: STATUS_LABEL[st],
+                                        value: rekap.matriks.total.counts[st],
+                                        color: TONE[st],
+                                    }))}
+                                    onSelect={(st) => router.get(matriksUrl({ status: st }, '#daftar-tiket'))}
+                                />
+                            </div>
+                        </Card>
+                        <Card className="p-5 md:p-6">
+                            <CardHeading eyebrow="Kategori" title="Tiket per kategori" />
+                            <div className="mt-4">
+                                <BarList rows={rekap.kategori} color="var(--adm-info)" icon={() => Tag} />
+                                <TotalLine total={rekap.total} />
+                            </div>
+                        </Card>
+                    </div>
+                )}
 
                 <MatrixCard matriks={rekap.matriks} isEmpty={isEmpty} sumbuUrl={(s) => matriksUrl({ sumbu: s })} ticketUrl={ticketUrl} />
 
@@ -1050,6 +1105,78 @@ function KawasanCard({ rows, total, survei }: { rows: Rekap['kawasan']; total: n
                     </div>
                 </div>
             )}
+        </Card>
+    );
+}
+
+/** Peta sebaran pengaduan per provinsi; klik provinsi menyaring seluruh dashboard. */
+function ProvinceMapCard({
+    rows,
+    periode,
+    selected,
+    onSelect,
+    onReset,
+}: {
+    rows: ProvinceRow[];
+    periode: string;
+    selected: string | null;
+    onSelect?: (provinsi: string) => void;
+    onReset: () => void;
+}) {
+    const mapped = rows.filter((r) => r.provinsi !== 'Tanpa provinsi');
+
+    return (
+        <Card className="p-5 md:p-6">
+            <CardHeading eyebrow="Peta wilayah" title="Sebaran Pengaduan per Wilayah">
+                <p className="text-xs text-[var(--adm-text-2)]">{periode}</p>
+            </CardHeading>
+            <p className="mt-1 text-sm text-[var(--adm-text-2)]">
+                {onSelect ? 'Klik provinsi untuk memfilter dashboard.' : 'Sebaran pengaduan di kawasan Anda.'}
+            </p>
+            <div className="mt-4 mb-3 flex flex-wrap items-center gap-2 text-sm font-semibold text-[var(--adm-text)]">
+                <MapPin className="h-4 w-4 text-[var(--adm-accent)]" aria-hidden="true" />
+                {selected ?? 'Seluruh Wilayah (Nasional)'}
+                {selected && onSelect && (
+                    <button
+                        type="button"
+                        onClick={onReset}
+                        className="ml-1 inline-flex items-center gap-1 rounded-full border border-[var(--adm-border-strong)] px-2.5 py-0.5 text-xs font-medium hover:bg-[var(--adm-surface-2)]"
+                    >
+                        <X className="h-3 w-3" aria-hidden="true" /> Nasional
+                    </button>
+                )}
+            </div>
+            <ProvinceMap
+                data={mapped}
+                selected={selected}
+                onSelect={onSelect}
+                hint={onSelect ? (selected ? 'Klik lagi untuk kembali ke nasional' : 'Klik untuk menyaring wilayah ini') : undefined}
+                tooltip={(_, row) =>
+                    row ? (
+                        <>
+                            <TooltipRow label="Total pengaduan" value={nf(row.total)} />
+                            <TooltipRow label="Sedang berjalan" value={nf(row.counts.baru + row.counts.verifikasi + row.counts.diproses)} />
+                            <TooltipRow label="Selesai" value={nf(row.counts.selesai)} tone="text-[#5fd0b5]" />
+                            <TooltipRow label="Lewat tenggat SLA" value={nf(row.ews)} tone={row.ews > 0 ? 'text-[#f6c453]' : undefined} />
+                            <TooltipRow label="Selesai tepat SLA" value={row.sla_pct === null ? '—' : `${dec(row.sla_pct)}%`} />
+                            <div className="mt-2 border-t border-white/15 pt-2">
+                                <p className="text-white/70">Kawasan ({row.kawasan.length}):</p>
+                                <ul className="mt-1 space-y-0.5">
+                                    {row.kawasan.slice(0, 4).map((k) => (
+                                        <li key={k.id} className="flex justify-between gap-3">
+                                            <span className="truncate">• {k.nama}</span>
+                                            <span className="tabular-nums">{nf(k.total)}</span>
+                                        </li>
+                                    ))}
+                                    {row.kawasan.length > 4 && <li className="text-white/60">+{row.kawasan.length - 4} kawasan lain</li>}
+                                </ul>
+                            </div>
+                        </>
+                    ) : (
+                        <p className="text-white/70">Belum ada pengaduan pada periode ini.</p>
+                    )
+                }
+            />
         </Card>
     );
 }

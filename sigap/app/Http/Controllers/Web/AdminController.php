@@ -88,11 +88,17 @@ class AdminController extends Controller
         }
         $paginator = $query->paginate($perPage)->withQueryString();
 
-        // Rekap: cakupan peran + saringan kawasan saja (periode diterapkan MatrixService).
+        // Rekap: cakupan peran + saringan kawasan/provinsi saja (periode diterapkan MatrixService).
         $regionId = $request->filled('region_id') ? $request->integer('region_id') : null;
-        $scope = $this->scopedTickets(Ticket::query())->when($regionId, fn ($q) => $q->where('region_id', $regionId));
+        $province = $request->filled('provinsi') ? $request->string('provinsi')->toString() : null;
+        $scope = $this->scopedTickets(Ticket::query())
+            ->when($regionId, fn ($q) => $q->where('region_id', $regionId))
+            ->when($province, fn ($q) => TicketFilters::applyProvince($q, $province));
         $regionIds = match (true) {
             $regionId !== null => [$regionId],
+            $province !== null => Region::query()->where('province', $province)
+                ->when(! $user->isSuperAdmin(), fn ($q) => $q->whereKey(array_filter([$user->region_id])))
+                ->pluck('id')->all(),
             $user->isSuperAdmin() => null,
             default => array_values(array_filter([$user->region_id])),
         };
