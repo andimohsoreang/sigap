@@ -463,7 +463,7 @@ refaktor selesai, karena T1 paling berdampak ke warga.
 | Berkas sekarang | Modul tujuan |
 |---|---|
 | `app/Services/Ai/{LlmClient,OpenAiCompatibleClient,FakeLlmClient,AiException,PiiMasker,Prompts}.php` | Ai |
-| `app/Services/Ai/AssistantService.php` | Assistant (dipecah: Consultation, ResponsePolicy, ReplyComposer) |
+| ~~`app/Services/Ai/AssistantService.php`~~ (dihapus Tahap 3) | Assistant: `app/Modules/Assistant/` — Assistant, Consultation, ResponsePolicy, Decision, ReplyComposer, Handoff, TicketLookup, AssistantText; teks `lang/id/asisten.php`; tes rekaman `tests/Feature/Assistant/ReplyGoldenTest` |
 | `app/Services/Ai/TicketSuggester.php` | Assistant (`TicketSuggestions`) |
 | `app/Services/Ai/ServiceHours.php`, `app/Services/ChatService.php`, `app/Services/ContactCenterStats.php` | ContactCenter |
 | `app/Services/Knowledge/*`, `app/Jobs/{ProcessKnowledgeDocument,SyncKnowledgeSource}.php` | Knowledge |

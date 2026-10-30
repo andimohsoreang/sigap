@@ -7,7 +7,6 @@ use App\Models\ChatMessage;
 use App\Models\User;
 use App\Modules\Assistant\Assistant;
 use App\Modules\Assistant\AssistantText;
-use App\Services\Ai\AssistantService;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -66,7 +65,7 @@ final class RespondToMessage implements ShouldBeUnique, ShouldQueue
         return [(new WithoutOverlapping('percakapan:'.$this->conversationId))->releaseAfter(2)->expireAfter(90)];
     }
 
-    public function handle(AssistantService $assistant): void
+    public function handle(Assistant $assistant): void
     {
         [$conversation, $message] = $this->load();
         if ($conversation === null || $message === null) {

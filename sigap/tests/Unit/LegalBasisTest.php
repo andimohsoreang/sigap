@@ -5,7 +5,8 @@ namespace Tests\Unit;
 use App\Models\KnowledgeArticle;
 use App\Models\KnowledgePassage;
 use App\Models\KnowledgeSource;
-use App\Services\Ai\AssistantService;
+use App\Modules\Assistant\ResponsePolicy;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 /** Label dasar hukum dan aturan "label memutuskan" (PRD-AI FR-AI-11). */
@@ -44,16 +45,23 @@ class LegalBasisTest extends TestCase
         $current = $this->article(['status_dasar' => 'berlaku']);
         $replaced = new KnowledgeSource(['status_dasar' => 'diganti', 'diganti_oleh' => 'Peraturan Baru']);
 
-        $this->assertTrue(AssistantService::basisDecides(collect([$current, $this->passage($replaced)])));
-        $this->assertFalse(AssistantService::basisDecides(collect([$current, $this->passage(new KnowledgeSource)])), 'sumber belum diketahui');
-        $this->assertFalse(AssistantService::basisDecides(collect([$current, $this->passage(null)])), 'kutipan tanpa sumber');
-        $this->assertFalse(AssistantService::basisDecides(collect([$current, $this->article(['status_dasar' => 'berlaku'])])), 'keduanya berlaku');
-        $this->assertFalse(AssistantService::basisDecides(collect([$current, $this->passage($replaced), $this->article([])])), 'ada yang belum diketahui');
+        $this->assertTrue(ResponsePolicy::basisDecides(collect([$current, $this->passage($replaced)])));
+        $this->assertFalse(ResponsePolicy::basisDecides(collect([$current, $this->passage(new KnowledgeSource)])), 'sumber belum diketahui');
+        $this->assertFalse(ResponsePolicy::basisDecides(collect([$current, $this->passage(null)])), 'kutipan tanpa sumber');
+        $this->assertFalse(ResponsePolicy::basisDecides(collect([$current, $this->article(['status_dasar' => 'berlaku'])])), 'keduanya berlaku');
+        $this->assertFalse(ResponsePolicy::basisDecides(collect([$current, $this->passage($replaced), $this->article([])])), 'ada yang belum diketahui');
     }
 
     public function test_unresolved_conflict_follows_model_flag_and_labels(): void
     {
-        $service = app(AssistantService::class);
+        // Dulu AssistantService::unresolvedConflict (sumber dikirim → sumber dikutip).
+        $service = new class
+        {
+            public function unresolvedConflict(array $result, Collection $sources): bool
+            {
+                return (new ResponsePolicy)->unresolvedConflict($result, ResponsePolicy::cited($result, $sources));
+            }
+        };
         $sources = collect([$this->article(['status_dasar' => 'berlaku']), $this->passage(new KnowledgeSource)]);
         $result = fn (array $r) => $r + ['sumber' => [1, 2], 'beda_sumber' => false, 'perlu_petugas' => false, 'alasan_petugas' => null];
 

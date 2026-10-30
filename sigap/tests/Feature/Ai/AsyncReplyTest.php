@@ -11,7 +11,7 @@ use App\Models\ChatMessage;
 use App\Models\KnowledgeArticle;
 use App\Models\Referral;
 use App\Models\User;
-use App\Services\Ai\AssistantService;
+use App\Modules\Assistant\Assistant;
 use App\Services\Ai\LlmClient;
 use App\Services\ChatService;
 use Database\Seeders\MasterSeeder;
@@ -72,7 +72,7 @@ class AsyncReplyTest extends TestCase
 
     private function runJob(ChatMessage $message): void
     {
-        (new RespondToMessage($message->conversation_id, $message->id))->handle(app(AssistantService::class));
+        (new RespondToMessage($message->conversation_id, $message->id))->handle(app(Assistant::class));
     }
 
     /** @return int jumlah pesan TARA (ai) di percakapan */
