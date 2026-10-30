@@ -47,12 +47,44 @@ interface Props {
     }[];
 }
 
-const DASAR_HUKUM = [
-    'Undang-Undang Nomor 25 Tahun 2009 tentang Pelayanan Publik',
-    'Undang-Undang Nomor 27 Tahun 2022 tentang Pelindungan Data Pribadi',
-    'Peraturan Menteri PANRB Nomor 62 Tahun 2018 tentang Pedoman SP4N',
-    'Peraturan Menteri Transmigrasi tentang Penyelenggaraan Pelayanan Publik',
-    'Peraturan Presiden tentang Program Transmigrasi 5T',
+/** Teks dari pemilik layanan (30-10-2026). */
+const DASAR_HUKUM: { judul: string; peran: string }[] = [
+    {
+        judul: 'Undang-Undang Nomor 25 Tahun 2009 tentang Pelayanan Publik',
+        peran: 'Sebagai landasan penyelenggaraan pelayanan publik yang efektif, transparan, akuntabel, serta memberikan kemudahan akses bagi masyarakat, termasuk dalam penyampaian dan pengelolaan pengaduan masyarakat.',
+    },
+    {
+        judul: 'Undang-Undang Nomor 27 Tahun 2022 tentang Pelindungan Data Pribadi',
+        peran: 'Sebagai landasan dalam pelindungan data pribadi yang diproses dalam penyelenggaraan layanan Dashboard Contact Center, termasuk data identitas, kontak, lokasi, dokumen pendukung, serta data lain yang berkaitan dengan pelapor dan pengaduan masyarakat.',
+    },
+    {
+        judul: 'Undang-Undang Nomor 1 Tahun 2024 tentang Perubahan Kedua atas Undang-Undang Nomor 11 Tahun 2008 tentang Informasi dan Transaksi Elektronik',
+        peran: 'Sebagai landasan penyelenggaraan sistem elektronik dan pemanfaatan teknologi informasi dalam pengembangan serta pengoperasian aplikasi Dashboard Contact Center.',
+    },
+    {
+        judul: 'Peraturan Presiden Nomor 76 Tahun 2013 tentang Pengelolaan Pengaduan Pelayanan Publik',
+        peran: 'Sebagai landasan penyelenggaraan pengelolaan pengaduan masyarakat secara terintegrasi, termasuk penerimaan, pencatatan, penyaluran, pemantauan, dan penyelesaian pengaduan.',
+    },
+    {
+        judul: 'Peraturan Presiden Nomor 95 Tahun 2018 tentang Sistem Pemerintahan Berbasis Elektronik (SPBE)',
+        peran: 'Sebagai landasan dalam pembangunan dan pengembangan sistem informasi pemerintahan yang terintegrasi, efektif, efisien, aman, dan berorientasi pada peningkatan kualitas layanan pemerintahan.',
+    },
+    {
+        judul: 'Peraturan Presiden Nomor 39 Tahun 2019 tentang Satu Data Indonesia',
+        peran: 'Sebagai landasan dalam pengelolaan data yang akurat, mutakhir, terpadu, dapat dipertanggungjawabkan, mudah diakses, dan dapat dibagipakaikan untuk mendukung perencanaan, pelaksanaan, evaluasi, dan pengendalian pembangunan.',
+    },
+    {
+        judul: 'Peraturan Presiden Nomor 132 Tahun 2022 tentang Arsitektur Sistem Pemerintahan Berbasis Elektronik Nasional',
+        peran: 'Sebagai acuan dalam penyelarasan arsitektur aplikasi, data, infrastruktur, keamanan, dan layanan digital yang dibangunkan dengan arsitektur SPBE.',
+    },
+    {
+        judul: 'Peraturan Menteri Komunikasi dan Informatika Nomor 1 Tahun 2023 tentang Interoperabilitas Data dalam Penyelenggaraan Sistem Pemerintahan Berbasis Elektronik dan Satu Data Indonesia',
+        peran: 'Sebagai acuan dalam penyediaan interoperabilitas data dan pertukaran data antar sistem secara andal, aman, akuntabel, serta terdokumentasi.',
+    },
+    {
+        judul: 'Peraturan Presiden Nomor 172 Tahun 2024 tentang Kementerian Transmigrasi',
+        peran: 'Sebagai landasan kelembagaan penyelenggaraan tugas dan fungsi Kementerian Transmigrasi, termasuk penyelenggaraan dukungan administrasi, koordinasi, pengelolaan data dan informasi, serta pelaksanaan kebijakan di bidang transmigrasi.',
+    },
 ];
 
 const STATUS_ORDER: { key: string; color: string }[] = [
@@ -342,7 +374,7 @@ export default function Tentang({ stats, regions }: Props) {
                     id="sec-dasar-hukum"
                     className="grid scroll-mt-24 gap-8 rounded-[24px] bg-[#f7f3ee] p-7 sm:p-9 lg:grid-cols-[340px_minmax(0,1fr)] lg:gap-10"
                 >
-                    <div className="flex flex-col gap-2.5">
+                    <div className="flex flex-col gap-2.5 lg:sticky lg:top-28 lg:self-start">
                         <TaraEyebrow tone="bronze">Dasar hukum</TaraEyebrow>
                         <h2 className="font-heading text-2xl leading-tight font-bold text-[var(--t-deep)]">
                             Keterbukaan data ini dijalankan berdasarkan
@@ -353,9 +385,12 @@ export default function Tentang({ stats, regions }: Props) {
                     </div>
                     <ul className="flex flex-col gap-2.5">
                         {DASAR_HUKUM.map((h) => (
-                            <li key={h} className="flex items-center gap-3 rounded-[14px] border border-[#ece6dc] bg-white px-[18px] py-3.5">
-                                <Scale className="h-[18px] w-[18px] shrink-0 text-[var(--t-navy)]" aria-hidden="true" />
-                                <span className="text-[15px] font-medium text-[var(--t-deep)]">{h}</span>
+                            <li key={h.judul} className="flex items-start gap-3 rounded-[14px] border border-[#ece6dc] bg-white px-[18px] py-3.5">
+                                <Scale className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[var(--t-navy)]" aria-hidden="true" />
+                                <div className="min-w-0">
+                                    <p className="text-[15px] leading-snug font-semibold text-[var(--t-deep)]">{h.judul}</p>
+                                    <p className="mt-1 text-sm leading-relaxed text-[#5b4a36]">{h.peran}</p>
+                                </div>
                             </li>
                         ))}
                     </ul>
