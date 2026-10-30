@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\ChatConversation;
+use App\Modules\Assistant\AssistantText;
 use App\Services\Ai\AssistantService;
 use Illuminate\Console\Command;
 
@@ -27,7 +28,7 @@ class AiMacetCommand extends Command
 
         foreach ($stuck as $conversation) {
             $conversation->forceFill(['ai_pending_at' => null])->save();
-            $assistant->handoff($conversation, 'ai_gagal', null, 'Maaf, asisten sedang tidak dapat menjawab. Pesan Anda kami teruskan ke petugas.');
+            $assistant->handoff($conversation, 'ai_gagal', null, AssistantText::get('ai_gagal'));
         }
 
         $this->info("{$stuck->count()} percakapan macet diserahkan ke petugas.");

@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\User;
+use App\Modules\Assistant\AssistantText;
 use App\Services\Ai\AssistantService;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -93,7 +94,7 @@ final class RespondToMessage implements ShouldBeUnique, ShouldQueue
             return;
         }
 
-        app(AssistantService::class)->handoff($conversation, 'ai_gagal', null, 'Maaf, asisten sedang tidak dapat menjawab. Pesan Anda kami teruskan ke petugas.');
+        app(AssistantService::class)->handoff($conversation, 'ai_gagal', null, AssistantText::get('ai_gagal'));
         $this->clearPending($conversation->refresh());
     }
 

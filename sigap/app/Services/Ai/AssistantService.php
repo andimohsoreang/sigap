@@ -14,6 +14,7 @@ use App\Modules\Ai\AiGateway;
 use App\Modules\Ai\AiResult;
 use App\Modules\Ai\AiTask;
 use App\Modules\Ai\NumberGuard;
+use App\Modules\Assistant\AssistantText;
 use App\Services\ChatService;
 use App\Services\Knowledge\KnowledgeRetriever;
 use App\Services\PortalDirectory;
@@ -47,19 +48,6 @@ class AssistantService
 
     /** Petugas dianggap sedang menangani percakapan bila membalas dalam rentang ini. */
     private const STAFF_ACTIVE_MINUTES = 30;
-
-    private const COMPLEX_NOTICE = 'Pertanyaan ini perlu ditelaah lebih lanjut terhadap keadaan Anda, jadi saya teruskan ke petugas beserta ringkasannya.';
-
-    /** Sumber resmi berbeda dan label dasar hukum tidak memutuskan (PRD-AI FR-AI-11). */
-    private const CONFLICT_NOTICE = 'Sumber resmi yang saya temukan berbeda, dan belum dapat dipastikan mana yang berlaku. Pertanyaan Anda saya teruskan ke petugas untuk dipastikan.';
-
-    /** Jawaban memuat angka yang tidak ada di sumbernya (PRD-AI FR-AI-12): tidak dikirim. */
-    private const UNSUPPORTED_NOTICE = 'Saya belum dapat memastikan jawaban untuk pertanyaan ini dari sumber resmi, jadi pertanyaan Anda saya teruskan ke petugas.';
-
-    private const ASK_DETAILS = 'Baik, saya bantu. Ceritakan masalahnya: apa yang terjadi, di kawasan atau SP mana, dan sejak kapan? Bila ada, sebutkan juga dampaknya.';
-
-    /** Pertanyaan kebijakan yang tidak dibahas sumber: tetap diarahkan ke kanal resmi, bukan sekadar "tidak tahu". */
-    private const POLICY_NO_SOURCE = 'Pertanyaan ini menyangkut kebijakan Kementerian Transmigrasi. Saya belum menemukan sumber resmi yang membahasnya, jadi saya tidak akan berspekulasi. Untuk pernyataan resmi atau data kinerja program, Bapak/Ibu dapat mengajukan permohonan informasi publik ke PPID Kementerian Transmigrasi atau menghubungi Humas Kementerian.';
 
     public function __construct(
         private readonly AiGateway $gateway,
@@ -131,7 +119,7 @@ class AssistantService
         try {
             $result = $this->ask($conversation, $text, $articles, $incoming->id);
         } catch (AiException) {
-            return $this->handoff($conversation, 'ai_gagal', null, 'Maaf, asisten sedang tidak dapat menjawab. Pesan Anda kami teruskan ke petugas.');
+            return $this->handoff($conversation, 'ai_gagal', null, AssistantText::get('ai_gagal'));
         }
 
         $summary = $result['ringkasan'] !== '' ? $result['ringkasan'] : null;
@@ -142,7 +130,7 @@ class AssistantService
         // diteruskan lewat alurnya sendiri (alasan aduan/pribadi), tanpa jawaban.
         if ($result['angka_tanpa_dasar'] !== []) {
             if (! $complaint) {
-                return $this->handoff($conversation, 'angka_tanpa_dasar', $summary, self::UNSUPPORTED_NOTICE);
+                return $this->handoff($conversation, 'angka_tanpa_dasar', $summary, AssistantText::get('angka_tanpa_dasar'));
             }
             $result['jawaban'] = '';
         }
@@ -158,7 +146,7 @@ class AssistantService
         if (! $complaint && $this->unresolvedConflict($result, $articles)) {
             return [
                 ...$sourcedAnswer(),
-                $this->say($conversation, self::CONFLICT_NOTICE, ['kind' => 'sumber_berbeda']),
+                $this->say($conversation, AssistantText::get('sumber_berbeda'), ['kind' => 'sumber_berbeda']),
                 ...$this->handoff($conversation, 'sumber_berbeda', $summary),
             ];
         }
@@ -173,7 +161,7 @@ class AssistantService
         // Niat melapor tanpa detail: tanya dulu masalahnya, jangan langsung
         // merujuk ke portal atau mengantrekan ke petugas dengan aduan kosong.
         if ($complaint && count($this->retriever->terms($query)) < self::MIN_COMPLAINT_TERMS) {
-            return [$this->say($conversation, self::ASK_DETAILS, ['kind' => 'tanya_detail'])];
+            return [$this->say($conversation, AssistantText::get('tanya_detail'), ['kind' => 'tanya_detail'])];
         }
 
         // Aduan/urusan pribadi yang dilayani portal lain (mis. lahan → Trans
@@ -188,7 +176,7 @@ class AssistantService
         if ($result['kompleks'] && $result['jenis'] === 'informasi') {
             return [
                 ...$sourcedAnswer(),
-                $this->say($conversation, self::COMPLEX_NOTICE, ['kind' => 'kompleks']),
+                $this->say($conversation, AssistantText::get('kompleks'), ['kind' => 'kompleks']),
                 ...$this->handoff($conversation, 'kompleks', $summary),
             ];
         }
@@ -196,27 +184,25 @@ class AssistantService
         return match ($result['jenis']) {
             'aduan' => [
                 ...$sourcedAnswer(),
-                $this->say($conversation, 'Terima kasih. Laporan Anda saya ringkas untuk petugas agar bisa langsung ditindaklanjuti.'
-                    .($summary ? "\n\nRingkasan: {$summary}" : ''), ['kind' => 'ringkasan']),
+                $this->say($conversation, AssistantText::get('aduan_diringkas')
+                    .($summary ? "\n\n".AssistantText::get('aduan_ringkasan', ['ringkasan' => $summary]) : ''), ['kind' => 'ringkasan']),
                 ...$this->handoff($conversation, 'aduan', $summary),
             ],
             // Ketentuan umumnya (bila ada sumbernya) tetap ditampilkan; kepastian
             // untuk kasus warga sendiri diserahkan ke petugas.
             'pribadi' => [
                 ...$sourcedAnswer(),
-                $this->say($conversation, $sourced
-                    ? 'Untuk memastikan apakah ketentuan di atas berlaku pada kasus Anda, perlu diperiksa langsung oleh petugas. Saya tidak dapat memastikannya.'
-                    : 'Pertanyaan ini menyangkut data Anda pribadi, jadi perlu diperiksa langsung oleh petugas. Saya tidak dapat memastikannya.', ['kind' => 'pribadi']),
+                $this->say($conversation, AssistantText::get($sourced ? 'pribadi_bersumber' : 'pribadi_tanpa_sumber'), ['kind' => 'pribadi']),
                 ...$this->handoff($conversation, 'pribadi', $summary),
             ],
             'tidak_jelas' => [$this->say(
                 $conversation,
-                'Mohon maaf, saya belum dapat memahami pesan Bapak/Ibu dengan baik. Bisakah pertanyaannya disampaikan dalam Bahasa Indonesia? Bapak/Ibu juga dapat langsung berbicara dengan petugas.',
+                AssistantText::get('tidak_jelas'),
                 ['kind' => 'tidak_jelas'],
             )],
             'lainnya' => [$this->say(
                 $conversation,
-                $result['jawaban'] !== '' ? $result['jawaban'] : 'Mohon maaf, saya hanya dapat membantu informasi seputar layanan Kementerian Transmigrasi.',
+                $result['jawaban'] !== '' ? $result['jawaban'] : AssistantText::get('di_luar_layanan'),
                 ['kind' => 'lainnya'],
             )],
             default => [$this->answer($conversation, $text, $result, $articles, $portal)],
@@ -251,11 +237,11 @@ class AssistantService
         $reference = $conversation->reference;
 
         $messages[] = $this->hours->isOpen()
-            ? $this->chat->send($conversation, 'Pesan Anda kami teruskan ke petugas beserta ringkasannya. Mohon tunggu, petugas akan membalas di percakapan ini.', 'system', null, [
+            ? $this->chat->send($conversation, AssistantText::get('diteruskan'), 'system', null, [
                 'kind' => 'diteruskan',
                 'referensi' => $reference,
             ])
-            : $this->chat->send($conversation, "Saat ini di luar jam layanan petugas ({$this->hours->label()}). Pesan Anda sudah kami catat dengan nomor referensi {$reference}. Tinggalkan nomor WhatsApp atau surel agar petugas dapat menghubungi Anda pada hari kerja berikutnya.", 'system', null, [
+            : $this->chat->send($conversation, AssistantText::get('minta_kontak', ['jam' => $this->hours->label(), 'referensi' => $reference]), 'system', null, [
                 'kind' => 'minta_kontak',
                 'referensi' => $reference,
             ]);
@@ -334,8 +320,8 @@ class AssistantService
         }
 
         $body = $this->hours->isOpen()
-            ? 'Pesan Anda sudah masuk ke petugas dan akan dibalas di percakapan ini. Sambil menunggu, Anda tetap bisa bertanya hal umum seputar transmigrasi kepada saya.'
-            : "Pesan Anda sudah masuk ke petugas dan akan dibalas pada jam layanan ({$this->hours->label()}). Sambil menunggu, Anda tetap bisa bertanya hal umum seputar transmigrasi kepada saya.";
+            ? AssistantText::get('menunggu_petugas')
+            : AssistantText::get('menunggu_petugas_luar_jam', ['jam' => $this->hours->label()]);
 
         return [$this->say($conversation, $body, ['kind' => 'menunggu_petugas'])];
     }
@@ -389,7 +375,7 @@ class AssistantService
         // Teks arahan tetap (bukan karangan AI); tetap dicatat sebagai
         // pertanyaan tak terjawab agar petugas dapat menyiapkan artikelnya.
         if (($sources->isEmpty() || $result['jawaban'] === '') && $result['kebijakan']) {
-            return $this->say($conversation, self::POLICY_NO_SOURCE, [
+            return $this->say($conversation, AssistantText::get('kebijakan_tanpa_sumber'), [
                 'kind' => 'tidak_tahu',
                 'kebijakan' => true,
                 'pertanyaan' => Str::limit($this->masker->mask($question), 200),
@@ -398,7 +384,7 @@ class AssistantService
 
         if (($sources->isEmpty() || $result['jawaban'] === '') && $portal !== null) {
             // Katalog portal dikelola admin = sumber resmi untuk "layanan ini ada di mana".
-            return $this->say($conversation, "Layanan ini tersedia di {$portal->name}: {$portal->purpose}.", [
+            return $this->say($conversation, AssistantText::get('portal_tersedia', ['portal' => $portal->name, 'kegunaan' => (string) $portal->purpose]), [
                 'kind' => 'jawaban',
                 'portal' => $portal->card(),
             ]);
@@ -407,7 +393,7 @@ class AssistantService
         if ($sources->isEmpty() || $result['jawaban'] === '') {
             return $this->say(
                 $conversation,
-                'Maaf, saya belum menemukan informasi resmi untuk pertanyaan tersebut, jadi saya tidak akan menebak. Anda dapat menanyakannya langsung ke petugas.',
+                AssistantText::get('tidak_tahu'),
                 ['kind' => 'tidak_tahu', 'pertanyaan' => Str::limit($this->masker->mask($question), 200)],
             );
         }
@@ -616,7 +602,7 @@ class AssistantService
     private function refer(ChatConversation $conversation, Portal $portal, string $summary): array
     {
         if (! $portal->is_reachable) {
-            return $this->handoff($conversation, 'portal_gangguan', $summary, "{$portal->name} sedang tidak dapat diakses. Pesan Anda kami teruskan ke petugas agar tetap dapat dibantu.");
+            return $this->handoff($conversation, 'portal_gangguan', $summary, AssistantText::get('portal_gangguan', ['portal' => $portal->name]));
         }
 
         // Sudah dirujuk ke portal yang sama: pesan baru dianggap kendala dan
@@ -630,9 +616,8 @@ class AssistantService
 
         return [$this->say(
             $conversation,
-            "Masalah ini ditangani langsung oleh {$portal->name}".($portal->managed_by ? " ({$portal->managed_by})" : '').'. '
-                .'Saya sudah menyiapkan pengantar berisi langkah, hal yang perlu disiapkan, dan ringkasan aduan Anda.'
-                .($pendamping ? " {$pendamping} dari SIGAP mendampingi Anda sampai aduan tercatat." : ''),
+            AssistantText::get('rujukan', ['portal' => $portal->name.($portal->managed_by ? " ({$portal->managed_by})" : '')])
+                .($pendamping ? ' '.AssistantText::get('rujukan_pendamping', ['nama' => $pendamping]) : ''),
             [
                 'kind' => 'rujukan',
                 'portal' => $portal->card(),
@@ -652,12 +637,12 @@ class AssistantService
         if ($ticket === null) {
             return $this->say(
                 $conversation,
-                "Tiket {$ticketNo} tidak ditemukan. Periksa kembali nomornya. Tiket bernomor format lama memerlukan kode akses di halaman Lacak Tiket.",
+                AssistantText::get('tiket_tidak_ditemukan', ['nomor' => $ticketNo]),
                 ['kind' => 'info'],
             );
         }
 
-        return $this->say($conversation, "Status tiket {$ticket->ticket_no}: {$ticket->status?->label()}.", [
+        return $this->say($conversation, AssistantText::get('tiket_status', ['nomor' => $ticket->ticket_no, 'status' => (string) $ticket->status?->label()]), [
             'kind' => 'status_tiket',
             'tiket' => [
                 'nomor' => $ticket->ticket_no,
