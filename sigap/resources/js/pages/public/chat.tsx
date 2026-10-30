@@ -1012,17 +1012,25 @@ function LeftPanel({ layanan, onTopic }: { layanan: Layanan; onTopic: (q: string
             >
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Kembali ke Beranda
             </button>
-            <div className="flex flex-col gap-3">
-                <img
-                    src="/images/tara/tablet.webp"
-                    alt=""
-                    width={273}
-                    height={900}
-                    className="transi-float h-48 w-32 object-contain xl:h-56 xl:w-36"
-                />
-                <h1 className="font-heading text-[22px] font-bold">TARA</h1>
-                <p className="text-[13px] leading-relaxed text-[#bcd0e0]">
-                    Asisten Contact Center. Menjawab dari sumber resmi Kementerian Transmigrasi, lalu meneruskan ke petugas bila perlu tindakan.
+            <div className="flex flex-col gap-4">
+                {/* Kartu sapaan: TARA setengah badan (dipotong di pinggang) dengan gelembung sapa. */}
+                <div className="relative aspect-square w-full overflow-hidden rounded-[22px] border border-white/15 bg-white/[0.04]">
+                    <span className="absolute top-[21%] -left-[2%] aspect-square w-[70%] rounded-full bg-white/10" aria-hidden="true" />
+                    <img
+                        src="/images/tara/tablet.webp"
+                        alt=""
+                        width={273}
+                        height={900}
+                        className="absolute top-[7%] left-[2%] h-auto w-[66%] max-w-none select-none"
+                        draggable={false}
+                    />
+                    <p className="absolute top-[7%] right-[4%] w-[54%] rounded-2xl bg-white px-3 py-2.5 text-[13.5px] leading-snug font-medium text-[var(--t-deep)] shadow-lg">
+                        Halo! Ada yang bisa saya bantu?
+                    </p>
+                </div>
+                <h1 className="font-heading text-[28px] leading-none font-bold">TARA</h1>
+                <p className="text-[14px] leading-relaxed text-[#bcd0e0]">
+                    TARA Agent AI. Menjawab dari sumber resmi Kementerian Transmigrasi, lalu meneruskan ke petugas bila perlu tindakan.
                 </p>
             </div>
             <div className="flex flex-col gap-3">
