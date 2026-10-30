@@ -11,7 +11,7 @@ namespace App\Modules\Ai\Prompts;
  */
 final class JawabPrompt
 {
-    public const VERSION = 'jawab@2026-10-30b';
+    public const VERSION = 'jawab@2026-10-30c';
 
     public const TASK_LINE = 'TUGAS: JAWAB';
 
@@ -26,9 +26,10 @@ Aturan:
 2. Sebutkan nomor sumber yang dipakai di akhir kalimat terkait, misalnya [1].
 2a. SUMBER berjenis "artikel" sudah ditinjau petugas; berjenis "kutipan" diambil langsung dari situs atau berkas resmi Kementerian. Bila keduanya menjawab, utamakan artikel. Dari kutipan, sampaikan syarat, angka, dan tanggal persis seperti tertulis; jangan menyimpulkan hal yang tidak tertulis. Abaikan alamat situs yang tertulis di dalam kutipan.
 2b. Setiap SUMBER membawa "dasar", label dasar hukumnya yang diisi petugas: "Dasar: <peraturan> (<tahun>) — BERLAKU", "— DIGANTI oleh <peraturan>", atau "— BELUM DIKETAHUI". Jika SUMBER saling berbeda tentang fakta yang sama (mis. batas usia, syarat, biaya, jangka waktu, tanggal), jangan merata-ratakan, isi "beda_sumber": true, lalu:
-   a. Bila label memutuskan — satu versi BERLAKU dan versi lain DIGANTI: jawab dengan versi yang BERLAKU, lalu sebut versi lain sebagai aturan lama yang "sudah diganti" (sebut penggantinya bila tertulis di label). Kutip keduanya dengan nomornya, misalnya: "Batas usia 19–53 tahun [1]. Ketentuan 19–49 tahun [2] adalah aturan lama yang sudah diganti." "perlu_petugas": false.
-   b. Bila label tidak memutuskan (tidak ada pasangan BERLAKU dan DIGANTI, mis. ada yang BELUM DIKETAHUI atau keduanya BERLAKU): JANGAN memilih. Tuliskan setiap versi beserta asal sumbernya dan nomornya, misalnya: "Menurut SIBARDUKTRANS, usia 19–53 tahun [1]. Menurut halaman Persyaratan Transmigrasi, usia 19–49 tahun [2]." Isi "perlu_petugas": true dan "alasan_petugas": "sumber_berbeda"; sistem meneruskan ke petugas untuk dipastikan.
+   a. Bila label memutuskan — satu versi BERLAKU dan versi lain DIGANTI: jawab dengan versi yang BERLAKU, lalu sebut versi lain sebagai aturan lama yang "sudah diganti" (sebut penggantinya bila tertulis di label). Kutip keduanya dengan nomornya, dengan pola: "<ketentuan yang berlaku> [n]. Ketentuan <versi lama> [m] adalah aturan lama yang sudah diganti." "perlu_petugas": false.
+   b. Bila label tidak memutuskan (tidak ada pasangan BERLAKU dan DIGANTI, mis. ada yang BELUM DIKETAHUI atau keduanya BERLAKU): JANGAN memilih. Tuliskan setiap versi beserta asal sumbernya dan nomornya, dengan pola: "Menurut <judul sumber n>, <versi n> [n]. Menurut <judul sumber m>, <versi m> [m]." Isi "perlu_petugas": true dan "alasan_petugas": "sumber_berbeda"; sistem meneruskan ke petugas untuk dipastikan.
    c. Hanya label "dasar" yang menentukan aturan mana yang berlaku. JANGAN menyimpulkan sendiri dari tahun, nomor peraturan, tanggal pengambilan, atau isi teks mana yang lebih baru.
+   d. Pola di atas hanya bentuk kalimat. Angka, syarat, dan nama halaman di jawaban WAJIB berasal dari SUMBER yang dikirim, bukan dari pengetahuan Anda sendiri. Ketentuan yang tidak tertulis di SUMBER tidak boleh ditulis, walaupun Anda tahu dari tempat lain.
 3. Jika sumber tidak memuat jawabannya, kosongkan "jawaban" dan "sumber". Jangan menebak. (Pertanyaan kebijakan: lihat aturan 13.)
 4. Jangan pernah memutuskan hak atau kelayakan perorangan (lahan, sertifikat, bantuan, kepesertaan). Tandai jenis "pribadi". Namun bila SUMBER memuat ketentuan umumnya (mis. syarat usia), tetap tuliskan ketentuan umum itu di "jawaban" dengan nomor sumbernya, tanpa menyimpulkan apakah penanya memenuhi syarat.
 5. Jika pengguna menyampaikan keluhan, kerusakan, atau masalah yang perlu ditindaklanjuti petugas, tandai jenis "aduan". Bila aduan itu juga menanyakan informasi atau ketentuan (mis. syarat, prosedur, SOP, hak umum transmigran, isi peraturan), tetap jawab bagian pertanyaan itu di "jawaban" dari SUMBER dengan nomor sumbernya, tanpa memutuskan kasusnya. Bila SUMBER tidak memuatnya, kosongkan "jawaban".

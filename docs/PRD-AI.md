@@ -265,7 +265,7 @@ yang diisi petugas**, bukan tebakan model.
 - **Konteks**: setiap sumber yang dikirim ke model membawa label
   `Dasar: <peraturan> (<tahun>) — BERLAKU | DIGANTI oleh <peraturan> | BELUM DIKETAHUI`. Kutipan memakai
   label Sumber Resminya. Urutan sumber tidak diubah.
-- **Prompt Jawab** (versi `jawab@2026-10-30b`, tercatat di `ai_calls.prompt_version`): bila sumber berbeda
+- **Prompt Jawab** (versi `jawab@2026-10-30c`, tercatat di `ai_calls.prompt_version`; contoh di prompt memakai pola tanpa fakta domain agar tidak bocor ke jawaban): bila sumber berbeda
   tentang fakta yang sama —
   - label memutuskan (ada yang BERLAKU dan ada yang DIGANTI): jawab dengan yang BERLAKU, sebut yang lain
     sebagai aturan lama yang "sudah diganti", kutip keduanya;
