@@ -337,7 +337,14 @@ function HeroMakarti({ mobile = false }: { mobile?: boolean }) {
             height={736}
             fetchPriority={mobile ? 'auto' : 'high'}
             loading={mobile ? 'lazy' : 'eager'}
-            className="absolute inset-0 h-full w-full object-cover object-center"
+            className={cn(
+                'absolute max-w-none object-cover',
+                // Desktop: gedung dikunci ke tepi kanan layar (selebar tinggi hero x rasio
+                // gambar, minimal selebar layar) agar papan nama "GRAND MAKARTI" selalu
+                // berada di kiri TARA, tidak tertutup tubuhnya. Layar sangat lebar memotong
+                // atas-bawah: fokus 80% ke bawah agar papan nama tetap terlihat.
+                mobile ? 'inset-0 h-full w-full object-center' : 'inset-y-0 right-0 h-full w-auto min-w-full object-[right_80%]',
+            )}
         />
     );
     const tara = (
@@ -351,9 +358,9 @@ function HeroMakarti({ mobile = false }: { mobile?: boolean }) {
             height={3600}
             className={cn(
                 'absolute max-w-none drop-shadow-[0_18px_30px_rgba(0,10,25,0.35)]',
-                // Seluruh tubuh dari kepala sampai paha di dalam kolom konten (tidak
-                // keluar tepi kanan), sebanding dengan teks hero. Versi HD 1584x3600.
-                mobile ? 'top-[8%] right-[2%] h-[150%] w-auto' : 'top-[120px] right-0 h-[960px] w-auto',
+                // Dari kepala sampai paha, di sisi kanan layar sejajar tepi kanan gedung;
+                // tangan menyambut ke arah papan nama. Versi HD 1584x3600.
+                mobile ? 'top-[8%] right-[2%] h-[150%] w-auto' : 'top-[120px] right-[2%] h-[960px] w-auto',
             )}
         />
     );
@@ -373,11 +380,10 @@ function HeroMakarti({ mobile = false }: { mobile?: boolean }) {
                 className="absolute inset-0"
                 style={{
                     background:
-                        'linear-gradient(90deg, rgba(2,43,74,0.97) 0%, rgba(2,43,74,0.93) 38%, rgba(2,43,74,0.6) 54%, rgba(2,43,74,0.15) 70%, rgba(2,43,74,0) 86%)',
+                        'linear-gradient(90deg, rgba(2,43,74,0.97) 0%, rgba(2,43,74,0.93) 34%, rgba(2,43,74,0.55) 46%, rgba(2,43,74,0.12) 60%, rgba(2,43,74,0) 74%)',
                 }}
             />
-            {/* TARA mengikuti kolom konten (bukan tepi layar) agar seimbang dengan teks di layar lebar. */}
-            <div className="absolute inset-y-0 left-1/2 w-full max-w-[1312px] -translate-x-1/2">{tara}</div>
+            {tara}
         </div>
     );
 }
