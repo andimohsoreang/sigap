@@ -86,7 +86,7 @@ function Controls() {
 function Scale() {
     const map = useMap();
     useEffect(() => {
-        const scale = L.control.scale({ metric: true, imperial: false, position: 'bottomright' }).addTo(map);
+        const scale = L.control.scale({ metric: true, imperial: false, position: 'topleft' }).addTo(map);
         return () => {
             scale.remove();
         };

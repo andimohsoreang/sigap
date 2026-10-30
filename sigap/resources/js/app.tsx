@@ -27,7 +27,8 @@ declare global {
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    // Judul halaman yang sudah memuat nama aplikasi ("Peta — Contact Center") tidak diberi akhiran lagi.
+    title: (title) => (!title ? appName : title.includes(appName) ? title : `${title} - ${appName}`),
     resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),
     setup({ el, App, props }) {
         const root = createRoot(el);
