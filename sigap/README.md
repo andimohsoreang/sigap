@@ -101,6 +101,16 @@ php artisan sigap:uji-asisten --rinci                 # alur lengkap dengan mode
 - Artikel dari `OfficialKnowledgeSeeder` masuk berstatus **Ditinjau**: Super Admin mencocokkan angka & pasal
   dengan dokumen asli (tautan tersedia di tiap artikel), lalu klik **Terbitkan** di *Basis Pengetahuan*.
   Seeder aman dijalankan ulang (judul yang sudah ada tidak ditimpa).
+- **Prosedur artikel resmi** (per batch, lihat PRD-AI "Prosedur artikel resmi"):
+  1. *Cek fakta berbukti kutipan*: setiap klaim artikel dicocokkan dengan kutipan dari naskah resmi (JDIH,
+     peraturan.bpk.go.id, portal Kementerian), dicatat per artikel (✅ / ⚠️ + usulan perbaikan).
+  2. *Koreksi*: ubah `OfficialKnowledgeSeeder`, simpan isi lama di `database/data/koreksi-artikel-<batch>.php`,
+     lalu `php artisan sigap:koreksi-artikel-resmi --berkas=koreksi-artikel-<batch>` (pratinjau) →
+     `--terapkan`. Hanya artikel "ditinjau" yang belum disunting petugas yang diubah; status tetap.
+  3. *Terbit atas keputusan Super Admin*: `php artisan sigap:terbitkan-artikel-resmi` (pratinjau) →
+     `--terapkan --dasar="<keputusan & rujukan cek fakta>"`. Hanya artikel "ditinjau" yang isinya sama dengan
+     seeder terkini yang terbit; dasar keputusan tercatat di audit log (`knowledge.published`).
+  4. Jalankan `sigap:uji-asisten` (lihat di bawah) dan laporkan hasilnya.
 - Pencarian: BM25 di atas kata dasar Bahasa Indonesia (`app/Services/Knowledge/IndonesianText.php` — imbuhan,
   sinonim, kata pengisi Jawa/Sunda). Bila artikel tidak ditemukan dengan istilah warga, isi **Kata kunci
   tambahan** pada artikel, lalu cek dengan kotak **Uji pencarian** di halaman yang sama.

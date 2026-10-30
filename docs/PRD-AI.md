@@ -301,6 +301,22 @@ sumber yang tidak memuatnya. Di server (`Modules\Ai\NumberGuard`):
   `status = ditolak`, `error_code = angka_tanpa_dasar`.
 - `sigap:uji-asisten` melaporkan tolakan per kasus. Jawaban yang benar tidak boleh ditolak.
 
+### Prosedur artikel resmi (Basis Pengetahuan)
+
+Artikel dari `OfficialKnowledgeSeeder` dipakai TARA hanya setelah terbit. Validasi = kecocokan dengan sumber
+resmi; hal yang tidak jelas atau sumber berbeda diteruskan ke petugas (FR-AI-11, FR-AI-12).
+
+1. **Cek fakta berbukti kutipan**: tiap klaim dicocokkan dengan kutipan naskah resmi (JDIH, peraturan.bpk.go.id,
+   portal Kementerian), dicatat per artikel dengan status dan usulan perbaikan. Ringkasan pihak ketiga dan
+   berita bukan bukti.
+2. **Koreksi**: seeder diubah, isi lama disimpan di `database/data/koreksi-artikel-<batch>.php`, diterapkan
+   dengan `sigap:koreksi-artikel-resmi --berkas=…` (pratinjau → `--terapkan`). Artikel yang sudah disunting
+   petugas tidak ditimpa; status tetap "ditinjau".
+3. **Terbit per batch atas keputusan Super Admin**: `sigap:terbitkan-artikel-resmi` (pratinjau →
+   `--terapkan --dasar="…"`). Hanya artikel "ditinjau" yang isinya sama dengan seeder terkini; dasar
+   keputusan masuk audit log `knowledge.published`.
+4. **Ukur**: `sigap:uji-asisten` lengkap di produksi; hasil dilaporkan ke pemilik.
+
 ## 6. Non-Functional Requirements
 
 | Aspek | Sasaran |
