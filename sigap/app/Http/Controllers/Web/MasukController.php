@@ -12,7 +12,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Login web SIGAP — NIK/username + kata sandi (PRD D3).
+ * Login web Contact Center — NIK/username + kata sandi (PRD D3).
  * Memakai AuthService yang sama dengan /api/v1 sehingga perilaku konsisten.
  */
 class MasukController extends Controller

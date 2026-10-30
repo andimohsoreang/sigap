@@ -18,7 +18,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *               ("Budi Santoso" -> "B*** S***").
  * - `nik`     : selalu null.
  * - `petugas` : selalu null (nama petugas tidak dipublikasikan).
- * - tanggapan : penulis "Petugas SIGAP" untuk petugas, "Pelapor" untuk pelapor.
+ * - tanggapan : penulis "Petugas Contact Center" untuk petugas, "Pelapor" untuk pelapor.
  *
  * Data lengkap untuk admin tersedia di {@see TicketAdminDetailResource}.
  */
@@ -63,12 +63,12 @@ class TicketResource extends JsonResource
         ];
     }
 
-    /** Penulis tanggapan untuk publik: pelapor sendiri atau "Petugas SIGAP". */
+    /** Penulis tanggapan untuk publik: pelapor sendiri atau "Petugas Contact Center". */
     private function publicAuthor($reply): string
     {
         $isReporter = $reply->author_id === null
             || ($this->reporter_id !== null && $reply->author_id === $this->reporter_id);
 
-        return $isReporter ? 'Pelapor' : 'Petugas SIGAP';
+        return $isReporter ? 'Pelapor' : 'Petugas Contact Center';
     }
 }

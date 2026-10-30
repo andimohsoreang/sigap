@@ -64,7 +64,7 @@ class PengaduanFormController extends Controller
                 'Direktorat Jenderal PKP2Trans',
                 'Direktorat Jenderal PKTrans',
                 'Biro Umum & TIK',
-                'Unit Layanan Pengaduan (SIGAP)',
+                'Unit Layanan Pengaduan (Contact Center)',
                 'Lainnya',
             ],
             'categories' => ['Internet / Jaringan', 'Listrik', 'Perangkat / Hardware', 'Aplikasi / Software', 'Fasilitas Kantor', 'Lainnya'],

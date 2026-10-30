@@ -164,7 +164,7 @@ class ChatService
             'ditutup' => $conversation->isClosed(),
             'petugas' => $staff && $conversation->handled_by === ChatConversation::HANDLED_STAFF ? [
                 'nama' => $staff->name,
-                'unit' => $staff->unit ?: ($staff->region?->name ? 'Kawasan '.$staff->region->name : 'Petugas SIGAP'),
+                'unit' => $staff->unit ?: ($staff->region?->name ? 'Kawasan '.$staff->region->name : 'Petugas Contact Center'),
             ] : null,
             'kontak' => self::maskContact($conversation->contact),
             'tiket' => $ticket ? [
@@ -203,7 +203,7 @@ class ChatService
     public function transcript(ChatConversation $conversation): string
     {
         $lines = [
-            'Transkrip percakapan SIGAP — Contact Center Kementerian Transmigrasi',
+            'Transkrip percakapan — Contact Center Kementerian Transmigrasi',
             'Dimulai: '.$conversation->created_at?->copy()->setTimezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H.i').' WIB',
         ];
         if ($conversation->reference) {
@@ -354,9 +354,9 @@ class ChatService
             'sender_type' => $m->sender_type,
             'mine' => $mine,
             'penulis' => match ($m->sender_type) {
-                'admin' => $m->sender?->name ?? 'Petugas SIGAP',
+                'admin' => $m->sender?->name ?? 'Petugas Contact Center',
                 'ai' => 'TARA',
-                'system' => 'SIGAP',
+                'system' => 'Contact Center',
                 default => 'Anda',
             },
             'pada' => $m->created_at?->toIso8601String(),

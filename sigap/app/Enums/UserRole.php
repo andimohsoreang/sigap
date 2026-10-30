@@ -19,7 +19,7 @@ enum UserRole: string
         };
     }
 
-    /** Peran yang boleh mengakses panel admin SIGAP. */
+    /** Peran yang boleh mengakses panel admin Contact Center. */
     public function isAdmin(): bool
     {
         return in_array($this, [self::AdminKawasan, self::SuperAdmin], true);

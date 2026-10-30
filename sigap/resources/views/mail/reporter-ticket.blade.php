@@ -2,7 +2,7 @@
     $meta = is_array($payload['meta'] ?? null) ? $payload['meta'] : [];
 @endphp
 <x-mail::message>
-# {{ $payload['heading'] ?? 'Perkembangan tiket SIGAP' }}
+# {{ $payload['heading'] ?? 'Perkembangan tiket Contact Center' }}
 
 {{ $payload['intro'] ?? '' }}
 
@@ -28,7 +28,7 @@
 </x-mail::button>
 @endisset
 
-Surel ini dikirim otomatis. Jangan membalas surel ini; gunakan live chat di situs SIGAP bila ada pertanyaan.
+Surel ini dikirim otomatis. Jangan membalas surel ini; gunakan live chat di situs Contact Center bila ada pertanyaan.
 
 {{ config('app.name') }} · Kementerian Transmigrasi Republik Indonesia
 </x-mail::message>

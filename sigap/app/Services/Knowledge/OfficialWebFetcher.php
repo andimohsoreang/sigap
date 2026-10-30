@@ -62,7 +62,7 @@ class OfficialWebFetcher
 
         try {
             $response = Http::withHeaders([
-                'User-Agent' => 'SIGAP-Kementrans/1.0 (Sumber Resmi; '.config('app.url').')',
+                'User-Agent' => 'ContactCenter-Kementrans/1.0 (Sumber Resmi; '.config('app.url').')',
                 'Accept' => 'text/html,application/xhtml+xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document;q=0.9,*/*;q=0.5',
             ])
                 ->timeout((int) config('services.knowledge.timeout', 30))

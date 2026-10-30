@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| SIGAP API v1 (PRD D1)
+| Contact Center API v1 (PRD D1)
 |--------------------------------------------------------------------------
 | Lapisan ini memakai Service/Request/Resource yang SAMA dengan jalur Inertia
 | sehingga data dapat dikeluarkan sebagai REST API kapan pun diminta.

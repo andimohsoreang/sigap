@@ -23,7 +23,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Halaman publik SIGAP (Inertia). Semua data dihitung dari Service yang SAMA
+ * Halaman publik Contact Center (Inertia). Semua data dihitung dari Service yang SAMA
  * dengan /api/v1 (PRD D1) — tampilan lama dipertahankan, datanya nyata.
  */
 class PublicController extends Controller
@@ -80,7 +80,7 @@ class PublicController extends Controller
         return Inertia::render('public/panduan');
     }
 
-    /** Data Terbuka SIGAP (tentang). */
+    /** Data Terbuka Contact Center (tentang). */
     public function about(): Response
     {
         return Inertia::render('public/tentang', [
@@ -272,8 +272,8 @@ class PublicController extends Controller
         }
 
         return [
-            ['question' => 'Bagaimana cara mengadukan layanan?', 'answer' => 'Anda dapat membuat tiket aduan melalui menu "Katalog Pengaduan" memilih SIGAP di portal ini, mengisi formulir dengan detail lokasi, lalu menyimpannya.'],
-            ['question' => 'Bagaimana caranya mendapatkan Hak Akses log in ke SIGAP?', 'answer' => 'Masyarakat umum dapat login lewat Portal Warga. Hak akses Admin dikhususkan bagi Pegawai terdaftar.'],
+            ['question' => 'Bagaimana cara mengadukan layanan?', 'answer' => 'Anda dapat membuat tiket aduan melalui menu "Katalog Pengaduan" memilih Contact Center di portal ini, mengisi formulir dengan detail lokasi, lalu menyimpannya.'],
+            ['question' => 'Bagaimana caranya mendapatkan Hak Akses log in ke Contact Center?', 'answer' => 'Masyarakat umum dapat login lewat Portal Warga. Hak akses Admin dikhususkan bagi Pegawai terdaftar.'],
             ['question' => 'Bagaimana jika status tiket saya sudah RESOLVE?', 'answer' => 'Status Resolve menandakan keluhan Anda telah diselesaikan. Anda akan diminta mengisi survei kepuasan pelanggan.'],
             ['question' => 'Bagaimana Cara Mengajukan Permohonan Baru?', 'answer' => 'Pilih menu "Katalog Pengaduan" di halaman beranda, pilih layanan yang sesuai, lalu isi kolom formulir.'],
             ['question' => 'Bagaimana cara memperbaiki permohonan yang ditolak?', 'answer' => 'Jika tiket ditolak karena kurang lengkap, Anda dapat membuat tiket baru dengan mereferensikan nomor lama dan melampirkan bukti.'],

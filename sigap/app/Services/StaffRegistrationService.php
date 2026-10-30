@@ -232,10 +232,10 @@ class StaffRegistrationService
 
         $deadline = $expires->copy()->setTimezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H:i');
         $body = match (true) {
-            $purpose === AccountActivation::PURPOSE_RECOVERY && $first => "Identitas Anda sudah dicocokkan petugas. Tekan tombol di bawah untuk membuat kata sandi baru akun SIGAP atas nama {$user->name}. Kata sandi lama tidak berlaku lagi setelah kata sandi baru disimpan.",
-            $purpose === AccountActivation::PURPOSE_RECOVERY => "Petugas mengirim ulang tautan untuk membuat kata sandi baru akun SIGAP atas nama {$user->name}. Tautan sebelumnya sudah tidak berlaku.",
-            $first => "Petugas sudah membuatkan akun SIGAP atas nama {$user->name}. Tekan tombol di bawah untuk membuat kata sandi Anda. Setelah itu Anda bisa masuk kapan saja dengan NIK dan kata sandi tersebut untuk memantau laporan.",
-            default => "Petugas mengirim ulang tautan untuk membuat kata sandi akun SIGAP atas nama {$user->name}. Tautan sebelumnya sudah tidak berlaku.",
+            $purpose === AccountActivation::PURPOSE_RECOVERY && $first => "Identitas Anda sudah dicocokkan petugas. Tekan tombol di bawah untuk membuat kata sandi baru akun Contact Center atas nama {$user->name}. Kata sandi lama tidak berlaku lagi setelah kata sandi baru disimpan.",
+            $purpose === AccountActivation::PURPOSE_RECOVERY => "Petugas mengirim ulang tautan untuk membuat kata sandi baru akun Contact Center atas nama {$user->name}. Tautan sebelumnya sudah tidak berlaku.",
+            $first => "Petugas sudah membuatkan akun Contact Center atas nama {$user->name}. Tekan tombol di bawah untuk membuat kata sandi Anda. Setelah itu Anda bisa masuk kapan saja dengan NIK dan kata sandi tersebut untuk memantau laporan.",
+            default => "Petugas mengirim ulang tautan untuk membuat kata sandi akun Contact Center atas nama {$user->name}. Tautan sebelumnya sudah tidak berlaku.",
         };
 
         $this->chat->send($conversation, $body."\nTautan berlaku sampai {$deadline} WIB dan hanya bisa dipakai sekali. Jangan bagikan tautan ini kepada siapa pun.", 'system', null, [

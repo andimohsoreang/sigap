@@ -7,7 +7,7 @@ return [
     | Server Side Rendering
     |--------------------------------------------------------------------------
     |
-    | SIGAP baru akan mengaktifkan SSR pada fase optimasi. Saat ini rendering
+    | Contact Center baru akan mengaktifkan SSR pada fase optimasi. Saat ini rendering
     | dilakukan di sisi klien (Vite dev/build).
     |
     */
@@ -21,7 +21,7 @@ return [
     | Testing
     |--------------------------------------------------------------------------
     |
-    | Halaman React SIGAP berada pada resources/js/pages (huruf kecil).
+    | Halaman React Contact Center berada pada resources/js/pages (huruf kecil).
     |
     */
     'testing' => [

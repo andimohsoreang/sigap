@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| SIGAP — Rute Web Publik (Inertia)
+| Contact Center — Rute Web Publik (Inertia)
 |--------------------------------------------------------------------------
 | Tampilan lama dipertahankan; data dilayani Service yang sama dengan API.
 */

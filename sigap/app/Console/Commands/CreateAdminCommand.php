@@ -28,12 +28,12 @@ class CreateAdminCommand extends Command
         {--role=super_admin : Peran (admin_kawasan|super_admin)}
         {--region= : ID atau kode kawasan (wajib untuk admin_kawasan)}';
 
-    protected $description = 'Membuat akun admin/petugas SIGAP (interaktif)';
+    protected $description = 'Membuat akun admin/petugas Contact Center (interaktif)';
 
     public function handle(): int
     {
         $username = $this->option('username') ?: $this->ask('Username admin');
-        $name = $this->option('name') ?: $this->ask('Nama lengkap', 'Administrator SIGAP');
+        $name = $this->option('name') ?: $this->ask('Nama lengkap', 'Administrator Contact Center');
         $roleInput = $this->option('role') ?: $this->choice('Peran', ['admin_kawasan', 'super_admin'], 1);
 
         $regionId = null;

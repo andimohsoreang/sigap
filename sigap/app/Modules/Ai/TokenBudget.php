@@ -61,7 +61,7 @@ final class TokenBudget
 
         $this->notifications->notify([
             'event' => 'ai_anggaran',
-            'subject' => '[SIGAP] Anggaran token AI hampir habis',
+            'subject' => '[Contact Center] Anggaran token AI hampir habis',
             'title' => 'Anggaran token AI hampir habis',
             'body' => $body,
             'message' => $body,

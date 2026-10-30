@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Broadcast;
 
 /*
 |--------------------------------------------------------------------------
-| Channel Broadcast SIGAP (PRD D5 — Reverb)
+| Channel Broadcast Contact Center (PRD D5 — Reverb)
 |--------------------------------------------------------------------------
 | Otentikasi channel privat. Warga hanya boleh mengakses percakapannya
 | sendiri; admin (admin kawasan & super admin) boleh memantau semua chat.

@@ -8,7 +8,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Surel notifikasi tiket SIGAP (D10). Dikirim oleh EmailDriver.
+ * Surel notifikasi tiket Contact Center (D10). Dikirim oleh EmailDriver.
  *
  * A-06: dikirim lewat queue (SMTP lambat/mati tidak memperlambat request)
  * dan baru diantrikan setelah transaksi database commit.
@@ -26,7 +26,7 @@ class TicketNotificationMail extends Mailable implements ShouldQueue
     public function build(): self
     {
         return $this
-            ->subject($this->payload['subject'] ?? '[SIGAP] Notifikasi Tiket')
+            ->subject($this->payload['subject'] ?? '[Contact Center] Notifikasi Tiket')
             ->markdown('mail.ticket-notification');
     }
 }

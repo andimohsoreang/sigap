@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
- * Uji kualitas Asisten SIGAP terhadap paket uji database/data/uji-asisten.php
+ * Uji kualitas Asisten Contact Center terhadap paket uji database/data/uji-asisten.php
  * memakai sumber yang SAMA dengan TARA — artikel terbit + kutipan Sumber Resmi
  * (KnowledgeRetriever::sources) — dan model yang sedang dikonfigurasi
  * (AI_DRIVER / AI_MODEL). Tidak menyimpan percakapan apa pun.
@@ -51,7 +51,7 @@ class UjiAsistenCommand extends Command
         {--maks-tanpa-sumber= : Batas jumlah jawaban informasi tanpa sumber}
         {--maks-p95= : Batas waktu jawab P95 dalam detik}';
 
-    protected $description = 'Uji pencarian dan jawaban Asisten SIGAP dengan paket pertanyaan warga';
+    protected $description = 'Uji pencarian dan jawaban Asisten Contact Center dengan paket pertanyaan warga';
 
     public function handle(KnowledgeRetriever $retriever, Consultation $consultation, ResponsePolicy $policy): int
     {

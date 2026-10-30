@@ -114,7 +114,7 @@ class EwsCheckCommand extends Command
             'nomor' => $count === 1 ? $tickets->first()->ticket_no : null,
             'tickets' => $tickets->pluck('ticket_no')->all(),
             'message' => $body,
-            'subject' => "[SIGAP] Peringatan EWS — {$count} tiket melewati SLA",
+            'subject' => "[Contact Center] Peringatan EWS — {$count} tiket melewati SLA",
             'title' => 'Peringatan EWS',
             'body' => $body,
             'cta_url' => '/admin/matriks',

@@ -108,7 +108,7 @@ return [
                     'scheme' => env('REVERB_SCHEME', 'https'),
                     'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
                 ],
-                // Hanya host halaman SIGAP sendiri (bukan '*'): cegah situs lain
+                // Hanya host halaman Contact Center sendiri (bukan '*'): cegah situs lain
                 // membuka koneksi WebSocket atas nama pengunjung.
                 'allowed_origins' => $allowedOrigins,
                 'ping_interval' => env('REVERB_APP_PING_INTERVAL', 60),

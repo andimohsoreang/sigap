@@ -26,7 +26,7 @@ class ReporterTicketMail extends Mailable implements ShouldQueue
     public function build(): self
     {
         return $this
-            ->subject($this->payload['subject'] ?? '[SIGAP] Perkembangan Tiket')
+            ->subject($this->payload['subject'] ?? '[Contact Center] Perkembangan Tiket')
             ->markdown('mail.reporter-ticket');
     }
 }

@@ -80,7 +80,7 @@ class EnsureRole
             $request->session()->regenerateToken();
         }
 
-        $message = 'Akun Anda dinonaktifkan. Hubungi admin SIGAP.';
+        $message = 'Akun Anda dinonaktifkan. Hubungi admin Contact Center.';
 
         if ($this->wantsJson($request)) {
             return response()->json(['authenticated' => false, 'error' => $message], 403);

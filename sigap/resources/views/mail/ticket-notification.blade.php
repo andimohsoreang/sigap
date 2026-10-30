@@ -2,7 +2,7 @@
     $meta = is_array($payload['meta'] ?? null) ? $payload['meta'] : [];
 @endphp
 <x-mail::message>
-# {{ $payload['title'] ?? 'SIGAP — Notifikasi' }}
+# {{ $payload['title'] ?? 'Contact Center — Notifikasi' }}
 
 {{ $payload['body'] ?? '' }}
 
@@ -18,7 +18,7 @@
 
 @isset($payload['cta_url'])
 <x-mail::button :url="config('app.url') . $payload['cta_url']">
-{{ $payload['cta_label'] ?? 'Buka di SIGAP' }}
+{{ $payload['cta_label'] ?? 'Buka di Contact Center' }}
 </x-mail::button>
 @endisset
 

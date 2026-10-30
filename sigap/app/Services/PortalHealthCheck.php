@@ -18,7 +18,7 @@ class PortalHealthCheck
     {
         $status = null;
         try {
-            $status = Http::timeout(8)->connectTimeout(5)->withHeaders(['User-Agent' => 'SIGAP-PortalCheck/1.0'])
+            $status = Http::timeout(8)->connectTimeout(5)->withHeaders(['User-Agent' => 'ContactCenter-PortalCheck/1.0'])
                 ->get($portal->destination())->status();
             $reachable = $status < 500;
         } catch (\Throwable) {

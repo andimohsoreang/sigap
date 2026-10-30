@@ -4,7 +4,7 @@ namespace App\Services\Ai;
 
 /**
  * Menyamarkan data pribadi sebelum teks dikirim ke model AI (UU 27/2022).
- * Teks asli tetap tersimpan di database SIGAP; yang dikirim hanya versi tersamar.
+ * Teks asli tetap tersimpan di database Contact Center; yang dikirim hanya versi tersamar.
  */
 class PiiMasker
 {

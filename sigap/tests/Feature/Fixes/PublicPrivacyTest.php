@@ -38,7 +38,7 @@ class PublicPrivacyTest extends TestCase
             ->assertJsonPath('data.nik', null)
             ->assertJsonPath('data.petugas', null)
             ->assertJsonCount(2, 'data.tanggapan')
-            ->assertJsonPath('data.tanggapan.0.author', 'Petugas SIGAP')
+            ->assertJsonPath('data.tanggapan.0.author', 'Petugas Contact Center')
             ->assertJsonPath('data.tanggapan.1.author', 'Pelapor');
 
         $body = $response->getContent();

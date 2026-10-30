@@ -136,7 +136,7 @@ class ReferralService
 
     /**
      * Ambil kode bukti dari pesan pendek ("TT-2026-00123", "kodenya ABC123").
-     * Nomor HP, NIK, dan nomor tiket SIGAP tidak dianggap kode.
+     * Nomor HP, NIK, dan nomor tiket Contact Center tidak dianggap kode.
      */
     public function extractCode(string $text): ?string
     {
@@ -382,7 +382,7 @@ class ReferralService
         $this->notifications->notify([
             'event' => 'rujukan',
             'nomor' => $referral->code,
-            'subject' => "[SIGAP] {$title} — {$referral->code}",
+            'subject' => "[Contact Center] {$title} — {$referral->code}",
             'title' => $title,
             'body' => $body,
             'message' => $body,

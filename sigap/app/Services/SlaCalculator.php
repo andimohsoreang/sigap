@@ -11,9 +11,9 @@ use Illuminate\Support\Carbon;
  * Menghitung prioritas dan tenggat SLA sebuah tiket dari tingkat dampak.
  *
  * Memperbaiki bug audit B1/B2: sebelumnya `tingkatDampak` diabaikan dan SLA
- * dihitung dari kategori, bukan dari prioritas resmi Pedoman Layanan SIGAP.
+ * dihitung dari kategori, bukan dari prioritas resmi Pedoman Layanan Contact Center.
  *
- * Pemetaan (Pedoman Layanan SIGAP):
+ * Pemetaan (Pedoman Layanan Contact Center):
  *   Kritis  -> Darurat   : respons 1x24 jam, selesai 3 hari kerja
  *   Tinggi  -> Prioritas : respons 3x24 jam, selesai 7 hari kerja
  *   Sedang  -> Umum      : respons 5 hari,  selesai 14 hari kerja

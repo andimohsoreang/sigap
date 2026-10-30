@@ -23,11 +23,11 @@ class VerifikasiEmail extends VerifyEmail implements ShouldQueue
     protected function buildMailMessage($url): MailMessage
     {
         return (new MailMessage)
-            ->subject('[SIGAP] Verifikasi email akun Anda')
+            ->subject('[Contact Center] Verifikasi email akun Anda')
             ->greeting('Halo!')
-            ->line('Terima kasih telah mendaftar di SIGAP Kementerian Transmigrasi. Klik tombol di bawah untuk memverifikasi email dan mengaktifkan akun Anda.')
+            ->line('Terima kasih telah mendaftar di Contact Center Kementerian Transmigrasi. Klik tombol di bawah untuk memverifikasi email dan mengaktifkan akun Anda.')
             ->action('Verifikasi email', $url)
             ->line('Tautan ini berlaku 60 menit. Bila Anda tidak merasa mendaftar, abaikan surel ini.')
-            ->salutation('Salam, Tim SIGAP');
+            ->salutation('Salam, Tim Contact Center');
     }
 }

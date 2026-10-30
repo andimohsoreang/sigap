@@ -25,9 +25,9 @@ class ReporterNotifier
     public function ticketCreated(Ticket $ticket): void
     {
         $this->send($ticket, [
-            'subject' => "[SIGAP] Tiket {$ticket->ticket_no} diterima",
+            'subject' => "[Contact Center] Tiket {$ticket->ticket_no} diterima",
             'heading' => 'Pengaduan Anda sudah kami terima',
-            'intro' => 'Terima kasih telah melapor melalui SIGAP. Simpan nomor tiket dan kode akses di bawah untuk melacak perkembangannya.',
+            'intro' => 'Terima kasih telah melapor melalui Contact Center. Simpan nomor tiket dan kode akses di bawah untuk melacak perkembangannya.',
             'meta' => $this->meta($ticket, withAccessCode: true),
         ]);
     }
@@ -45,7 +45,7 @@ class ReporterNotifier
         };
 
         $this->send($ticket, [
-            'subject' => "[SIGAP] Tiket {$ticket->ticket_no}: {$status?->label()}",
+            'subject' => "[Contact Center] Tiket {$ticket->ticket_no}: {$status?->label()}",
             'heading' => 'Status laporan: '.($status?->label() ?? '-'),
             'intro' => $intro,
             'meta' => $this->meta($ticket),
@@ -60,9 +60,9 @@ class ReporterNotifier
         }
 
         $this->send($ticket, [
-            'subject' => "[SIGAP] Tanggapan petugas untuk tiket {$ticket->ticket_no}",
+            'subject' => "[Contact Center] Tanggapan petugas untuk tiket {$ticket->ticket_no}",
             'heading' => 'Ada tanggapan baru dari petugas',
-            'intro' => 'Petugas SIGAP menanggapi laporan Anda:',
+            'intro' => 'Petugas Contact Center menanggapi laporan Anda:',
             'quote' => $reply->body,
             'meta' => $this->meta($ticket),
         ]);

@@ -37,7 +37,7 @@ class HandleInertiaRequests extends Middleware
         return array_merge(parent::share($request), [
             'name' => config('app.name'),
             'app' => [
-                'brand' => 'SIGAP',
+                'brand' => 'Contact Center',
                 'tagline' => 'Suara Masyarakat, Inisiatif Gerak Aksi, Penyelesaian Tuntas',
                 'ministry' => 'Kementerian Transmigrasi Republik Indonesia',
             ],

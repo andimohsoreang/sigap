@@ -23,7 +23,7 @@ enum TicketImpact: string
         };
     }
 
-    /** Target penyelesaian (hari kerja) sesuai Pedoman Layanan SIGAP. */
+    /** Target penyelesaian (hari kerja) sesuai Pedoman Layanan Contact Center. */
     public function resolveDays(): int
     {
         return match ($this) {
@@ -33,7 +33,7 @@ enum TicketImpact: string
         };
     }
 
-    /** Target respons awal (jam) sesuai Pedoman Layanan SIGAP. */
+    /** Target respons awal (jam) sesuai Pedoman Layanan Contact Center. */
     public function responseHours(): int
     {
         return match ($this) {

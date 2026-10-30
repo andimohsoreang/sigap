@@ -26,12 +26,12 @@ class AturUlangSandi extends ResetPassword implements ShouldQueue
         $minutes = config('auth.passwords.'.config('auth.defaults.passwords').'.expire');
 
         return (new MailMessage)
-            ->subject('[SIGAP] Atur ulang kata sandi')
+            ->subject('[Contact Center] Atur ulang kata sandi')
             ->greeting('Halo!')
-            ->line('Kami menerima permintaan untuk mengatur ulang kata sandi akun SIGAP Anda.')
+            ->line('Kami menerima permintaan untuk mengatur ulang kata sandi akun Contact Center Anda.')
             ->action('Atur ulang kata sandi', $url)
             ->line("Tautan ini berlaku {$minutes} menit dan hanya dapat dipakai satu kali.")
             ->line('Bila Anda tidak meminta ini, abaikan surel ini. Kata sandi Anda tidak akan berubah.')
-            ->salutation('Salam, Tim SIGAP');
+            ->salutation('Salam, Tim Contact Center');
     }
 }

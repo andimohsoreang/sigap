@@ -43,7 +43,7 @@ class NotificationBroadcast implements ShouldBroadcast, ShouldDispatchAfterCommi
     {
         return [
             'event' => $this->payload['event'] ?? 'notifikasi',
-            'title' => $this->payload['title'] ?? 'SIGAP — Notifikasi',
+            'title' => $this->payload['title'] ?? 'Contact Center — Notifikasi',
             'body' => $this->payload['body'] ?? '',
             'meta' => $this->payload['meta'] ?? [],
             'cta_url' => $this->payload['cta_url'] ?? null,

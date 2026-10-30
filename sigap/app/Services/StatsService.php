@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Cache;
  *
  * D-05: semua angka dihitung dengan agregat SQL (COUNT/SUM/AVG) — tidak ada
  * lagi pemuatan seluruh tiket ke memori. Dipakai halaman publik (Beranda, Data
- * SIGAP) maupun panel admin/API (matriks, rekap, tiket internal) dengan
+ * Contact Center) maupun panel admin/API (matriks, rekap, tiket internal) dengan
  * query yang sudah dibatasi sesuai peran.
  */
 class StatsService

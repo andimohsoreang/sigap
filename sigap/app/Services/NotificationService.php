@@ -101,7 +101,7 @@ class NotificationService
             'is_internal' => (bool) $ticket->is_internal,
             'created_at' => $ticket->created_at?->toIso8601String(),
             'message' => $message,
-            'subject' => "[SIGAP] {$ticket->ticket_no} — {$ticket->title}",
+            'subject' => "[Contact Center] {$ticket->ticket_no} — {$ticket->title}",
             'title' => "Tiket {$ticket->ticket_no}",
             'body' => $message !== '' ? $message : "Status: {$status}",
             'cta_url' => '/admin/tiket/'.$ticket->ticket_no,

@@ -47,7 +47,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Panel admin SIGAP (Inertia). Memakai Service/Request yang SAMA dengan
+ * Panel admin Contact Center (Inertia). Memakai Service/Request yang SAMA dengan
  * /api/v1/admin (PRD D1) dan scoping peran yang SAMA (SEC-07).
  */
 class AdminController extends Controller
