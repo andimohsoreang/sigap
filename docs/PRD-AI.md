@@ -5,7 +5,7 @@
 > **batas modul**, **urutan tahap**, dan **kriteria selesai**. Rincian deploy tetap di
 > [`DEPLOY.md`](DEPLOY.md) §13; PRD produk utama di [`PRD.md`](PRD.md).
 >
-> Versi 1.2 · 30 Oktober 2026 (1.1: FR-AI-10 — Sumber Resmi tidak disamarkan; 1.2: FR-AI-11 — Sumber berbeda & aturan lama; 1.3: FR-AI-12 pengaman angka, aturan 8 gerbang prompt sebelum deploy) · Pemilik: Andi · Basis kode: branch `feat/contact-center-ai` (`b7f9525`)
+> Versi 1.4 · 30 Oktober 2026 (1.1: FR-AI-10 — Sumber Resmi tidak disamarkan; 1.2: FR-AI-11 — Sumber berbeda & aturan lama; 1.3: FR-AI-12 pengaman angka, aturan 8 gerbang prompt sebelum deploy; 1.4: aturan 9 contoh prompt tanpa fakta domain) · Pemilik: Andi · Basis kode: branch `feat/contact-center-ai` (`b7f9525`)
 >
 > **Keputusan: SIGAP tetap satu aplikasi Laravel (monolith modular).** Yang dipisah hanya **mesin model
 > AI** (penyedia API atau server GPU) di balik satu pintu, yaitu API kompatibel OpenAI. Tidak ada
@@ -34,6 +34,10 @@
    `docker compose run --rm app php artisan sigap:uji-asisten --rinci` dengan model produksi (paling sedikit
    3 kali bila menyangkut aturan jawaban), bandingkan dengan hasil versi sebelumnya, baru `up -d`. Prompt
    yang memperburuk satu kasus pun tidak di-deploy.
+9. **Contoh di prompt tidak boleh memakai fakta domain sungguhan** — angka, pasal/nomor peraturan, nama
+   program, portal, atau halaman resmi. Pakai contoh fiktif netral di luar topik transmigrasi dan tandai
+   sebagai fiktif. Alasan: contoh "usia 19–49 tahun … halaman Persyaratan Transmigrasi" pernah bocor ke
+   jawaban TARA walau tidak ada di SUMBER. Dijaga `tests/Unit/Architecture/PromptExamplesTest.php`.
 
 ---
 
