@@ -5,7 +5,7 @@
 > **batas modul**, **urutan tahap**, dan **kriteria selesai**. Rincian deploy tetap di
 > [`DEPLOY.md`](DEPLOY.md) §13; PRD produk utama di [`PRD.md`](PRD.md).
 >
-> Versi 1.2 · 30 Oktober 2026 (1.1: FR-AI-10 — Sumber Resmi tidak disamarkan; 1.2: FR-AI-11 — Sumber berbeda & aturan lama) · Pemilik: Andi · Basis kode: branch `feat/contact-center-ai` (`b7f9525`)
+> Versi 1.2 · 30 Oktober 2026 (1.1: FR-AI-10 — Sumber Resmi tidak disamarkan; 1.2: FR-AI-11 — Sumber berbeda & aturan lama; 1.3: FR-AI-12 pengaman angka, aturan 8 gerbang prompt sebelum deploy) · Pemilik: Andi · Basis kode: branch `feat/contact-center-ai` (`b7f9525`)
 >
 > **Keputusan: SIGAP tetap satu aplikasi Laravel (monolith modular).** Yang dipisah hanya **mesin model
 > AI** (penyedia API atau server GPU) di balik satu pintu, yaitu API kompatibel OpenAI. Tidak ada
@@ -29,6 +29,11 @@
 6. **Jangan menulis kunci API** ke repo, log, atau chat. Repo ini publik.
 7. Kerjakan **per tahap** (§11). Setiap tahap: tes lengkap hijau (`php artisan test`, Vitest, tsc,
    eslint, pint) → laporkan ke pemilik → baru lanjut.
+8. **Perubahan prompt wajib lulus gerbang `sigap:uji-asisten` SEBELUM deploy** (FR-AI-06/07): naikkan
+   `VERSION`, build image baru tanpa mengganti layanan yang berjalan, jalankan
+   `docker compose run --rm app php artisan sigap:uji-asisten --rinci` dengan model produksi (paling sedikit
+   3 kali bila menyangkut aturan jawaban), bandingkan dengan hasil versi sebelumnya, baru `up -d`. Prompt
+   yang memperburuk satu kasus pun tidak di-deploy.
 
 ---
 
@@ -204,8 +209,8 @@ lang/id/asisten.php   ← semua teks balasan TARA
 ### FR-AI-06 Prompt berversi
 
 - Setiap prompt adalah kelas di `Modules/Ai/Prompts` dengan konstanta `VERSION` (mis. `jawab@2026-10-30`).
-- `ai_calls.prompt_version` terisi; mengubah isi prompt **wajib** menaikkan versi dan menjalankan
-  FR-AI-07.
+- `ai_calls.prompt_version` terisi; mengubah isi prompt **wajib** menaikkan versi dan lulus FR-AI-07
+  **sebelum deploy** (aturan §0.8).
 
 ### FR-AI-07 Gerbang kualitas
 
@@ -215,8 +220,8 @@ lang/id/asisten.php   ← semua teks balasan TARA
 - Pencarian dinilai berbasis isi: tiap kasus punya `harus_memuat`, frasa fakta dari teks resmi yang wajib
   ada di salah satu dari 3 sumber teratas `sources()` (artikel ATAU kutipan Sumber Resmi). Judul artikel
   (`artikel`) tetap dipakai untuk metrik terpisah "artikel saja".
-- Dengan model sungguhan: wajib sebelum mengganti `AI_MODEL`, penyedia, atau versi prompt; serta
-  terjadwal mingguan dengan ringkasan dikirim ke Super Admin.
+- Dengan model sungguhan: wajib — dan harus lulus — **sebelum deploy** penggantian `AI_MODEL`, penyedia,
+  atau versi prompt (§0.8); serta terjadwal mingguan dengan ringkasan dikirim ke Super Admin.
 - Paket uji `database/data/uji-asisten.php` bertambah dari pertanyaan nyata yang dinilai 👎 atau
   masuk "Belum bisa dijawab AI" (setelah disamarkan).
 
@@ -281,6 +286,20 @@ yang diisi petugas**, bukan tebakan model.
   terkirim ke model (termasuk artikel dari indeks pencarian). Paket uji `sigap:uji-asisten` memberi kasus
   batas usia tanda `konflik`: jawaban wajib memuat 53 dan menyebut 49 sebagai aturan lama bila label
   memutuskan, atau diteruskan ke petugas bila belum.
+
+### FR-AI-12 Pengaman angka
+
+Model dapat menulis ketentuan dari pengetahuannya sendiri — mis. syarat usia aturan lama — sambil mengutip
+sumber yang tidak memuatnya. Di server (`Modules\Ai\NumberGuard`):
+
+- Setiap angka di jawaban harus ada di **teks sumber yang dikutip** (judul, isi, rujukan, dan label dasar
+  hukum persis seperti dikirim ke model) **atau di pesan warga** (pesan saat ini dan riwayat dari warga).
+- Rujukan `[3]` dan penanda daftar `1.` di awal baris diabaikan; angka dibandingkan per deret digit sehingga
+  rentang setara (`19–53` = `19 - 53` = `19 sampai 53`); pemisah ribuan (`1.300`) dan nol depan dinormalkan.
+- Gagal: jawaban **tidak dikirim**; percakapan diserahkan ke petugas dengan alasan `angka_tanpa_dasar`
+  (aduan/urusan pribadi tetap dengan alasannya sendiri, tanpa jawaban); baris `ai_calls` ditandai
+  `status = ditolak`, `error_code = angka_tanpa_dasar`.
+- `sigap:uji-asisten` melaporkan tolakan per kasus. Jawaban yang benar tidak boleh ditolak.
 
 ## 6. Non-Functional Requirements
 
