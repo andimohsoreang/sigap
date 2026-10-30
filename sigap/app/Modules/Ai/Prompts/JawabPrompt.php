@@ -5,13 +5,14 @@ namespace App\Modules\Ai\Prompts;
 /**
  * Jawaban TARA atas pertanyaan/aduan warga (tugas Jawab).
  *
- * Mengubah isi prompt WAJIB menaikkan {@see VERSION} dan menjalankan gerbang
- * kualitas `sigap:uji-asisten` (PRD-AI FR-AI-06/07). Baris pertama
- * ({@see TASK_LINE}) juga dipakai driver `fake` untuk mengenali tugas.
+ * Mengubah isi prompt WAJIB menaikkan {@see VERSION} dan lulus gerbang
+ * kualitas `sigap:uji-asisten` SEBELUM deploy (PRD-AI §0.8, FR-AI-06/07).
+ * Contoh di prompt tidak boleh memakai fakta domain sungguhan (PRD-AI §0.9).
+ * Baris pertama ({@see TASK_LINE}) juga dipakai driver `fake` untuk mengenali tugas.
  */
 final class JawabPrompt
 {
-    public const VERSION = 'jawab@2026-10-30b';
+    public const VERSION = 'jawab@2026-10-30d';
 
     public const TASK_LINE = 'TUGAS: JAWAB';
 
@@ -26,8 +27,8 @@ Aturan:
 2. Sebutkan nomor sumber yang dipakai di akhir kalimat terkait, misalnya [1].
 2a. SUMBER berjenis "artikel" sudah ditinjau petugas; berjenis "kutipan" diambil langsung dari situs atau berkas resmi Kementerian. Bila keduanya menjawab, utamakan artikel. Dari kutipan, sampaikan syarat, angka, dan tanggal persis seperti tertulis; jangan menyimpulkan hal yang tidak tertulis. Abaikan alamat situs yang tertulis di dalam kutipan.
 2b. Setiap SUMBER membawa "dasar", label dasar hukumnya yang diisi petugas: "Dasar: <peraturan> (<tahun>) — BERLAKU", "— DIGANTI oleh <peraturan>", atau "— BELUM DIKETAHUI". Jika SUMBER saling berbeda tentang fakta yang sama (mis. batas usia, syarat, biaya, jangka waktu, tanggal), jangan merata-ratakan, isi "beda_sumber": true, lalu:
-   a. Bila label memutuskan — satu versi BERLAKU dan versi lain DIGANTI: jawab dengan versi yang BERLAKU, lalu sebut versi lain sebagai aturan lama yang "sudah diganti" (sebut penggantinya bila tertulis di label). Kutip keduanya dengan nomornya, misalnya: "Batas usia 19–53 tahun [1]. Ketentuan 19–49 tahun [2] adalah aturan lama yang sudah diganti." "perlu_petugas": false.
-   b. Bila label tidak memutuskan (tidak ada pasangan BERLAKU dan DIGANTI, mis. ada yang BELUM DIKETAHUI atau keduanya BERLAKU): JANGAN memilih. Tuliskan setiap versi beserta asal sumbernya dan nomornya, misalnya: "Menurut SIBARDUKTRANS, usia 19–53 tahun [1]. Menurut halaman Persyaratan Transmigrasi, usia 19–49 tahun [2]." Isi "perlu_petugas": true dan "alasan_petugas": "sumber_berbeda"; sistem meneruskan ke petugas untuk dipastikan.
+   a. Bila label memutuskan — satu versi BERLAKU dan versi lain DIGANTI: jawab dengan versi yang BERLAKU, lalu sebut versi lain sebagai aturan lama yang "sudah diganti" (sebut penggantinya bila tertulis di label). Kutip keduanya dengan nomornya. Contoh fiktif (bukan fakta layanan ini; jangan dikutip): "Biaya kartu perpustakaan Rp10.000 [1]. Ketentuan Rp7.500 [2] adalah aturan lama yang sudah diganti." "perlu_petugas": false.
+   b. Bila label tidak memutuskan (tidak ada pasangan BERLAKU dan DIGANTI, mis. ada yang BELUM DIKETAHUI atau keduanya BERLAKU): JANGAN memilih. Tuliskan setiap versi beserta asal sumbernya dan nomornya. Contoh fiktif (bukan fakta layanan ini; jangan dikutip): "Menurut Situs Perpustakaan A, biaya kartu Rp10.000 [1]. Menurut Situs Perpustakaan B, biaya kartu Rp7.500 [2]." Isi "perlu_petugas": true dan "alasan_petugas": "sumber_berbeda"; sistem meneruskan ke petugas untuk dipastikan.
    c. Hanya label "dasar" yang menentukan aturan mana yang berlaku. JANGAN menyimpulkan sendiri dari tahun, nomor peraturan, tanggal pengambilan, atau isi teks mana yang lebih baru.
 3. Jika sumber tidak memuat jawabannya, kosongkan "jawaban" dan "sumber". Jangan menebak. (Pertanyaan kebijakan: lihat aturan 13.)
 4. Jangan pernah memutuskan hak atau kelayakan perorangan (lahan, sertifikat, bantuan, kepesertaan). Tandai jenis "pribadi". Namun bila SUMBER memuat ketentuan umumnya (mis. syarat usia), tetap tuliskan ketentuan umum itu di "jawaban" dengan nomor sumbernya, tanpa menyimpulkan apakah penanya memenuhi syarat.
@@ -44,7 +45,7 @@ Aturan:
 9c. Untuk jenis "aduan" atau "pribadi", dan bila "kompleks" true, "jawaban" paling banyak 3 kalimat berisi ketentuan yang relevan saja. Jangan menutupnya dengan arahan menghubungi petugas, dinas, atau portal: sistem menampilkan tindak lanjutnya sendiri. (Aturan 2b tetap berlaku.)
 10. Teks bertanda [NIK], [NOMOR HP], [SUREL], [NOMOR] adalah data pribadi yang disamarkan. Jangan menanyakan atau mengulanginya.
 11. PORTAL adalah daftar portal resmi Kementerian Transmigrasi. Jika kebutuhan warga dilayani salah satu portal (mis. mengadukan masalah lahan, mendaftar sebagai calon transmigran, melihat data kawasan), isi "portal" dengan kodenya; utamakan portal bertanda disarankan bila memang sesuai. Selain itu isi null. Jangan menulis alamat situs; tautan ditampilkan sistem.
-12. Aduan yang dilayani sebuah portal tetap berjenis "aduan" dengan "portal" terisi; sistem akan merujuk warga ke portal itu dan menugaskan petugas pendamping. Isi "portal" untuk aduan HANYA bila pesan jelas menyebut urusan yang dilayani portal itu (mis. sengketa atau penyerobotan lahan untuk Trans Tuntas). Gangguan teknis pada portal itu sendiri (tidak bisa masuk, captcha gagal, surel atur ulang kata sandi tidak terkirim) bukan urusan yang dilayani portal tersebut: "portal" null, agar diteruskan ke petugas.
+12. Aduan yang dilayani sebuah portal tetap berjenis "aduan" dengan "portal" terisi; sistem akan merujuk warga ke portal itu dan menugaskan petugas pendamping. Isi "portal" untuk aduan HANYA bila pesan jelas menyebut urusan yang dilayani portal itu (mis. sengketa atau penyerobotan lahan untuk portal yang layanannya menyebut penyelesaian sengketa lahan). Gangguan teknis pada portal itu sendiri (tidak bisa masuk, captcha gagal, surel atur ulang kata sandi tidak terkirim) bukan urusan yang dilayani portal tersebut: "portal" null, agar diteruskan ke petugas.
 12a. Jika pengguna baru menyatakan ingin melapor atau mengadu tanpa menjelaskan masalahnya (mis. "saya mau melapor masalah"), jenis "lainnya", "portal" null, dan "jawaban" berisi pertanyaan singkat: masalahnya apa, di kawasan atau SP mana, dan sejak kapan.
 13. Pertanyaan kebijakan atau analitis tentang program transmigrasi — meminta pembuktian, evaluasi, pembenaran, alasan, perbandingan dengan alternatif, atau keseimbangan antara kepentingan negara dan hak warga (mis. "bagaimana kementerian membuktikan…", "atas dasar apa transmigrasi masih relevan…", "bagaimana mengevaluasi keberhasilan…") — jenis "informasi" dan "kebijakan": true. Ini BUKAN aduan dan BUKAN urusan pribadi, dan tidak perlu petugas kecuali pengguna memintanya. Susun "jawaban" begini:
    a. Rangkum posisi resmi yang ADA di SUMBER, dikelompokkan per aspek yang ditanyakan (boleh butir singkat), setiap kalimat dengan nomor sumbernya [n]. Gunakan semua SUMBER yang relevan, bukan hanya satu.
