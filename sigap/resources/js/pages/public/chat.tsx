@@ -117,7 +117,7 @@ const TOPICS: { icon: LucideIcon; label: string; question: string }[] = [
     { icon: Headset, label: 'Lapor masalah', question: 'Saya mau melapor masalah' },
     { icon: Search, label: 'Cek status tiket', question: 'Saya mau cek status tiket' },
     { icon: BookOpen, label: 'Syarat pendaftaran', question: 'Apa saja syarat pendaftaran transmigrasi?' },
-    { icon: UserPlus, label: 'Buatkan akun', question: 'Saya mau dibuatkan akun SIGAP' },
+    { icon: UserPlus, label: 'Buatkan akun', question: 'Saya mau dibuatkan akun Contact Center' },
 ];
 
 /** Tombol kanal lain di atas kolom pesan; tautan ikut Admin → Pengaturan (kanal_publik). */
@@ -482,9 +482,9 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
         : staff
           ? `Terhubung ke petugas${panel?.tiket ? ` · Tiket ${panel.tiket.nomor}` : ''}`
           : withAi || !assistant
-            ? 'Asisten SIGAP · menjawab dari sumber resmi'
+            ? 'Asisten Contact Center · menjawab dari sumber resmi'
             : layanan.petugas_tersedia
-              ? 'Petugas SIGAP · siap membantu'
+              ? 'Petugas Contact Center · siap membantu'
               : `Petugas: ${layanan.jam_label}`;
 
     const quickReplies: { label: string; onClick: () => void }[] = needsIdentity
@@ -528,7 +528,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
 
     return (
         <>
-            <Head title="Chat TARA — SIGAP">
+            <Head title="Chat TARA — Contact Center">
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link
                     rel="stylesheet"
@@ -1022,7 +1022,7 @@ function LeftPanel({ layanan, onTopic }: { layanan: Layanan; onTopic: (q: string
                 />
                 <h1 className="font-heading text-[22px] font-bold">TARA</h1>
                 <p className="text-[13px] leading-relaxed text-[#bcd0e0]">
-                    Asisten SIGAP. Menjawab dari sumber resmi Kementerian Transmigrasi, lalu meneruskan ke petugas bila perlu tindakan.
+                    Asisten Contact Center. Menjawab dari sumber resmi Kementerian Transmigrasi, lalu meneruskan ke petugas bila perlu tindakan.
                 </p>
             </div>
             <div className="flex flex-col gap-3">

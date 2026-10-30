@@ -352,7 +352,7 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
     return (
         <AdminLayout
             title="Matriks Rekapitulasi"
-            subtitle="Rekap tiket per tahap penanganan, kategori, tingkat dampak & SLA, kanal masuk, dan kawasan — sesuai Pedoman Layanan SIGAP."
+            subtitle="Rekap tiket per tahap penanganan, kategori, tingkat dampak & SLA, kanal masuk, dan kawasan — sesuai Pedoman Layanan Contact Center."
             actions={
                 <div className="flex flex-wrap items-center gap-2 print:hidden">
                     <Select value={periode.value} onValueChange={(v) => visit({ periode: v })}>
@@ -971,7 +971,7 @@ function SlaBar({ pct }: { pct: number | null }) {
 function ImpactCard({ rows }: { rows: Rekap['dampak'] }) {
     return (
         <Card className="flex flex-col p-5 md:p-6">
-            <CardHeading eyebrow="Tingkat dampak × SLA" title="Target Pedoman Layanan SIGAP" />
+            <CardHeading eyebrow="Tingkat dampak × SLA" title="Target Pedoman Layanan Contact Center" />
             <div className="-mx-1 mt-4 overflow-x-auto">
                 <table className="w-full min-w-[480px] text-sm">
                     <thead className="bg-[var(--adm-surface-2)] text-[11px] font-semibold tracking-[0.06em] text-[var(--adm-text-3)] uppercase">

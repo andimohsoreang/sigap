@@ -3,14 +3,14 @@ import StaticShell, { Section } from './static-shell';
 
 export default function SyaratKetentuan() {
     return (
-        <StaticShell title="Syarat dan Ketentuan" subtitle="Ketentuan penggunaan layanan SIGAP bagi seluruh pengguna" updated="Januari 2026">
-            <Head title="Syarat dan Ketentuan — SIGAP" />
+        <StaticShell title="Syarat dan Ketentuan" subtitle="Ketentuan penggunaan layanan Contact Center bagi seluruh pengguna" updated="Januari 2026">
+            <Head title="Syarat dan Ketentuan — Contact Center" />
 
             <Section title="1. Ketentuan Umum">
                 <p>
-                    SIGAP ("Suara Masyarakat, Inisiatif Gerak Aksi, Penyelesaian Tuntas") adalah sistem elektronik pengelolaan pengaduan masyarakat
-                    milik Kementerian Transmigrasi Republik Indonesia. Dengan mengakses dan menggunakan SIGAP, pengguna dianggap telah membaca,
-                    memahami, dan menyetujui seluruh ketentuan dalam dokumen ini.
+                    Contact Center Kementerian Transmigrasi adalah sistem elektronik pengelolaan pengaduan masyarakat milik Kementerian Transmigrasi
+                    Republik Indonesia. Dengan mengakses dan menggunakan Contact Center, pengguna dianggap telah membaca, memahami, dan menyetujui
+                    seluruh ketentuan dalam dokumen ini.
                 </p>
             </Section>
 
@@ -22,12 +22,12 @@ export default function SyaratKetentuan() {
             </Section>
 
             <Section title="3. Larangan Penggunaan">
-                <p>Pengguna dilarang menggunakan SIGAP untuk:</p>
+                <p>Pengguna dilarang menggunakan Contact Center untuk:</p>
                 <ul className="list-inside list-disc space-y-1 text-sm">
                     <li>Menyampaikan laporan palsu, fitnah, atau tidak berdasar dengan itikad tidak baik;</li>
                     <li>Mengunggah konten yang mengandung SARA, ujaran kebencian, atau pornografi;</li>
                     <li>Melakukan spam atau mengirim aduan berulang dengan isi yang identik secara sengaja;</li>
-                    <li>Mencoba mengakses, mengubah, atau merusak sistem SIGAP tanpa otorisasi.</li>
+                    <li>Mencoba mengakses, mengubah, atau merusak sistem Contact Center tanpa otorisasi.</li>
                 </ul>
             </Section>
 
@@ -42,8 +42,8 @@ export default function SyaratKetentuan() {
 
             <Section title="5. Kekayaan Intelektual">
                 <p>
-                    Seluruh elemen tampilan, logo, dan konten pada situs SIGAP merupakan hak milik Kementerian Transmigrasi, kecuali dinyatakan lain,
-                    dan tidak boleh digandakan untuk kepentingan komersial tanpa izin tertulis.
+                    Seluruh elemen tampilan, logo, dan konten pada situs Contact Center merupakan hak milik Kementerian Transmigrasi, kecuali
+                    dinyatakan lain, dan tidak boleh digandakan untuk kepentingan komersial tanpa izin tertulis.
                 </p>
             </Section>
 

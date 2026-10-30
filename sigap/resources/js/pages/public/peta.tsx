@@ -62,7 +62,7 @@ export default function Peta({ regions, points, provinsi }: Props) {
     return (
         <TaraPage
             title="Peta Wilayah"
-            description="Peta kawasan transmigrasi yang dilayani SIGAP."
+            description="Peta kawasan transmigrasi yang dilayani Contact Center."
             active="peta"
             eyebrow="Peta Wilayah"
             heading="Peta Wilayah Transmigrasi"

@@ -72,8 +72,8 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
     };
 
     return (
-        <PublicLayout title="Formulir SIGAP">
-            <Head title="Formulir Pengaduan — SIGAP" />
+        <PublicLayout title="Formulir Contact Center">
+            <Head title="Formulir Pengaduan — Contact Center" />
 
             <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
                 <p className="mb-6 text-sm text-gray-400">
@@ -84,7 +84,7 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
                     <Link href="/katalog" className="hover:text-brand-light">
                         Katalog Pengaduan
                     </Link>{' '}
-                    &gt; <span className="text-gray-700">Formulir SIGAP</span>
+                    &gt; <span className="text-gray-700">Formulir Contact Center</span>
                 </p>
 
                 <Card className="border-gray-100">
@@ -272,7 +272,7 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
                                     <Link href="/kebijakan-privasi" className="text-brand-light font-bold hover:underline">
                                         Kebijakan Privasi
                                     </Link>{' '}
-                                    SIGAP.
+                                    Contact Center.
                                 </span>
                             </label>
 

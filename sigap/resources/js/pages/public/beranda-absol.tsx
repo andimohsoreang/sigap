@@ -30,7 +30,7 @@ import { type SharedData } from '@/types';
  * Struktur section, kartu, dan materi teks sengaja TIDAK diubah; yang diganti
  * hanya bahasa visualnya: tipografi Space Grotesk (uppercase) + Jost, section
  * tag + accent line, kartu bergaris dengan hover-lift, ikon dalam bulatan, dan
- * tombol pill uppercase. Palet warna tetap brand SIGAP (teal + gold).
+ * tombol pill uppercase. Palet warna tetap brand Contact Center (teal + gold).
  */
 
 interface Channel {
@@ -61,7 +61,7 @@ const CHANNEL_ICONS: Record<string, typeof Building2> = {
     internal: ShieldAlert,
 };
 
-/** Pertanyaan cepat di kotak tanya (dikirim ke Asisten SIGAP). */
+/** Pertanyaan cepat di kotak tanya (dikirim ke Asisten Contact Center). */
 const QUICK_QUESTIONS = ['Bagaimana cara membuat pengaduan?', 'Berapa lama pengaduan ditangani?', 'Kapan melapor ke SP4N-LAPOR! atau Inspektorat?'];
 
 export default function BerandaAbsol({ stats, channels, faqs }: Props) {
@@ -88,12 +88,12 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
     const quickActions = [
         { page: 'katalog', label: 'Buat Tiket', sub: 'Baru', icon: Ticket },
         { page: 'peta', label: 'Peta Aduan', sub: 'Kawasan', icon: MapPin },
-        { page: 'tentang', label: 'Data', sub: 'SIGAP', icon: Database },
+        { page: 'tentang', label: 'Data', sub: 'Contact Center', icon: Database },
     ];
 
     return (
         <PublicLayout title="Beranda">
-            <Head title="Beranda — SIGAP">
+            <Head title="Beranda — Contact Center">
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link
                     rel="stylesheet"
@@ -134,19 +134,19 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                         </Link>
                         <span className="text-secondary mb-4 inline-flex items-center gap-3 text-xs font-bold tracking-[3px] uppercase">
                             <span className="bg-secondary hidden h-[2px] w-6 sm:block" />
-                            {aiEnabled ? 'Contact Center Kementerian Transmigrasi' : 'Pusat Bantuan SIGAP'}
+                            {aiEnabled ? 'Contact Center Kementerian Transmigrasi' : 'Pusat Bantuan Contact Center'}
                             <span className="bg-secondary hidden h-[2px] w-6 sm:block" />
                         </span>
 
                         <h2 className="font-heading mb-5 max-w-3xl text-center text-3xl leading-tight font-extrabold tracking-tight text-white uppercase md:text-5xl">
-                            {aiEnabled ? 'Ada yang bisa kami bantu?' : 'Selamat Datang di Pusat Bantuan SIGAP'}
+                            {aiEnabled ? 'Ada yang bisa kami bantu?' : 'Selamat Datang di Pusat Bantuan Contact Center'}
                         </h2>
 
                         <div className="bg-secondary mb-6 h-[3px] w-20 rounded-full" />
 
                         {aiEnabled ? (
                             <p className="mb-8 max-w-2xl text-center text-base font-medium text-white/90 md:text-lg">
-                                Tanyakan syarat, prosedur, atau status tiket Anda. Asisten SIGAP menjawab dari sumber resmi, dan petugas siap
+                                Tanyakan syarat, prosedur, atau status tiket Anda. Asisten Contact Center menjawab dari sumber resmi, dan petugas siap
                                 melanjutkan bila diperlukan.
                             </p>
                         ) : (
@@ -280,7 +280,7 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                                 <h3 className="font-heading text-brand group-hover:text-brand-light relative z-10 text-lg leading-tight font-bold tracking-tight uppercase transition-colors">
                                     Kontak Kami
                                     <br />
-                                    SIGAP
+                                    Contact Center
                                 </h3>
                             </button>
                         </div>
@@ -345,15 +345,15 @@ export default function BerandaAbsol({ stats, channels, faqs }: Props) {
                             </Button>
                         </div>
                         <div className="flex flex-col justify-center p-8 md:w-2/3">
-                            <span className="text-brand-light mb-3 w-fit text-xs font-bold tracking-[3px] uppercase">Komitmen SIGAP</span>
+                            <span className="text-brand-light mb-3 w-fit text-xs font-bold tracking-[3px] uppercase">Komitmen Contact Center</span>
                             <h2 className="font-heading text-brand mb-4 text-2xl font-bold tracking-tight uppercase">
                                 Maklumat Pelayanan dan Penilaian
                             </h2>
                             <div className="bg-brand-light mb-6 h-[3px] w-20 rounded-full" />
                             <p className="leading-relaxed text-gray-600">
-                                "Kami Pimpinan dan Seluruh Agen SIGAP menyatakan sanggup menyelenggarakan pelayanan publik pada program transformasi
-                                5T yang sesuai standar pelayanan. Apabila kami tidak menepati maklumat ini, kami siap menerima sanksi sesuai dengan
-                                peraturan perundang-undangan."
+                                "Kami Pimpinan dan Seluruh Agen Contact Center menyatakan sanggup menyelenggarakan pelayanan publik pada program
+                                transformasi 5T yang sesuai standar pelayanan. Apabila kami tidak menepati maklumat ini, kami siap menerima sanksi
+                                sesuai dengan peraturan perundang-undangan."
                             </p>
                         </div>
                     </div>

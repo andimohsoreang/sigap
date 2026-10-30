@@ -37,7 +37,7 @@ export default function VerifikasiEmail({ email, hasEmail }: Props) {
 
     return (
         <PublicLayout title="Verifikasi Email">
-            <Head title="Verifikasi Email — SIGAP" />
+            <Head title="Verifikasi Email — Contact Center" />
 
             <div className="mx-auto flex max-w-md flex-col px-4 py-12 sm:px-6">
                 <Card className="border-gray-100 shadow-lg">

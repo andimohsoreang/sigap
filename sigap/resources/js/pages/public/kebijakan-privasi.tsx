@@ -3,8 +3,12 @@ import StaticShell, { Section } from './static-shell';
 
 export default function KebijakanPrivasi() {
     return (
-        <StaticShell title="Kebijakan Privasi" subtitle="Bagaimana SIGAP mengumpulkan, menggunakan, dan melindungi data Anda" updated="Januari 2026">
-            <Head title="Kebijakan Privasi — SIGAP" />
+        <StaticShell
+            title="Kebijakan Privasi"
+            subtitle="Bagaimana Contact Center mengumpulkan, menggunakan, dan melindungi data Anda"
+            updated="Januari 2026"
+        >
+            <Head title="Kebijakan Privasi — Contact Center" />
 
             <Section title="1. Dasar Hukum">
                 <p>

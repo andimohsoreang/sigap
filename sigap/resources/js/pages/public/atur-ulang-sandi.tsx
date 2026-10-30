@@ -22,7 +22,7 @@ export default function AturUlangSandi({ token, email }: { token: string; email:
 
     return (
         <PublicLayout title="Atur Ulang Kata Sandi">
-            <Head title="Atur Ulang Kata Sandi — SIGAP" />
+            <Head title="Atur Ulang Kata Sandi — Contact Center" />
 
             <div className="mx-auto flex max-w-md flex-col px-4 py-12 sm:px-6">
                 <Card className="border-gray-100 shadow-lg">

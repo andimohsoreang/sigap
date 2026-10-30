@@ -100,7 +100,7 @@ export default function Admins({ admins, regions, roles }: Props) {
     ];
 
     return (
-        <AdminLayout title="Daftar Admin SIGAP" subtitle="Kelola akun petugas dan admin kawasan.">
+        <AdminLayout title="Daftar Admin Contact Center" subtitle="Kelola akun petugas dan admin kawasan.">
             <Card className="mb-6 border-gray-200">
                 <CardHeader className="border-b border-gray-100 pb-3">
                     <CardTitle className="flex items-center gap-2 text-base text-gray-800">

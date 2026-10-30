@@ -18,7 +18,7 @@ test.describe('Live chat: identitas tamu & badge belum dibaca', () => {
         await guest.goto('/');
         await guest.getByRole('button', { name: /buka live chat/i }).click();
 
-        const dialog = guest.getByRole('dialog', { name: 'Live chat SIGAP' });
+        const dialog = guest.getByRole('dialog', { name: 'Live chat Contact Center' });
         await expect(dialog.getByLabel(/^Nama/)).toBeVisible();
         await expect(dialog.getByLabel('Ketik pesan')).toHaveCount(0);
 

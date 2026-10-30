@@ -62,7 +62,7 @@ export default function WargaPortal({ profile, tickets }: Props) {
 
     return (
         <PublicLayout title="Portal Warga">
-            <Head title="Portal Warga — SIGAP" />
+            <Head title="Portal Warga — Contact Center" />
 
             <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
                 <p className="mb-6 text-sm text-gray-400">

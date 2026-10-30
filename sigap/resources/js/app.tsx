@@ -16,7 +16,7 @@ if (reverb) {
     try {
         configureEcho({ broadcaster: 'reverb', ...reverb });
     } catch (error) {
-        console.warn('[SIGAP] Realtime (Reverb) dinonaktifkan:', error);
+        console.warn('[Contact Center] Realtime (Reverb) dinonaktifkan:', error);
     }
 }
 

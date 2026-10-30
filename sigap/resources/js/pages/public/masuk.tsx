@@ -22,13 +22,13 @@ export default function Masuk({ status, canResetPassword }: { status?: string | 
 
     return (
         <PublicLayout title="Masuk">
-            <Head title="Masuk — SIGAP" />
+            <Head title="Masuk — Contact Center" />
 
             <div className="mx-auto flex max-w-md flex-col px-4 py-12 sm:px-6">
                 <Card className="border-gray-100 shadow-lg">
                     <CardContent className="p-8">
                         <div className="mb-6 text-center">
-                            <h1 className="text-primary text-2xl font-bold">Masuk ke SIGAP</h1>
+                            <h1 className="text-primary text-2xl font-bold">Masuk ke Contact Center</h1>
                             <p className="mt-1 text-sm text-gray-500">Untuk warga (NIK) maupun petugas/admin (username)</p>
                         </div>
 

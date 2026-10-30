@@ -121,7 +121,9 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                     </span>
                     {!compact && (
                         <span className="min-w-0">
-                            <span className="block font-[family-name:var(--font-heading)] text-lg leading-tight font-bold text-white">SIGAP</span>
+                            <span className="block font-[family-name:var(--font-heading)] text-lg leading-tight font-bold text-white">
+                                Contact Center
+                            </span>
                             <span className="block truncate text-[11px] text-[#9fb2c3]">Panel Admin · Contact Center</span>
                         </span>
                     )}
@@ -130,7 +132,9 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
 
             <nav className={cn('flex-1 overflow-y-auto pb-4', compact ? 'px-2.5' : 'px-3.5')} aria-label="Menu admin">
                 {!compact && (
-                    <p className="px-2.5 pt-1 pb-2 text-[10.5px] font-semibold tracking-[0.12em] text-[#7f97ab] uppercase">Panel Kontrol SIGAP</p>
+                    <p className="px-2.5 pt-1 pb-2 text-[10.5px] font-semibold tracking-[0.12em] text-[#7f97ab] uppercase">
+                        Panel Kontrol Contact Center
+                    </p>
                 )}
                 <ul className="space-y-0.5">
                     {nav.map((item) => (
@@ -214,7 +218,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
 
     return (
         <div className="absol-admin min-h-screen bg-[var(--adm-bg)]">
-            <Head title={`${title} — Admin SIGAP`}>
+            <Head title={`${title} — Admin Contact Center`}>
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link
                     rel="stylesheet"

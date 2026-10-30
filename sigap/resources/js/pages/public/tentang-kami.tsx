@@ -5,14 +5,14 @@ import StaticShell, { Section } from './static-shell';
 
 export default function TentangKami() {
     return (
-        <StaticShell title="Tentang Kami" subtitle="Mengenal SIGAP dan unit pengelola layanan pengaduan">
-            <Head title="Tentang Kami — SIGAP" />
+        <StaticShell title="Tentang Kami" subtitle="Mengenal Contact Center dan unit pengelola layanan pengaduan">
+            <Head title="Tentang Kami — Contact Center" />
 
-            <Section title="Sekilas SIGAP">
+            <Section title="Sekilas Contact Center">
                 <p>
-                    <strong>SIGAP</strong> — Suara Masyarakat, Inisiatif Gerak Aksi, Penyelesaian Tuntas — adalah sistem pengaduan pelayanan publik
-                    milik Kementerian Transmigrasi Republik Indonesia yang mengelola laporan warga terkait kawasan dan program transmigrasi di seluruh
-                    Indonesia, terintegrasi dengan SP4N-LAPOR!.
+                    <strong>Contact Center Kementerian Transmigrasi</strong> adalah sistem pengaduan pelayanan publik milik Kementerian Transmigrasi
+                    Republik Indonesia yang mengelola laporan warga terkait kawasan dan program transmigrasi di seluruh Indonesia, terintegrasi dengan
+                    SP4N-LAPOR!.
                 </p>
             </Section>
 
@@ -39,7 +39,7 @@ export default function TentangKami() {
 
             <Section title="Unit Pengelola">
                 <p>
-                    SIGAP dikelola oleh Unit Pelayanan Pengaduan Masyarakat pada Biro Hubungan Masyarakat dan Layanan Informasi, Kementerian
+                    Contact Center dikelola oleh Unit Pelayanan Pengaduan Masyarakat pada Biro Hubungan Masyarakat dan Layanan Informasi, Kementerian
                     Transmigrasi Republik Indonesia, bekerja sama dengan Admin Kawasan di setiap satuan permukiman transmigrasi.
                 </p>
             </Section>

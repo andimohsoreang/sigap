@@ -5,13 +5,13 @@ import StaticShell, { Section } from './static-shell';
 
 const ALUR = [
     ['Ajukan', 'Warga mengirim aduan lewat salah satu dari 5 kanal resmi.'],
-    ['Verifikasi', 'Agen SIGAP memeriksa kelengkapan & kategori aduan.'],
+    ['Verifikasi', 'Agen Contact Center memeriksa kelengkapan & kategori aduan.'],
     ['Disposisi', 'Aduan diteruskan ke admin kawasan/unit terkait.'],
     ['Ditindaklanjuti', 'Progres dapat dipantau berkala melalui Lacak Tiket.'],
     ['Selesai', 'Notifikasi hasil dikirim ke pelapor.'],
 ];
 
-const KANAL = ['Portal Web SIGAP', 'PPID & Inspektorat Jenderal', 'SP4N-LAPOR!', 'Media Sosial', 'Loket Kantor'];
+const KANAL = ['Portal Web Contact Center', 'PPID & Inspektorat Jenderal', 'SP4N-LAPOR!', 'Media Sosial', 'Loket Kantor'];
 
 const SLA = [
     ['Darurat / Keselamatan', 'Maks. 1 x 24 jam', '3 hari kerja'],
@@ -21,8 +21,8 @@ const SLA = [
 
 export default function PedomanLayanan() {
     return (
-        <StaticShell title="Pedoman Layanan SIGAP" subtitle="Panduan resmi alur, kanal, dan standar waktu penanganan pengaduan masyarakat">
-            <Head title="Pedoman Layanan — SIGAP" />
+        <StaticShell title="Pedoman Layanan Contact Center" subtitle="Panduan resmi alur, kanal, dan standar waktu penanganan pengaduan masyarakat">
+            <Head title="Pedoman Layanan — Contact Center" />
 
             <Section title="Alur Penanganan Pengaduan">
                 <ol className="space-y-4">
@@ -41,7 +41,7 @@ export default function PedomanLayanan() {
             </Section>
 
             <Section title="Kanal Pengaduan Resmi">
-                <p>SIGAP menyediakan 5 kanal resmi berikut. Laporan di luar kanal ini tidak dapat dijamin diproses.</p>
+                <p>Contact Center menyediakan 5 kanal resmi berikut. Laporan di luar kanal ini tidak dapat dijamin diproses.</p>
                 <div className="flex flex-wrap gap-3">
                     {KANAL.map((k) => (
                         <span key={k} className="border-secondary/60 text-primary rounded-full border bg-white px-4 py-2 text-sm font-medium">

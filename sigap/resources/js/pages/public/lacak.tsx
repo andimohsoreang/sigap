@@ -142,7 +142,7 @@ export default function Lacak({ query, kode = '', butuh_kode: butuhKode = false,
     return (
         <TaraPage
             title="Lacak Tiket"
-            description="Lacak status laporan Anda di SIGAP dengan nomor tiket."
+            description="Lacak status laporan Anda di Contact Center dengan nomor tiket."
             active="lacak"
             eyebrow="Lacak Tiket"
             heading="Lacak Status Laporan"

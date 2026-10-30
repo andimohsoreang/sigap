@@ -63,7 +63,7 @@ export default function PublicLayout({ children, title }: PublicLayoutProps) {
                                 <Zap className="h-5 w-5" />
                             </div>
                             <div className="flex flex-col justify-center">
-                                <h1 className="text-primary text-xl leading-tight font-bold">{app?.brand ?? 'SIGAP'}</h1>
+                                <h1 className="text-primary text-xl leading-tight font-bold">{app?.brand ?? 'Contact Center'}</h1>
                                 <p
                                     className="hidden max-w-[200px] truncate text-[10px] font-medium text-gray-500 md:block lg:max-w-xs"
                                     title={app?.tagline}
@@ -87,7 +87,7 @@ export default function PublicLayout({ children, title }: PublicLayoutProps) {
                                                 ['Data Harian', 'sec-harian'],
                                                 ['Data Bulanan', 'sec-bulanan'],
                                                 ['Dasar Hukum', 'sec-dasar-hukum'],
-                                                ['Agen SIGAP', 'sec-petugas'],
+                                                ['Agen Contact Center', 'sec-petugas'],
                                             ].map(([label, sec]) => (
                                                 <Link
                                                     key={sec}
@@ -248,7 +248,7 @@ export default function PublicLayout({ children, title }: PublicLayoutProps) {
             <footer className="border-brand-light mt-auto w-full border-t-4 bg-gray-900 pt-10 pb-6 text-white">
                 <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 text-center sm:px-6 md:grid-cols-2 md:text-left lg:px-8">
                     <div>
-                        <h3 className="mb-1 text-xl font-bold">{app?.brand ?? 'SIGAP'}</h3>
+                        <h3 className="mb-1 text-xl font-bold">{app?.brand ?? 'Contact Center'}</h3>
                         <p className="mb-1 text-sm text-gray-400">{app?.tagline}.</p>
                         <p className="text-secondary mt-2 text-xs font-bold italic">"Komitmen Melayani, Menuntaskan Tanpa Henti"</p>
                     </div>

@@ -44,7 +44,7 @@ export default function FormulirInternal({ units, categories }: Props) {
 
     return (
         <PublicLayout title="Pengaduan Internal">
-            <Head title="Pengaduan Internal Pegawai — SIGAP" />
+            <Head title="Pengaduan Internal Pegawai — Contact Center" />
 
             <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
                 <p className="mb-6 text-sm text-gray-400">
@@ -64,7 +64,7 @@ export default function FormulirInternal({ units, categories }: Props) {
                         Gunakan formulir ini hanya untuk kendala teknis internal kantor (mis. internet/jaringan mati, listrik padam, perangkat rusak).
                         Untuk pengaduan masyarakat, gunakan{' '}
                         <Link href="/pengaduan/baru" className="text-brand-light font-bold hover:underline">
-                            Formulir SIGAP
+                            Formulir Contact Center
                         </Link>
                         . Untuk indikasi pelanggaran/etik, laporkan ke Inspektorat Jenderal (itjen@transmigrasi.go.id) atau lewat PPID.
                     </span>

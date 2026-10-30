@@ -336,7 +336,7 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, p
                                     value={form.data.category}
                                     onChange={(e) => form.setData('category', e.target.value)}
                                     list="kategori-pengetahuan"
-                                    placeholder="Program, Pertanahan, Layanan SIGAP…"
+                                    placeholder="Program, Pertanahan, Layanan Contact Center…"
                                 />
                                 <datalist id="kategori-pengetahuan">
                                     {categories.map((c) => (

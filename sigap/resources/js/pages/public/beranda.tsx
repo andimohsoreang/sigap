@@ -47,19 +47,19 @@ export default function Beranda({ stats, channels, faqs }: Props) {
     const quickActions = [
         { page: 'katalog', label: 'Buat Tiket', sub: 'Baru', icon: Ticket },
         { page: 'peta', label: 'Peta Aduan', sub: 'Kawasan', icon: MapPin },
-        { page: 'tentang', label: 'Data', sub: 'SIGAP', icon: Database },
+        { page: 'tentang', label: 'Data', sub: 'Contact Center', icon: Database },
     ];
 
     return (
         <PublicLayout title="Beranda">
-            <Head title="Beranda — SIGAP" />
+            <Head title="Beranda — Contact Center" />
 
             {/* HERO */}
             <section className="bg-primary relative overflow-hidden pt-16 pb-24 lg:pt-20 lg:pb-32">
                 <div className="from-primary to-brand-light absolute inset-0 bg-gradient-to-br" />
                 <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center px-4 sm:px-6 lg:px-8">
                     <h2 className="mb-2 text-center text-lg font-bold tracking-wide text-white drop-shadow-md md:text-3xl">
-                        Selamat Datang di Pusat Bantuan SIGAP
+                        Selamat Datang di Pusat Bantuan Contact Center
                     </h2>
                     <p className="text-brand-soft mb-8 max-w-2xl text-center text-sm font-medium italic drop-shadow md:text-base">
                         "Komitmen Melayani, Menuntaskan Tanpa Henti"
@@ -124,7 +124,7 @@ export default function Beranda({ stats, channels, faqs }: Props) {
                             <h3 className="group-hover:text-brand-light relative z-10 text-xl leading-tight font-extrabold text-gray-800 transition-colors">
                                 Kontak Kami
                                 <br />
-                                SIGAP
+                                Contact Center
                             </h3>
                         </div>
                     </div>
@@ -183,13 +183,13 @@ export default function Beranda({ stats, channels, faqs }: Props) {
                     </div>
                     <div className="flex flex-col justify-center p-8 md:w-2/3">
                         <span className="mb-3 w-fit rounded bg-green-100 px-2 py-1 text-xs font-bold tracking-wider text-green-700 uppercase">
-                            Komitmen SIGAP
+                            Komitmen Contact Center
                         </span>
                         <h2 className="mb-4 text-2xl font-bold text-gray-800">Maklumat Pelayanan dan Penilaian</h2>
                         <p className="mb-6 leading-relaxed text-gray-600">
-                            "Kami Pimpinan dan Seluruh Agen SIGAP menyatakan sanggup menyelenggarakan pelayanan publik pada program transformasi 5T
-                            yang sesuai standar pelayanan. Apabila kami tidak menepati maklumat ini, kami siap menerima sanksi sesuai dengan peraturan
-                            perundang-undangan."
+                            "Kami Pimpinan dan Seluruh Agen Contact Center menyatakan sanggup menyelenggarakan pelayanan publik pada program
+                            transformasi 5T yang sesuai standar pelayanan. Apabila kami tidak menepati maklumat ini, kami siap menerima sanksi sesuai
+                            dengan peraturan perundang-undangan."
                         </p>
                     </div>
                 </div>

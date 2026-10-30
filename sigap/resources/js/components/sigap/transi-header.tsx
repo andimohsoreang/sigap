@@ -53,7 +53,7 @@ export default function TransiHeader({
             )}
         >
             <div className="mx-auto flex h-16 max-w-[1312px] items-center justify-between gap-4 px-4 sm:px-6 lg:h-[76px] lg:px-16">
-                <Link href="/" aria-label="SIGAP, Contact Center Kementerian Transmigrasi" className="flex min-w-0 shrink-0 items-center gap-3">
+                <Link href="/" aria-label="Contact Center Kementerian Transmigrasi" className="flex min-w-0 shrink-0 items-center gap-3">
                     <img
                         src="/images/brand/logo-kementrans.png"
                         alt=""

@@ -25,7 +25,7 @@ export default function LupaSandi({ status }: { status?: string | null }) {
 
     return (
         <PublicLayout title="Lupa Kata Sandi">
-            <Head title="Lupa Kata Sandi — SIGAP" />
+            <Head title="Lupa Kata Sandi — Contact Center" />
 
             <div className="mx-auto flex max-w-md flex-col px-4 py-12 sm:px-6">
                 <Card className="border-gray-100 shadow-lg">

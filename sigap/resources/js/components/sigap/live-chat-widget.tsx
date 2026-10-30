@@ -26,7 +26,7 @@ import {
 import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 /**
- * Widget chat SIGAP (contact center).
+ * Widget chat Contact Center.
  *
  * Alur:
  * 1. Warga login → langsung chat atas nama akunnya.
@@ -437,7 +437,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
     };
 
     const greeting = withAi
-        ? `Halo${identity ? `, ${identity.nama}` : ''}! Saya TARA, asisten SIGAP. Tanyakan syarat, prosedur, atau status tiket Anda. Untuk aduan, saya bantu teruskan ke petugas.`
+        ? `Halo${identity ? `, ${identity.nama}` : ''}! Saya TARA, asisten Contact Center. Tanyakan syarat, prosedur, atau status tiket Anda. Untuk aduan, saya bantu teruskan ke petugas.`
         : `Halo${identity ? `, ${identity.nama}` : ''}! Ada yang bisa kami bantu?`;
 
     return (
@@ -507,7 +507,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                     open ? 'scale-100' : 'pointer-events-none scale-0',
                 )}
                 role="dialog"
-                aria-label="Live chat SIGAP"
+                aria-label="Live chat Contact Center"
                 aria-hidden={!open}
                 inert={!open}
                 onKeyDown={(e) => {
@@ -528,7 +528,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                             <Headset className="h-5 w-5 shrink-0" aria-hidden="true" />
                         )}
                         <div className="min-w-0">
-                            <p className="text-sm leading-tight font-bold">{withAi ? 'TARA' : 'Petugas SIGAP'}</p>
+                            <p className="text-sm leading-tight font-bold">{withAi ? 'TARA' : 'Petugas Contact Center'}</p>
                             <p className="truncate text-[11px] leading-tight opacity-85">
                                 {withAi
                                     ? 'Menjawab dari sumber resmi'
@@ -569,7 +569,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                             aria-label="Riwayat percakapan"
                             className="flex h-96 max-h-[60vh] flex-col gap-3 overflow-y-auto scroll-smooth bg-gray-50 p-4 text-sm"
                         >
-                            <Bubble mine={false} ai={withAi} author={withAi ? 'TARA' : 'Petugas SIGAP'}>
+                            <Bubble mine={false} ai={withAi} author={withAi ? 'TARA' : 'Petugas Contact Center'}>
                                 {greeting}
                             </Bubble>
 
@@ -1050,7 +1050,7 @@ export function SystemNotice({ message }: { message: ChatMessage }) {
 
 /**
  * Kartu portal tujuan. Dengan rujukan, tombol utama membuka halaman
- * pengantar SIGAP (langkah, ringkasan, tempat bukti) — bukan portal langsung.
+ * pengantar Contact Center (langkah, ringkasan, tempat bukti) — bukan portal langsung.
  */
 export function PortalCard({ portal, referral }: { portal: PortalCardInfo; referral: ReferralInfo | null }) {
     return (

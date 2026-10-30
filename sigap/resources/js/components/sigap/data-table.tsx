@@ -78,7 +78,7 @@ interface DataTableProps<T extends object> {
 }
 
 /**
- * DataTable generik ala shadcn/ui untuk admin panel SIGAP.
+ * DataTable generik ala shadcn/ui untuk admin panel Contact Center.
  *
  * Fitur: pencarian global, filter dropdown per kolom, sorting per kolom,
  * pagination dengan pilihan per-halaman, toggle visibilitas kolom.

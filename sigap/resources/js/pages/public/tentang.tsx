@@ -138,7 +138,7 @@ export default function Tentang({ stats, regions }: Props) {
             description="Data terbuka pelayanan pengaduan Kementerian Transmigrasi: laporan harian, status penanganan, kategori, kanal, dan kawasan."
             active="data"
             eyebrow="Data Terbuka"
-            heading="Data Terbuka SIGAP"
+            heading="Data Terbuka Contact Center"
             subtitle="Transparansi pelayanan pengaduan Kementerian Transmigrasi. Angka diperbarui otomatis dari sistem, tanpa data pribadi pelapor."
             pose="tablet"
             poseAlt="TARA memegang tablet berisi data layanan"

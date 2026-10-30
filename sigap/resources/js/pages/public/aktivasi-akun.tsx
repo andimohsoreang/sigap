@@ -40,7 +40,7 @@ export default function AktivasiAkun({
 
     return (
         <PublicLayout title={title}>
-            <Head title={`${title} — SIGAP`} />
+            <Head title={`${title} — Contact Center`} />
 
             <div className="mx-auto flex max-w-md flex-col px-4 py-12 sm:px-6">
                 <Card className="border-gray-100 shadow-lg">
@@ -50,8 +50,8 @@ export default function AktivasiAkun({
                                 <MessageCircleWarning className="mx-auto mb-3 h-10 w-10 text-amber-500" aria-hidden="true" />
                                 <h1 className="text-primary text-2xl font-bold">Tautan tidak berlaku</h1>
                                 <p className="mt-2 text-base text-gray-600">
-                                    Tautan ini sudah dipakai atau sudah lewat batas waktunya. Tulis pesan di chat SIGAP dan minta petugas mengirim
-                                    tautan baru.
+                                    Tautan ini sudah dipakai atau sudah lewat batas waktunya. Tulis pesan di chat Contact Center dan minta petugas
+                                    mengirim tautan baru.
                                 </p>
                                 <p className="mt-4 text-base text-gray-600">
                                     Sudah pernah membuat kata sandi?{' '}

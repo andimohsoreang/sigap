@@ -19,8 +19,8 @@ interface Props {
     kantor: Kantor[];
 }
 
-/** https://sp4n.lapor.go.id/instansi/... → sp4n.lapor.go.id; path internal → Formulir SIGAP */
-const domain = (url: string) => (url.startsWith('/') ? 'Formulir SIGAP' : url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]);
+/** https://sp4n.lapor.go.id/instansi/... → sp4n.lapor.go.id; path internal → Formulir Contact Center */
+const domain = (url: string) => (url.startsWith('/') ? 'Formulir Contact Center' : url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]);
 
 export default function Katalog({ kanal, kantor }: Props) {
     const links = activeLinks(kanal);

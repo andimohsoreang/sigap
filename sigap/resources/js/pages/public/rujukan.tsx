@@ -69,13 +69,13 @@ export default function Rujukan({ portal, rujukan }: Props) {
 
     return (
         <PublicLayout title={`Rujukan ke ${portal.nama}`}>
-            <Head title={`Pengantar ke ${portal.nama} — SIGAP`}>
+            <Head title={`Pengantar ke ${portal.nama} — Contact Center`}>
                 <meta name="robots" content="noindex, nofollow" />
             </Head>
 
             <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
                 <p className="text-primary mb-2 text-sm font-semibold">
-                    Rujukan <span className="font-mono">{rujukan.kode}</span> · dari SIGAP
+                    Rujukan <span className="font-mono">{rujukan.kode}</span> · dari Contact Center
                 </p>
                 <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
                     {done ? 'Aduan Anda sudah tercatat' : `Anda akan diarahkan ke ${portal.nama}`}
@@ -94,7 +94,7 @@ export default function Rujukan({ portal, rujukan }: Props) {
                     <DoneCard portal={portal} rujukan={rujukan} />
                 ) : closed ? (
                     <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 text-gray-700">
-                        Rujukan ini sudah ditutup petugas. Bila masih membutuhkan bantuan, mulai chat baru di SIGAP.
+                        Rujukan ini sudah ditutup petugas. Bila masih membutuhkan bantuan, mulai chat baru di Contact Center.
                     </div>
                 ) : (
                     <>
@@ -117,7 +117,7 @@ export default function Rujukan({ portal, rujukan }: Props) {
                             >
                                 <LifeBuoy className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                                 Kendala Anda sudah diterima. Petugas pendamping akan menghubungi Anda
-                                {rujukan.ada_chat ? ' dan membalas di chat SIGAP' : ''}.
+                                {rujukan.ada_chat ? ' dan membalas di chat Contact Center' : ''}.
                             </div>
                         )}
 
@@ -158,10 +158,10 @@ export default function Rujukan({ portal, rujukan }: Props) {
                                 <span>
                                     {rujukan.pendamping ? (
                                         <>
-                                            <b>{rujukan.pendamping}</b>, petugas SIGAP, mendampingi Anda sampai aduan tercatat.
+                                            <b>{rujukan.pendamping}</b>, petugas Contact Center, mendampingi Anda sampai aduan tercatat.
                                         </>
                                     ) : (
-                                        'Petugas SIGAP mendampingi Anda sampai aduan tercatat.'
+                                        'Petugas Contact Center mendampingi Anda sampai aduan tercatat.'
                                     )}
                                 </span>
                             </div>

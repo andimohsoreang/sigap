@@ -45,7 +45,7 @@ export default function Daftar() {
 
     return (
         <PublicLayout title="Daftar Akun Warga">
-            <Head title="Daftar Akun Warga — SIGAP" />
+            <Head title="Daftar Akun Warga — Contact Center" />
 
             <div className="mx-auto flex max-w-lg flex-col px-4 py-12 sm:px-6">
                 <Card className="border-gray-100 shadow-lg">
@@ -142,7 +142,7 @@ export default function Daftar() {
                                         <Link href="/kebijakan-privasi" className="text-brand-light font-bold hover:underline">
                                             Kebijakan Privasi
                                         </Link>{' '}
-                                        SIGAP.
+                                        Contact Center.
                                     </span>
                                 </label>
                                 {errors.setuju && <p className="text-destructive mt-1 text-sm">{errors.setuju}</p>}

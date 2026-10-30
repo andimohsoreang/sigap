@@ -33,7 +33,7 @@ const SUMBER = [
     },
     {
         group: 'Daring',
-        items: [{ value: 'live_chat', label: 'Live Chat SIGAP' }],
+        items: [{ value: 'live_chat', label: 'Live Chat Contact Center' }],
     },
     {
         group: 'Media Sosial',

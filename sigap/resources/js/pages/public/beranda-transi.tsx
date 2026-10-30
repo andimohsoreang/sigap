@@ -61,7 +61,7 @@ const STEPS: { icon: LucideIcon; title: string; desc: string; pillIcon: LucideIc
         title: 'Tanya TARA, kapan saja',
         desc: 'Asisten menjawab 24 jam hanya dari artikel resmi Kementerian, lengkap dengan sumbernya. Data pribadi yang Anda ketik otomatis disamarkan.',
         pillIcon: BookOpen,
-        pill: 'Sumber: Panduan Layanan SIGAP',
+        pill: 'Sumber: Panduan Layanan Contact Center',
     },
     {
         icon: Headset,
@@ -216,7 +216,7 @@ export default function BerandaTransi({ kanal, kantor, beritaSemua }: { kanal: K
 
     return (
         <>
-            <Head title="Contact Center TARA — SIGAP">
+            <Head title="Contact Center Kementerian Transmigrasi">
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link
                     rel="stylesheet"
@@ -906,7 +906,7 @@ function Faq() {
                     })}
                     <div data-reveal className="flex items-center gap-3.5 px-1 pt-4">
                         <FileText className="h-5 w-5 shrink-0 text-[var(--t-navy)]" aria-hidden="true" />
-                        <span className="flex-1 text-[15px] text-[#4a5a68]">Maklumat Pelayanan dan Penilaian SIGAP</span>
+                        <span className="flex-1 text-[15px] text-[#4a5a68]">Maklumat Pelayanan dan Penilaian Contact Center</span>
                         <Link
                             href="/pedoman-layanan"
                             className="text-[15px] font-semibold text-[var(--t-navy)] underline underline-offset-4 hover:text-[#00508a]"

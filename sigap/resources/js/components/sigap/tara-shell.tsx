@@ -118,7 +118,7 @@ export function TaraFooter() {
             <div className="mx-auto flex max-w-[1312px] flex-col gap-10 px-4 pt-12 pb-8 sm:px-6 lg:px-16 lg:pt-16">
                 <div className="flex flex-col gap-10 lg:flex-row lg:gap-16">
                     <div className="flex flex-col gap-3 lg:w-[420px]">
-                        <span className="font-heading text-[22px] font-bold text-white">SIGAP</span>
+                        <span className="font-heading text-[22px] font-bold text-white">Contact Center</span>
                         <p className="text-[15px] leading-[1.55]">Suara Masyarakat, Inisiatif Gerak Aksi, Penyelesaian Tuntas.</p>
                         <p className="text-sm text-[var(--t-gold)] italic">“Komitmen Melayani, Menuntaskan Tanpa Henti”</p>
                     </div>
@@ -229,7 +229,7 @@ export default function TaraPage({
 
     return (
         <>
-            <Head title={`${title} — SIGAP`}>
+            <Head title={`${title} — Contact Center`}>
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link
                     rel="stylesheet"

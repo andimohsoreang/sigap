@@ -33,7 +33,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 /**
- * Halaman panduan lengkap SIGAP per-fitur: seluruh fitur untuk masyarakat
+ * Halaman panduan lengkap Contact Center per-fitur: seluruh fitur untuk masyarakat
  * (beranda, katalog, peta, formulir + unggah bukti, lacak, survei, portal
  * warga, live chat) dan seluruh fitur admin (matriks, manajemen tiket,
  * tanggapan, status, tiket internal, input manual, chat, kawasan, kanal,
@@ -66,16 +66,18 @@ const FITUR_WARGA: Feature[] = [
         title: 'Beranda & Informasi Publik',
         desc: (
             <>
-                Halaman awal SIGAP menampilkan statistik pengaduan, kanal layanan, dan pertanyaan umum. Dari beranda Anda bisa langsung menuju{' '}
-                <strong>Katalog Pengaduan</strong>, <strong>Peta Wilayah</strong>, <strong>Lacak Tiket</strong>, atau membuat laporan baru lewat
-                tombol aksi utama.
+                Halaman awal Contact Center menampilkan statistik pengaduan, kanal layanan, dan pertanyaan umum. Dari beranda Anda bisa langsung
+                menuju <strong>Katalog Pengaduan</strong>, <strong>Peta Wilayah</strong>, <strong>Lacak Tiket</strong>, atau membuat laporan baru
+                lewat tombol aksi utama.
             </>
         ),
         tips: [
             'Menu navigasi tersedia di bagian atas; versi mobile memakai menu hamburger.',
             'Panduan ini juga terhubung dari menu navigasi & footer.',
         ],
-        shots: [s('m01-beranda.jpeg', 'Beranda SIGAP', 'Beranda SIGAP: statistik, kanal layanan, dan akses cepat pembuatan laporan.')],
+        shots: [
+            s('m01-beranda.jpeg', 'Beranda Contact Center', 'Beranda Contact Center: statistik, kanal layanan, dan akses cepat pembuatan laporan.'),
+        ],
     },
     {
         id: 'w-katalog',
@@ -107,8 +109,8 @@ const FITUR_WARGA: Feature[] = [
         title: 'Formulir Pengaduan & Unggah Bukti',
         desc: (
             <>
-                Inti layanan SIGAP: formulir pengaduan yang dapat diisi <strong>tanpa login</strong>. Alurnya terdiri dari empat bagian — Data
-                Pelapor, Detail Laporan, Privasi & Lampiran, lalu Pernyataan & Kirim. Ikuti urutan gambar berikut dari awal sampai selesai.
+                Inti layanan Contact Center: formulir pengaduan yang dapat diisi <strong>tanpa login</strong>. Alurnya terdiri dari empat bagian —
+                Data Pelapor, Detail Laporan, Privasi & Lampiran, lalu Pernyataan & Kirim. Ikuti urutan gambar berikut dari awal sampai selesai.
             </>
         ),
         tips: [
@@ -184,8 +186,8 @@ const FITUR_WARGA: Feature[] = [
         title: 'Live Chat Bantuan',
         desc: (
             <>
-                Widget obrolan di pojok kanan bawah menghubungkan Anda langsung dengan petugas SIGAP tanpa formulir. Cocok untuk pertanyaan cepat atau
-                klarifikasi laporan yang sedang berjalan.
+                Widget obrolan di pojok kanan bawah menghubungkan Anda langsung dengan petugas Contact Center tanpa formulir. Cocok untuk pertanyaan
+                cepat atau klarifikasi laporan yang sedang berjalan.
             </>
         ),
         tips: ['Balasan petugas masuk ke halaman Kotak Masuk panel admin.', 'Untuk laporan resmi tetap gunakan formulir pengaduan.'],
@@ -404,13 +406,13 @@ export default function Panduan() {
     return (
         <TaraPage
             title="Panduan Lengkap"
-            description="Panduan visual seluruh fitur SIGAP untuk masyarakat dan admin."
+            description="Panduan visual seluruh fitur Contact Center untuk masyarakat dan admin."
             active="panduan"
             eyebrow="Pusat Bantuan"
-            heading="Panduan Lengkap SIGAP"
+            heading="Panduan Lengkap Contact Center"
             subtitle="Dokumentasi visual seluruh fitur — untuk masyarakat maupun admin — langkah demi langkah dengan tangkapan layar asli aplikasi. Klik gambar untuk memperbesar, gunakan tombol panah untuk berpindah."
             pose="menjelaskan"
-            poseAlt="TARA menjelaskan cara memakai SIGAP"
+            poseAlt="TARA menjelaskan cara memakai Contact Center"
         >
             <div className="font-body">
                 {/* Alur singkat */}
@@ -554,7 +556,12 @@ export default function Panduan() {
                     {/* BANTUAN LANJUTAN */}
                     <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
                         {[
-                            { icon: BookOpen, title: 'Pedoman Layanan', desc: 'Standar pelayanan & maklumat resmi SIGAP.', href: '/pedoman-layanan' },
+                            {
+                                icon: BookOpen,
+                                title: 'Pedoman Layanan',
+                                desc: 'Standar pelayanan & maklumat resmi Contact Center.',
+                                href: '/pedoman-layanan',
+                            },
                             { icon: Search, title: 'Lacak Tiket', desc: 'Pantau status laporan Anda kapan saja.', href: '/lacak' },
                             { icon: Inbox, title: 'Katalog Pengaduan', desc: 'Daftar kanal & kategori layanan pengaduan.', href: '/katalog' },
                         ].map(({ icon: Icon, title, desc, href }) => (

@@ -47,7 +47,7 @@
     --color-chart-4: var(--chart-4);
     --color-chart-5: var(--chart-5);
 
-    /* ===== Brand SIGAP (paritas token lama) ===== */
+    /* ===== Brand Contact Center (paritas token lama) ===== */
     --color-brand: #0e5b72; /* primary lama */
     --color-brand-light: #0093b6; /* primaryLight lama */
     --color-brand-soft: #e5f4f7; /* primarySoft lama */
@@ -89,13 +89,13 @@
     --card-foreground: hsl(222, 47%, 11%);
     --popover: hsl(0, 0%, 100%);
     --popover-foreground: hsl(222, 47%, 11%);
-    /* SIGAP brand: #0E5B72 */
+    /* Contact Center brand: #0E5B72 */
     --primary: hsl(192, 79%, 25%);
     --primary-foreground: hsl(0, 0%, 98%);
-    /* SIGAP secondary: #C3A167 (gold) */
+    /* Contact Center secondary: #C3A167 (gold) */
     --secondary: hsl(40, 44%, 58%);
     --secondary-foreground: hsl(222, 47%, 11%);
-    /* SIGAP primarySoft: #E5F4F7 */
+    /* Contact Center primarySoft: #E5F4F7 */
     --muted: hsl(190, 55%, 93%);
     --muted-foreground: hsl(200, 15%, 40%);
     --accent: hsl(190, 55%, 93%);
