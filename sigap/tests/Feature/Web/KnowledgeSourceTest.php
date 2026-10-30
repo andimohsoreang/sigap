@@ -4,6 +4,7 @@ namespace Tests\Feature\Web;
 
 use App\Enums\UserRole;
 use App\Jobs\SyncKnowledgeSource;
+use App\Models\AiCall;
 use App\Models\ChatConversation;
 use App\Models\KnowledgeDocument;
 use App\Models\KnowledgePassage;
@@ -338,6 +339,72 @@ class KnowledgeSourceTest extends TestCase
         $this->assertSame('ai', ChatConversation::query()->sole()->handled_by);
     }
 
+    /**
+     * Model palsu yang menulis $answer (":no" = nomor sumber yang memuat 19–53).
+     *
+     * @param  array<string, mixed>  $extra
+     */
+    private function citingFiftyThreeSource(string $answer, array $extra = []): void
+    {
+        $this->app->bind(LlmClient::class, fn () => new class($answer, $extra) implements LlmClient
+        {
+            public function __construct(private string $answer, private array $extra) {}
+
+            public function complete(array $messages, bool $json = false): string
+            {
+                $no = collect(json_decode((string) end($messages)['content'], true)['sumber'])->first(fn ($s) => str_contains($s['isi'], '53'))['no'];
+
+                return (string) json_encode($this->extra + ['jenis' => 'informasi', 'jawaban' => str_replace(':no', (string) $no, $this->answer), 'sumber' => [$no], 'beda_sumber' => false, 'portal' => null, 'perlu_petugas' => false, 'ringkasan' => '']);
+            }
+        });
+    }
+
+    public function test_answer_with_number_missing_from_cited_source_is_not_sent_and_hands_off(): void
+    {
+        config(['services.ai.enabled' => true]);
+        $this->twoConflictingSites();
+        // Angka 49 ada di sumber LAIN, bukan di sumber yang dikutip.
+        $this->citingFiftyThreeSource('Syarat usia 19–49 tahun [:no].');
+
+        $this->postJson('/chat/mulai', ['nama' => 'Bu Sri'])->assertCreated();
+        $reply = $this->postJson('/chat/pesan', ['body' => 'Berapa batas usia ikut transmigrasi?'])->assertCreated();
+
+        $this->assertNotContains('jawaban', $reply->json('balasan.*.jenis'));
+        $this->assertStringNotContainsString('19–49', implode(' ', $reply->json('balasan.*.body')));
+        $this->assertStringContainsString('belum dapat memastikan', $reply->json('balasan.0.body'));
+        $this->assertSame('angka_tanpa_dasar', ChatConversation::query()->sole()->handoff_reason);
+        $call = AiCall::query()->latest('id')->firstOrFail();
+        $this->assertSame([AiCall::STATUS_REJECTED, 'angka_tanpa_dasar'], [$call->status, $call->error_code]);
+    }
+
+    public function test_supported_numbers_and_numbers_from_the_citizen_are_answered(): void
+    {
+        config(['services.ai.enabled' => true]);
+        $this->twoConflictingSites();
+        $this->citingFiftyThreeSource('Ketentuannya usia 19 - 53 tahun [:no]; usia 50 tahun Anda termasuk di dalamnya menurut ketentuan umum.');
+
+        $this->postJson('/chat/mulai', ['nama' => 'Bu Sri'])->assertCreated();
+        $this->postJson('/chat/pesan', ['body' => 'Umur 50 tahun, berapa batas usia ikut transmigrasi?'])
+            ->assertCreated()
+            ->assertJsonPath('balasan.0.jenis', 'jawaban');
+
+        $this->assertSame('ai', ChatConversation::query()->sole()->handled_by);
+        $this->assertSame(AiCall::STATUS_OK, AiCall::query()->latest('id')->value('status'));
+    }
+
+    public function test_complaint_with_unsupported_number_drops_the_answer_but_keeps_its_reason(): void
+    {
+        config(['services.ai.enabled' => true]);
+        $this->twoConflictingSites();
+        $this->citingFiftyThreeSource('Syarat usia 19–49 tahun [:no].', ['jenis' => 'aduan', 'ringkasan' => 'Warga ditolak mendaftar karena usia.']);
+
+        $this->postJson('/chat/mulai', ['nama' => 'Bu Sri'])->assertCreated();
+        $reply = $this->postJson('/chat/pesan', ['body' => 'Berapa batas usia ikut transmigrasi?'])->assertCreated();
+
+        $this->assertNotContains('jawaban', $reply->json('balasan.*.jenis'));
+        $this->assertSame('aduan', ChatConversation::query()->sole()->handoff_reason);
+    }
+
     public function test_admin_sets_legal_basis_of_a_source_and_it_is_audited(): void
     {
         $source = $this->site();
@@ -375,7 +442,10 @@ class KnowledgeSourceTest extends TestCase
         {
             public function complete(array $messages, bool $json = false): string
             {
-                return json_encode(['jenis' => 'pribadi', 'jawaban' => 'Ketentuan umumnya: usia 19–53 tahun [1].', 'sumber' => [1], 'beda_sumber' => true, 'portal' => null, 'perlu_petugas' => false, 'ringkasan' => 'Warga 50 tahun menanyakan kelayakan.']);
+                // Kutip sumber yang memang memuat 19–53 (urutan sumber tidak tetap).
+                $no = collect(json_decode((string) end($messages)['content'], true)['sumber'])->first(fn ($s) => str_contains($s['isi'], '53'))['no'];
+
+                return json_encode(['jenis' => 'pribadi', 'jawaban' => "Ketentuan umumnya: usia 19–53 tahun [{$no}].", 'sumber' => [$no], 'beda_sumber' => true, 'portal' => null, 'perlu_petugas' => false, 'ringkasan' => 'Warga 50 tahun menanyakan kelayakan.']);
             }
         });
 

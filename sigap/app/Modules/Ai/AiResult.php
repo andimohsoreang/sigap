@@ -10,7 +10,9 @@ namespace App\Modules\Ai;
  * - `skipped`  : model tidak dipanggil (sirkuit terbuka, anggaran habis, batas percakapan)
  * - `error`    : penyedia gagal (setelah coba ulang)
  *
- * Selain `ok`, pemanggil memakai jalur cadangan tanpa model.
+ * Selain `ok`, pemanggil memakai jalur cadangan tanpa model. `callId` menunjuk
+ * baris `ai_calls` panggilan yang berhasil, agar pemanggil dapat menandainya
+ * ditolak ({@see AiGateway::reject()}).
  */
 final readonly class AiResult
 {
@@ -27,12 +29,13 @@ final readonly class AiResult
         public string $status,
         public array $data = [],
         public ?string $reason = null,
+        public ?int $callId = null,
     ) {}
 
     /** @param  array<string, mixed>  $data */
-    public static function ok(array $data): self
+    public static function ok(array $data, ?int $callId = null): self
     {
-        return new self(self::OK, $data);
+        return new self(self::OK, $data, null, $callId);
     }
 
     public static function fallback(string $reason): self

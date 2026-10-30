@@ -115,6 +115,16 @@ class UjiAsistenGateTest extends TestCase
         $this->artisan('sigap:uji-asisten')->expectsOutputToContain('Sumber berbeda tepat: 0% (0/1)')->assertSuccessful();
     }
 
+    public function test_number_guard_rejections_are_reported_per_case(): void
+    {
+        $this->answering(['jawaban' => 'Jawabannya 987654 hari [1].', 'sumber' => [1], 'beda_sumber' => false, 'perlu_petugas' => false]);
+
+        $this->artisan('sigap:uji-asisten')
+            ->expectsOutputToContain('⛔ angka tanpa dasar: 987654')
+            ->expectsOutputToContain('— #1 (987654)')
+            ->assertSuccessful();
+    }
+
     public function test_answers_without_sources_fail_the_gate(): void
     {
         // Model selalu menjawab "informasi" dengan sumber yang tidak dikirim → dianggap menebak.

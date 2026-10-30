@@ -33,6 +33,9 @@ class AiCall extends Model
 
     public const STATUS_TIMEOUT = 'timeout';
 
+    /** Jawaban diterima dari model tetapi ditolak pengaman server (mis. angka tanpa dasar). */
+    public const STATUS_REJECTED = 'ditolak';
+
     protected $fillable = [
         'task', 'prompt_version', 'provider', 'model', 'status', 'latency_ms',
         'prompt_tokens', 'completion_tokens', 'conversation_id', 'error_code',

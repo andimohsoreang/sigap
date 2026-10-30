@@ -13,11 +13,13 @@ use App\Modules\Ai\AiContext;
 use App\Modules\Ai\AiGateway;
 use App\Modules\Ai\AiResult;
 use App\Modules\Ai\AiTask;
+use App\Modules\Ai\NumberGuard;
 use App\Services\ChatService;
 use App\Services\Knowledge\KnowledgeRetriever;
 use App\Services\PortalDirectory;
 use App\Services\ReferralService;
 use App\Services\TicketService;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -50,6 +52,9 @@ class AssistantService
 
     /** Sumber resmi berbeda dan label dasar hukum tidak memutuskan (PRD-AI FR-AI-11). */
     private const CONFLICT_NOTICE = 'Sumber resmi yang saya temukan berbeda, dan belum dapat dipastikan mana yang berlaku. Pertanyaan Anda saya teruskan ke petugas untuk dipastikan.';
+
+    /** Jawaban memuat angka yang tidak ada di sumbernya (PRD-AI FR-AI-12): tidak dikirim. */
+    private const UNSUPPORTED_NOTICE = 'Saya belum dapat memastikan jawaban untuk pertanyaan ini dari sumber resmi, jadi pertanyaan Anda saya teruskan ke petugas.';
 
     private const ASK_DETAILS = 'Baik, saya bantu. Ceritakan masalahnya: apa yang terjadi, di kawasan atau SP mana, dan sejak kapan? Bila ada, sebutkan juga dampaknya.';
 
@@ -131,6 +136,16 @@ class AssistantService
 
         $summary = $result['ringkasan'] !== '' ? $result['ringkasan'] : null;
         $complaint = in_array($result['jenis'], ['aduan', 'pribadi'], true);
+
+        // Angka di jawaban tidak ada di sumber yang dikutip maupun pesan warga
+        // (PRD-AI FR-AI-12): jawaban tidak dikirim. Aduan/urusan pribadi tetap
+        // diteruskan lewat alurnya sendiri (alasan aduan/pribadi), tanpa jawaban.
+        if ($result['angka_tanpa_dasar'] !== []) {
+            if (! $complaint) {
+                return $this->handoff($conversation, 'angka_tanpa_dasar', $summary, self::UNSUPPORTED_NOTICE);
+            }
+            $result['jawaban'] = '';
+        }
         // Bagian informasi/regulasi yang bersumber selalu ditampilkan lebih dulu,
         // termasuk di dalam aduan; keputusan kasusnya tetap di tangan petugas.
         $sourced = $result['jawaban'] !== '' && $this->citedSources($result, $articles)->isNotEmpty();
@@ -274,7 +289,8 @@ class AssistantService
             $articles = $this->retriever->sources($text);
             try {
                 $result = $this->ask($conversation, $text, $articles, $incoming->id);
-                $answerable = in_array($result['jenis'], ['informasi', 'aduan', 'pribadi'], true) && ! $result['perlu_petugas'];
+                $answerable = in_array($result['jenis'], ['informasi', 'aduan', 'pribadi'], true) && ! $result['perlu_petugas']
+                    && $result['angka_tanpa_dasar'] === [];
                 if ($answerable && $result['jawaban'] !== '' && $this->citedSources($result, $articles)->isNotEmpty()) {
                     return [$this->answer($conversation, $text, $result, $articles)];
                 }
@@ -362,7 +378,7 @@ class AssistantService
     }
 
     /**
-     * @param  array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, alasan_petugas: string|null, kompleks: bool, ringkasan: string}  $result
+     * @param  array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, alasan_petugas: string|null, kompleks: bool, ringkasan: string, angka_tanpa_dasar: list<string>}  $result
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
      */
     private function answer(ChatConversation $conversation, string $question, array $result, Collection $articles, ?Portal $portal = null): ChatMessage
@@ -488,7 +504,7 @@ class AssistantService
 
     /**
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
-     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, alasan_petugas: string|null, kompleks: bool, ringkasan: string}
+     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, alasan_petugas: string|null, kompleks: bool, ringkasan: string, angka_tanpa_dasar: list<string>}
      */
     private function ask(ChatConversation $conversation, string $question, Collection $articles, int $incomingId): array
     {
@@ -518,7 +534,7 @@ class AssistantService
      *
      * @param  list<array{dari: string, isi: string}>  $history
      * @param  Collection<int, KnowledgeArticle|KnowledgePassage>  $articles
-     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, alasan_petugas: string|null, kompleks: bool, ringkasan: string}
+     * @return array{jenis: string, jawaban: string, sumber: list<int>, beda_sumber: bool, kebijakan: bool, portal: string|null, perlu_petugas: bool, alasan_petugas: string|null, kompleks: bool, ringkasan: string, angka_tanpa_dasar: list<string>}
      *
      * @throws AiException
      */
@@ -557,14 +573,29 @@ class AssistantService
         $data = $result->data;
 
         $type = in_array($data['jenis'] ?? null, self::TYPES, true) ? $data['jenis'] : 'informasi';
+        $answer = trim((string) ($data['jawaban'] ?? ''));
+        $cited = array_values(array_filter(array_map('intval', (array) ($data['sumber'] ?? []))));
+
+        // Pengaman angka (FR-AI-12): dasar = teks sumber yang dikutip persis
+        // seperti dikirim (judul, isi, rujukan, label dasar hukum) + pesan warga.
+        $basis = [$question, ...collect($history)->where('dari', 'warga')->pluck('isi')->all()];
+        foreach (array_unique($cited) as $no) {
+            if (isset($input['sumber'][$no - 1])) {
+                $basis[] = implode("\n", Arr::only($input['sumber'][$no - 1], ['judul', 'isi', 'rujukan', 'dasar']));
+            }
+        }
+        $unsupported = $answer === '' ? [] : NumberGuard::unsupported($answer, $basis);
+        if ($unsupported !== []) {
+            $this->gateway->reject($result->callId, 'angka_tanpa_dasar');
+        }
         // Pertanyaan kebijakan dijawab sebagai informasi: "hak warga" di
         // dalamnya bersifat umum, bukan kasus pribadi. Aduan tetap aduan.
         $policy = (bool) ($data['kebijakan'] ?? false) && in_array($type, ['informasi', 'pribadi'], true);
 
         return [
             'jenis' => $policy ? 'informasi' : $type,
-            'jawaban' => trim((string) ($data['jawaban'] ?? '')),
-            'sumber' => array_values(array_filter(array_map('intval', (array) ($data['sumber'] ?? [])))),
+            'jawaban' => $answer,
+            'sumber' => $cited,
             'beda_sumber' => (bool) ($data['beda_sumber'] ?? false),
             'kebijakan' => $policy,
             'portal' => $this->portals->find(is_string($data['portal'] ?? null) ? $data['portal'] : null)?->code,
@@ -572,6 +603,7 @@ class AssistantService
             'alasan_petugas' => in_array($data['alasan_petugas'] ?? null, ['diminta', 'sumber_berbeda'], true) ? $data['alasan_petugas'] : null,
             'kompleks' => ! $policy && (bool) ($data['kompleks'] ?? false),
             'ringkasan' => Str::limit(trim((string) ($data['ringkasan'] ?? '')), 600),
+            'angka_tanpa_dasar' => $unsupported,
         ];
     }
 

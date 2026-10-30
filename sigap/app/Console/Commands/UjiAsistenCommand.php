@@ -26,6 +26,8 @@ use Illuminate\Support\Str;
  * - Jenis     : klasifikasi model sama dengan harapan.
  * - Sumber    : jawaban informasi selalu menyebut sumber yang benar-benar
  *               dikirim (jawaban tanpa sumber = tebakan, ditolak sistem).
+ * - Angka     : jawaban yang ditolak pengaman angka (FR-AI-12) dilaporkan per
+ *               kasus; jawaban benar tidak boleh ditolak.
  * - Konflik   : kasus bertanda `konflik` mengikuti label dasar hukum sumber
  *               (PRD-AI FR-AI-11): aturan yang berlaku + aturan lama disebut,
  *               atau diteruskan ke petugas bila label belum memutuskan.
@@ -59,7 +61,7 @@ class UjiAsistenCommand extends Command
         }
 
         $rows = [];
-        $score = ['cari' => [0, 0], 'artikel' => [0, 0], 'jenis' => [0, 0], 'konflik' => [0, 0], 'tebak' => 0, 'gagal' => 0];
+        $score = ['cari' => [0, 0], 'artikel' => [0, 0], 'jenis' => [0, 0], 'konflik' => [0, 0], 'tebak' => 0, 'gagal' => 0, 'angka' => []];
         $durations = [];
 
         foreach ($cases as $i => $case) {
@@ -101,6 +103,10 @@ class UjiAsistenCommand extends Command
                         $type .= ' ⚠ tanpa sumber';
                     }
                     $answer = $result['jawaban'] !== '' ? $result['jawaban'] : $result['ringkasan'];
+                    if ($result['angka_tanpa_dasar'] !== []) {
+                        $score['angka'][] = '#'.($i + 1).' ('.implode(', ', $result['angka_tanpa_dasar']).')';
+                        $type .= ' ⛔ angka tanpa dasar: '.implode(', ', $result['angka_tanpa_dasar']);
+                    }
 
                     if (isset($case['konflik'])) {
                         [$ok, $note] = $this->conflictHandled($case['konflik'], $result, $sources, $assistant);
@@ -149,6 +155,7 @@ class UjiAsistenCommand extends Command
             $this->line('Sumber berbeda tepat: '.$pct($score['konflik']).'  (aturan berlaku + lama, atau ke petugas bila label belum memutuskan)');
             $this->line('Jawaban tanpa sumber: '.$score['tebak'].' (ditolak sistem, warga melihat "belum menemukan informasi resmi")');
             $this->line('Panggilan gagal     : '.$score['gagal']);
+            $this->line('Ditolak pengaman angka: '.count($score['angka']).($score['angka'] === [] ? '' : ' — '.implode('; ', $score['angka'])));
             if ($durations !== []) {
                 sort($durations);
                 $this->line('Waktu jawab median  : '.round($durations[intdiv(count($durations), 2)], 1).' detik');

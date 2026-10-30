@@ -80,9 +80,7 @@ final class AiGateway
                 return AiResult::fallback('json_tidak_valid');
             }
 
-            $this->record($task, $conversationId, $started, AiCall::STATUS_OK, null, $driver);
-
-            return AiResult::ok($data);
+            return AiResult::ok($data, $this->record($task, $conversationId, $started, AiCall::STATUS_OK, null, $driver));
         }
     }
 
@@ -126,14 +124,35 @@ final class AiGateway
         return AiResult::skipped($reason);
     }
 
-    /** Catat panggilan tanpa teks; gagal mencatat tidak pernah menggagalkan tugas. */
-    private function record(AiTask $task, ?int $conversationId, int $started, string $status, ?string $errorCode, mixed $driver): void
+    /**
+     * Tandai panggilan yang jawabannya ditolak pengaman server (FR-AI-12),
+     * mis. `angka_tanpa_dasar`. Gagal mencatat tidak menggagalkan alur.
+     */
+    public function reject(?int $callId, string $reason): void
+    {
+        if ($callId === null) {
+            return;
+        }
+
+        try {
+            AiCall::query()->whereKey($callId)->update(['status' => AiCall::STATUS_REJECTED, 'error_code' => substr($reason, 0, 40)]);
+        } catch (Throwable $e) {
+            Log::warning('AI: gagal menandai ai_calls ditolak', ['error' => class_basename($e)]);
+        }
+    }
+
+    /**
+     * Catat panggilan tanpa teks; gagal mencatat tidak pernah menggagalkan tugas.
+     *
+     * @return int|null id baris `ai_calls`
+     */
+    private function record(AiTask $task, ?int $conversationId, int $started, string $status, ?string $errorCode, mixed $driver): ?int
     {
         try {
             $usage = $driver instanceof ReportsUsage ? $driver->lastUsage() : null;
             $meta = $this->drivers->describe($task);
 
-            AiCall::query()->create([
+            return AiCall::query()->create([
                 'task' => $task->value,
                 'prompt_version' => $task->promptVersion(),
                 'provider' => $meta['provider'],
@@ -144,9 +163,11 @@ final class AiGateway
                 'completion_tokens' => $status === AiCall::STATUS_OK || $status === AiResult::FALLBACK ? ($usage['completion'] ?? null) : null,
                 'conversation_id' => $conversationId,
                 'error_code' => $errorCode === null ? null : substr($errorCode, 0, 40),
-            ]);
+            ])->id;
         } catch (Throwable $e) {
             Log::warning('AI: gagal mencatat ai_calls', ['error' => class_basename($e)]);
+
+            return null;
         }
     }
 }
