@@ -148,10 +148,12 @@ export default function Pengetahuan({ articles, stats, categories, unanswered, p
         {
             accessorKey: 'title',
             header: 'Judul & sumber',
+            // Sel tabel bawaan tidak membungkus teks; judul dan rujukan yang panjang
+            // dibungkus di dalam kolom ini agar tidak menimpa kolom Status dst.
             cell: ({ row }) => (
-                <div className="max-w-xl">
-                    <div className="font-semibold text-gray-800">{row.original.title}</div>
-                    <div className="text-xs text-gray-500">
+                <div className="max-w-xl min-w-[18rem] whitespace-normal">
+                    <div className="font-semibold break-words text-gray-800">{row.original.title}</div>
+                    <div className="mt-0.5 text-xs leading-relaxed break-words text-gray-500">
                         {[row.original.category, [row.original.source, row.original.source_ref].filter(Boolean).join(' · ')]
                             .filter(Boolean)
                             .join(' · ') || 'Sumber belum diisi'}
