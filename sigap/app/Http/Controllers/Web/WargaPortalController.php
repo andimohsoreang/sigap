@@ -46,7 +46,7 @@ class WargaPortalController extends Controller
                 'status' => $t->status?->value,
                 'status_label' => $t->status?->label(),
                 'kategori' => $t->category?->name,
-                'kawasan' => $t->region?->name,
+                'kawasan' => $t->wilayahLabel(),
                 'jenis' => $t->is_internal ? 'Internal' : 'Publik',
                 'jumlah_tanggapan' => $t->replies->where('is_public', true)->count(),
             ])

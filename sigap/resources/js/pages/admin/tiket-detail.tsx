@@ -109,7 +109,7 @@ export default function TiketDetail({ ticket, statuses }: Props) {
 
                             <dl className="grid grid-cols-1 gap-4 border-t border-gray-100 pt-4 sm:grid-cols-2">
                                 <Info icon={Tag} label="Kategori" value={ticket.kategori} />
-                                <Info icon={MapPin} label="Kawasan" value={ticket.kawasan} />
+                                <Info icon={MapPin} label="Wilayah asal" value={ticket.kawasan} />
                                 <Info icon={User2} label="Pelapor" value={ticket.pelapor} />
                                 <Info icon={User2} label="NIK" value={ticket.nik} />
                                 <Info icon={Send} label="Kontak" value={[ticket.telepon, ticket.email].filter(Boolean).join(' · ') || null} />

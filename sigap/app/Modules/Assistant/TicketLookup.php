@@ -35,7 +35,7 @@ final class TicketLookup
                 'status' => $ticket->status?->value,
                 'status_label' => $ticket->status?->label(),
                 'kategori' => $ticket->category?->name,
-                'kawasan' => $ticket->region?->name,
+                'kawasan' => $ticket->wilayahLabel(false),
                 'tenggat' => $ticket->sla_due_at?->toIso8601String(),
                 'diperbarui' => $ticket->updated_at?->toIso8601String(),
                 'url' => '/lacak/'.$ticket->ticket_no,

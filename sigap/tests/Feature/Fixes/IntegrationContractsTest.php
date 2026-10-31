@@ -36,7 +36,7 @@ class IntegrationContractsTest extends TestCase
 
         $this->actingAs($admin)->get('/admin/input-manual')
             ->assertInertia(fn (Assert $page) => $page
-                ->where('region_locked', true)
+                ->missing('region_locked')
                 ->where('own_region.id', $own->id));
 
         $this->actingAs($admin)->post('/admin/input-manual', [
@@ -51,12 +51,13 @@ class IntegrationContractsTest extends TestCase
         $this->assertSame($own->id, Ticket::where('title', 'Aduan tanpa kawasan')->value('region_id'));
     }
 
-    public function test_super_admin_manual_input_still_requires_region(): void
+    /** 31-10-2026: wajib provinsi pengaduan atau kawasan lama. */
+    public function test_super_admin_manual_input_still_requires_region_or_province(): void
     {
         $super = User::factory()->admin(UserRole::SuperAdmin)->create();
 
         $this->actingAs($super)->get('/admin/input-manual')
-            ->assertInertia(fn (Assert $page) => $page->where('region_locked', false));
+            ->assertInertia(fn (Assert $page) => $page->missing('region_locked'));
 
         $this->actingAs($super)->post('/admin/input-manual', [
             'sumber_laporan' => 'tatap_muka',
@@ -65,7 +66,7 @@ class IntegrationContractsTest extends TestCase
             'uraian' => 'Super admin wajib memilih kawasan',
             'category_id' => Category::query()->value('id'),
             'impact' => 'rendah',
-        ])->assertSessionHasErrors('region_id');
+        ])->assertSessionHasErrors(['region_id', 'provinsi']);
     }
 
     public function test_inertia_survey_by_other_account_returns_field_error(): void

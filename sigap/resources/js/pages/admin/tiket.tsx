@@ -58,7 +58,7 @@ export default function ManajemenTiket({ tickets, filters, chips, statuses }: Pr
         },
         {
             id: 'kategori',
-            header: 'Kategori / Kawasan',
+            header: 'Kategori / Wilayah',
             accessorFn: (row) => `${row.kategori ?? ''} ${row.kawasan ?? ''}`,
             cell: ({ row }) => (
                 <div>

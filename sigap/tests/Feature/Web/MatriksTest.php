@@ -165,9 +165,8 @@ class MatriksTest extends TestCase
                 ->where('rekap.dampak.2.selesai', 1)
                 // Kanal & kawasan.
                 ->where('rekap.kanal.0', ['key' => 'web', 'label' => 'Formulir web', 'total' => 2])
-                ->where('rekap.kawasan.0.label', 'SP1 Merauke')
-                ->where('rekap.kawasan.0.total', 3)
-                ->where('rekap.kawasan.0.ews', 2)
+                // Wilayah = provinsi pengaduan (31-10-2026).
+                ->where('rekap.kawasan', fn ($rows) => collect($rows)->firstWhere('label', 'Papua Selatan') === ['provinsi' => 'Papua Selatan', 'label' => 'Papua Selatan', 'total' => 3, 'ews' => 2])
                 ->where('rekap.survei', ['rata' => 4, 'responden' => 1, 'selesai' => 2])
                 // Perlu tindakan: terlama lewat tenggat lebih dulu.
                 ->where('rekap.perlu_tindakan.total', 2)
@@ -212,11 +211,15 @@ class MatriksTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where('filters.sumbu', 'kawasan')
                 ->where('rekap.matriks.sumbu', 'kawasan')
-                ->has('rekap.matriks.rows', 3)
-                ->where('rekap.matriks.rows.0.label', 'SP1 Merauke')
-                ->where('rekap.matriks.rows.0.param', ['region_id' => (string) $this->merauke->id])
-                ->where('rekap.matriks.rows.0.total', 3)
-                ->where('rekap.matriks.rows.1.total', 3));
+                // Sumbu "kawasan" berisi provinsi pengaduan (31-10-2026).
+                ->has('rekap.matriks.rows', 2)
+                ->where('rekap.matriks.rows', fn ($rows) => collect($rows)->mapWithKeys(fn ($r) => [$r['label'] => [$r['param'], $r['total']]])->all() === [
+                    'Papua Selatan' => [['provinsi' => 'Papua Selatan'], 3],
+                    'Kalimantan Utara' => [['provinsi' => 'Kalimantan Utara'], 3],
+                ] || collect($rows)->mapWithKeys(fn ($r) => [$r['label'] => [$r['param'], $r['total']]])->all() === [
+                    'Kalimantan Utara' => [['provinsi' => 'Kalimantan Utara'], 3],
+                    'Papua Selatan' => [['provinsi' => 'Papua Selatan'], 3],
+                ]));
 
         $this->actingAs($admin)
             ->get('/admin/matriks?sumbu=kanal')
@@ -269,28 +272,26 @@ class MatriksTest extends TestCase
                 ->has('rekap.perlu_tindakan.items', 0));
     }
 
-    public function test_role_scope_still_applies_to_rekap(): void
+    /** 31-10-2026: admin kawasan melihat rekap semua pengaduan publik; saringan provinsi tetap berlaku. */
+    public function test_admin_kawasan_rekap_covers_all_public_tickets(): void
     {
         $this->seedTickets($this->superAdmin());
+        $this->ticket(['ticket_no' => 'TKT-261012-IIIIII', 'status' => TicketStatus::Baru, 'is_internal' => true]);
         $admin = User::factory()->admin(UserRole::AdminKawasan)->create(['region_id' => $this->merauke->id]);
 
         $this->actingAs($admin)
             ->get('/admin/matriks?sumbu=kawasan')
             ->assertInertia(fn (Assert $page) => $page
-                ->where('region_locked', true)
-                ->where('rekap.total', 3)
-                ->where('rekap.kpi.ews', 2)
-                ->has('rekap.matriks.rows', 1)
-                ->where('rekap.matriks.rows.0.label', 'SP1 Merauke')
-                ->has('rekap.kawasan', 1)
-                ->has('tickets.data', 3));
+                ->missing('region_locked')
+                ->where('rekap.total', 6)
+                ->has('rekap.matriks.rows', 2)
+                ->has('rekap.kawasan', 2));
 
-        // Meminta kawasan lain lewat query tidak membuka tiket di luar cakupan.
         $this->actingAs($admin)
-            ->get('/admin/matriks?region_id='.$this->bulungan->id)
+            ->get('/admin/matriks?provinsi=Kalimantan%20Utara')
             ->assertInertia(fn (Assert $page) => $page
-                ->where('rekap.total', 0)
-                ->has('tickets.data', 0));
+                ->where('rekap.total', 3)
+                ->has('tickets.data', 3));
     }
 
     public function test_ticket_list_accepts_matrix_drilldown_filters(): void
@@ -335,7 +336,8 @@ class MatriksTest extends TestCase
                 $provinsi = collect($page->toArray()['props']['rekap']['provinsi'])->keyBy('provinsi');
                 $this->assertSame(3, $provinsi['Papua Selatan']['total']);
                 $this->assertSame(2, $provinsi['Papua Selatan']['ews']);
-                $this->assertSame(['id' => $this->merauke->id, 'nama' => 'SP1 Merauke', 'total' => 3], $provinsi['Papua Selatan']['kawasan'][0]);
+                // Lokasi bebas yang ditulis pelapor (tiket contoh ini tanpa lokasi).
+                $this->assertSame([], $provinsi['Papua Selatan']['kawasan']);
                 $this->assertSame(3, $provinsi['Kalimantan Utara']['total']);
                 $this->assertSame(2, $provinsi['Kalimantan Utara']['counts']['selesai']);
                 $this->assertEquals(50, $provinsi['Kalimantan Utara']['sla_pct']);
@@ -373,7 +375,7 @@ class MatriksTest extends TestCase
                 ->has('tickets.data', 3)
                 ->where('filters.provinsi', 'Kalimantan Utara')
                 ->where('chips', fn ($chips) => collect($chips)->contains(fn ($c) => $c['key'] === 'provinsi' && $c['label'] === 'Provinsi: Kalimantan Utara'))
-                ->where('rekap.kawasan', fn ($rows) => collect($rows)->pluck('label')->all() === ['SP3 Bulungan'])
+                ->where('rekap.kawasan', fn ($rows) => collect($rows)->pluck('label')->all() === ['Kalimantan Utara'])
                 ->where('rekap.provinsi', fn ($rows) => collect($rows)->pluck('provinsi')->all() === ['Kalimantan Utara']));
     }
 
@@ -385,7 +387,8 @@ class MatriksTest extends TestCase
         $this->get('/peta')->assertInertia(function (Assert $page) {
             $provinsi = collect($page->toArray()['props']['provinsi'])->keyBy('provinsi');
             // Merauke: 3 bulan ini + 1 bulan lalu (semua waktu); tiket internal tidak dihitung.
-            $this->assertSame(['provinsi' => 'Papua Selatan', 'total' => 4, 'selesai' => 0, 'berjalan' => 4, 'kawasan' => [['nama' => 'SP1 Merauke', 'total' => 4]]], $provinsi['Papua Selatan']);
+            // Lokasi bebas pelapor tidak ditampilkan di halaman publik (bisa memuat data pribadi).
+            $this->assertSame(['provinsi' => 'Papua Selatan', 'total' => 4, 'selesai' => 0, 'berjalan' => 4], $provinsi['Papua Selatan']);
             $this->assertSame(3, $provinsi['Kalimantan Utara']['total']);
             $this->assertSame(2, $provinsi['Kalimantan Utara']['selesai']);
             $this->assertArrayNotHasKey('Sulawesi Selatan', $provinsi->all());

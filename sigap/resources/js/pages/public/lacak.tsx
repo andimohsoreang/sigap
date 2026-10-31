@@ -230,7 +230,7 @@ function StatusCard({ data, onSurvey }: { data: TicketData; onSurvey: () => void
     const current = rejected ? 2 : Math.max(0, STEPS.indexOf(data.status as (typeof STEPS)[number]));
     const meta: [string, string][] = [
         ['Kategori', data.kategori ?? '—'],
-        ['Kawasan', data.kawasan ?? '—'],
+        ['Wilayah', data.kawasan ?? '—'],
         ['Diajukan', formatDateTime(data.created_at)],
         ['Tenggat SLA', formatDateTime(data.tenggat_sla)],
         ...(data.pelapor ? ([['Pelapor', data.pelapor]] as [string, string][]) : []),
@@ -316,7 +316,7 @@ function StatusCard({ data, onSurvey }: { data: TicketData; onSurvey: () => void
                         <Star className="mt-0.5 h-5 w-5 shrink-0 text-[var(--t-gold)]" aria-hidden="true" />
                         <div>
                             <p className="font-semibold text-[var(--tcd-heading,var(--t-deep))]">Laporan Anda sudah selesai ditangani.</p>
-                            <p className="text-sm text-[var(--tcd-text-2,#4a5868)]">Bantu kami menilai mutu layanan di kawasan Anda.</p>
+                            <p className="text-sm text-[var(--tcd-text-2,#4a5868)]">Bantu kami menilai mutu layanan kami.</p>
                         </div>
                     </div>
                     {data.sudah_disurvei ? (

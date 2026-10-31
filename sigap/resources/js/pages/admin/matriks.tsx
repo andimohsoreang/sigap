@@ -53,6 +53,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AdminLayout, { AdminStat, ImpactBadge, StatusBadge } from '@/layouts/admin-layout';
 import { formatDate } from '@/lib/admin-format';
+import { PROVINCE_OPTIONS } from '@/lib/provinces';
 import { cn } from '@/lib/utils';
 
 interface TicketRow {
@@ -134,7 +135,8 @@ interface Rekap {
         selesai: number;
     }[];
     kanal: { key: string; label: string; total: number }[];
-    kawasan: { id: number | null; label: string; total: number; ews: number }[];
+    /** Sebaran per provinsi asal pengaduan (nama kunci lama). */
+    kawasan: { provinsi: string | null; label: string; total: number; ews: number }[];
     provinsi: ProvinceRow[];
     kategori: { key: string; label: string; total: number }[];
     tren: { satuan: 'hari' | 'bulan'; titik: TrendPoint[] };
@@ -148,11 +150,11 @@ interface ProvinceRow {
     counts: Record<StatusKey, number>;
     ews: number;
     sla_pct: number | null;
-    kawasan: { id: number; nama: string; total: number }[];
+    /** Lokasi teratas yang ditulis pelapor (kabupaten/kawasan/desa). */
+    kawasan: { nama: string; total: number }[];
 }
 
 interface Options {
-    regions: { id: number; name: string; province: string | null }[];
     categories: { id: number; name: string }[];
     months: { value: string; label: string }[];
 }
@@ -164,8 +166,6 @@ interface Props {
     filters: Record<string, string>;
     chips: { key: string; label: string }[];
     options: Options;
-    region_locked: boolean;
-    own_region: { id: number; name: string } | null;
 }
 
 type PaginationMeta = { total: number; current_page: number; last_page: number; per_page: number; from: number | null; to: number | null };
@@ -199,7 +199,7 @@ const OPEN_STAGES: { key: StatusKey; desc: string; icon: LucideIcon }[] = [
 
 const SUMBU: { key: Sumbu; label: string; title: string; column: string }[] = [
     { key: 'kategori', label: 'Kategori', title: 'Kategori aduan × tahap penanganan', column: 'Kategori' },
-    { key: 'kawasan', label: 'Kawasan', title: 'Kawasan × tahap penanganan', column: 'Kawasan' },
+    { key: 'kawasan', label: 'Provinsi', title: 'Provinsi asal × tahap penanganan', column: 'Provinsi' },
     { key: 'kanal', label: 'Kanal', title: 'Kanal masuk × tahap penanganan', column: 'Kanal' },
     { key: 'petugas', label: 'Petugas', title: 'Petugas × tahap penanganan', column: 'Petugas' },
 ];
@@ -259,7 +259,7 @@ function slaColor(pct: number | null): string {
 
 /* -------------------------------- Halaman ------------------------------ */
 
-export default function Matriks({ tickets, rekap, periode, filters, chips, options, region_locked, own_region }: Props) {
+export default function Matriks({ tickets, rekap, periode, filters, chips, options }: Props) {
     const isEmpty = rekap.total === 0;
     const periodeTiket = periode.value === 'semua' ? '' : periode.value;
 
@@ -269,13 +269,12 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
 
     /** Tautan sel matriks → Manajemen Tiket dengan saringan baris + status. */
     const ticketUrl = (param: Record<string, string> | null, status?: StatusKey) =>
-        `/admin/tiket${qs({ region_id: filters.region_id, periode: periodeTiket, ...(param ?? {}), status })}`;
+        `/admin/tiket${qs({ provinsi: filters.provinsi, periode: periodeTiket, ...(param ?? {}), status })}`;
 
-    const regionName = region_locked
-        ? (own_region?.name ?? '—')
-        : (options.regions.find((r) => String(r.id) === filters.region_id)?.name ?? 'Semua kawasan');
+    // Wilayah = provinsi asal pengaduan (dipilih warga), bukan kawasan tugas admin.
+    const regionName = filters.provinsi || 'Semua provinsi';
 
-    const extraChips = chips.filter((c) => ['provinsi', 'kanal', 'petugas', 'ews'].includes(c.key));
+    const extraChips = chips.filter((c) => ['kanal', 'petugas', 'ews'].includes(c.key));
 
     const columns: DataTableColumn<TicketRow>[] = [
         {
@@ -301,7 +300,7 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
         },
         {
             accessorKey: 'kawasan',
-            header: 'Kawasan',
+            header: 'Wilayah',
             cell: ({ getValue }) => getValue<string | null>() ?? '—',
         },
         {
@@ -352,7 +351,7 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
     return (
         <AdminLayout
             title="Matriks Rekapitulasi"
-            subtitle="Rekap tiket per tahap penanganan, kategori, tingkat dampak & SLA, kanal masuk, dan kawasan — sesuai Pedoman Layanan Contact Center."
+            subtitle="Rekap tiket per tahap penanganan, kategori, tingkat dampak & SLA, kanal masuk, dan provinsi asal pengaduan — sesuai Pedoman Layanan Contact Center."
             actions={
                 <div className="flex flex-wrap items-center gap-2 print:hidden">
                     <Select value={periode.value} onValueChange={(v) => visit({ periode: v })}>
@@ -369,27 +368,20 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
                             <SelectItem value="semua">Semua waktu</SelectItem>
                         </SelectContent>
                     </Select>
-                    {region_locked ? (
-                        <span className="flex h-10 items-center gap-2 rounded-md border border-[var(--adm-border-strong)] bg-[var(--acd-surface,#fff)] px-3 text-sm font-medium">
-                            <MapPin className="h-4 w-4 text-[var(--adm-text-2)]" aria-hidden="true" />
-                            {regionName}
-                        </span>
-                    ) : (
-                        <Select value={filters.region_id || 'all'} onValueChange={(v) => visit({ region_id: v === 'all' ? '' : v })}>
-                            <SelectTrigger className="h-10 w-auto min-w-[180px] gap-2 bg-[var(--acd-surface,#fff)] font-medium" aria-label="Kawasan">
-                                <MapPin className="h-4 w-4 shrink-0 text-[var(--adm-text-2)]" aria-hidden="true" />
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Semua kawasan</SelectItem>
-                                {options.regions.map((r) => (
-                                    <SelectItem key={r.id} value={String(r.id)}>
-                                        {r.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    )}
+                    <Select value={filters.provinsi || 'all'} onValueChange={(v) => visit({ provinsi: v === 'all' ? '' : v, region_id: '' })}>
+                        <SelectTrigger className="h-10 w-auto min-w-[180px] gap-2 bg-[var(--acd-surface,#fff)] font-medium" aria-label="Provinsi">
+                            <MapPin className="h-4 w-4 shrink-0 text-[var(--adm-text-2)]" aria-hidden="true" />
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Semua provinsi</SelectItem>
+                            {PROVINCE_OPTIONS.map((p) => (
+                                <SelectItem key={p} value={p}>
+                                    {p}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                     <Button size="sm" className="h-10 px-4" onClick={() => window.print()}>
                         <Printer className="h-4 w-4" /> Print
                     </Button>
@@ -398,7 +390,7 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
         >
             <div className="space-y-6 [print-color-adjust:exact]">
                 <p className="hidden text-sm text-[var(--adm-text-2)] print:block">
-                    Periode: <strong>{periode.label}</strong> · Kawasan: <strong>{regionName}</strong>
+                    Periode: <strong>{periode.label}</strong> · Provinsi: <strong>{regionName}</strong>
                 </p>
 
                 <FlowCard
@@ -414,7 +406,7 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
                     rows={rekap.provinsi}
                     periode={periode.label}
                     selected={filters.provinsi || null}
-                    onSelect={region_locked ? undefined : (p) => visit({ provinsi: p === filters.provinsi ? '' : p, region_id: '' })}
+                    onSelect={(p) => visit({ provinsi: p === filters.provinsi ? '' : p, region_id: '' })}
                     onReset={() => visit({ provinsi: '' })}
                 />
 
@@ -465,7 +457,7 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
                         <OverdueCard
                             data={rekap.perlu_tindakan}
                             luarPeriode={rekap.kpi.ews_luar_periode}
-                            listUrl={`/admin/tiket${qs({ ews: '1', periode: periodeTiket, region_id: filters.region_id })}`}
+                            listUrl={`/admin/tiket${qs({ ews: '1', periode: periodeTiket, provinsi: filters.provinsi })}`}
                             semuaUrl={matriksUrl({ periode: 'semua' })}
                         />
                     </>
@@ -498,9 +490,9 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
                         emptyMessage="Tidak ada tiket yang cocok."
                         filters={[
                             {
-                                columnId: 'region_id',
-                                placeholder: 'Semua Wilayah',
-                                options: options.regions.map((r) => ({ value: String(r.id), label: r.name })),
+                                columnId: 'provinsi',
+                                placeholder: 'Semua Provinsi',
+                                options: PROVINCE_OPTIONS.map((p) => ({ value: p, label: p })),
                             },
                             {
                                 columnId: 'category_id',
@@ -1089,9 +1081,9 @@ function KanalCard({ rows, total }: { rows: Rekap['kanal']; total: number }) {
 function KawasanCard({ rows, total, survei }: { rows: Rekap['kawasan']; total: number; survei: Rekap['survei'] }) {
     return (
         <Card className="flex flex-col p-5 md:p-6">
-            <CardHeading eyebrow="Kawasan transmigrasi" title="Sebaran per kawasan" />
+            <CardHeading eyebrow="Wilayah asal pengaduan" title="Sebaran per provinsi" />
             <div className="mt-4">
-                <BarList rows={rows.map((r) => ({ ...r, key: String(r.id ?? 'kosong') }))} color="var(--adm-accent)" icon={() => MapPin} />
+                <BarList rows={rows.map((r) => ({ ...r, key: r.provinsi ?? 'kosong' }))} color="var(--adm-accent)" icon={() => MapPin} />
                 <TotalLine total={total} />
             </div>
             {survei.rata !== null && (
@@ -1135,7 +1127,7 @@ function ProvinceMapCard({
                 <p className="text-xs text-[var(--adm-text-2)]">{periode}</p>
             </CardHeading>
             <p className="mt-1 text-sm text-[var(--adm-text-2)]">
-                {onSelect ? 'Klik provinsi untuk memfilter dashboard.' : 'Sebaran pengaduan di kawasan Anda.'}
+                {onSelect ? 'Klik provinsi untuk memfilter dashboard.' : 'Sebaran pengaduan per provinsi asal.'}
             </p>
             <div className="mt-4 mb-3 flex flex-wrap items-center gap-2 text-sm font-semibold text-[var(--adm-text)]">
                 <MapPin className="h-4 w-4 text-[var(--adm-accent)]" aria-hidden="true" />
@@ -1164,15 +1156,16 @@ function ProvinceMapCard({
                             <TooltipRow label="Lewat tenggat SLA" value={nf(row.ews)} tone={row.ews > 0 ? 'text-[#f6c453]' : undefined} />
                             <TooltipRow label="Selesai tepat SLA" value={row.sla_pct === null ? '—' : `${dec(row.sla_pct)}%`} />
                             <div className="mt-2 border-t border-white/15 pt-2">
-                                <p className="text-white/70">Kawasan ({row.kawasan.length}):</p>
+                                <p className="text-white/70">Lokasi teratas:</p>
                                 <ul className="mt-1 space-y-0.5">
+                                    {row.kawasan.length === 0 && <li className="text-white/60">Pelapor belum menulis lokasi.</li>}
                                     {row.kawasan.slice(0, 4).map((k) => (
-                                        <li key={k.id} className="flex justify-between gap-3">
+                                        <li key={k.nama} className="flex justify-between gap-3">
                                             <span className="truncate">• {k.nama}</span>
                                             <span className="tabular-nums">{nf(k.total)}</span>
                                         </li>
                                     ))}
-                                    {row.kawasan.length > 4 && <li className="text-white/60">+{row.kawasan.length - 4} kawasan lain</li>}
+                                    {row.kawasan.length > 4 && <li className="text-white/60">+{row.kawasan.length - 4} lokasi lain</li>}
                                 </ul>
                             </div>
                         </>
@@ -1232,7 +1225,7 @@ function OverdueCard({
                     <thead className="bg-[var(--adm-surface-2)] text-[11px] font-semibold tracking-[0.06em] text-[var(--adm-text-3)] uppercase">
                         <tr>
                             <th className="px-6 py-3 text-left font-semibold">Tiket</th>
-                            <th className="px-3 py-3 text-left font-semibold">Kategori · Kawasan</th>
+                            <th className="px-3 py-3 text-left font-semibold">Kategori · Wilayah</th>
                             <th className="px-3 py-3 text-left font-semibold">Dampak</th>
                             <th className="px-3 py-3 text-left font-semibold">Tahap</th>
                             <th className="px-3 py-3 text-left font-semibold">Petugas</th>

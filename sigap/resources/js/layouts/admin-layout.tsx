@@ -71,7 +71,7 @@ const NAV: NavEntry[] = [
     { label: 'Basis Pengetahuan', href: '/admin/pengetahuan', icon: Library, match: '/admin/pengetahuan' },
     { label: 'Daftar Admin', href: '/admin/petugas', icon: Users, match: '/admin/petugas', superAdminOnly: true },
     { label: 'Log Aktivitas', href: '/admin/log-aktivitas', icon: ScrollText, match: '/admin/log-aktivitas', superAdminOnly: true },
-    { label: 'Data Kawasan', href: '/admin/kawasan', icon: Map, match: '/admin/kawasan' },
+    { label: 'Sebaran Wilayah', href: '/admin/kawasan', icon: Map, match: '/admin/kawasan' },
     { label: 'Manajemen Kanal', href: '/admin/kanal', icon: RadioTower, match: '/admin/kanal' },
     { label: 'Katalog Portal', href: '/admin/portal', icon: Globe, match: '/admin/portal' },
     { label: 'Pengaturan', href: '/admin/pengaturan', icon: Settings, match: '/admin/pengaturan' },

@@ -20,7 +20,8 @@ class TicketAdminResource extends JsonResource
             'is_internal' => (bool) $this->is_internal,
             'nama_pelapor' => $this->reporter_name,
             'kategori' => $this->whenLoaded('category', fn () => $this->category?->name),
-            'kawasan' => $this->whenLoaded('region', fn () => $this->region?->name),
+            'kawasan' => $this->wilayahLabel(),
+            'provinsi' => $this->province,
             'prioritas' => $this->priority?->value,
             'impact' => $this->impact?->value,
         ];

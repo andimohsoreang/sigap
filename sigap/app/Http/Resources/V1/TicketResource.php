@@ -38,7 +38,9 @@ class TicketResource extends JsonResource
             'prioritas' => $this->priority?->value,
             'impact' => $this->impact?->value,
             'kategori' => $this->whenLoaded('category', fn () => $this->category?->name),
-            'kawasan' => $this->whenLoaded('region', fn () => $this->region?->name),
+            // Pelapor & petugas melihat lokasi lengkap; publik hanya provinsi.
+            'kawasan' => $this->wilayahLabel(self::seesLocation($request, $this->resource)),
+            'provinsi' => $this->province,
             'kanal' => $this->whenLoaded('channel', fn () => $this->channel?->name),
             'petugas' => null,
             'pelapor' => $hideIdentity ? 'Anonim' : (Ticket::maskName($this->reporter_name) ?? 'Anonim'),
@@ -64,6 +66,14 @@ class TicketResource extends JsonResource
     }
 
     /** Penulis tanggapan untuk publik: pelapor sendiri atau "Petugas Contact Center". */
+    /** Lokasi bebas hanya untuk pelapor tiket ini dan petugas (bukan pengunjung lain). */
+    private static function seesLocation(Request $request, Ticket $ticket): bool
+    {
+        $user = $request->user();
+
+        return $user !== null && ($user->isAdmin() || ($ticket->reporter_id !== null && $ticket->reporter_id === $user->id));
+    }
+
     private function publicAuthor($reply): string
     {
         $isReporter = $reply->author_id === null

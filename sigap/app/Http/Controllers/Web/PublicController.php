@@ -8,7 +8,6 @@ use App\Http\Requests\StoreSurveyRequest;
 use App\Http\Resources\V1\TicketResource;
 use App\Models\Channel;
 use App\Models\KnowledgeArticle;
-use App\Models\Region;
 use App\Models\Ticket;
 use App\Services\OfficialNews;
 use App\Services\PublicChannels;
@@ -85,7 +84,6 @@ class PublicController extends Controller
     {
         return Inertia::render('public/tentang', [
             'stats' => $this->stats->publicOverview(),
-            'regions' => Region::query()->where('is_active', true)->get(['id', 'code', 'name', 'province', 'latitude', 'longitude', 'infrastructure_status', 'kk_count']),
         ]);
     }
 
@@ -101,47 +99,37 @@ class PublicController extends Controller
         ]);
     }
 
-    /** Peta kawasan (Leaflet — data spasial dummy, PRD D9). */
+    /** Peta Wilayah: sebaran pengaduan per provinsi asal pengaduan. */
     public function map(): Response
     {
         return Inertia::render('public/peta', [
-            'regions' => Region::query()->where('is_active', true)->count(),
-            'points' => Region::query()
-                ->where('is_active', true)
-                ->whereNotNull('latitude')
-                ->whereNotNull('longitude')
-                ->get(['id', 'code', 'name', 'province', 'latitude', 'longitude', 'infrastructure_status', 'kk_count']),
             'provinsi' => $this->complaintsByProvince(),
         ]);
     }
 
     /**
-     * Total pengaduan publik per provinsi untuk peta (hanya angka agregat;
-     * tiket internal tidak dihitung). Nama provinsi seperti di data kawasan.
+     * Total pengaduan publik per provinsi asal pengaduan (hanya angka agregat;
+     * tiket internal tidak dihitung). Lokasi bebas yang ditulis pelapor TIDAK
+     * ditampilkan di halaman publik karena bisa memuat data pribadi.
      *
-     * @return list<array{provinsi: string, total: int, selesai: int, berjalan: int, kawasan: list<array{nama: string, total: int}>}>
+     * @return list<array{provinsi: string, total: int, selesai: int, berjalan: int}>
      */
     private function complaintsByProvince(): array
     {
         $done = TicketStatus::Selesai->value;
         $open = "'".implode("', '", TicketFilters::openStatuses())."'";
-        $rows = Ticket::query()->public()->whereNotNull('region_id')->toBase()
-            ->selectRaw("region_id, COUNT(*) as total, SUM(CASE WHEN status = '{$done}' THEN 1 ELSE 0 END) as selesai, SUM(CASE WHEN status IN ({$open}) THEN 1 ELSE 0 END) as berjalan")
-            ->groupBy('region_id')
-            ->get()
-            ->keyBy('region_id');
-        $regions = Region::query()->whereKey($rows->keys()->all())->whereNotNull('province')->get(['id', 'name', 'province']);
 
-        return $regions->groupBy(fn (Region $r) => trim($r->province))
-            ->map(fn ($group, string $province) => [
-                'provinsi' => $province,
-                'total' => (int) $group->sum(fn (Region $r) => $rows[$r->id]->total),
-                'selesai' => (int) $group->sum(fn (Region $r) => $rows[$r->id]->selesai),
-                'berjalan' => (int) $group->sum(fn (Region $r) => $rows[$r->id]->berjalan),
-                'kawasan' => $group->map(fn (Region $r) => ['nama' => $r->name, 'total' => (int) $rows[$r->id]->total])->sortByDesc('total')->values()->all(),
+        return Ticket::query()->public()->whereNotNull('province')->toBase()
+            ->selectRaw("province, COUNT(*) as total, SUM(CASE WHEN status = '{$done}' THEN 1 ELSE 0 END) as selesai, SUM(CASE WHEN status IN ({$open}) THEN 1 ELSE 0 END) as berjalan")
+            ->groupBy('province')
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn (object $r) => [
+                'provinsi' => (string) $r->province,
+                'total' => (int) $r->total,
+                'selesai' => (int) $r->selesai,
+                'berjalan' => (int) $r->berjalan,
             ])
-            ->sortByDesc('total')
-            ->values()
             ->all();
     }
 

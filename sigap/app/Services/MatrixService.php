@@ -8,7 +8,6 @@ use App\Models\Category;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\Referral;
-use App\Models\Region;
 use App\Models\Survey;
 use App\Models\Ticket;
 use App\Models\User;
@@ -32,7 +31,7 @@ class MatrixService
     /** Sumbu baris matriks yang didukung. */
     public const SUMBU = [
         'kategori' => 'Kategori',
-        'kawasan' => 'Kawasan',
+        'kawasan' => 'Provinsi',
         'kanal' => 'Kanal',
         'petugas' => 'Petugas',
     ];
@@ -46,19 +45,21 @@ class MatrixService
     public function __construct(private readonly StatsService $stats) {}
 
     /**
-     * @param  Builder  $scope  tiket dalam cakupan peran + saringan kawasan (tanpa periode)
+     * Wilayah = provinsi yang dipilih pelapor (tickets.province) + lokasi bebas
+     * (tickets.location), bukan master kawasan (31-10-2026).
+     *
+     * @param  Builder  $scope  tiket dalam cakupan peran + saringan provinsi (tanpa periode)
      * @param  array{0: CarbonInterface, 1: CarbonInterface}|null  $range  periode, null = semua waktu
-     * @param  list<int>|null  $regionIds  kawasan yang tampil sebagai baris; null = semua kawasan aktif
      * @return array<string, mixed>
      */
-    public function build(Builder $scope, ?array $range, string $sumbu, ?array $regionIds = null): array
+    public function build(Builder $scope, ?array $range, string $sumbu): array
     {
         $now = now();
         $period = (clone $scope)->when($range, fn (Builder $q) => $q->whereBetween('created_at', $range));
 
         $all = $this->aggregate($period, null, $now)->first() ?? $this->emptyMetrics();
         $byKanal = $this->aggregate($period, TicketIntake::kanalSql(), $now);
-        $byRegion = $this->aggregate($period, 'tickets.region_id', $now);
+        $byProvince = $this->aggregate($period, 'tickets.province', $now);
         $counts = $all['counts'];
         $selesai = (clone $period)->where('status', TicketStatus::Selesai->value);
         $resolutionHours = $this->stats->averageHours($selesai, 'created_at', 'resolved_at');
@@ -83,13 +84,13 @@ class MatrixService
             ],
             'matriks' => [
                 'sumbu' => $sumbu,
-                'rows' => $this->matrixRows($period, $sumbu, $now, $regionIds, $byKanal, $byRegion),
+                'rows' => $this->matrixRows($period, $sumbu, $now, $byKanal, $byProvince),
                 'total' => $all,
             ],
             'dampak' => $this->impactRows($period, $now),
             'kanal' => $this->kanalRows($byKanal),
-            'kawasan' => $this->regionRows($byRegion, $regionIds),
-            'provinsi' => $this->provinceRows($byRegion),
+            'kawasan' => $this->provinceCards($byProvince),
+            'provinsi' => $this->provinceRows($byProvince, $this->locations($period)),
             'kategori' => $this->categoryRows($this->aggregate($period, 'tickets.category_id', $now)),
             'tren' => $this->trend($scope, $range),
             'survei' => $this->survey($period, $counts['selesai']),
@@ -271,10 +272,11 @@ class MatrixService
     /* ----------------------------- Matriks ----------------------------- */
 
     /** @return list<array<string, mixed>> */
-    private function matrixRows(Builder $period, string $sumbu, CarbonInterface $now, ?array $regionIds, Collection $byKanal, Collection $byRegion): array
+    private function matrixRows(Builder $period, string $sumbu, CarbonInterface $now, Collection $byKanal, Collection $byProvince): array
     {
         return match ($sumbu) {
-            'kawasan' => $this->regionMatrix($byRegion, $regionIds),
+            // Sumbu "kawasan" (nama lama di URL) kini berisi provinsi pengaduan.
+            'kawasan' => $this->provinceMatrix($byProvince),
             'kanal' => $this->kanalMatrix($byKanal),
             'petugas' => $this->assigneeMatrix($this->aggregate($period, 'tickets.assignee_id', $now)),
             default => $this->categoryMatrix($this->aggregate($period, 'tickets.category_id', $now)),
@@ -305,18 +307,15 @@ class MatrixService
         return $rows;
     }
 
-    private function regionMatrix(Collection $data, ?array $regionIds): array
+    private function provinceMatrix(Collection $data): array
     {
-        $rows = array_map(
-            fn (Region $r) => $this->row((string) $r->id, $r->name, ['region_id' => (string) $r->id], $data[(string) $r->id] ?? $this->emptyMetrics(), 'kawasan'),
-            $this->regions($data, $regionIds),
-        );
-
-        if ($data->has('')) {
-            $rows[] = $this->row('', 'Tanpa kawasan', null, $data[''], 'kawasan');
-        }
-
-        return $rows;
+        return $data
+            ->sortByDesc('total')
+            ->map(fn (array $metrics, string $province) => $province === ''
+                ? $this->row('', 'Tanpa provinsi', null, $metrics, 'kawasan')
+                : $this->row($province, $province, ['provinsi' => $province], $metrics, 'kawasan'))
+            ->values()
+            ->all();
     }
 
     private function kanalMatrix(Collection $data): array
@@ -345,22 +344,6 @@ class MatrixService
                 ? $this->row('', 'Belum ditugaskan', ['petugas' => 'none'], $metrics, 'belum')
                 : $this->row($id, $names[(int) $id] ?? 'Petugas #'.$id, ['petugas' => $id], $metrics, 'petugas'))
             ->values()
-            ->all();
-    }
-
-    /** @return list<Region> */
-    private function regions(Collection $data, ?array $regionIds): array
-    {
-        $ids = $data->keys()->filter()->map(fn ($id) => (int) $id)->values()->all();
-
-        return Region::query()
-            ->when(
-                $regionIds !== null,
-                fn ($q) => $q->whereKey($regionIds),
-                fn ($q) => $q->where(fn ($w) => $w->where('is_active', true)->orWhereIn('id', $ids)),
-            )
-            ->orderBy('id')
-            ->get(['id', 'name'])
             ->all();
     }
 
@@ -414,52 +397,60 @@ class MatrixService
             ->all();
     }
 
-    /** @return list<array{id: int|null, label: string, total: int, ews: int}> */
-    private function regionRows(Collection $byRegion, ?array $regionIds): array
+    /** @return list<array{provinsi: string|null, label: string, total: int, ews: int}> */
+    private function provinceCards(Collection $byProvince): array
     {
-        $rows = collect($this->regions($byRegion, $regionIds))
-            ->map(fn (Region $r) => [
-                'id' => $r->id,
-                'label' => $r->name,
-                'total' => $byRegion[(string) $r->id]['total'] ?? 0,
-                'ews' => $byRegion[(string) $r->id]['ews'] ?? 0,
-            ]);
-
-        if ($byRegion->has('')) {
-            $rows->push(['id' => null, 'label' => 'Tanpa kawasan', 'total' => $byRegion['']['total'], 'ews' => $byRegion['']['ews']]);
-        }
-
-        return $rows->sortByDesc('total')->values()->all();
+        return $byProvince
+            ->map(fn (array $m, string $province) => [
+                'provinsi' => $province === '' ? null : $province,
+                'label' => $province === '' ? 'Tanpa provinsi' : $province,
+                'total' => $m['total'],
+                'ews' => $m['ews'],
+            ])
+            ->sortByDesc('total')
+            ->values()
+            ->all();
     }
 
     /**
-     * Sebaran per provinsi untuk peta (dijumlah dari agregat per kawasan).
-     * Nama provinsi seperti di data kawasan; tiket tanpa kawasan/provinsi
-     * dikumpulkan di "Tanpa provinsi" (tidak tampil di peta).
+     * Lokasi (kabupaten/kawasan/desa) yang ditulis pelapor, per provinsi.
      *
-     * @param  Collection<string, array<string, mixed>>  $byRegion
-     * @return list<array{provinsi: string, total: int, counts: array<string, int>, ews: int, sla_pct: float|null, kawasan: list<array{id: int, nama: string, total: int}>}>
+     * @return Collection<string, list<array{nama: string, total: int}>>
      */
-    private function provinceRows(Collection $byRegion): array
+    private function locations(Builder $period): Collection
     {
-        $regions = Region::query()->whereKey($byRegion->keys()->filter()->map(fn ($id) => (int) $id)->all())->get(['id', 'name', 'province'])->keyBy('id');
+        return (clone $period)->reorder()->toBase()
+            ->whereNotNull('tickets.province')
+            ->whereNotNull('tickets.location')
+            ->where('tickets.location', '!=', '')
+            ->selectRaw('tickets.province as provinsi, tickets.location as lokasi, COUNT(*) as total')
+            ->groupBy('tickets.province', 'tickets.location')
+            ->get()
+            ->groupBy('provinsi')
+            ->map(fn (Collection $rows) => $rows->sortByDesc('total')->take(5)
+                ->map(fn (object $r) => ['nama' => (string) $r->lokasi, 'total' => (int) $r->total])->values()->all());
+    }
 
-        return $byRegion
-            ->groupBy(fn (array $m, string $id) => trim((string) ($regions[(int) $id]->province ?? '')) ?: 'Tanpa provinsi', true)
-            ->map(function (Collection $group, string $province) use ($regions) {
-                $sum = fn (string $key) => (int) $group->sum($key);
-                $finished = $sum('selesai_sla');
-
-                return [
-                    'provinsi' => $province,
-                    'total' => $sum('total'),
-                    'counts' => collect(TicketStatus::cases())->mapWithKeys(fn (TicketStatus $st) => [$st->value => (int) $group->sum(fn ($m) => $m['counts'][$st->value])])->all(),
-                    'ews' => $sum('ews'),
-                    'sla_pct' => $finished > 0 ? round($sum('tepat') / $finished * 100, 1) : null,
-                    'kawasan' => $group->map(fn (array $m, string $id) => ['id' => (int) $id, 'nama' => (string) ($regions[(int) $id]->name ?? 'Tanpa kawasan'), 'total' => $m['total']])
-                        ->sortByDesc('total')->values()->all(),
-                ];
-            })
+    /**
+     * Sebaran per provinsi untuk peta. Tiket tanpa provinsi dikumpulkan di
+     * "Tanpa provinsi" (tidak tampil di peta).
+     *
+     * @param  Collection<string, array<string, mixed>>  $byProvince
+     * @param  Collection<string, list<array{nama: string, total: int}>>  $locations
+     * @return list<array{provinsi: string, total: int, counts: array<string, int>, ews: int, sla_pct: float|null, kawasan: list<array{nama: string, total: int}>}>
+     */
+    private function provinceRows(Collection $byProvince, Collection $locations): array
+    {
+        return $byProvince
+            ->map(fn (array $m, string $province) => [
+                'provinsi' => $province === '' ? 'Tanpa provinsi' : $province,
+                'total' => $m['total'],
+                'counts' => $m['counts'],
+                'ews' => $m['ews'],
+                'sla_pct' => $m['sla_pct'],
+                // Lokasi teratas yang ditulis pelapor (nama kunci lama dipertahankan untuk peta).
+                'kawasan' => $locations[$province] ?? [],
+            ])
             ->sortByDesc('total')
             ->values()
             ->all();
@@ -565,7 +556,7 @@ class MatrixService
                 'nomor' => $t->ticket_no,
                 'judul' => $t->title,
                 'kategori' => $t->category?->name,
-                'kawasan' => $t->region?->name,
+                'kawasan' => $t->wilayahLabel(),
                 'impact' => $t->impact?->value,
                 'impact_label' => $t->impact?->label(),
                 'status' => $t->status?->value,

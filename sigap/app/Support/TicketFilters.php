@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 /**
  * Saringan daftar tiket panel admin (Matriks Rekapitulasi & Manajemen Tiket).
  *
- * Parameter query: status, region_id, provinsi (nama provinsi kawasan),
+ * Parameter query: status, region_id, provinsi (provinsi pengaduan),
  * category_id, impact, q, periode
  * (`YYYY-MM` atau `semua`), kanal (kunci {@see TicketIntake::KANAL}),
  * petugas (id petugas atau `none`), ews (`1` = lewat tenggat SLA).
@@ -152,13 +152,13 @@ final class TicketFilters
         return $chips;
     }
 
-    /** @return list<string> */
-    /** Tiket yang kawasannya berada di provinsi ini (nama seperti di data kawasan). */
+    /** Tiket dari provinsi ini (provinsi yang dipilih pelapor; tiket lama terisi dari kawasannya). */
     public static function applyProvince($query, string $province): void
     {
-        $query->whereHas('region', fn ($q) => $q->where('province', $province));
+        $query->where('tickets.province', Provinces::normalize($province) ?? $province);
     }
 
+    /** @return list<string> */
     public static function openStatuses(): array
     {
         return [TicketStatus::Baru->value, TicketStatus::Verifikasi->value, TicketStatus::Diproses->value];

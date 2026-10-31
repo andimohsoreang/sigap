@@ -39,6 +39,7 @@ use App\Support\TicketFilters;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -88,20 +89,11 @@ class AdminController extends Controller
         }
         $paginator = $query->paginate($perPage)->withQueryString();
 
-        // Rekap: cakupan peran + saringan kawasan/provinsi saja (periode diterapkan MatrixService).
-        $regionId = $request->filled('region_id') ? $request->integer('region_id') : null;
+        // Rekap: cakupan peran + saringan provinsi saja (periode diterapkan MatrixService).
         $province = $request->filled('provinsi') ? $request->string('provinsi')->toString() : null;
         $scope = $this->scopedTickets(Ticket::query())
-            ->when($regionId, fn ($q) => $q->where('region_id', $regionId))
+            ->when($request->filled('region_id'), fn ($q) => $q->where('region_id', $request->integer('region_id')))
             ->when($province, fn ($q) => TicketFilters::applyProvince($q, $province));
-        $regionIds = match (true) {
-            $regionId !== null => [$regionId],
-            $province !== null => Region::query()->where('province', $province)
-                ->when(! $user->isSuperAdmin(), fn ($q) => $q->whereKey(array_filter([$user->region_id])))
-                ->pluck('id')->all(),
-            $user->isSuperAdmin() => null,
-            default => array_values(array_filter([$user->region_id])),
-        };
 
         $range = TicketFilters::range($periode);
 
@@ -111,7 +103,7 @@ class AdminController extends Controller
                 'meta' => $this->paginationMeta($paginator),
             ],
             // D-05: agregat SQL (tanpa memuat semua tiket).
-            'rekap' => $matrix->build($scope, $range, $sumbu, $regionIds),
+            'rekap' => $matrix->build($scope, $range, $sumbu),
             'periode' => [
                 'value' => $periode,
                 'label' => $range ? TicketFilters::monthLabel($range[0]) : 'Semua waktu',
@@ -123,7 +115,6 @@ class AdminController extends Controller
                 'months' => $matrix->months($this->scopedTickets(Ticket::query()), $periode),
             ],
             // A-11: admin kawasan hanya melihat kawasannya sendiri.
-            'region_locked' => $user->role === UserRole::AdminKawasan,
             'own_region' => $user->region ? ['id' => $user->region->id, 'name' => $user->region->name] : null,
         ]);
     }
@@ -296,7 +287,6 @@ class AdminController extends Controller
         return Inertia::render('admin/input-manual', [
             'options' => $this->formOptions(),
             // A-11: admin kawasan selalu menerbitkan tiket ke kawasannya sendiri.
-            'region_locked' => $user->role === UserRole::AdminKawasan,
             'own_region' => $user->region ? ['id' => $user->region->id, 'name' => $user->region->name] : null,
             // Tiket dari percakapan contact center: formulir diisi dari ringkasan AI.
             'prefill' => $conversation ? $this->ticketPrefill($conversation) : null,
@@ -357,6 +347,9 @@ class AdminController extends Controller
             'referensi' => $conversation->reference,
             'nama' => $conversation->participantName(),
             'telepon' => preg_match('/^[\d\s.+-]+$/', $contact) ? $contact : '',
+            // Asal pengaduan dari kartu Kenalan di chat.
+            'provinsi' => $conversation->province,
+            'lokasi' => $conversation->location,
             'judul' => Str::limit($summary !== '' ? Str::before($summary, '.') : 'Aduan dari live chat', 120, ''),
             'uraian' => trim(($summary !== '' ? "Ringkasan asisten: {$summary}\n\n" : '')."Pesan warga di live chat:\n- {$wargaMessages}"),
         ];
@@ -433,14 +426,12 @@ class AdminController extends Controller
             'outcomes' => collect(ChatConversation::OUTCOMES)->only(['terjawab_petugas', 'lapor', 'wbs', 'tidak_selesai']),
             // Pilihan untuk "Terbitkan tiket" langsung dari Kotak Masuk.
             'ticket_options' => [
-                'kawasan' => Region::query()->orderBy('name')->get(['id', 'name']),
                 'kategori' => Category::query()->orderBy('name')->get(['id', 'name']),
                 'dampak' => collect(TicketImpact::cases())->map(fn (TicketImpact $i) => [
                     'value' => $i->value,
                     'label' => $i->label(),
                     'hari' => $i->resolveDays(),
                 ]),
-                'kawasan_tetap' => $request->user()->isSuperAdmin() ? null : $request->user()->region_id,
             ],
             // Portal tujuan rujukan yang dilacak sampai warga berhasil (menu "Rujuk ke portal").
             'portal_rujukan' => Portal::query()->publicActive()->where('track_completion', true)->orderBy('sort')
@@ -473,13 +464,16 @@ class AdminController extends Controller
         $this->authorize('viewAny', Ticket::class);
 
         $user = $request->user();
-        $suggestion = $suggester->suggest($conversation, $user->isSuperAdmin() ? null : $user->region_id);
+        $suggestion = $suggester->suggest($conversation, null);
         $contact = (string) $conversation->contact;
         $account = $this->registrations->accountFor($conversation);
 
         return response()->json($suggestion + [
             'nama' => $account?->name ?? $conversation->participantName(),
             'telepon' => $account?->phone ?? (preg_match('/^[\d\s.+-]+$/', $contact) ? $contact : ''),
+            // Asal pengaduan dari kartu Kenalan warga (bukan tebakan AI).
+            'provinsi' => $conversation->province,
+            'lokasi' => $conversation->location,
         ]);
     }
 
@@ -697,26 +691,48 @@ class AdminController extends Controller
 
     /* --------------------------- Data Kawasan ---------------------------- */
 
-    public function kawasan(): Response
+    /**
+     * Sebaran Wilayah (menggantikan direktori kawasan, 31-10-2026): provinsi &
+     * lokasi diambil dari pengaduan yang masuk (pilihan warga di formulir/chat),
+     * hanya untuk dibaca. Klik provinsi membuka Manajemen Tiket tersaring.
+     */
+    public function kawasan(Request $request): Response
     {
-        $this->authorize('manageMaster', User::class);
+        $this->authorize('viewAny', Ticket::class);
 
-        return Inertia::render('admin/kawasan', [
-            'regions' => Region::query()->orderBy('id')->get()->map(fn (Region $r) => [
-                'id' => $r->id,
-                'code' => $r->code,
-                'name' => $r->name,
-                'province' => $r->province,
-                'latitude' => $r->latitude,
-                'longitude' => $r->longitude,
-                'infrastructure_status' => $r->infrastructure_status,
-                'kk_count' => $r->kk_count,
-                'is_active' => (bool) $r->is_active,
-                'can_edit' => request()->user()->can('updateRegion', [User::class, $r]),
-            ]),
-            // A-05: hanya super admin yang dapat menambah/menghapus kawasan.
-            'is_super_admin' => request()->user()->isSuperAdmin(),
-            'own_region_id' => request()->user()->region_id,
+        $scope = $this->scopedTickets(Ticket::query());
+        $done = TicketStatus::Selesai->value;
+        $open = "'".implode("', '", TicketFilters::openStatuses())."'";
+        $now = now();
+
+        $provinces = (clone $scope)->toBase()
+            ->selectRaw("province, COUNT(*) as total, SUM(CASE WHEN status IN ({$open}) THEN 1 ELSE 0 END) as berjalan, SUM(CASE WHEN status = '{$done}' THEN 1 ELSE 0 END) as selesai, SUM(CASE WHEN status IN ({$open}) AND sla_due_at IS NOT NULL AND sla_due_at < ? THEN 1 ELSE 0 END) as ews, MAX(created_at) as terakhir", [$now])
+            ->groupBy('province')
+            ->get();
+
+        $locations = (clone $scope)->toBase()
+            ->whereNotNull('province')->whereNotNull('location')->where('location', '!=', '')
+            ->selectRaw('province, location, COUNT(*) as total')
+            ->groupBy('province', 'location')
+            ->get()
+            ->groupBy('province');
+
+        $rows = $provinces->map(fn (object $r) => [
+            'provinsi' => $r->province,
+            'total' => (int) $r->total,
+            'berjalan' => (int) $r->berjalan,
+            'selesai' => (int) $r->selesai,
+            'ews' => (int) $r->ews,
+            'terakhir' => $r->terakhir ? Carbon::parse($r->terakhir)->toIso8601String() : null,
+            'lokasi' => $r->province === null ? [] : ($locations[$r->province] ?? collect())
+                ->sortByDesc('total')->take(5)
+                ->map(fn (object $l) => ['nama' => (string) $l->location, 'total' => (int) $l->total])->values()->all(),
+        ])->sortByDesc('total')->values();
+
+        return Inertia::render('admin/sebaran-wilayah', [
+            'rows' => $rows->whereNotNull('provinsi')->values(),
+            'tanpa_provinsi' => (int) ($rows->firstWhere('provinsi', null)['total'] ?? 0),
+            'total' => (int) $rows->sum('total'),
         ]);
     }
 
@@ -1028,7 +1044,7 @@ class AdminController extends Controller
             'impact' => 'impact',
             'urgensi' => 'impact',
             'kategori' => 'category_id',
-            'kawasan' => 'region_id',
+            'kawasan' => 'province',
             'created_at' => 'created_at',
             'tenggat_sla' => 'sla_due_at',
             'overdue' => 'sla_due_at',
@@ -1057,7 +1073,8 @@ class AdminController extends Controller
             'impact' => $t->impact?->value,
             'impact_label' => $t->impact?->label(),
             'kategori' => $t->category?->name,
-            'kawasan' => $t->region?->name,
+            'kawasan' => $t->wilayahLabel(),
+            'provinsi' => $t->province,
             'is_internal' => (bool) $t->is_internal,
             'created_at' => $t->created_at?->toIso8601String(),
             'tenggat_sla' => $t->sla_due_at?->toIso8601String(),

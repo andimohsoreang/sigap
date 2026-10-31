@@ -55,7 +55,7 @@ class AdminPanelTest extends TestCase
             '/admin/input-manual' => 'admin/input-manual',
             '/admin/chat' => 'admin/chat',
             '/admin/petugas' => 'admin/admins',
-            '/admin/kawasan' => 'admin/kawasan',
+            '/admin/kawasan' => 'admin/sebaran-wilayah',
             '/admin/kanal' => 'admin/kanal',
             '/admin/pengaturan' => 'admin/pengaturan',
         ] as $url => $component) {
@@ -72,7 +72,8 @@ class AdminPanelTest extends TestCase
         $this->actingAs($admin)->get('/admin/petugas')->assertForbidden();
     }
 
-    public function test_matriks_is_scoped_to_admin_region(): void
+    /** 31-10-2026: admin kawasan melihat semua pengaduan publik di matriks. */
+    public function test_matriks_shows_all_public_tickets_to_admin_kawasan(): void
     {
         $regionA = Region::factory()->create();
         $regionB = Region::factory()->create();
@@ -86,8 +87,7 @@ class AdminPanelTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('admin/matriks')
-                ->has('tickets.data', 1)
-                ->where('tickets.data.0.nomor', 'TKT-A1')
+                ->has('tickets.data', 2)
             );
     }
 

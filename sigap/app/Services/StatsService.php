@@ -57,9 +57,20 @@ class StatsService
             ->map(fn ($c) => ['name' => $c->name, 'total' => (int) $c->total])
             ->values();
 
+        // Provinsi asal pengaduan (top 6; hanya angka, tanpa lokasi bebas pelapor).
+        $byProvince = (clone $public)->whereNotNull('province')->toBase()
+            ->selectRaw('province, COUNT(*) as total')
+            ->groupBy('province')
+            ->orderByDesc('total')
+            ->limit(6)
+            ->get()
+            ->map(fn ($r) => ['name' => (string) $r->province, 'total' => (int) $r->total])
+            ->values();
+
         return [
             'total' => array_sum($byStatus),
             'by_status' => $byStatus,
+            'by_province' => $byProvince,
             'today' => $this->todayCount($public),
             'this_month' => $this->thisMonthCount($public),
             'by_category' => $byCategory,

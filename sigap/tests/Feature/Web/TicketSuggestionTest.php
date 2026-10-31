@@ -55,15 +55,19 @@ class TicketSuggestionTest extends TestCase
             ->assertJsonPath('telepon', '081234567890');
     }
 
-    public function test_admin_kawasan_suggestion_keeps_own_region(): void
+    /** 31-10-2026: wilayah dari kartu Kenalan warga; admin kawasan tidak lagi dikunci ke kawasannya. */
+    public function test_suggestion_carries_origin_from_identity_card_without_region_lock(): void
     {
         $conversation = $this->conversation();
+        $conversation->forceFill(['province' => 'Kalimantan Utara', 'location' => 'Kab. Bulungan, SP 3'])->save();
         $own = Region::query()->where('name', '!=', 'SP3 Bulungan')->value('id');
         $kawasan = User::factory()->admin(UserRole::AdminKawasan)->create(['region_id' => $own]);
 
-        $this->actingAs($kawasan)->getJson("/admin/chat/{$conversation->id}/saran-tiket")->assertJsonPath('region_id', $own);
+        $this->actingAs($kawasan)->getJson("/admin/chat/{$conversation->id}/saran-tiket")
+            ->assertJsonPath('provinsi', 'Kalimantan Utara')
+            ->assertJsonPath('lokasi', 'Kab. Bulungan, SP 3');
         $this->actingAs($kawasan)->get("/admin/chat?conversation={$conversation->id}")->assertInertia(fn (Assert $page) => $page
-            ->where('ticket_options.kawasan_tetap', $own)
+            ->missing('ticket_options.kawasan_tetap')
             ->has('ticket_options.dampak', 4));
     }
 
