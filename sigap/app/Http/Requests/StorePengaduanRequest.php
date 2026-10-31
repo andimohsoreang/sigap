@@ -9,6 +9,7 @@ use App\Http\Requests\Concerns\VerifiesRecaptcha;
 use App\Models\User;
 use App\Services\RecaptchaService;
 use App\Support\Coordinates;
+use App\Support\Provinces;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -53,7 +54,12 @@ class StorePengaduanRequest extends FormRequest
             'judul' => ['required', 'string', 'max:255'],
             'uraian' => ['required', 'string', 'min:10'],
             'koordinat' => ['nullable', 'string', 'max:100', Coordinates::rule()],
+            // Klien lama (API) boleh mengirim kawasan sebagai ganti provinsi.
             'region_id' => ['nullable', 'integer', 'exists:regions,id'],
+            // Wilayah pengaduan: provinsi (38, nama baku) + lokasi bebas (kabupaten/kawasan/desa).
+            // Formulir web mewajibkan provinsi di tampilan; API lama boleh tanpa wilayah.
+            'provinsi' => ['nullable', 'string', Rule::in(Provinces::ALL)],
+            'lokasi' => ['nullable', 'string', 'max:150'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'impact' => ['required', Rule::enum(TicketImpact::class)],
             'visibility' => ['nullable', Rule::enum(TicketVisibility::class)],
@@ -67,6 +73,7 @@ class StorePengaduanRequest extends FormRequest
     {
         return [
             'nik.required' => 'NIK wajib diisi.',
+            'provinsi.in' => 'Pilih provinsi dari daftar.',
             'nik.digits' => 'NIK harus 16 digit angka.',
             'nama.required' => 'Nama lengkap wajib diisi.',
             'judul.required' => 'Judul laporan wajib diisi.',

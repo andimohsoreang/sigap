@@ -86,13 +86,20 @@ class ChatController extends Controller
     public function start(StartChatRequest $request): JsonResponse
     {
         if ($request->user()) {
-            return response()->json(['identitas' => $this->identity($request, null)]);
+            // Warga login: kartu Kenalan hanya menanyakan asal provinsi/lokasi.
+            $conversation = $this->current($request, true);
+            if ($conversation && $request->filled('provinsi')) {
+                $this->chat->fillOrigin($conversation, $request->validated('provinsi'), $request->validated('lokasi'));
+                $conversation->save();
+            }
+
+            return response()->json(['identitas' => $this->identity($request, $conversation)]);
         }
 
         $token = $this->guestToken($request) ?? (string) Str::uuid();
         $request->session()->put(self::SESSION_KEY, $token);
 
-        $conversation = $this->chat->startGuest($token, $request->validated('nama'));
+        $conversation = $this->chat->startGuest($token, $request->validated('nama'), $request->validated('provinsi'), $request->validated('lokasi'));
         $this->rememberGuest($request, $conversation);
 
         return response()->json([
@@ -486,15 +493,17 @@ class ChatController extends Controller
         return $this->chat->forGuest($token);
     }
 
-    /** @return array{nama: string, tipe: string}|null */
+    /** @return array{nama: string, tipe: string, provinsi: ?string, lokasi: ?string}|null */
     private function identity(Request $request, ?ChatConversation $conversation): ?array
     {
+        $origin = ['provinsi' => $conversation?->province, 'lokasi' => $conversation?->location];
+
         if ($user = $request->user()) {
-            return ['nama' => $user->name, 'tipe' => 'warga'];
+            return ['nama' => $user->name, 'tipe' => 'warga', ...$origin];
         }
 
         return $conversation?->guest_name
-            ? ['nama' => $conversation->guest_name, 'tipe' => 'tamu']
+            ? ['nama' => $conversation->guest_name, 'tipe' => 'tamu', ...$origin]
             : null;
     }
 }

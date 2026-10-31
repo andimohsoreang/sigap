@@ -7,6 +7,7 @@ use App\Events\ChatUnreadChanged;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\Ticket;
+use App\Support\Provinces;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -277,13 +278,14 @@ class ChatService
     }
 
     /** Mulai/ubah identitas percakapan tamu. */
-    public function startGuest(string $guestToken, string $name): ChatConversation
+    public function startGuest(string $guestToken, string $name, ?string $province = null, ?string $location = null): ChatConversation
     {
         $conversation = ChatConversation::query()->firstOrNew(['guest_token' => $guestToken]);
         $conversation->fill([
             'guest_name' => $name,
             'subject' => 'Live Chat (Tamu)',
         ]);
+        $this->fillOrigin($conversation, $province, $location);
         $conversation->last_message_at ??= now();
         if (! $conversation->exists) {
             $conversation->handled_by = self::initialHandler();
@@ -291,6 +293,18 @@ class ChatService
         $conversation->save();
 
         return $conversation;
+    }
+
+    /** Asal pengaduan (provinsi + lokasi) dari kartu Kenalan; nilai kosong tidak menimpa. */
+    public function fillOrigin(ChatConversation $conversation, ?string $province, ?string $location): void
+    {
+        if ($province = Provinces::normalize($province)) {
+            $conversation->province = $province;
+        }
+        $location = trim((string) $location);
+        if ($location !== '') {
+            $conversation->location = mb_substr($location, 0, 150);
+        }
     }
 
     /**

@@ -62,6 +62,7 @@ import { RecaptchaNotice } from '@/components/sigap/recaptcha-notice';
 import TransiHeader from '@/components/sigap/transi-header';
 import { useRecaptcha } from '@/hooks/use-recaptcha';
 import { clearPendingQuestion, leaveChat, peekPendingQuestion } from '@/lib/chat-transition';
+import { PROVINCE_OPTIONS } from '@/lib/provinces';
 import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 
@@ -181,7 +182,8 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
     const pendingSent = useRef(false);
 
     const withAi = Boolean(assistant?.aktif && assistant.mode === 'ai');
-    const needsIdentity = loaded && !loggedIn && !identity;
+    // Kartu Kenalan: tamu mengisi nama + provinsi; warga login (atau tamu lama) cukup provinsi.
+    const needsIdentity = loaded && (loggedIn ? Boolean(identity) && !identity?.provinsi : !identity || !identity.provinsi);
     const staff = panel?.petugas ?? null;
     const closed = Boolean(panel?.ditutup);
     // Diteruskan tetapi petugas tidak sedang membalas: TARA masih menjawab pertanyaan umum.
@@ -293,10 +295,14 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
         });
     }, [loaded, needsIdentity, pending, sending, send]);
 
-    const startWithName = (nama: string) => {
+    const startWithName = ({ nama, provinsi, lokasi }: { nama: string; provinsi: string; lokasi: string }) => {
         const name = nama.trim().replace(/\s+/g, ' ');
-        if (name.length < 2) {
+        if (!loggedIn && name.length < 2) {
             setError('Nama minimal 2 huruf.');
+            return;
+        }
+        if (!provinsi) {
+            setError('Pilih provinsi asal Anda.');
             return;
         }
         setError(null);
@@ -306,7 +312,12 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
             .withToken(async (token) => {
                 called = true;
                 try {
-                    const res = await postJson('/chat/mulai', { nama: name, recaptcha_token: token });
+                    const res = await postJson('/chat/mulai', {
+                        ...(loggedIn ? {} : { nama: name }),
+                        provinsi,
+                        lokasi: lokasi.trim(),
+                        recaptcha_token: token,
+                    });
                     const data = (await res.json().catch(() => ({}))) as {
                         identitas?: Identity;
                         conversation_id?: number;
@@ -320,7 +331,14 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                     } else if (res.status === 429) {
                         setError('Terlalu banyak percobaan. Tunggu beberapa menit.');
                     } else {
-                        setError(data.errors?.nama?.[0] ?? data.errors?.recaptcha_token?.[0] ?? data.message ?? 'Nama belum bisa disimpan.');
+                        setError(
+                            data.errors?.nama?.[0] ??
+                                data.errors?.provinsi?.[0] ??
+                                data.errors?.lokasi?.[0] ??
+                                data.errors?.recaptcha_token?.[0] ??
+                                data.message ??
+                                'Data belum bisa disimpan.',
+                        );
                     }
                 } catch {
                     setError('Tidak ada koneksi. Coba lagi.');
@@ -431,7 +449,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
     const askTopic = (question: string) => {
         if (needsIdentity) {
             setPending(question);
-            document.getElementById(NAME_INPUT_ID)?.focus();
+            (document.getElementById(NAME_INPUT_ID) ?? document.getElementById(PROVINCE_INPUT_ID))?.focus();
             return;
         }
         void send(question);
@@ -718,6 +736,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
 
                                     {needsIdentity && (
                                         <IdentityCard
+                                            knownName={loggedIn ? (identity?.nama ?? '') : (identity?.nama ?? null)}
                                             busy={sending || recaptcha.verifying}
                                             error={error}
                                             recaptcha={recaptcha}
@@ -916,7 +935,9 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                     maxLength={2000}
                                     placeholder={
                                         needsIdentity
-                                            ? 'Isi nama di atas untuk mulai chat'
+                                            ? loggedIn
+                                                ? 'Pilih provinsi di atas untuk mulai chat'
+                                                : 'Isi nama & provinsi di atas untuk mulai chat'
                                             : staff && !closed
                                               ? `Balas ke ${staff.nama.split(' ')[0]} atau tanya TARA…`
                                               : 'Tulis pertanyaan atau keluhan Anda…'
@@ -1700,6 +1721,8 @@ function ThreadSkeleton() {
 /* ------------------------------------------------------------ identity card */
 
 const NAME_INPUT_ID = 'nama-tamu';
+const PROVINCE_INPUT_ID = 'provinsi-tamu';
+const LOCATION_INPUT_ID = 'lokasi-tamu';
 
 /** Sama dengan aturan StartChatRequest agar salah ketik terlihat sebelum dikirim. */
 function nameError(value: string): string | null {
@@ -1712,33 +1735,63 @@ function nameError(value: string): string | null {
     return null;
 }
 
+const fieldClass = (state: 'error' | 'valid' | 'idle') =>
+    cn(
+        'h-12 w-full rounded-xl border bg-[var(--tcd-surface,#fff)] px-3.5 text-[15px] text-[var(--tcd-text,#1f2d3a)] transition-[border-color,box-shadow] outline-none placeholder:text-[var(--tcd-text-3,#6d7681)]',
+        state === 'error'
+            ? 'border-[var(--tcd-danger,#d92d20)] ring-4 ring-[#d92d20]/10'
+            : state === 'valid'
+              ? 'border-[var(--tcd-success,#0d7a5f)] focus:ring-4 focus:ring-[#0d7a5f]/10'
+              : 'border-[var(--tcd-border-strong,#d5dee6)] focus:border-[var(--tcd-link,var(--t-navy))] focus:ring-4 focus:ring-[#0b5a8c]/10',
+    );
+
+/**
+ * Kartu "Kenalan dulu": nama (tamu baru) + asal pengaduan. Provinsi wajib
+ * dipilih karena sebaran pengaduan dihitung dari provinsi yang diisi warga.
+ * `knownName`: null = tamu baru (isi nama); string = nama sudah diketahui.
+ */
 function IdentityCard({
+    knownName,
     busy,
     error,
     recaptcha,
     onEdit,
     onSubmit,
 }: {
+    knownName: string | null;
     busy: boolean;
     error: string | null;
     recaptcha: { enabled: boolean; error: string | null };
     onEdit: () => void;
-    onSubmit: (nama: string) => void;
+    onSubmit: (data: { nama: string; provinsi: string; lokasi: string }) => void;
 }) {
+    const askName = knownName === null;
     const [nama, setNama] = useState('');
+    const [provinsi, setProvinsi] = useState('');
+    const [lokasi, setLokasi] = useState('');
     const [touched, setTouched] = useState(false);
-    const invalid = nameError(nama);
-    const valid = invalid === null;
-    const message = (touched ? invalid : null) ?? error;
+    const nameInvalid = askName ? nameError(nama) : null;
+    const provinceInvalid = provinsi === '' ? 'Pilih provinsi asal Anda.' : null;
+    const required = askName ? 2 : 1;
+    const filled = (askName && !nameInvalid ? 1 : 0) + (provinceInvalid ? 0 : 1);
+    const message = (touched ? (nameInvalid ?? provinceInvalid) : null) ?? error;
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
         setTouched(true);
-        if (invalid) {
+        if (nameInvalid) {
             document.getElementById(NAME_INPUT_ID)?.focus();
             return;
         }
-        onSubmit(nama);
+        if (provinceInvalid) {
+            document.getElementById(PROVINCE_INPUT_ID)?.focus();
+            return;
+        }
+        onSubmit({ nama, provinsi, lokasi });
+    };
+
+    const edit = () => {
+        if (error) onEdit();
     };
 
     return (
@@ -1748,42 +1801,89 @@ function IdentityCard({
             className="transi-msg-in flex w-full max-w-[460px] flex-col gap-3 self-start rounded-2xl border border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-surface,#fff)] p-4 shadow-[0_10px_30px_rgba(2,43,74,0.06)] sm:ml-[42px] sm:p-5"
         >
             <div className="flex items-baseline justify-between gap-3">
-                <p className="font-heading text-[17px] font-bold text-[var(--tcd-heading,var(--t-deep))]">Kenalan dulu, yuk</p>
-                <span className={cn('font-mono text-xs', valid ? 'text-[var(--tcd-success,#0d7a5f)]' : 'text-[var(--tcd-text-3,#6d7681)]')}>
-                    {valid ? '1/1' : '0/1'} valid
+                <p className="font-heading text-[17px] font-bold text-[var(--tcd-heading,var(--t-deep))]">
+                    {askName ? 'Kenalan dulu, yuk' : `Dari mana asal Anda${knownName ? `, ${knownName.split(' ')[0]}` : ''}?`}
+                </p>
+                <span
+                    className={cn(
+                        'font-mono text-xs',
+                        filled === required ? 'text-[var(--tcd-success,#0d7a5f)]' : 'text-[var(--tcd-text-3,#6d7681)]',
+                    )}
+                >
+                    {filled}/{required} terisi
                 </span>
             </div>
             <span
-                className={cn('h-1 rounded-full transition-colors', valid ? 'bg-[#0d7a5f]' : 'bg-[var(--tcd-muted-2,#e1e7ed)]')}
+                className={cn('h-1 rounded-full transition-colors', filled === required ? 'bg-[#0d7a5f]' : 'bg-[var(--tcd-muted-2,#e1e7ed)]')}
                 aria-hidden="true"
             />
-            <label htmlFor={NAME_INPUT_ID} className="mt-1 text-sm font-semibold text-[var(--tcd-text-2,#3d4b59)]">
-                Nama lengkap <span className="text-[var(--tcd-danger,#d92d20)]">*</span>
+
+            {askName && (
+                <>
+                    <label htmlFor={NAME_INPUT_ID} className="mt-1 text-sm font-semibold text-[var(--tcd-text-2,#3d4b59)]">
+                        Nama lengkap <span className="text-[var(--tcd-danger,#d92d20)]">*</span>
+                    </label>
+                    <input
+                        id={NAME_INPUT_ID}
+                        value={nama}
+                        onChange={(e) => {
+                            setNama(e.target.value);
+                            edit();
+                        }}
+                        onBlur={() => nama.trim() !== '' && setTouched(true)}
+                        autoFocus
+                        autoComplete="name"
+                        maxLength={100}
+                        required
+                        aria-invalid={Boolean(touched && nameInvalid)}
+                        placeholder="Nama Anda"
+                        className={fieldClass(touched && nameInvalid ? 'error' : nameInvalid ? 'idle' : 'valid')}
+                    />
+                </>
+            )}
+
+            <label htmlFor={PROVINCE_INPUT_ID} className="mt-1 text-sm font-semibold text-[var(--tcd-text-2,#3d4b59)]">
+                Provinsi asal <span className="text-[var(--tcd-danger,#d92d20)]">*</span>
+            </label>
+            <select
+                id={PROVINCE_INPUT_ID}
+                value={provinsi}
+                onChange={(e) => {
+                    setProvinsi(e.target.value);
+                    edit();
+                }}
+                autoFocus={!askName}
+                required
+                aria-invalid={Boolean(touched && provinceInvalid)}
+                className={cn(
+                    fieldClass(touched && provinceInvalid ? 'error' : provinceInvalid ? 'idle' : 'valid'),
+                    !provinsi && 'text-[var(--tcd-text-3,#6d7681)]',
+                )}
+            >
+                <option value="">Pilih provinsi…</option>
+                {PROVINCE_OPTIONS.map((p) => (
+                    <option key={p} value={p}>
+                        {p}
+                    </option>
+                ))}
+            </select>
+
+            <label htmlFor={LOCATION_INPUT_ID} className="mt-1 text-sm font-semibold text-[var(--tcd-text-2,#3d4b59)]">
+                Kabupaten / kawasan / desa <span className="font-normal text-[var(--tcd-text-3,#6d7681)]">(opsional)</span>
             </label>
             <input
-                id={NAME_INPUT_ID}
-                value={nama}
+                id={LOCATION_INPUT_ID}
+                value={lokasi}
                 onChange={(e) => {
-                    setNama(e.target.value);
-                    if (error) onEdit();
+                    setLokasi(e.target.value);
+                    edit();
                 }}
-                onBlur={() => nama.trim() !== '' && setTouched(true)}
-                autoFocus
-                autoComplete="name"
-                maxLength={100}
-                required
-                aria-invalid={Boolean(message)}
-                aria-describedby={`${NAME_INPUT_ID}-info`}
-                placeholder="Nama Anda"
-                className={cn(
-                    'h-12 w-full rounded-xl border bg-[var(--tcd-surface,#fff)] px-3.5 text-[15px] text-[var(--tcd-text,#1f2d3a)] transition-[border-color,box-shadow] outline-none placeholder:text-[var(--tcd-text-3,#6d7681)]',
-                    message
-                        ? 'border-[var(--tcd-danger,#d92d20)] ring-4 ring-[#d92d20]/10'
-                        : valid
-                          ? 'border-[var(--tcd-success,#0d7a5f)] focus:ring-4 focus:ring-[#0d7a5f]/10'
-                          : 'border-[var(--tcd-border-strong,#d5dee6)] focus:border-[var(--tcd-link,var(--t-navy))] focus:ring-4 focus:ring-[#0b5a8c]/10',
-                )}
+                maxLength={150}
+                autoComplete="address-level2"
+                placeholder="Mis. Kab. Merauke, SP 1 Kurik"
+                className={fieldClass('idle')}
             />
+
             <p
                 id={`${NAME_INPUT_ID}-info`}
                 role={message ? 'alert' : undefined}
@@ -1792,7 +1892,7 @@ function IdentityCard({
                     message ? 'font-semibold text-[var(--tcd-danger,#b42318)]' : 'text-[var(--tcd-text-2,#5b6b7a)]',
                 )}
             >
-                {message ?? 'Agar petugas tahu siapa yang bertanya. Jangan tulis NIK atau nomor rekening di sini.'}
+                {message ?? 'Agar petugas tahu siapa yang bertanya dan dari mana. Jangan tulis NIK, nomor rekening, atau alamat lengkap di sini.'}
             </p>
             <button
                 type="submit"
@@ -1800,7 +1900,7 @@ function IdentityCard({
                 className="font-heading flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--t-gold)] text-sm font-bold text-[var(--t-deep)] transition-[background-color,opacity] hover:bg-[#d0a552] disabled:opacity-50"
             >
                 {busy ? <Loader2 className="h-[18px] w-[18px] animate-spin" aria-hidden="true" /> : null}
-                Mulai chat
+                {askName ? 'Mulai chat' : 'Lanjutkan'}
                 {!busy && <SendHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />}
             </button>
             <div className="text-xs text-[var(--tcd-text-2,#5b6b7a)]">

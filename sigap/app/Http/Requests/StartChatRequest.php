@@ -4,7 +4,9 @@ namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\VerifiesRecaptcha;
 use App\Services\RecaptchaService;
+use App\Support\Provinces;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /** Tamu memulai live chat dengan mengisi nama (warga login tidak perlu). */
 class StartChatRequest extends FormRequest
@@ -32,7 +34,11 @@ class StartChatRequest extends FormRequest
     {
         return [
             // Huruf (termasuk aksen), spasi, titik, koma, apostrof, tanda hubung.
-            'nama' => ['required', 'string', 'min:2', 'max:100', "regex:/^[\\pL\\pM][\\pL\\pM .,'’-]*$/u"],
+            // Warga yang login memakai nama akunnya; tamu wajib mengisi nama.
+            'nama' => [Rule::requiredIf(! $this->user()), 'nullable', 'string', 'min:2', 'max:100', "regex:/^[\\pL\\pM][\\pL\\pM .,'’-]*$/u"],
+            // Asal pengaduan: provinsi (wajib di kartu Kenalan) + kabupaten/kawasan/desa.
+            'provinsi' => ['nullable', 'string', Rule::in(Provinces::ALL)],
+            'lokasi' => ['nullable', 'string', 'max:150'],
             ...$this->recaptchaRules(),
         ];
     }
@@ -45,6 +51,8 @@ class StartChatRequest extends FormRequest
             'nama.min' => 'Nama minimal 2 huruf.',
             'nama.max' => 'Nama maksimal 100 karakter.',
             'nama.regex' => 'Nama hanya boleh berisi huruf, spasi, titik, koma, apostrof, dan tanda hubung.',
+            'provinsi.in' => 'Pilih provinsi dari daftar.',
+            'lokasi.max' => 'Lokasi maksimal 150 karakter.',
         ];
     }
 }

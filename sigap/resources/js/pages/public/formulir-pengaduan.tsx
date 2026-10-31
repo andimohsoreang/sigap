@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useRecaptcha } from '@/hooks/use-recaptcha';
 import PublicLayout from '@/layouts/public-layout';
+import { PROVINCE_OPTIONS } from '@/lib/provinces';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { AlertTriangle, Crosshair, LoaderCircle, Send, Upload } from 'lucide-react';
 import { type FormEvent } from 'react';
@@ -19,7 +20,6 @@ interface Option {
 }
 
 interface Props {
-    regions: (Option & { code: string })[];
     categories: Option[];
 }
 
@@ -36,8 +36,8 @@ const VISIBILITIES = [
     { value: 'rahasia', label: 'Rahasia', desc: 'Laporan disembunyikan dari publik.' },
 ];
 
-export default function FormulirPengaduan({ regions, categories }: Props) {
-    const { data, setData, post, transform, processing, errors, progress } = useForm({
+export default function FormulirPengaduan({ categories }: Props) {
+    const { data, setData, post, transform, processing, errors, progress, setError, clearErrors } = useForm({
         nik: '',
         nama: '',
         email: '',
@@ -45,7 +45,8 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
         judul: '',
         uraian: '',
         koordinat: '',
-        region_id: '',
+        provinsi: '',
+        lokasi: '',
         category_id: '',
         impact: '',
         visibility: 'publik',
@@ -57,6 +58,13 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
+        // Provinsi wajib: sebaran pengaduan dihitung dari provinsi yang diisi pelapor.
+        if (!data.provinsi) {
+            setError('provinsi', 'Pilih provinsi asal pengaduan.');
+            document.getElementById('provinsi')?.focus();
+            return;
+        }
+        clearErrors('provinsi');
         void recaptcha.withToken((token) => {
             transform((form) => ({ ...form, recaptcha_token: token }));
             post('/pengaduan/baru', { forceFormData: true });
@@ -169,16 +177,15 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
                                     </p>
                                 </Field>
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <Field label="Lokasi Kawasan" htmlFor="region_id" error={errors.region_id}>
-                                        <Select value={data.region_id} onValueChange={(v) => setData('region_id', v)}>
-                                            <SelectTrigger aria-label="Lokasi Kawasan">
-                                                <SelectValue placeholder="Pilih Kawasan" />
+                                    <Field label="Provinsi" htmlFor="provinsi" required error={errors.provinsi}>
+                                        <Select value={data.provinsi} onValueChange={(v) => setData('provinsi', v)}>
+                                            <SelectTrigger id="provinsi" aria-label="Provinsi">
+                                                <SelectValue placeholder="Pilih Provinsi" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {regions.map((r) => (
-                                                    <SelectItem key={r.id} value={String(r.id)}>
-                                                        {r.name}
-                                                        {r.province ? `, ${r.province}` : ''}
+                                                {PROVINCE_OPTIONS.map((p) => (
+                                                    <SelectItem key={p} value={p}>
+                                                        {p}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -199,6 +206,15 @@ export default function FormulirPengaduan({ regions, categories }: Props) {
                                         </Select>
                                     </Field>
                                 </div>
+                                <Field label="Kabupaten / Kawasan / Desa" htmlFor="lokasi" error={errors.lokasi}>
+                                    <Input
+                                        id="lokasi"
+                                        value={data.lokasi}
+                                        onChange={(e) => setData('lokasi', e.target.value)}
+                                        maxLength={150}
+                                        placeholder="Mis. Kab. Merauke, SP 1 Kurik"
+                                    />
+                                </Field>
                                 <Field label="Tingkat Dampak" htmlFor="impact" required error={errors.impact}>
                                     <Select value={data.impact} onValueChange={(v) => setData('impact', v)}>
                                         <SelectTrigger aria-label="Tingkat Dampak">

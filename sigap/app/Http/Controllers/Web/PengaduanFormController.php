@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePengaduanInternalRequest;
 use App\Http\Requests\StorePengaduanRequest;
 use App\Models\Category;
-use App\Models\Region;
 use App\Services\TicketService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -23,7 +22,6 @@ class PengaduanFormController extends Controller
     public function create(): Response
     {
         return Inertia::render('public/formulir-pengaduan', [
-            'regions' => Region::query()->where('is_active', true)->get(['id', 'code', 'name', 'province']),
             'categories' => Category::query()->where('is_active', true)->get(['id', 'name', 'slug']),
         ]);
     }
@@ -41,6 +39,8 @@ class PengaduanFormController extends Controller
             'latitude' => $lat,
             'longitude' => $lng,
             'region_id' => $data['region_id'] ?? null,
+            'province' => $data['provinsi'] ?? null,
+            'location' => $data['lokasi'] ?? null,
             'category_id' => $data['category_id'] ?? null,
             'attachment' => $request->file('attachment'),
             'reporter_name' => $data['nama'],

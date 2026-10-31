@@ -7,10 +7,12 @@ use App\Enums\TicketStatus;
 use App\Enums\TicketVisibility;
 use App\Events\TicketChanged;
 use App\Models\Category;
+use App\Models\Region;
 use App\Models\Ticket;
 use App\Models\TicketHistory;
 use App\Models\TicketReply;
 use App\Models\User;
+use App\Support\Provinces;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
@@ -282,6 +284,12 @@ class TicketService
             ? Category::query()->whereKey($categoryId)->value('sla_days')
             : null;
 
+        // Wilayah pengaduan = provinsi yang dipilih pelapor; data lama yang masih
+        // memakai kawasan memakai provinsi kawasan itu.
+        $regionId = $isInternal ? null : ($data['region_id'] ?? null);
+        $province = $isInternal ? null : (Provinces::normalize($data['province'] ?? null)
+            ?? ($regionId !== null ? Provinces::normalize(Region::query()->whereKey($regionId)->value('province')) : null));
+
         $ticket = new Ticket;
 
         $ticket->fill([
@@ -297,7 +305,8 @@ class TicketService
             'attachment_path' => $attachmentPath,
             'is_internal' => $isInternal,
             'category_id' => $categoryId,
-            'region_id' => $isInternal ? null : ($data['region_id'] ?? null),
+            'region_id' => $regionId,
+            'province' => $province,
             'channel_id' => $data['channel_id'] ?? null,
             'assignee_id' => $data['assignee_id'] ?? null,
             'reporter_id' => $data['reporter_id'] ?? null,

@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/layouts/admin-layout';
+import { PROVINCE_OPTIONS } from '@/lib/provinces';
 import { type SharedData } from '@/types';
 import { useForm, usePage } from '@inertiajs/react';
 import { Building2, CheckCircle, FilePen, LoaderCircle, Upload, UserRound } from 'lucide-react';
@@ -12,14 +13,19 @@ import { type FormEvent } from 'react';
 
 interface Props {
     options: {
-        regions: { id: number; name: string; province: string | null }[];
         categories: { id: number; name: string }[];
     };
-    /** A-11: admin kawasan tidak dapat memilih kawasan (dipaksa server). */
-    region_locked?: boolean;
-    own_region?: { id: number; name: string } | null;
     /** Tiket dari percakapan contact center: isian awal dari ringkasan AI. */
-    prefill?: { percakapan_id: number; referensi: string | null; nama: string; telepon: string; judul: string; uraian: string } | null;
+    prefill?: {
+        percakapan_id: number;
+        referensi: string | null;
+        nama: string;
+        telepon: string;
+        judul: string;
+        uraian: string;
+        provinsi?: string | null;
+        lokasi?: string | null;
+    } | null;
 }
 
 const SUMBER = [
@@ -46,7 +52,7 @@ const SUMBER = [
     },
 ];
 
-export default function InputManual({ options, region_locked: regionLocked = false, own_region: ownRegion = null, prefill = null }: Props) {
+export default function InputManual({ options, prefill = null }: Props) {
     const { auth } = usePage<SharedData>().props;
     const { data, setData, post, processing, errors, progress } = useForm({
         sumber_laporan: prefill ? 'live_chat' : '',
@@ -57,7 +63,9 @@ export default function InputManual({ options, region_locked: regionLocked = fal
         judul: prefill?.judul ?? '',
         uraian: prefill?.uraian ?? '',
         percakapan_id: prefill ? String(prefill.percakapan_id) : '',
-        region_id: regionLocked && ownRegion ? String(ownRegion.id) : '',
+        // Wilayah dari pengaduan: provinsi asal + lokasi bebas (terisi dari chat bila ada).
+        provinsi: prefill?.provinsi ?? '',
+        lokasi: prefill?.lokasi ?? '',
         category_id: '',
         impact: '',
         attachment: null as File | null,
@@ -145,32 +153,28 @@ export default function InputManual({ options, region_locked: regionLocked = fal
                             </Field>
                         </div>
 
-                        <Field label="Kawasan Transmigrasi" required error={errors.region_id}>
-                            {regionLocked ? (
-                                <>
-                                    <Input
-                                        value={ownRegion?.name ?? 'Kawasan belum ditetapkan'}
-                                        readOnly
-                                        aria-label="Kawasan Transmigrasi"
-                                        className="cursor-not-allowed bg-gray-100"
-                                    />
-                                    <p className="text-[11px] text-gray-400">Tiket otomatis diterbitkan ke kawasan tugas Anda.</p>
-                                </>
-                            ) : (
-                                <Select value={data.region_id} onValueChange={(v) => setData('region_id', v)}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Pilih Kawasan" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {options.regions.map((r) => (
-                                            <SelectItem key={r.id} value={String(r.id)}>
-                                                {r.name}
-                                                {r.province ? `, ${r.province}` : ''}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            )}
+                        <Field label="Provinsi Asal Pengaduan" required error={errors.provinsi}>
+                            <Select value={data.provinsi} onValueChange={(v) => setData('provinsi', v)}>
+                                <SelectTrigger aria-label="Provinsi Asal Pengaduan">
+                                    <SelectValue placeholder="Pilih Provinsi" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {PROVINCE_OPTIONS.map((p) => (
+                                        <SelectItem key={p} value={p}>
+                                            {p}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </Field>
+                        <Field label="Kabupaten / Kawasan / Desa" error={errors.lokasi}>
+                            <Input
+                                value={data.lokasi}
+                                onChange={(e) => setData('lokasi', e.target.value)}
+                                maxLength={150}
+                                placeholder="Mis. Kab. Merauke, SP 1 Kurik"
+                                aria-label="Kabupaten / Kawasan / Desa"
+                            />
                         </Field>
                         <Field label="Kategori Masalah" required error={errors.category_id}>
                             <Select value={data.category_id} onValueChange={(v) => setData('category_id', v)}>

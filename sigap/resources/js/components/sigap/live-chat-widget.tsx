@@ -187,6 +187,9 @@ export interface ChatConfirmation {
 export interface Identity {
     nama: string;
     tipe: 'warga' | 'tamu';
+    /** Asal pengaduan dari kartu Kenalan (31-10-2026). */
+    provinsi?: string | null;
+    lokasi?: string | null;
 }
 
 export interface Assistant {

@@ -1,5 +1,6 @@
 import { CHAT_UNREAD_EVENT, type ChatUnreadPayload } from '@/hooks/use-chat-unread';
 import AdminLayout from '@/layouts/admin-layout';
+import { PROVINCE_OPTIONS } from '@/lib/provinces';
 import { cn } from '@/lib/utils';
 import { Link, router, useForm } from '@inertiajs/react';
 import { echo, echoIsConfigured } from '@laravel/echo-react';
@@ -139,23 +140,22 @@ interface Props {
 }
 
 interface TicketOptions {
-    kawasan: { id: number; name: string }[];
     kategori: { id: number; name: string }[];
     dampak: { value: string; label: string; hari: number }[];
-    /** Admin kawasan hanya dapat menerbitkan untuk kawasannya. */
-    kawasan_tetap: number | null;
 }
 
 interface TicketSuggestion {
     judul: string;
     uraian: string;
-    region_id: number | null;
     category_id: number | null;
     impact: string;
     alasan: string | null;
     sumber: 'ai' | 'kata_kunci';
     nama: string;
     telepon: string;
+    /** Dari kartu Kenalan warga. */
+    provinsi: string | null;
+    lokasi: string | null;
 }
 
 const TABS: { value: Tab; label: string; icon: LucideIcon; hint: string }[] = [
@@ -697,7 +697,7 @@ export default function Chat({
 
 /**
  * Terbitkan tiket tanpa meninggalkan Kotak Masuk. Isian disarankan asisten
- * (kawasan, kategori, dampak, judul, uraian); petugas memeriksa lalu
+ * (kategori, dampak, judul, uraian; provinsi & lokasi dari kartu Kenalan warga); petugas memeriksa lalu
  * menerbitkan. Nomor tiket otomatis dikirim ke chat warga.
  */
 function TicketPanel({ conversationId, options, onCancel }: { conversationId: number; options: TicketOptions; onCancel: () => void }) {
@@ -711,7 +711,8 @@ function TicketPanel({ conversationId, options, onCancel }: { conversationId: nu
         telepon: '',
         judul: '',
         uraian: '',
-        region_id: options.kawasan_tetap ? String(options.kawasan_tetap) : '',
+        provinsi: '',
+        lokasi: '',
         category_id: '',
         impact: 'sedang',
     });
@@ -729,7 +730,8 @@ function TicketPanel({ conversationId, options, onCancel }: { conversationId: nu
                     telepon: s.telepon,
                     judul: s.judul,
                     uraian: s.uraian,
-                    region_id: options.kawasan_tetap ? String(options.kawasan_tetap) : s.region_id ? String(s.region_id) : '',
+                    provinsi: s.provinsi ?? '',
+                    lokasi: s.lokasi ?? '',
                     category_id: s.category_id ? String(s.category_id) : '',
                     impact: s.impact,
                 }));
@@ -746,7 +748,7 @@ function TicketPanel({ conversationId, options, onCancel }: { conversationId: nu
         form.post('/admin/input-manual', { preserveScroll: true, onSuccess: onCancel });
     };
 
-    const suggested = (field: 'region_id' | 'category_id', id: string) =>
+    const suggested = (field: 'category_id', id: string) =>
         suggestion && id !== '' && String(suggestion[field] ?? '') === id ? (
             <span className="ml-1.5 rounded bg-violet-50 px-1.5 py-0.5 text-[11px] font-medium text-violet-800">Saran</span>
         ) : null;
@@ -773,24 +775,34 @@ function TicketPanel({ conversationId, options, onCancel }: { conversationId: nu
 
             <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                    <label htmlFor="tiket-kawasan" className="mb-1 flex items-center text-xs font-semibold text-gray-700">
-                        Kawasan {suggested('region_id', form.data.region_id)}
+                    <label htmlFor="tiket-provinsi" className="mb-1 flex items-center text-xs font-semibold text-gray-700">
+                        Provinsi asal
+                        {suggestion?.provinsi && form.data.provinsi === suggestion.provinsi && (
+                            <span className="ml-1.5 rounded bg-sky-50 px-1.5 py-0.5 text-[11px] font-medium text-sky-800">Dari warga</span>
+                        )}
                     </label>
                     <select
-                        id="tiket-kawasan"
-                        value={form.data.region_id}
-                        disabled={options.kawasan_tetap !== null}
-                        onChange={(e) => form.setData('region_id', e.target.value)}
-                        className={cn(selectClass, form.data.region_id === '' && 'border-amber-400')}
+                        id="tiket-provinsi"
+                        value={form.data.provinsi}
+                        onChange={(e) => form.setData('provinsi', e.target.value)}
+                        className={cn(selectClass, form.data.provinsi === '' && 'border-amber-400')}
                     >
-                        <option value="">Pilih kawasan…</option>
-                        {options.kawasan.map((k) => (
-                            <option key={k.id} value={k.id}>
-                                {k.name}
+                        <option value="">Pilih provinsi…</option>
+                        {PROVINCE_OPTIONS.map((p) => (
+                            <option key={p} value={p}>
+                                {p}
                             </option>
                         ))}
                     </select>
-                    {form.errors.region_id && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.region_id}</p>}
+                    {form.errors.provinsi && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.provinsi}</p>}
+                    <input
+                        aria-label="Kabupaten / kawasan / desa"
+                        value={form.data.lokasi}
+                        onChange={(e) => form.setData('lokasi', e.target.value)}
+                        maxLength={150}
+                        placeholder="Kabupaten / kawasan / desa (opsional)"
+                        className={cn(selectClass, 'mt-2')}
+                    />
                 </div>
                 <div>
                     <label htmlFor="tiket-kategori" className="mb-1 flex items-center text-xs font-semibold text-gray-700">
@@ -872,7 +884,7 @@ function TicketPanel({ conversationId, options, onCancel }: { conversationId: nu
                     </button>
                     <button
                         type="submit"
-                        disabled={form.processing || form.data.region_id === '' || form.data.category_id === '' || form.data.judul.trim() === ''}
+                        disabled={form.processing || form.data.provinsi === '' || form.data.category_id === '' || form.data.judul.trim() === ''}
                         className="bg-primary hover:bg-primary/90 flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                     >
                         <Ticket className="h-4 w-4" aria-hidden="true" /> Terbitkan tiket

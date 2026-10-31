@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Enums\TicketImpact;
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Support\Provinces;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -46,7 +47,11 @@ class StoreInputManualRequest extends FormRequest
             'tautan' => ['nullable', 'url:http,https', 'max:500'],
             'judul' => ['required', 'string', 'max:255'],
             'uraian' => ['required', 'string', 'min:10'],
-            'region_id' => ['required', 'integer', 'exists:regions,id'],
+            // Salah satu wajib: provinsi (formulir baru) atau kawasan lama (API/klien lama).
+            'region_id' => ['required_without:provinsi', 'nullable', 'integer', 'exists:regions,id'],
+            // Wilayah pengaduan: provinsi (38, nama baku) + lokasi bebas (kabupaten/kawasan/desa).
+            'provinsi' => ['required_without:region_id', 'nullable', 'string', Rule::in(Provinces::ALL)],
+            'lokasi' => ['nullable', 'string', 'max:150'],
             'category_id' => ['required', 'integer', 'exists:categories,id'],
             'impact' => ['required', Rule::enum(TicketImpact::class)],
             'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
@@ -67,13 +72,15 @@ class StoreInputManualRequest extends FormRequest
 
         $regionId = $actor->role === UserRole::AdminKawasan
             ? $actor->region_id
-            : $data['region_id'];
+            : ($data['region_id'] ?? null);
 
         return [
             'title' => $data['judul'],
             'description' => $data['uraian'],
             'impact' => $data['impact'],
             'region_id' => $regionId,
+            'province' => $data['provinsi'] ?? null,
+            'location' => $data['lokasi'] ?? null,
             'category_id' => $data['category_id'],
             'attachment' => $this->file('attachment'),
             'reporter_name' => $data['nama'],

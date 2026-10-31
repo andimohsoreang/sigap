@@ -32,6 +32,8 @@ class PengaduanController extends Controller
             'latitude' => $lat,
             'longitude' => $lng,
             'region_id' => $data['region_id'] ?? null,
+            'province' => $data['provinsi'] ?? null,
+            'location' => $data['lokasi'] ?? null,
             'category_id' => $data['category_id'] ?? null,
             'channel_id' => null,
             'attachment' => $request->file('attachment'),
