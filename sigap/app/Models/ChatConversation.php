@@ -41,6 +41,8 @@ class ChatConversation extends Model
         'user_id',
         'guest_token',
         'guest_name',
+        'province',
+        'location',
         'subject',
         'last_message_at',
         'unread_admin',

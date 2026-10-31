@@ -7,6 +7,7 @@ use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Enums\TicketVisibility;
 use App\Support\Nik;
+use App\Support\Provinces;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -51,6 +52,7 @@ class Ticket extends Model
         'is_internal',
         'category_id',
         'region_id',
+        'province',
         'channel_id',
         'assignee_id',
         'reporter_id',
@@ -107,7 +109,28 @@ class Ticket extends Model
             if ($ticket->isDirty('reporter_nik')) {
                 $ticket->reporter_nik_hash = Nik::hash($ticket->reporter_nik);
             }
+            // Klien/data lama yang hanya mengirim kawasan: provinsi diambil dari kawasan itu.
+            if ($ticket->province === null && $ticket->region_id !== null && ! $ticket->is_internal && $ticket->isDirty('region_id')) {
+                $ticket->province = Provinces::normalize(Region::query()->whereKey($ticket->region_id)->value('province'));
+            }
         });
+    }
+
+    /**
+     * Wilayah pengaduan untuk tampilan: "Provinsi · lokasi" (admin/pemilik)
+     * atau provinsi saja (publik, karena lokasi bebas bisa memuat data
+     * pribadi). Tiket lama tanpa provinsi memakai nama kawasannya.
+     */
+    public function wilayahLabel(bool $withLocation = true): ?string
+    {
+        $location = $withLocation ? trim((string) $this->location) : '';
+        $parts = array_values(array_filter([$this->province, $location !== '' ? $location : null]));
+
+        if ($parts === [] && $this->region_id !== null) {
+            return $this->relationLoaded('region') ? $this->region?->name : $this->region()->value('name');
+        }
+
+        return $parts === [] ? null : implode(' · ', $parts);
     }
 
     /** Normalisasi nomor tiket dari input pengguna (trim + huruf besar). */
@@ -257,12 +280,10 @@ class Ticket extends Model
             return $query;
         }
 
+        // Admin kawasan menangani semua pengaduan publik (31-10-2026: wilayah
+        // berasal dari pengaduan, bukan dari kawasan tugas admin).
         if ($user->isAdmin()) {
-            if ($user->region_id === null) {
-                return $query->whereRaw('1 = 0');
-            }
-
-            return $query->where('region_id', $user->region_id);
+            return $query->where('is_internal', false);
         }
 
         return $query->where('reporter_id', $user->id);
