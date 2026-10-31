@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { Menu, MessageCircle, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { AccessibilityMenu, AccessibilityMenuRow, ThemeMenuRow, ThemeToggle } from '@/components/sigap/accessibility';
 import { cn } from '@/lib/utils';
 
 /** Header beranda baru & halaman Chat TARA (desain pen.dev). */
@@ -48,9 +49,9 @@ export default function TransiHeader({
     return (
         <header
             className={cn(
-                'sticky top-0 z-50 border-b bg-white/90 backdrop-blur-md transition-[box-shadow,border-color] duration-300',
+                'sticky top-0 z-50 border-b bg-[var(--tcd-surface,#fff)]/90 backdrop-blur-md transition-[box-shadow,border-color] duration-300',
                 className,
-                scrolled ? 'border-transparent shadow-[0_6px_24px_rgba(2,43,74,0.08)]' : 'border-[#e8edf2]',
+                scrolled ? 'border-transparent shadow-[0_6px_24px_rgba(2,43,74,0.08)]' : 'border-[var(--tcd-border,#e8edf2)]',
             )}
         >
             <div className="mx-auto flex h-16 max-w-[1312px] items-center justify-between gap-4 px-4 sm:px-6 lg:h-[76px] lg:px-16">
@@ -64,10 +65,10 @@ export default function TransiHeader({
                     />
                     {/* 1024–1279 px: lambang saja agar menu tidak bertumpuk. */}
                     <span className="min-w-0 lg:hidden xl:block">
-                        <span className="font-heading block text-lg leading-tight font-bold tracking-[0.01em] whitespace-nowrap text-[var(--t-navy)] uppercase xl:text-xl">
+                        <span className="font-heading block text-lg leading-tight font-bold tracking-[0.01em] whitespace-nowrap text-[var(--tcd-link,var(--t-navy))] uppercase xl:text-xl">
                             Contact Center
-                        </span>
-                        <span className="block truncate text-xs text-[#5b6b7a]">Kementerian Transmigrasi</span>
+                        </span>{' '}
+                        <span className="block truncate text-xs text-[var(--tcd-text-2,#5b6b7a)]">Kementerian Transmigrasi</span>
                     </span>
                 </Link>
 
@@ -78,11 +79,11 @@ export default function TransiHeader({
                             href={n.href}
                             aria-current={n.key === active ? 'page' : undefined}
                             className={cn(
-                                'relative text-[15px] whitespace-nowrap transition-colors after:absolute after:-bottom-1.5 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-[var(--t-gold)] after:transition-transform after:duration-300 hover:text-[var(--t-navy)] hover:after:scale-x-100',
+                                'relative text-[15px] whitespace-nowrap transition-colors after:absolute after:-bottom-1.5 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-[var(--t-gold)] after:transition-transform after:duration-300 hover:text-[var(--tcd-link,var(--t-navy))] hover:after:scale-x-100',
                                 // Aktif: garis emas pendek di tengah (desain Wonder); lainnya garis penuh saat hover.
                                 n.key === active
-                                    ? 'font-semibold text-[var(--t-navy)] after:left-1/2 after:w-5 after:-translate-x-1/2 after:scale-x-100 after:rounded-full'
-                                    : 'font-medium text-[#4a5a68]',
+                                    ? 'font-semibold text-[var(--tcd-link,var(--t-navy))] after:left-1/2 after:w-5 after:-translate-x-1/2 after:scale-x-100 after:rounded-full'
+                                    : 'font-medium text-[var(--tcd-text-2,#4a5a68)]',
                             )}
                         >
                             {n.label}
@@ -90,17 +91,18 @@ export default function TransiHeader({
                     ))}
                 </nav>
 
-                <div className="flex shrink-0 items-center gap-3">
+                <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                    <ThemeToggle className="hidden sm:flex" />
                     <button
                         type="button"
                         onClick={onChat}
-                        className="transi-lift hidden h-10 items-center gap-2 rounded-full border-[1.5px] border-[var(--t-navy)] px-4 text-[15px] font-semibold text-[var(--t-navy)] hover:bg-[var(--t-navy)] hover:text-white lg:flex"
+                        className="transi-lift hidden h-10 items-center gap-2 rounded-full border-[1.5px] border-[var(--tcd-link,var(--t-navy))] px-4 text-[15px] font-semibold text-[var(--tcd-link,var(--t-navy))] hover:bg-[var(--tcd-primary,var(--t-navy))] hover:text-white lg:flex"
                     >
                         <MessageCircle className="h-[18px] w-[18px]" aria-hidden="true" /> Chat TARA
                     </button>
                     <Link
                         href={account.href}
-                        className="transi-lift flex h-10 items-center rounded-full bg-[var(--t-navy)] px-[18px] text-[15px] font-semibold text-white hover:bg-[#00508a]"
+                        className="transi-lift flex h-10 items-center rounded-full bg-[var(--tcd-primary,var(--t-navy))] px-[18px] text-[15px] font-semibold text-white hover:bg-[var(--tcd-primary-hover,#00508a)]"
                     >
                         {account.label}
                     </Link>
@@ -110,7 +112,7 @@ export default function TransiHeader({
                         aria-expanded={open}
                         aria-controls="menu-ponsel"
                         aria-label={open ? 'Tutup menu' : 'Buka menu'}
-                        className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d5dee6] text-[var(--t-navy)] transition-colors hover:bg-[#f2f5f8] lg:hidden"
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--tcd-border-strong,#d5dee6)] text-[var(--tcd-link,var(--t-navy))] transition-colors hover:bg-[var(--tcd-muted,#f2f5f8)] lg:hidden"
                     >
                         {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                     </button>
@@ -119,17 +121,23 @@ export default function TransiHeader({
 
             <div
                 id="menu-ponsel"
-                className={cn('transi-accordion border-t border-[#e8edf2] lg:hidden', !open && 'border-transparent')}
+                className={cn('transi-accordion border-t border-[var(--tcd-border,#e8edf2)] lg:hidden', !open && 'border-transparent')}
                 data-open={open}
                 inert={!open}
             >
                 <div>
                     <nav aria-label="Menu ponsel" className="flex flex-col gap-1 px-4 py-4 sm:px-6">
                         {NAV.map((n) => (
-                            <Link key={n.href} href={n.href} className="rounded-lg px-3 py-3 text-base text-[#22313f] hover:bg-[#f2f5f8]">
+                            <Link
+                                key={n.href}
+                                href={n.href}
+                                className="rounded-lg px-3 py-3 text-base text-[var(--tcd-text,#22313f)] hover:bg-[var(--tcd-muted,#f2f5f8)]"
+                            >
                                 {n.label}
                             </Link>
                         ))}
+                        <ThemeMenuRow />
+                        <AccessibilityMenuRow onOpen={() => setOpen(false)} />
                         <button
                             type="button"
                             onClick={() => {
@@ -143,6 +151,7 @@ export default function TransiHeader({
                     </nav>
                 </div>
             </div>
+            <AccessibilityMenu />
         </header>
     );
 }
