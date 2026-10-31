@@ -280,12 +280,16 @@
    melayang, gelembung chat berurutan, konten muncul saat digulir. Semua
    dimatikan bila pengguna memilih "kurangi gerakan".
    -------------------------------------------------------------------------- */
-.transi-page {
+/* Warna merek TARA di :root (bukan .transi-page) agar panel yang dirender di
+   luar halaman (portal) memakainya juga, dan mode kontras tinggi bisa menimpanya. */
+:root {
     --t-navy: #003d68;
     --t-deep: #022b4a;
     --t-gold: #c29642;
     --t-cream: #f8f3ef;
     --t-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+.transi-page {
     font-family: var(--font-body);
 }
 
@@ -791,4 +795,200 @@ html[data-vt='back-sheet']::view-transition-new(root) {
     .tara-pin__label {
         display: none;
     }
+}
+
+/* --------------------------------------------------------------------------
+   Tema gelap, kontras tinggi & aksesibilitas — halaman publik TARA
+   Kelas di <html> dipasang resources/js/lib/preferences.ts (dan skrip awal di
+   app.blade.php). Komponen memakai var(--tcd-<peran>, warna-terang): di mode
+   terang variabel tidak didefinisikan sehingga warna asli yang dipakai.
+   Didefinisikan di <html> (bukan .transi-page) agar dialog/menu yang dirender
+   di luar halaman (portal) ikut berganti warna.
+   -------------------------------------------------------------------------- */
+html.dark:has(.transi-page) {
+    color-scheme: dark;
+    --tcd-surface: #0e1b29;
+    --tcd-muted: #142638;
+    --tcd-muted-2: #1b3046;
+    --tcd-cream: #131f2c;
+    --tcd-gold-soft: #33291a;
+    --tcd-primary: #1b6aa5;
+    --tcd-primary-hover: #2479b9;
+    --tcd-heading: #f1f5f9;
+    --tcd-link: #8fc8f2;
+    --tcd-text: #e2e9f0;
+    --tcd-text-2: #b4c2cf;
+    --tcd-text-3: #8b9bab;
+    --tcd-warm: #d6c8b4;
+    --tcd-bronze: #e2ba68;
+    --tcd-border: #22364a;
+    --tcd-border-strong: #33495f;
+    --tcd-border-warm: #34393c;
+    --tcd-info: #8cc6f5;
+    --tcd-info-soft: #112c45;
+    --tcd-info-border: #1f4566;
+    --tcd-success: #5ad3a8;
+    --tcd-success-soft: #0f2f28;
+    --tcd-success-border: #1d4d40;
+    --tcd-danger: #ff8f86;
+    --tcd-danger-soft: #3a1a18;
+    --tcd-danger-border: #5c2621;
+    --tcd-warning: #f2b85b;
+    --tcd-warning-soft: #36290f;
+    --tcd-warning-border: #5a4420;
+
+    /* Komponen shadcn (Select, Dialog) di halaman publik. */
+    --color-background: var(--tcd-surface);
+    --color-foreground: var(--tcd-text);
+    --color-popover: var(--tcd-surface);
+    --color-popover-foreground: var(--tcd-text);
+    --color-card: var(--tcd-surface);
+    --color-card-foreground: var(--tcd-text);
+    --color-muted: var(--tcd-muted);
+    --color-muted-foreground: var(--tcd-text-3);
+    --color-accent: var(--tcd-muted-2);
+    --color-accent-foreground: var(--tcd-text);
+    --color-border: var(--tcd-border);
+    --color-input: var(--tcd-border-strong);
+    background: var(--tcd-surface);
+}
+html.dark .province-map {
+    background: linear-gradient(180deg, #10233a 0%, #0c1c2e 100%);
+}
+html.dark .transi-page .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
+}
+
+/* Kontras tinggi: hitam, putih, kuning (berlaku di mode terang maupun gelap). */
+html.a11y-contrast:has(.transi-page) {
+    color-scheme: dark;
+    --t-navy: #000;
+    --t-deep: #000;
+    --t-gold: #ffd400;
+    --tcd-surface: #000;
+    --tcd-muted: #000;
+    --tcd-muted-2: #1a1a1a;
+    --tcd-cream: #000;
+    --tcd-gold-soft: #000;
+    --tcd-primary: #0047ab;
+    --tcd-primary-hover: #0057d0;
+    --tcd-heading: #fff;
+    --tcd-link: #ffd400;
+    --tcd-text: #fff;
+    --tcd-text-2: #fff;
+    --tcd-text-3: #e6e6e6;
+    --tcd-warm: #fff;
+    --tcd-bronze: #ffd400;
+    --tcd-border: #fff;
+    --tcd-border-strong: #fff;
+    --tcd-border-warm: #fff;
+    --tcd-info: #7fd4ff;
+    --tcd-info-soft: #000;
+    --tcd-info-border: #7fd4ff;
+    --tcd-success: #6dff9e;
+    --tcd-success-soft: #000;
+    --tcd-success-border: #6dff9e;
+    --tcd-danger: #ff7b7b;
+    --tcd-danger-soft: #000;
+    --tcd-danger-border: #ff7b7b;
+    --tcd-warning: #ffd400;
+    --tcd-warning-soft: #000;
+    --tcd-warning-border: #ffd400;
+    --color-background: #000;
+    --color-foreground: #fff;
+    --color-popover: #000;
+    --color-popover-foreground: #fff;
+    --color-card: #000;
+    --color-card-foreground: #fff;
+    --color-muted: #000;
+    --color-muted-foreground: #fff;
+    --color-accent: #1a1a1a;
+    --color-accent-foreground: #ffd400;
+    --color-border: #fff;
+    --color-input: #fff;
+    background: #000;
+}
+html.a11y-contrast .transi-page a:not([class*='bg-']) {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+html.a11y-contrast .transi-page img:not([src*='/tara/']):not([src*='logo']) {
+    filter: grayscale(1) contrast(1.2) brightness(0.6);
+}
+html.a11y-contrast .hero-shade {
+    background: linear-gradient(90deg, #000 0%, #000 42%, rgb(0 0 0 / 0.65) 58%, rgb(0 0 0 / 0.25) 76%, transparent 90%) !important;
+}
+html.a11y-contrast .province-map {
+    background: #000;
+}
+
+/* Ukuran teks: halaman memakai ukuran piksel tetap, jadi seluruh halaman diperbesar. */
+/* Header tidak diperbesar: titik-pecah responsif mengikuti lebar layar, bukan zoom. */
+html.a11y-text-1 .transi-page > :not(header, .chat-grid),
+html.a11y-text-1 .chat-grid > * {
+    zoom: 1.15;
+}
+html.a11y-text-2 .transi-page > :not(header, .chat-grid),
+html.a11y-text-2 .chat-grid > * {
+    zoom: 1.3;
+}
+/* Halaman chat: yang diperbesar isi tiap kolom, bukan grid-nya (lebar kolom tetap). */
+/* Leaflet menghitung posisi kursor tanpa memperhitungkan zoom: peta dikembalikan ke skala 1. */
+html.a11y-text-1 .transi-page .leaflet-container {
+    zoom: calc(1 / 1.15);
+}
+html.a11y-text-2 .transi-page .leaflet-container {
+    zoom: calc(1 / 1.3);
+}
+
+/* Sorot tautan & tombol. */
+html.a11y-links .transi-page :is(a, button, [role='button'], summary) {
+    outline: 2px dashed var(--a11y-highlight, #c29642);
+    outline-offset: 2px;
+}
+html.a11y-links .transi-page a {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+}
+
+/* Huruf mudah dibaca (Atkinson Hyperlegible) dan jarak lebih lega. */
+html.a11y-dyslexia .transi-page,
+html.a11y-dyslexia .transi-page :is(h1, h2, h3, h4, p, li, a, button, span, label, input, textarea, dd, dt, td, th) {
+    font-family: 'Atkinson Hyperlegible', var(--font-body), sans-serif !important;
+}
+html.a11y-dyslexia .transi-page :is(p, li, dd, label, td) {
+    letter-spacing: 0.035em;
+    word-spacing: 0.14em;
+    line-height: 1.75;
+}
+
+/* Hentikan animasi: konten yang menunggu animasi muncul langsung tampil. */
+html.a11y-motion .transi-page *,
+html.a11y-motion .transi-page *::before,
+html.a11y-motion .transi-page *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+}
+html.a11y-motion .transi-js [data-reveal]:not(.is-in) {
+    opacity: 1;
+    transform: none;
+}
+html.a11y-motion {
+    scroll-behavior: auto;
+}
+
+/* Penanda fokus tebal untuk navigasi keyboard. */
+html.a11y-focus .transi-page :focus-visible,
+html.a11y-focus .a11y-panel :focus-visible {
+    outline: 3px solid #ffbf00 !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 6px #022b4a !important;
+}
+
+/* Mode abu-abu. */
+/* Di <html> (bukan <body>) agar elemen melayang tetap menempel di layar. */
+html.a11y-gray:has(.transi-page) {
+    filter: grayscale(1);
 }
