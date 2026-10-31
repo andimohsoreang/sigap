@@ -6,10 +6,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AdminLayout from '@/layouts/admin-layout';
+import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 import { router, useForm, usePage } from '@inertiajs/react';
-import { Bell, ListChecks, Plus, Save, Settings2, Timer, Trash2, UserCog } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
+import { Bell, ListChecks, Megaphone, Plus, Save, Timer, Trash2, UserCog } from 'lucide-react';
+import { type FormEvent, useEffect, useState } from 'react';
 
 interface Props {
     settings: {
@@ -25,9 +26,35 @@ interface Props {
     profil: { email: string | null };
 }
 
+type TabKey = 'profil' | 'sla' | 'kategori' | 'notifikasi' | 'kanal';
+
+const TABS: { key: TabKey; label: string; icon: typeof UserCog; superOnly?: boolean }[] = [
+    { key: 'profil', label: 'Profil saya', icon: UserCog },
+    { key: 'sla', label: 'SLA & EWS', icon: Timer, superOnly: true },
+    { key: 'kategori', label: 'Kategori laporan', icon: ListChecks, superOnly: true },
+    { key: 'notifikasi', label: 'Notifikasi internal', icon: Bell, superOnly: true },
+    { key: 'kanal', label: 'Kanal resmi publik', icon: Megaphone, superOnly: true },
+];
+
+const initialTab = (): TabKey => {
+    if (typeof window === 'undefined') return 'profil';
+    const hash = window.location.hash.slice(1);
+    return TABS.some((t) => t.key === hash) ? (hash as TabKey) : 'profil';
+};
+
 export default function Pengaturan({ settings, categories, kanal_publik: kanalPublik, can_edit: canEdit, profil: profilData }: Props) {
     const { auth } = usePage<SharedData>().props;
     const [newCategory, setNewCategory] = useState('');
+    const [tab, setTab] = useState<TabKey>(initialTab);
+    useEffect(() => {
+        const onHash = () => setTab(initialTab());
+        window.addEventListener('hashchange', onHash);
+        return () => window.removeEventListener('hashchange', onHash);
+    }, []);
+    const selectTab = (key: TabKey) => {
+        setTab(key);
+        window.history.replaceState(window.history.state, '', `#${key}`);
+    };
 
     // SLA + EWS
     const sla = useForm({
@@ -88,212 +115,244 @@ export default function Pengaturan({ settings, categories, kanal_publik: kanalPu
     };
 
     return (
-        <AdminLayout title="Pengaturan & Preferensi" subtitle="Profil, SLA/EWS, kategori, dan notifikasi.">
+        <AdminLayout title="Pengaturan" subtitle="Profil Anda, aturan SLA, kategori laporan, notifikasi, dan kanal resmi di halaman publik.">
             {!canEdit && (
                 <p className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
                     Pengaturan sistem, kategori, dan notifikasi hanya dapat diubah Super Admin. Anda tetap dapat memperbarui profil Anda sendiri.
                 </p>
             )}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {/* Profil */}
-                <Card className="border-gray-200">
-                    <CardHeader className="border-b border-gray-100 pb-3">
-                        <CardTitle className="flex items-center gap-2 text-base text-gray-800">
-                            <UserCog className="text-brand-light h-5 w-5" /> Profil Admin
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <form onSubmit={submitProfil} className="space-y-4">
-                            <Field label="Nama Lengkap" error={profil.errors.name}>
-                                <Input value={profil.data.name} onChange={(e) => profil.setData('name', e.target.value)} />
-                            </Field>
-                            <Field label="Email Notifikasi" error={profil.errors.email}>
-                                <Input
-                                    type="email"
-                                    autoComplete="email"
-                                    value={profil.data.email}
-                                    onChange={(e) => profil.setData('email', e.target.value)}
-                                    placeholder="nama@transmigrasi.go.id"
-                                />
-                                <p className="mt-1 text-[11px] text-gray-400">
-                                    Untuk notifikasi tiket baru, perubahan status, EWS, dan rujukan. Kosongkan bila tidak ingin menerima email.
-                                </p>
-                            </Field>
-                            <Field label="Kata Sandi Saat Ini" error={profil.errors.current_password}>
-                                <Input
-                                    type="password"
-                                    autoComplete="current-password"
-                                    value={profil.data.current_password}
-                                    onChange={(e) => profil.setData('current_password', e.target.value)}
-                                    placeholder="Wajib diisi jika mengganti kata sandi"
-                                />
-                            </Field>
-                            <Field label="Kata Sandi Baru" error={profil.errors.password}>
-                                <Input
-                                    type="password"
-                                    autoComplete="new-password"
-                                    value={profil.data.password}
-                                    onChange={(e) => profil.setData('password', e.target.value)}
-                                    placeholder="Kosongkan jika tidak ingin diubah"
-                                />
-                                <p className="text-[11px] text-gray-400">Min. 12 karakter, huruf besar, huruf kecil, angka.</p>
-                            </Field>
-                            <Field label="Konfirmasi Kata Sandi Baru" error={profil.errors.password_confirmation}>
-                                <Input
-                                    type="password"
-                                    autoComplete="new-password"
-                                    value={profil.data.password_confirmation}
-                                    onChange={(e) => profil.setData('password_confirmation', e.target.value)}
-                                />
-                            </Field>
-                            <div className="flex justify-end">
-                                <Button type="submit" disabled={profil.processing}>
-                                    <Save className="h-4 w-4" /> Simpan Profil
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
-
-                {/* SLA & EWS */}
-                <Card className="border-gray-200">
-                    <CardHeader className="border-b border-gray-100 pb-3">
-                        <CardTitle className="flex items-center gap-2 text-base text-gray-800">
-                            <Timer className="text-brand-light h-5 w-5" /> Konfigurasi SLA &amp; EWS
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <form onSubmit={submitSla} className="space-y-4">
-                            <fieldset disabled={!canEdit} className="space-y-4">
-                                <Field label="Batas Waktu Respon Awal (Menit)" error={sla.errors.sla_response_minutes}>
-                                    <Input
-                                        type="number"
-                                        value={sla.data.sla_response_minutes}
-                                        onChange={(e) => sla.setData('sla_response_minutes', e.target.value)}
-                                    />
-                                </Field>
-                                <ToggleRow
-                                    label="Aktifkan Peringatan EWS"
-                                    checked={sla.data.ews_enabled}
-                                    onChange={(v) => sla.setData('ews_enabled', v)}
-                                    disabled={!canEdit}
-                                />
-                                <ToggleRow
-                                    label="Otomatisasi Disposisi Tiket"
-                                    checked={sla.data.auto_disposition}
-                                    onChange={(v) => sla.setData('auto_disposition', v)}
-                                    disabled={!canEdit}
-                                />
-                            </fieldset>
-                            <div className="flex justify-end">
-                                <Button type="submit" disabled={!canEdit || sla.processing}>
-                                    <Save className="h-4 w-4" /> Simpan Sistem
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
-
-                {/* Kategori */}
-                <Card className="border-gray-200">
-                    <CardHeader className="border-b border-gray-100 pb-3">
-                        <CardTitle className="flex items-center gap-2 text-base text-gray-800">
-                            <ListChecks className="text-brand-light h-5 w-5" /> Manajemen Kategori Laporan
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        {canEdit && (
-                            <div className="mb-4 flex gap-2">
-                                <Input
-                                    value={newCategory}
-                                    onChange={(e) => setNewCategory(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCategory())}
-                                    placeholder="Tambah kategori baru..."
-                                />
-                                <Button type="button" onClick={addCategory} className="shrink-0">
-                                    <Plus className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        )}
-                        {categoryError && <p className="mb-2 text-xs font-semibold text-rose-500">{categoryError}</p>}
-                        <div className="h-48 space-y-2 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-2">
-                            {categories.map((c) => (
-                                <div
-                                    key={c.id}
-                                    className="flex items-center justify-between rounded border border-gray-100 bg-[var(--acd-surface,#fff)] p-2 text-xs font-bold text-gray-700"
-                                >
-                                    <span>{c.name}</span>
-                                    {canEdit && (
-                                        <button
-                                            onClick={() => router.delete(`/admin/kategori/${c.id}`, { preserveScroll: true })}
-                                            className="px-2 text-red-500 hover:text-red-700"
-                                            title="Hapus kategori"
-                                        >
-                                            <Trash2 className="h-3.5 w-3.5" />
-                                        </button>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Notifikasi internal */}
-                <Card className="border-gray-200">
-                    <CardHeader className="border-b border-gray-100 pb-3">
-                        <CardTitle className="flex items-center gap-2 text-base text-gray-800">
-                            <Bell className="text-primary h-5 w-5" /> Notifikasi Tiket Internal
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <p className="mb-4 text-xs text-gray-500">Tujuan notifikasi saat pegawai mengirim laporan gangguan sarana &amp; TIK.</p>
-                        <form onSubmit={submitNotif} className="space-y-4">
-                            <fieldset disabled={!canEdit} className="space-y-4">
-                                <Field
-                                    label="Email PIC Biro Umum & TIK"
-                                    error={(notif.errors as Record<string, string | undefined>)['notification.pic_email']}
-                                >
-                                    <Input
-                                        type="email"
-                                        value={notif.data['notification[pic_email]']}
-                                        onChange={(e) => notif.setData('notification[pic_email]', e.target.value)}
-                                        placeholder="it-support@kemenatrans.go.id"
-                                    />
-                                </Field>
-                                <Field
-                                    label="No. WhatsApp PIC (Eskalasi Kritis)"
-                                    error={(notif.errors as Record<string, string | undefined>)['notification.pic_phone']}
-                                >
-                                    <Input
-                                        value={notif.data['notification[pic_phone]']}
-                                        onChange={(e) => notif.setData('notification[pic_phone]', e.target.value)}
-                                        placeholder="081234567890"
-                                    />
-                                </Field>
-                                <div className="flex items-center gap-3 rounded-lg border border-gray-200 p-3 opacity-60">
-                                    <Checkbox checked={false} disabled />
-                                    <div>
-                                        <p className="text-xs font-bold text-gray-800">Kirim WhatsApp otomatis untuk urgensi Kritis</p>
-                                        <p className="text-[11px] text-gray-500">
-                                            Belum diaktifkan (PRD D10). Notifikasi hanya lewat email &amp; in-app.
+            <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+                {/* Satu bagian per tab (dulu satu halaman ±3.000 px); tab tersimpan di #hash URL. */}
+                <nav
+                    aria-label="Bagian pengaturan"
+                    className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:sticky lg:top-24 lg:mx-0 lg:flex-col lg:self-start lg:overflow-visible lg:px-0"
+                >
+                    {TABS.map((t) => (
+                        <button
+                            key={t.key}
+                            type="button"
+                            onClick={() => selectTab(t.key)}
+                            aria-current={tab === t.key ? 'page' : undefined}
+                            className={cn(
+                                'flex h-10 shrink-0 items-center gap-2.5 rounded-lg px-3 text-left text-[13.5px] font-medium transition-colors lg:w-full',
+                                tab === t.key
+                                    ? 'bg-[var(--acd-surface,#fff)] text-[var(--adm-text)] shadow-sm ring-1 ring-[var(--adm-border)]'
+                                    : 'text-[var(--adm-text-2)] hover:bg-[var(--acd-surface,#fff)] hover:text-[var(--adm-text)]',
+                            )}
+                        >
+                            <t.icon
+                                className={cn('h-4 w-4 shrink-0', tab === t.key ? 'text-[var(--adm-accent)]' : 'text-[var(--adm-text-3)]')}
+                                aria-hidden="true"
+                            />
+                            {t.label}
+                            {t.superOnly && !canEdit && <span className="ml-auto text-[11px] text-[var(--adm-text-3)]">lihat</span>}
+                        </button>
+                    ))}
+                </nav>
+                <div className="max-w-3xl min-w-0 [&_.border-gray-200]:shadow-none">
+                    {tab === 'profil' && (
+                        <Card className="border-gray-200">
+                            <CardHeader className="border-b border-gray-100 pb-3">
+                                <CardTitle className="flex items-center gap-2 text-base text-gray-800">
+                                    <UserCog className="text-brand-light h-5 w-5" /> Profil Admin
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6">
+                                <form onSubmit={submitProfil} className="space-y-4">
+                                    <Field label="Nama Lengkap" error={profil.errors.name}>
+                                        <Input value={profil.data.name} onChange={(e) => profil.setData('name', e.target.value)} />
+                                    </Field>
+                                    <Field label="Email Notifikasi" error={profil.errors.email}>
+                                        <Input
+                                            type="email"
+                                            autoComplete="email"
+                                            value={profil.data.email}
+                                            onChange={(e) => profil.setData('email', e.target.value)}
+                                            placeholder="nama@transmigrasi.go.id"
+                                        />
+                                        <p className="mt-1 text-[11px] text-gray-400">
+                                            Untuk notifikasi tiket baru, perubahan status, EWS, dan rujukan. Kosongkan bila tidak ingin menerima
+                                            email.
                                         </p>
+                                    </Field>
+                                    <Field label="Kata Sandi Saat Ini" error={profil.errors.current_password}>
+                                        <Input
+                                            type="password"
+                                            autoComplete="current-password"
+                                            value={profil.data.current_password}
+                                            onChange={(e) => profil.setData('current_password', e.target.value)}
+                                            placeholder="Wajib diisi jika mengganti kata sandi"
+                                        />
+                                    </Field>
+                                    <Field label="Kata Sandi Baru" error={profil.errors.password}>
+                                        <Input
+                                            type="password"
+                                            autoComplete="new-password"
+                                            value={profil.data.password}
+                                            onChange={(e) => profil.setData('password', e.target.value)}
+                                            placeholder="Kosongkan jika tidak ingin diubah"
+                                        />
+                                        <p className="text-[11px] text-gray-400">Min. 12 karakter, huruf besar, huruf kecil, angka.</p>
+                                    </Field>
+                                    <Field label="Konfirmasi Kata Sandi Baru" error={profil.errors.password_confirmation}>
+                                        <Input
+                                            type="password"
+                                            autoComplete="new-password"
+                                            value={profil.data.password_confirmation}
+                                            onChange={(e) => profil.setData('password_confirmation', e.target.value)}
+                                        />
+                                    </Field>
+                                    <div className="flex justify-end">
+                                        <Button type="submit" disabled={profil.processing}>
+                                            <Save className="h-4 w-4" /> Simpan Profil
+                                        </Button>
                                     </div>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {tab === 'sla' && (
+                        <Card className="border-gray-200">
+                            <CardHeader className="border-b border-gray-100 pb-3">
+                                <CardTitle className="flex items-center gap-2 text-base text-gray-800">
+                                    <Timer className="text-brand-light h-5 w-5" /> Konfigurasi SLA &amp; EWS
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6">
+                                <form onSubmit={submitSla} className="space-y-4">
+                                    <fieldset disabled={!canEdit} className="space-y-4">
+                                        <Field label="Batas Waktu Respon Awal (Menit)" error={sla.errors.sla_response_minutes}>
+                                            <Input
+                                                type="number"
+                                                value={sla.data.sla_response_minutes}
+                                                onChange={(e) => sla.setData('sla_response_minutes', e.target.value)}
+                                            />
+                                        </Field>
+                                        <ToggleRow
+                                            label="Aktifkan Peringatan EWS"
+                                            checked={sla.data.ews_enabled}
+                                            onChange={(v) => sla.setData('ews_enabled', v)}
+                                            disabled={!canEdit}
+                                        />
+                                        <ToggleRow
+                                            label="Otomatisasi Disposisi Tiket"
+                                            checked={sla.data.auto_disposition}
+                                            onChange={(v) => sla.setData('auto_disposition', v)}
+                                            disabled={!canEdit}
+                                        />
+                                    </fieldset>
+                                    <div className="flex justify-end">
+                                        <Button type="submit" disabled={!canEdit || sla.processing}>
+                                            <Save className="h-4 w-4" /> Simpan Sistem
+                                        </Button>
+                                    </div>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {tab === 'kategori' && (
+                        <Card className="border-gray-200">
+                            <CardHeader className="border-b border-gray-100 pb-3">
+                                <CardTitle className="flex items-center gap-2 text-base text-gray-800">
+                                    <ListChecks className="text-brand-light h-5 w-5" /> Manajemen Kategori Laporan
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6">
+                                {canEdit && (
+                                    <div className="mb-4 flex gap-2">
+                                        <Input
+                                            value={newCategory}
+                                            onChange={(e) => setNewCategory(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCategory())}
+                                            placeholder="Tambah kategori baru..."
+                                        />
+                                        <Button type="button" onClick={addCategory} className="shrink-0">
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                )}
+                                {categoryError && <p className="mb-2 text-xs font-semibold text-rose-500">{categoryError}</p>}
+                                <div className="h-48 space-y-2 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-2">
+                                    {categories.map((c) => (
+                                        <div
+                                            key={c.id}
+                                            className="flex items-center justify-between rounded border border-gray-100 bg-[var(--acd-surface,#fff)] p-2 text-xs font-bold text-gray-700"
+                                        >
+                                            <span>{c.name}</span>
+                                            {canEdit && (
+                                                <button
+                                                    onClick={() => router.delete(`/admin/kategori/${c.id}`, { preserveScroll: true })}
+                                                    className="px-2 text-red-500 hover:text-red-700"
+                                                    title="Hapus kategori"
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
-                            </fieldset>
-                            <div className="flex justify-end">
-                                <Button type="submit" disabled={!canEdit || notif.processing}>
-                                    <Save className="h-4 w-4" /> Simpan Notifikasi
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                            </CardContent>
+                        </Card>
+                    )}
 
-                <KanalPublikForm initial={kanalPublik} canEdit={canEdit} />
-            </div>
+                    {tab === 'notifikasi' && (
+                        <Card className="border-gray-200">
+                            <CardHeader className="border-b border-gray-100 pb-3">
+                                <CardTitle className="flex items-center gap-2 text-base text-gray-800">
+                                    <Bell className="text-primary h-5 w-5" /> Notifikasi Tiket Internal
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6">
+                                <p className="mb-4 text-xs text-gray-500">
+                                    Tujuan notifikasi saat pegawai mengirim laporan gangguan sarana &amp; TIK.
+                                </p>
+                                <form onSubmit={submitNotif} className="space-y-4">
+                                    <fieldset disabled={!canEdit} className="space-y-4">
+                                        <Field
+                                            label="Email PIC Biro Umum & TIK"
+                                            error={(notif.errors as Record<string, string | undefined>)['notification.pic_email']}
+                                        >
+                                            <Input
+                                                type="email"
+                                                value={notif.data['notification[pic_email]']}
+                                                onChange={(e) => notif.setData('notification[pic_email]', e.target.value)}
+                                                placeholder="it-support@kemenatrans.go.id"
+                                            />
+                                        </Field>
+                                        <Field
+                                            label="No. WhatsApp PIC (Eskalasi Kritis)"
+                                            error={(notif.errors as Record<string, string | undefined>)['notification.pic_phone']}
+                                        >
+                                            <Input
+                                                value={notif.data['notification[pic_phone]']}
+                                                onChange={(e) => notif.setData('notification[pic_phone]', e.target.value)}
+                                                placeholder="081234567890"
+                                            />
+                                        </Field>
+                                        <div className="flex items-center gap-3 rounded-lg border border-gray-200 p-3 opacity-60">
+                                            <Checkbox checked={false} disabled />
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-800">Kirim WhatsApp otomatis untuk urgensi Kritis</p>
+                                                <p className="text-[11px] text-gray-500">
+                                                    Belum diaktifkan (PRD D10). Notifikasi hanya lewat email &amp; in-app.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </fieldset>
+                                    <div className="flex justify-end">
+                                        <Button type="submit" disabled={!canEdit || notif.processing}>
+                                            <Save className="h-4 w-4" /> Simpan Notifikasi
+                                        </Button>
+                                    </div>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    )}
 
-            <div className="mt-6 flex items-center gap-2 text-xs text-gray-400">
-                <Settings2 className="h-4 w-4" /> Pengaturan disimpan pada tabel <code>settings</code> dan langsung berlaku pada perhitungan SLA.
+                    {tab === 'kanal' && <KanalPublikForm initial={kanalPublik} canEdit={canEdit} />}
+                </div>
             </div>
         </AdminLayout>
     );
