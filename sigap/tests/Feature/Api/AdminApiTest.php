@@ -65,20 +65,22 @@ class AdminApiTest extends TestCase
         ]);
     }
 
-    public function test_admin_kawasan_only_sees_own_region_tickets(): void
+    /** 31-10-2026: wilayah berasal dari pengaduan; admin kawasan menangani semua pengaduan publik. */
+    public function test_admin_kawasan_sees_all_public_tickets_but_not_internal(): void
     {
         $mine = Region::factory()->create();
         $other = Region::factory()->create();
 
         Ticket::factory()->create(['region_id' => $mine->id]);
         Ticket::factory()->create(['region_id' => $other->id]);
+        Ticket::factory()->internal()->create();
 
         $admin = $this->admin(UserRole::AdminKawasan, $mine->id);
 
         $this->actingAs($admin, 'sanctum')
             ->getJson('/api/v1/admin/tickets')
             ->assertOk()
-            ->assertJsonCount(1, 'data');
+            ->assertJsonCount(2, 'data');
     }
 
     public function test_rekap_sla_pct_is_not_always_zero(): void

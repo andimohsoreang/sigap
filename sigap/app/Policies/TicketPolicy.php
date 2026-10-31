@@ -33,8 +33,9 @@ class TicketPolicy
             return true;
         }
 
+        // Admin kawasan: semua pengaduan publik (tiket internal hanya super admin).
         if ($user->role === UserRole::AdminKawasan) {
-            return $ticket->region_id !== null && $ticket->region_id === $user->region_id;
+            return ! $ticket->is_internal;
         }
 
         // Warga: hanya tiket miliknya.
@@ -48,9 +49,7 @@ class TicketPolicy
             return true;
         }
 
-        return $user->role === UserRole::AdminKawasan
-            && $ticket->region_id !== null
-            && $ticket->region_id === $user->region_id;
+        return $user->role === UserRole::AdminKawasan && ! $ticket->is_internal;
     }
 
     public function reply(User $user, Ticket $ticket): bool

@@ -77,10 +77,9 @@ class NotificationService
             ->where(function ($q) use ($ticket) {
                 $q->where('role', UserRole::SuperAdmin->value);
 
-                if (! $ticket->is_internal && $ticket->region_id !== null) {
-                    $q->orWhere(fn ($q) => $q
-                        ->where('role', UserRole::AdminKawasan->value)
-                        ->where('region_id', $ticket->region_id));
+                // Pengaduan publik: semua admin kawasan (wilayah tidak lagi membatasi).
+                if (! $ticket->is_internal) {
+                    $q->orWhere('role', UserRole::AdminKawasan->value);
                 }
             })
             ->orderBy('id')

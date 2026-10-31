@@ -70,7 +70,8 @@ class PublicPrivacyTest extends TestCase
 
         $this->getJson($url)->assertNotFound();
         $this->actingAs($other, 'sanctum')->getJson($url)->assertNotFound();
-        $this->actingAs($kawasanLain, 'sanctum')->getJson($url)->assertNotFound();
+        // 31-10-2026: admin kawasan menangani semua pengaduan publik, termasuk yang rahasia.
+        $this->actingAs($kawasanLain, 'sanctum')->getJson($url)->assertOk();
         $this->actingAs($owner, 'sanctum')->getJson($url)->assertOk()->assertJsonPath('data.pelapor', 'Anonim');
         $this->actingAs($super, 'sanctum')->getJson($url)->assertOk();
     }

@@ -30,15 +30,17 @@ class AuthorizationScopeTest extends TestCase
         return User::factory()->admin(UserRole::AdminKawasan)->create(['region_id' => $region?->id]);
     }
 
-    public function test_admin_kawasan_without_region_sees_no_tickets(): void
+    /** 31-10-2026: admin kawasan tanpa kawasan tugas tetap melihat semua pengaduan publik (bukan internal). */
+    public function test_admin_kawasan_without_region_sees_all_public_tickets(): void
     {
         Ticket::factory()->create(['region_id' => null]);
         Ticket::factory()->create(['region_id' => Region::factory()->create()->id]);
+        Ticket::factory()->internal()->create();
         $admin = $this->kawasan(null);
 
-        $this->assertSame(0, Ticket::query()->visibleTo($admin)->count());
-        $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/tickets')->assertOk()->assertJsonCount(0, 'data');
-        $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/rekap')->assertOk()->assertJsonPath('total', 0);
+        $this->assertSame(2, Ticket::query()->visibleTo($admin)->count());
+        $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/tickets')->assertOk()->assertJsonCount(2, 'data');
+        $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/rekap')->assertOk()->assertJsonPath('total', 2);
     }
 
     public function test_store_admin_requires_region_for_admin_kawasan_and_strong_password(): void

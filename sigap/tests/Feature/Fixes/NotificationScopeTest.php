@@ -43,7 +43,8 @@ class NotificationScopeTest extends TestCase
         $this->assertTrue((new TicketNotificationMail([]))->afterCommit);
     }
 
-    public function test_recipients_are_super_admins_and_admins_of_ticket_region(): void
+    /** 31-10-2026: pengaduan publik ke semua admin kawasan aktif; internal hanya super admin. */
+    public function test_recipients_are_super_admins_and_all_admin_kawasan_for_public_tickets(): void
     {
         $regionA = Region::factory()->create();
         $regionB = Region::factory()->create();
@@ -56,12 +57,11 @@ class NotificationScopeTest extends TestCase
         $service = app(NotificationService::class);
 
         $ids = $service->recipientsFor(Ticket::factory()->create(['region_id' => $regionA->id]))->pluck('id')->all();
-        $this->assertEqualsCanonicalizing([$super->id, $kawasanA->id], $ids);
+        $this->assertEqualsCanonicalizing([$super->id, $kawasanA->id, $kawasanB->id], $ids);
 
         $internal = $service->recipientsFor(Ticket::factory()->internal()->create())->pluck('id')->all();
         $this->assertSame([$super->id], $internal);
 
-        $this->assertNotContains($kawasanB->id, $ids);
     }
 
     public function test_ticket_changed_broadcasts_on_private_user_channels(): void
