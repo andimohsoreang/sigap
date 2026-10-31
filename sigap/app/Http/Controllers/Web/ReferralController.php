@@ -40,7 +40,8 @@ class ReferralController extends Controller
         $this->authorize('viewAny', Ticket::class);
 
         $user = $request->user();
-        $mine = $request->query('milik', 'saya') !== 'semua';
+        // Super admin memantau semua rujukan; petugas mulai dari rujukan miliknya.
+        $mine = $request->query('milik', $user->isSuperAdmin() ? 'semua' : 'saya') !== 'semua';
         $tab = in_array($request->query('tab'), self::TABS, true) ? $request->query('tab') : 'perlu_tindakan';
 
         $scope = fn (): Builder => Referral::query()->when($mine, fn ($q) => $q->where('assigned_to', $user->id));
