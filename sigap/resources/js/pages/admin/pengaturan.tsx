@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import AdminLayout from '@/layouts/admin-layout';
 import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
@@ -170,7 +169,7 @@ export default function Pengaturan({ settings, categories, kanal_publik: kanalPu
                                             onChange={(e) => profil.setData('email', e.target.value)}
                                             placeholder="nama@transmigrasi.go.id"
                                         />
-                                        <p className="mt-1 text-[11px] text-gray-400">
+                                        <p className="mt-1 text-xs text-[var(--adm-text-3)]">
                                             Untuk notifikasi tiket baru, perubahan status, EWS, dan rujukan. Kosongkan bila tidak ingin menerima
                                             email.
                                         </p>
@@ -192,7 +191,7 @@ export default function Pengaturan({ settings, categories, kanal_publik: kanalPu
                                             onChange={(e) => profil.setData('password', e.target.value)}
                                             placeholder="Kosongkan jika tidak ingin diubah"
                                         />
-                                        <p className="text-[11px] text-gray-400">Min. 12 karakter, huruf besar, huruf kecil, angka.</p>
+                                        <p className="text-xs text-[var(--adm-text-3)]">Min. 12 karakter, huruf besar, huruf kecil, angka.</p>
                                     </Field>
                                     <Field label="Konfirmasi Kata Sandi Baru" error={profil.errors.password_confirmation}>
                                         <Input
@@ -369,10 +368,11 @@ function ToggleRow({ label, checked, onChange, disabled }: { label: string; chec
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
     return (
-        <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-gray-600">{label}</Label>
+        // <label> pembungkus: label tertaut ke isian di dalamnya (pembaca layar & klik label).
+        <label className="block space-y-1.5">
+            <span className="block text-[13px] font-semibold text-[var(--adm-text)]">{label}</span>
             {children}
-            {error && <p className="text-xs font-semibold text-rose-500">{error}</p>}
-        </div>
+            {error && <span className="block text-xs font-semibold text-[var(--adm-danger)]">{error}</span>}
+        </label>
     );
 }

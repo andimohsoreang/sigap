@@ -264,7 +264,7 @@ function State({ tone, icon: Icon, text }: { tone: 'amber' | 'green' | 'gray' | 
     return (
         <span
             className={cn('mt-0.5 flex items-center gap-1.5 text-xs font-medium', {
-                'text-amber-700': tone === 'amber',
+                'text-amber-800': tone === 'amber',
                 'text-emerald-700': tone === 'green',
                 'text-gray-500': tone === 'gray',
                 'text-red-600': tone === 'red',

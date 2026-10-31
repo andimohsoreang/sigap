@@ -70,7 +70,7 @@ export function Pagination({
                 </span>
                 {onPerPageChange && (
                     <Select value={String(meta.per_page)} onValueChange={(v) => onPerPageChange(Number(v))}>
-                        <SelectTrigger className="h-9 w-[124px] text-[13px]">
+                        <SelectTrigger className="h-9 w-[124px] text-[13px]" aria-label="Jumlah baris per halaman">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

@@ -37,7 +37,7 @@ export default function SebaranWilayah({ rows, tanpa_provinsi: tanpaProvinsi, to
             subtitle={`${nf(rows.length)} provinsi asal · ${nf(total)} pengaduan. Diambil dari pengaduan yang masuk.`}
         >
             <div className="space-y-4">
-                <p className="flex items-start gap-2 rounded-lg border border-[var(--adm-border)] bg-[var(--adm-info-soft)] px-4 py-3 text-sm text-[var(--adm-text-2)]">
+                <p className="flex items-start gap-2 rounded-lg border border-[var(--adm-border)] bg-[var(--adm-info-soft)] px-4 py-3 text-sm text-[var(--adm-text)]">
                     <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--adm-info)]" aria-hidden="true" />
                     Provinsi dipilih warga saat bertanya ke TARA, mengisi formulir, atau oleh petugas di Input Manual. Lokasi adalah teks bebas yang
                     ditulis pelapor (kabupaten, kawasan, atau desa).
@@ -124,7 +124,7 @@ export default function SebaranWilayah({ rows, tanpa_provinsi: tanpaProvinsi, to
                 )}
 
                 {tanpaProvinsi > 0 && (
-                    <p className="text-xs text-[var(--adm-text-3)]">
+                    <p className="text-xs text-[var(--adm-text-2)]">
                         {nf(tanpaProvinsi)} pengaduan lama belum mencantumkan provinsi dan tidak masuk daftar ini.
                     </p>
                 )}

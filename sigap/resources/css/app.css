@@ -1135,6 +1135,17 @@ html.dark .absol-admin {
     --color-purple-700: oklch(0.827 0.119 306.383);
     --color-purple-800: oklch(0.902 0.063 306.703);
     --color-purple-900: oklch(0.946 0.033 307.174);
+    --color-red-950: oklch(0.971 0.013 17.38);
+    --color-rose-950: oklch(0.969 0.015 12.422);
+    --color-amber-950: oklch(0.987 0.022 95.277);
+    --color-emerald-950: oklch(0.979 0.021 166.113);
+    --color-green-950: oklch(0.982 0.018 155.826);
+    --color-blue-950: oklch(0.97 0.014 254.604);
+    --color-violet-950: oklch(0.969 0.016 293.756);
+    --color-orange-950: oklch(0.98 0.016 73.684);
+    --color-yellow-950: oklch(0.987 0.026 102.212);
+    --color-sky-950: oklch(0.977 0.013 236.62);
+    --color-purple-950: oklch(0.977 0.014 308.299);
     --color-gray-50: #111c28;
     --color-gray-100: #182636;
     --color-gray-200: #22344a;

@@ -196,7 +196,7 @@ export default function ManajemenTiket({ tickets, filters, chips, impacts, tab_c
                                 className={cn(
                                     'rounded-full px-1.5 text-xs font-semibold tabular-nums',
                                     active
-                                        ? 'bg-white/20 text-white'
+                                        ? 'bg-black/25 text-white'
                                         : t.key === 'ews' && n > 0
                                           ? 'bg-[var(--adm-danger-soft)] text-[var(--adm-danger)]'
                                           : 'bg-[var(--adm-surface-2)] text-[var(--adm-text-3)]',
