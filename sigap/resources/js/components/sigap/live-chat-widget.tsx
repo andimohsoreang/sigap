@@ -454,7 +454,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                         <button
                             type="button"
                             onClick={() => setOpen(true)}
-                            className="transi-launcher__bubble hidden rounded-2xl rounded-br-sm bg-white px-4 py-2.5 text-sm font-semibold text-[#022b4a] shadow-[0_10px_24px_rgba(0,18,36,0.18)] sm:block"
+                            className="transi-launcher__bubble hidden rounded-2xl rounded-br-sm bg-[var(--tcd-surface,#fff)] px-4 py-2.5 text-sm font-semibold text-[var(--tcd-heading,#022b4a)] shadow-[0_10px_24px_rgba(0,18,36,0.18)] sm:block"
                         >
                             Ada yang bisa dibantu?
                         </button>
@@ -466,7 +466,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                         aria-label={open ? 'Tutup chat TARA' : unread > 0 ? `Buka chat TARA, ${unread} balasan baru` : 'Buka chat TARA'}
                         aria-expanded={open}
                         aria-controls="sigap-live-chat"
-                        className="transi-launcher__face relative h-16 w-16 rounded-full border-[3px] border-[#c29642] bg-[#f8f3ef] bg-cover bg-center shadow-[0_12px_28px_rgba(0,18,36,0.35)] sm:h-[72px] sm:w-[72px]"
+                        className="transi-launcher__face relative h-16 w-16 rounded-full border-[3px] border-[#c29642] bg-[var(--tcd-cream,#f8f3ef)] bg-cover bg-center shadow-[0_12px_28px_rgba(0,18,36,0.35)] sm:h-[72px] sm:w-[72px]"
                         style={{ backgroundImage: `url(${TRANSI_AVATAR})` }}
                     >
                         {unread > 0 && !open && (
@@ -502,7 +502,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
             <div
                 id="sigap-live-chat"
                 className={cn(
-                    'fixed right-4 z-[100] flex w-[calc(100vw-2rem)] max-w-md origin-bottom-right flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-transform duration-300 sm:right-6 sm:w-96',
+                    'fixed right-4 z-[100] flex w-[calc(100vw-2rem)] max-w-md origin-bottom-right flex-col overflow-hidden rounded-xl border border-[var(--tcd-border,oklch(0.928_0.006_264.531))] bg-[var(--tcd-surface,#fff)] shadow-2xl transition-transform duration-300 sm:right-6 sm:w-96',
                     transi ? 'bottom-24 rounded-2xl sm:bottom-28' : 'bottom-20 sm:bottom-24',
                     open ? 'scale-100' : 'pointer-events-none scale-0',
                 )}
@@ -518,7 +518,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                     <div className="flex min-w-0 items-center gap-2">
                         {transi ? (
                             <span
-                                className="h-8 w-8 shrink-0 rounded-full bg-[#f8f3ef] bg-cover bg-center ring-2 ring-white/40"
+                                className="h-8 w-8 shrink-0 rounded-full bg-[var(--tcd-cream,#f8f3ef)] bg-cover bg-center ring-2 ring-white/40"
                                 style={{ backgroundImage: `url(${TRANSI_AVATAR})` }}
                                 aria-hidden="true"
                             />
@@ -567,7 +567,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                             role="log"
                             aria-live="polite"
                             aria-label="Riwayat percakapan"
-                            className="flex h-96 max-h-[60vh] flex-col gap-3 overflow-y-auto scroll-smooth bg-gray-50 p-4 text-sm"
+                            className="flex h-96 max-h-[60vh] flex-col gap-3 overflow-y-auto scroll-smooth bg-[var(--tcd-muted,oklch(0.985_0.002_247.839))] p-4 text-sm"
                         >
                             <Bubble mine={false} ai={withAi} author={withAi ? 'TARA' : 'Petugas Contact Center'}>
                                 {greeting}
@@ -624,7 +624,7 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                             )}
 
                             {((outgoing && (withAi || awaitingStaff)) || assistant?.mengetik) && (
-                                <p className="text-xs text-gray-500" role="status">
+                                <p className="text-xs text-[var(--tcd-text-3,oklch(0.551_0.027_264.364))]" role="status">
                                     {waitLabel}
                                 </p>
                             )}
@@ -641,25 +641,28 @@ export default function LiveChatWidget({ variant = 'default' }: { variant?: 'def
                         )}
 
                         {error && (
-                            <p role="alert" className="border-t border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-600">
+                            <p
+                                role="alert"
+                                className="border-t border-[var(--tcd-danger-border,oklch(0.941_0.03_12.58))] bg-[var(--tcd-danger-soft,oklch(0.969_0.015_12.422))] px-3 py-2 text-xs text-[var(--tcd-danger,oklch(0.586_0.253_17.585))]"
+                            >
                                 {error}
                             </p>
                         )}
 
                         {withAi && (
-                            <div className="flex justify-center border-t border-gray-100 bg-white px-3 pt-2">
+                            <div className="flex justify-center border-t border-[var(--tcd-border,oklch(0.967_0.003_264.542))] bg-[var(--tcd-surface,#fff)] px-3 pt-2">
                                 <button
                                     type="button"
                                     onClick={() => void requestStaff()}
                                     disabled={sending}
-                                    className="border-primary text-primary flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold hover:bg-gray-50 disabled:opacity-50"
+                                    className="border-primary text-primary flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold hover:bg-[var(--tcd-muted,oklch(0.985_0.002_247.839))] disabled:opacity-50"
                                 >
                                     <Headset className="h-3.5 w-3.5" aria-hidden="true" /> Bicara dengan petugas
                                 </button>
                             </div>
                         )}
 
-                        <form onSubmit={submit} className="flex items-center gap-2 bg-white p-3">
+                        <form onSubmit={submit} className="flex items-center gap-2 bg-[var(--tcd-surface,#fff)] p-3">
                             <label htmlFor="sigap-chat-input" className="sr-only">
                                 Ketik pesan
                             </label>
@@ -717,14 +720,16 @@ function Bubble({
                 <div
                     className={cn(
                         'rounded-lg p-2.5 text-xs break-words whitespace-pre-wrap shadow-sm',
-                        mine ? 'bg-primary rounded-tr-none text-white' : 'rounded-tl-none border border-gray-100 bg-white text-gray-700',
+                        mine
+                            ? 'bg-primary rounded-tr-none text-white'
+                            : 'rounded-tl-none border border-[var(--tcd-border,oklch(0.967_0.003_264.542))] bg-[var(--tcd-surface,#fff)] text-[var(--tcd-text-2,oklch(0.373_0.034_259.733))]',
                     )}
                 >
                     {children}
                     {footer}
                 </div>
                 {time && (
-                    <span className="mt-0.5 text-[10px] text-gray-500">
+                    <span className="mt-0.5 text-[10px] text-[var(--tcd-text-3,oklch(0.551_0.027_264.364))]">
                         {!mine && `${author} · `}
                         {time}
                     </span>
@@ -836,15 +841,17 @@ export function SourceList({ sources }: { sources: Source[] }) {
     const hasQuotes = sorted.some((s) => s.jenis === 'kutipan' && (s.kutipan || s.label));
 
     return (
-        <div className="mt-2 flex flex-col gap-1.5 border-t border-dashed border-gray-200 pt-2 whitespace-normal">
+        <div className="mt-2 flex flex-col gap-1.5 border-t border-dashed border-[var(--tcd-border,oklch(0.928_0.006_264.531))] pt-2 whitespace-normal">
             <span className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-bold tracking-wide text-gray-500 uppercase">Sumber resmi ({sorted.length})</span>
+                <span className="text-[10px] font-bold tracking-wide text-[var(--tcd-text-3,oklch(0.551_0.027_264.364))] uppercase">
+                    Sumber resmi ({sorted.length})
+                </span>
                 {hasQuotes && (
                     <button
                         type="button"
                         onClick={() => setOpen((v) => !v)}
                         aria-expanded={open}
-                        className="flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold text-gray-600 hover:bg-gray-50"
+                        className="flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold text-[var(--tcd-text-2,oklch(0.446_0.03_256.802))] hover:bg-[var(--tcd-muted,oklch(0.985_0.002_247.839))]"
                     >
                         {open ? 'Sembunyikan kutipan' : 'Lihat kutipan'}
                         <ChevronDown className={cn('h-3 w-3 transition-transform', open && 'rotate-180')} aria-hidden="true" />
@@ -890,11 +897,11 @@ export function SourceList({ sources }: { sources: Source[] }) {
                         {open && s.jenis === 'kutipan' && (
                             <>
                                 {s.kutipan && (
-                                    <blockquote className="line-clamp-3 border-l-2 border-gray-300 pl-2 text-[11px] leading-snug text-gray-600 italic">
+                                    <blockquote className="line-clamp-3 border-l-2 border-[var(--tcd-border-strong,oklch(0.872_0.01_258.338))] pl-2 text-[11px] leading-snug text-[var(--tcd-text-2,oklch(0.446_0.03_256.802))] italic">
                                         “{s.kutipan}”
                                     </blockquote>
                                 )}
-                                {s.label && <span className="pl-2 text-[10px] text-gray-500">{s.label}</span>}
+                                {s.label && <span className="pl-2 text-[10px] text-[var(--tcd-text-3,oklch(0.551_0.027_264.364))]">{s.label}</span>}
                             </>
                         )}
                     </div>
@@ -921,24 +928,29 @@ export function AiExtras({
     return (
         <>
             {t && (
-                <div className="mt-2 overflow-hidden rounded-md border border-gray-200 whitespace-normal">
-                    <div className="flex items-center justify-between gap-2 border-b border-gray-100 px-2.5 py-1.5">
+                <div className="mt-2 overflow-hidden rounded-md border border-[var(--tcd-border,oklch(0.928_0.006_264.531))] whitespace-normal">
+                    <div className="flex items-center justify-between gap-2 border-b border-[var(--tcd-border,oklch(0.967_0.003_264.542))] px-2.5 py-1.5">
                         <span className="text-primary flex items-center gap-1 font-bold">
                             <Ticket className="h-3.5 w-3.5" aria-hidden="true" /> {t.nomor}
                         </span>
-                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800 uppercase">{t.status_label}</span>
+                        <span className="rounded-full bg-[var(--tcd-info-soft,oklch(0.932_0.032_255.585))] px-2 py-0.5 text-[10px] font-bold text-[var(--tcd-info,oklch(0.424_0.199_265.638))] uppercase">
+                            {t.status_label}
+                        </span>
                     </div>
                     <dl className="grid grid-cols-[70px_1fr] gap-x-2 gap-y-1 px-2.5 py-2 text-[11px]">
-                        <dt className="text-gray-500">Kategori</dt>
+                        <dt className="text-[var(--tcd-text-3,oklch(0.551_0.027_264.364))]">Kategori</dt>
                         <dd className="font-semibold">{t.kategori ?? '—'}</dd>
-                        <dt className="text-gray-500">Kawasan</dt>
+                        <dt className="text-[var(--tcd-text-3,oklch(0.551_0.027_264.364))]">Kawasan</dt>
                         <dd className="font-semibold">{t.kawasan ?? '—'}</dd>
-                        <dt className="text-gray-500">Batas waktu</dt>
+                        <dt className="text-[var(--tcd-text-3,oklch(0.551_0.027_264.364))]">Batas waktu</dt>
                         <dd className="font-semibold">
                             {t.tenggat ? new Date(t.tenggat).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                         </dd>
                     </dl>
-                    <Link href={t.url} className="text-primary block border-t border-gray-100 px-2.5 py-1.5 font-semibold hover:underline">
+                    <Link
+                        href={t.url}
+                        className="text-primary block border-t border-[var(--tcd-border,oklch(0.967_0.003_264.542))] px-2.5 py-1.5 font-semibold hover:underline"
+                    >
                         Lihat riwayat lengkap
                     </Link>
                 </div>
@@ -947,7 +959,7 @@ export function AiExtras({
             {message.portal && <PortalCard portal={message.portal} referral={message.rujukan ?? null} />}
 
             {message.beda_sumber && (
-                <div className="mt-2 flex items-start gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2 text-[11px] leading-snug whitespace-normal text-amber-900">
+                <div className="mt-2 flex items-start gap-1.5 rounded-md border border-[var(--tcd-warning-border,oklch(0.924_0.12_95.746))] bg-[var(--tcd-warning-soft,oklch(0.987_0.022_95.277))] px-2.5 py-2 text-[11px] leading-snug whitespace-normal text-[var(--tcd-warning,oklch(0.414_0.112_45.904))]">
                     <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                     <span>
                         <strong>Sumber resmi menyebut ketentuan berbeda.</strong> Semua versi ditampilkan beserta sumbernya. Pastikan ketentuan yang
@@ -956,7 +968,7 @@ export function AiExtras({
                 </div>
             )}
             {message.kebijakan && (
-                <div className="mt-2 flex items-start gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-2 text-[11px] leading-snug whitespace-normal text-blue-900">
+                <div className="mt-2 flex items-start gap-1.5 rounded-md border border-[var(--tcd-info-border,oklch(0.882_0.059_254.128))] bg-[var(--tcd-info-soft,oklch(0.97_0.014_254.604))] px-2.5 py-2 text-[11px] leading-snug whitespace-normal text-[var(--tcd-info,oklch(0.379_0.146_265.522))]">
                     <Landmark className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                     <span>
                         <strong>Pertanyaan kebijakan.</strong> Untuk pernyataan resmi atau data kinerja, ajukan permohonan informasi ke{' '}
@@ -977,7 +989,7 @@ export function AiExtras({
             {(message.sumber?.length ?? 0) > 0 && <SourceList sources={message.sumber!} />}
 
             {message.jenis === 'jawaban' && (
-                <div className="mt-2 flex items-center gap-2 text-[11px] whitespace-normal text-gray-500">
+                <div className="mt-2 flex items-center gap-2 text-[11px] whitespace-normal text-[var(--tcd-text-3,oklch(0.551_0.027_264.364))]">
                     {message.nilai ? (
                         <span>Terima kasih atas penilaian Anda.</span>
                     ) : (
@@ -986,14 +998,14 @@ export function AiExtras({
                             <button
                                 type="button"
                                 onClick={() => onRate(true)}
-                                className="rounded-full border border-gray-300 px-2 py-0.5 hover:bg-gray-50"
+                                className="rounded-full border border-[var(--tcd-border-strong,oklch(0.872_0.01_258.338))] px-2 py-0.5 hover:bg-[var(--tcd-muted,oklch(0.985_0.002_247.839))]"
                             >
                                 Ya
                             </button>
                             <button
                                 type="button"
                                 onClick={() => onRate(false)}
-                                className="rounded-full border border-gray-300 px-2 py-0.5 hover:bg-gray-50"
+                                className="rounded-full border border-[var(--tcd-border-strong,oklch(0.872_0.01_258.338))] px-2 py-0.5 hover:bg-[var(--tcd-muted,oklch(0.985_0.002_247.839))]"
                             >
                                 Tidak
                             </button>
@@ -1006,7 +1018,7 @@ export function AiExtras({
                 <button
                     type="button"
                     onClick={onStaff}
-                    className="border-primary text-primary mt-2 flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold whitespace-normal hover:bg-gray-50"
+                    className="border-primary text-primary mt-2 flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold whitespace-normal hover:bg-[var(--tcd-muted,oklch(0.985_0.002_247.839))]"
                 >
                     <Headset className="h-3 w-3" aria-hidden="true" /> Tanyakan ke petugas
                 </button>
@@ -1022,7 +1034,9 @@ export function SystemNotice({ message }: { message: ChatMessage }) {
         <div
             className={cn(
                 'mx-auto max-w-[92%] rounded-lg border px-3 py-2 text-center text-[11px] leading-relaxed whitespace-pre-wrap',
-                amber ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900',
+                amber
+                    ? 'border-[var(--tcd-warning-border,oklch(0.924_0.12_95.746))] bg-[var(--tcd-warning-soft,oklch(0.987_0.022_95.277))] text-[var(--tcd-warning,oklch(0.414_0.112_45.904))]'
+                    : 'border-[var(--tcd-success-border,oklch(0.905_0.093_164.15))] bg-[var(--tcd-success-soft,oklch(0.979_0.021_166.113))] text-[var(--tcd-success,oklch(0.378_0.077_168.94))]',
             )}
         >
             {message.body}
@@ -1040,7 +1054,7 @@ export function SystemNotice({ message }: { message: ChatMessage }) {
                     <span className="mt-1 block font-semibold">Tautan ini sudah tidak berlaku. Minta tautan baru ke petugas.</span>
                 ))}
             {message.portal && (
-                <div className="text-left text-gray-800">
+                <div className="text-left text-[var(--tcd-text,oklch(0.278_0.033_256.848))]">
                     <PortalCard portal={message.portal} referral={message.rujukan ?? null} />
                 </div>
             )}
@@ -1054,15 +1068,15 @@ export function SystemNotice({ message }: { message: ChatMessage }) {
  */
 export function PortalCard({ portal, referral }: { portal: PortalCardInfo; referral: ReferralInfo | null }) {
     return (
-        <div className="mt-2 overflow-hidden rounded-md border border-gray-200 bg-white whitespace-normal">
+        <div className="mt-2 overflow-hidden rounded-md border border-[var(--tcd-border,oklch(0.928_0.006_264.531))] bg-[var(--tcd-surface,#fff)] whitespace-normal">
             <div className="px-2.5 py-2">
                 <span className="text-primary flex items-center gap-1 text-[12px] font-bold">
                     <Globe className="h-3.5 w-3.5" aria-hidden="true" /> {portal.nama}
                 </span>
-                <p className="mt-0.5 text-[11px] text-gray-600">{portal.kegunaan}</p>
-                <p className="mt-0.5 font-mono text-[10px] text-gray-400">{portal.domain}</p>
+                <p className="mt-0.5 text-[11px] text-[var(--tcd-text-2,oklch(0.446_0.03_256.802))]">{portal.kegunaan}</p>
+                <p className="mt-0.5 font-mono text-[10px] text-[var(--tcd-text-3,oklch(0.707_0.022_261.325))]">{portal.domain}</p>
                 {referral && (
-                    <p className="mt-1 text-[11px] text-gray-600">
+                    <p className="mt-1 text-[11px] text-[var(--tcd-text-2,oklch(0.446_0.03_256.802))]">
                         Rujukan <span className="font-mono font-semibold">{referral.kode}</span>
                         {referral.pendamping && <> · pendamping {referral.pendamping}</>}
                     </p>
@@ -1077,13 +1091,15 @@ export function PortalCard({ portal, referral }: { portal: PortalCardInfo; refer
                     href={portal.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary flex items-center justify-center gap-1 border-t border-gray-100 px-2.5 py-1.5 text-[12px] font-semibold hover:underline"
+                    className="text-primary flex items-center justify-center gap-1 border-t border-[var(--tcd-border,oklch(0.967_0.003_264.542))] px-2.5 py-1.5 text-[12px] font-semibold hover:underline"
                 >
                     {portal.tombol} <ExternalLink className="h-3 w-3" aria-hidden="true" />
                     <span className="sr-only">(membuka tab baru)</span>
                 </a>
             ) : (
-                <p className="border-t border-gray-100 px-2.5 py-1.5 text-center text-[11px] text-amber-700">Portal sedang tidak dapat diakses.</p>
+                <p className="border-t border-[var(--tcd-border,oklch(0.967_0.003_264.542))] px-2.5 py-1.5 text-center text-[11px] text-[var(--tcd-warning,oklch(0.555_0.163_48.998))]">
+                    Portal sedang tidak dapat diakses.
+                </p>
             )}
         </div>
     );
@@ -1118,8 +1134,11 @@ export function ContactForm({ reference, onSaved }: { reference: string | null; 
     };
 
     return (
-        <form onSubmit={submit} className="space-y-2 border-t border-amber-200 bg-amber-50 p-3">
-            <label htmlFor="sigap-chat-contact" className="block text-xs font-semibold text-amber-900">
+        <form
+            onSubmit={submit}
+            className="space-y-2 border-t border-[var(--tcd-warning-border,oklch(0.924_0.12_95.746))] bg-[var(--tcd-warning-soft,oklch(0.987_0.022_95.277))] p-3"
+        >
+            <label htmlFor="sigap-chat-contact" className="block text-xs font-semibold text-[var(--tcd-warning,oklch(0.414_0.112_45.904))]">
                 Nomor WhatsApp atau surel {reference ? `(ref. ${reference})` : ''}
             </label>
             <div className="flex gap-2">
@@ -1132,18 +1151,20 @@ export function ContactForm({ reference, onSaved }: { reference: string | null; 
                     autoComplete="tel"
                     placeholder="08xx-xxxx-xxxx"
                     aria-invalid={Boolean(error)}
-                    className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-xs focus:outline-none"
+                    className="min-w-0 flex-1 rounded-lg border bg-[var(--tcd-surface,#fff)] px-3 py-2 text-xs focus:outline-none"
                 />
                 <button type="submit" disabled={busy} className="bg-primary rounded-lg px-3 text-xs font-bold text-white disabled:opacity-60">
                     {busy ? 'Menyimpan…' : 'Simpan'}
                 </button>
             </div>
             {error && (
-                <p role="alert" className="text-xs text-rose-600">
+                <p role="alert" className="text-xs text-[var(--tcd-danger,oklch(0.586_0.253_17.585))]">
                     {error}
                 </p>
             )}
-            <p className="text-[11px] text-amber-900">Kontak hanya dipakai petugas untuk menindaklanjuti percakapan ini.</p>
+            <p className="text-[11px] text-[var(--tcd-warning,oklch(0.414_0.112_45.904))]">
+                Kontak hanya dipakai petugas untuk menindaklanjuti percakapan ini.
+            </p>
         </form>
     );
 }
@@ -1200,22 +1221,25 @@ function IdentityStep({ onStarted }: { onStarted: (identity: Identity, conversat
     };
 
     return (
-        <div className="space-y-4 bg-gray-50 p-4 text-sm">
+        <div className="space-y-4 bg-[var(--tcd-muted,oklch(0.985_0.002_247.839))] p-4 text-sm">
             <div className="flex gap-2">
                 <div className="bg-brand-light flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white" aria-hidden="true">
                     <Headset className="h-4 w-4" />
                 </div>
-                <p className="rounded-lg rounded-tl-none border border-gray-100 bg-white p-2.5 text-xs text-gray-700 shadow-sm">
+                <p className="rounded-lg rounded-tl-none border border-[var(--tcd-border,oklch(0.967_0.003_264.542))] bg-[var(--tcd-surface,#fff)] p-2.5 text-xs text-[var(--tcd-text-2,oklch(0.373_0.034_259.733))] shadow-sm">
                     Halo! Sebelum mulai, boleh kami tahu nama Anda? Agar petugas tahu siapa yang bertanya bila pertanyaan Anda perlu diteruskan.
                 </p>
             </div>
 
             <form onSubmit={submit} className="space-y-2" noValidate>
-                <label htmlFor="sigap-chat-name" className="block text-xs font-semibold text-gray-700">
-                    Nama <span className="text-rose-500">*</span>
+                <label htmlFor="sigap-chat-name" className="block text-xs font-semibold text-[var(--tcd-text-2,oklch(0.373_0.034_259.733))]">
+                    Nama <span className="text-[var(--tcd-danger,oklch(0.645_0.246_16.439))]">*</span>
                 </label>
                 <div className="relative">
-                    <UserRound className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+                    <UserRound
+                        className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--tcd-text-3,oklch(0.707_0.022_261.325))]"
+                        aria-hidden="true"
+                    />
                     <input
                         id="sigap-chat-name"
                         type="text"
@@ -1227,11 +1251,11 @@ function IdentityStep({ onStarted }: { onStarted: (identity: Identity, conversat
                         aria-invalid={Boolean(error)}
                         aria-describedby={error ? 'sigap-chat-name-error' : undefined}
                         placeholder="Nama lengkap"
-                        className="w-full rounded-lg border bg-white py-2 pr-3 pl-9 text-xs focus:outline-none"
+                        className="w-full rounded-lg border bg-[var(--tcd-surface,#fff)] py-2 pr-3 pl-9 text-xs focus:outline-none"
                     />
                 </div>
                 {error && (
-                    <p id="sigap-chat-name-error" role="alert" className="text-xs text-rose-600">
+                    <p id="sigap-chat-name-error" role="alert" className="text-xs text-[var(--tcd-danger,oklch(0.586_0.253_17.585))]">
                         {error}
                     </p>
                 )}
@@ -1242,7 +1266,7 @@ function IdentityStep({ onStarted }: { onStarted: (identity: Identity, conversat
                 >
                     {busy || recaptcha.verifying ? 'Memulai…' : 'Mulai chat'}
                 </button>
-                <p className="text-[11px] text-gray-500">
+                <p className="text-[11px] text-[var(--tcd-text-3,oklch(0.551_0.027_264.364))]">
                     Dengan memulai chat, Anda menyetujui{' '}
                     <Link href="/kebijakan-privasi" className="underline">
                         Kebijakan Privasi
@@ -1252,12 +1276,13 @@ function IdentityStep({ onStarted }: { onStarted: (identity: Identity, conversat
                 <RecaptchaNotice enabled={recaptcha.enabled} error={recaptcha.error} />
             </form>
 
-            <div className="flex items-center gap-2 text-[11px] text-gray-400">
-                <span className="h-px flex-1 bg-gray-200" /> atau <span className="h-px flex-1 bg-gray-200" />
+            <div className="flex items-center gap-2 text-[11px] text-[var(--tcd-text-3,oklch(0.707_0.022_261.325))]">
+                <span className="h-px flex-1 bg-[var(--tcd-muted-2,oklch(0.928_0.006_264.531))]" /> atau{' '}
+                <span className="h-px flex-1 bg-[var(--tcd-muted-2,oklch(0.928_0.006_264.531))]" />
             </div>
             <Link
                 href="/masuk"
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--tcd-border-strong,oklch(0.872_0.01_258.338))] bg-[var(--tcd-surface,#fff)] py-2 text-xs font-semibold text-[var(--tcd-text-2,oklch(0.373_0.034_259.733))] hover:bg-[var(--tcd-muted,oklch(0.985_0.002_247.839))]"
             >
                 <LogIn className="h-4 w-4" aria-hidden="true" /> Masuk sebagai warga
             </Link>

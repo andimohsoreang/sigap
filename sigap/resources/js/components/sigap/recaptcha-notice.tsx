@@ -9,7 +9,7 @@ export function RecaptchaNotice({ enabled, error }: { enabled: boolean; error?: 
     return (
         <div className="space-y-1">
             {enabled && (
-                <p className="flex items-start gap-2 text-xs text-gray-500">
+                <p className="flex items-start gap-2 text-xs text-[var(--tcd-text-3,oklch(0.551_0.027_264.364))]">
                     <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                     <span>
                         Situs ini dilindungi oleh reCAPTCHA dan berlaku{' '}
@@ -25,7 +25,7 @@ export function RecaptchaNotice({ enabled, error }: { enabled: boolean; error?: 
                 </p>
             )}
             {error && (
-                <p role="alert" className="text-xs font-semibold text-rose-500">
+                <p role="alert" className="text-xs font-semibold text-[var(--tcd-danger,oklch(0.645_0.246_16.439))]">
                     {error}
                 </p>
             )}

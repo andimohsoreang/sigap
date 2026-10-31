@@ -229,10 +229,10 @@ export default function BerandaTransi({ kanal, kantor, beritaSemua }: { kanal: K
                 />
             </Head>
 
-            <div ref={pageRef} className="transi-page min-h-screen bg-white text-[#0f2233] antialiased">
+            <div ref={pageRef} className="transi-page min-h-screen bg-[var(--tcd-surface,#fff)] text-[var(--tcd-text,#0f2233)] antialiased">
                 <a
                     href="#konten"
-                    className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[110] focus:rounded-lg focus:bg-[var(--t-navy)] focus:px-4 focus:py-2 focus:text-white"
+                    className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[110] focus:rounded-lg focus:bg-[var(--tcd-primary,var(--t-navy))] focus:px-4 focus:py-2 focus:text-white"
                 >
                     Langsung ke konten utama
                 </a>
@@ -377,7 +377,7 @@ function HeroMakarti({ mobile = false }: { mobile?: boolean }) {
             <div aria-hidden="true" className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[rgba(2,43,74,0.35)] to-transparent" />
             <div
                 aria-hidden="true"
-                className="absolute inset-0"
+                className="hero-shade absolute inset-0"
                 style={{
                     background:
                         'linear-gradient(90deg, rgba(2,43,74,0.97) 0%, rgba(2,43,74,0.93) 34%, rgba(2,43,74,0.55) 46%, rgba(2,43,74,0.12) 60%, rgba(2,43,74,0) 74%)',
@@ -405,15 +405,15 @@ function JustType() {
     };
 
     return (
-        <section className="bg-[var(--t-cream)] py-12 sm:py-[72px]">
+        <section className="bg-[var(--tcd-cream,var(--t-cream))] py-12 sm:py-[72px]">
             <div className="mx-auto flex max-w-[1312px] flex-col gap-6 px-4 sm:items-center sm:gap-7 sm:px-6 lg:px-16">
-                <p data-reveal className="text-xs font-semibold tracking-[0.12em] text-[#9a7330] uppercase sm:text-[13px]">
+                <p data-reveal className="text-xs font-semibold tracking-[0.12em] text-[var(--tcd-bronze,#8b682b)] uppercase sm:text-[13px]">
                     Tidak perlu tahu harus ke menu mana
                 </p>
                 <h2
                     data-reveal
                     style={delay(0.08)}
-                    className="font-heading text-[28px] leading-[1.15] font-bold tracking-[-0.015em] text-balance text-[var(--t-deep)] sm:text-center sm:text-[40px]"
+                    className="font-heading text-[28px] leading-[1.15] font-bold tracking-[-0.015em] text-balance text-[var(--tcd-heading,var(--t-deep))] sm:text-center sm:text-[40px]"
                 >
                     Cukup ketik seperti bicara dengan petugas.
                 </h2>
@@ -422,10 +422,10 @@ function JustType() {
                     data-reveal="zoom"
                     style={delay(0.16)}
                     onSubmit={submit}
-                    className="flex h-16 w-full max-w-[860px] items-center gap-3 rounded-full border border-[#e3d9cf] bg-white pr-2 pl-2 shadow-[0_14px_36px_rgba(59,42,18,0.08)] transition-shadow focus-within:border-[var(--t-gold)] focus-within:shadow-[0_16px_40px_rgba(194,150,66,0.22)] sm:h-[72px] sm:gap-3.5 sm:pr-2.5 sm:pl-3.5"
+                    className="flex h-16 w-full max-w-[860px] items-center gap-3 rounded-full border border-[var(--tcd-border-warm,#e3d9cf)] bg-[var(--tcd-surface,#fff)] pr-2 pl-2 shadow-[0_14px_36px_rgba(59,42,18,0.08)] transition-shadow focus-within:border-[var(--t-gold)] focus-within:shadow-[0_16px_40px_rgba(194,150,66,0.22)] sm:h-[72px] sm:gap-3.5 sm:pr-2.5 sm:pl-3.5"
                 >
                     <span
-                        className="h-11 w-11 shrink-0 rounded-full bg-[var(--t-cream)] bg-cover bg-center sm:h-12 sm:w-12"
+                        className="h-11 w-11 shrink-0 rounded-full bg-[var(--tcd-cream,var(--t-cream))] bg-cover bg-center sm:h-12 sm:w-12"
                         style={{ backgroundImage: `url(${IMG}/avatar.webp)` }}
                         aria-hidden="true"
                     />
@@ -442,12 +442,12 @@ function JustType() {
                             autoComplete="off"
                             maxLength={500}
                             placeholder={focused ? 'Tulis pertanyaan atau keluhan Anda…' : ''}
-                            className="w-full bg-transparent text-base text-[#1f2d3a] outline-none placeholder:text-[#8a96a3] sm:text-lg"
+                            className="w-full bg-transparent text-base text-[var(--tcd-text,#1f2d3a)] outline-none placeholder:text-[var(--tcd-text-3,#6d7681)] sm:text-lg"
                         />
                         {!focused && value === '' && (
                             <span
                                 aria-hidden="true"
-                                className="pointer-events-none absolute inset-0 flex items-center truncate text-base text-[#8a96a3] sm:text-lg"
+                                className="pointer-events-none absolute inset-0 flex items-center truncate text-base text-[var(--tcd-text-3,#6d7681)] sm:text-lg"
                             >
                                 {typed || (
                                     <>
@@ -470,7 +470,7 @@ function JustType() {
                     </button>
                 </form>
                 <div data-reveal style={delay(0.24)} className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-2.5">
-                    <span className="text-sm font-medium text-[#6b5a45] sm:text-[15px]">
+                    <span className="text-sm font-medium text-[var(--tcd-warm,#6b5a45)] sm:text-[15px]">
                         <span className="sm:hidden">Coba tanyakan:</span>
                         <span className="hidden sm:inline">Coba:</span>
                     </span>
@@ -480,9 +480,9 @@ function JustType() {
                                 key={text}
                                 type="button"
                                 onClick={() => goToChat({ question: text, source: formRef.current })}
-                                className="transi-lift flex shrink-0 items-center gap-2 rounded-full border border-[#e3d9cf] bg-white px-3.5 py-2.5 text-sm text-[#2a3a48] hover:border-[var(--t-gold)] hover:shadow-[0_8px_18px_rgba(59,42,18,0.08)]"
+                                className="transi-lift flex shrink-0 items-center gap-2 rounded-full border border-[var(--tcd-border-warm,#e3d9cf)] bg-[var(--tcd-surface,#fff)] px-3.5 py-2.5 text-sm text-[var(--tcd-text-2,#2a3a48)] hover:border-[var(--t-gold)] hover:shadow-[0_8px_18px_rgba(59,42,18,0.08)]"
                             >
-                                <Icon className="h-[15px] w-[15px] text-[var(--t-navy)]" aria-hidden="true" />
+                                <Icon className="h-[15px] w-[15px] text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" />
                                 {text}
                             </button>
                         ))}
@@ -500,9 +500,9 @@ function Eyebrow({ children, tone = 'teal', className }: { children: ReactNode; 
         <p
             className={cn(
                 'text-xs font-semibold tracking-[0.12em] uppercase sm:text-[13px]',
-                tone === 'teal' && 'text-[#0d6b8a]',
+                tone === 'teal' && 'text-[var(--tcd-info,#0d6b8a)]',
                 tone === 'gold' && 'text-[var(--t-gold)]',
-                tone === 'bronze' && 'text-[#9a7330]',
+                tone === 'bronze' && 'text-[var(--tcd-bronze,#8b682b)]',
                 className,
             )}
         >
@@ -513,7 +513,7 @@ function Eyebrow({ children, tone = 'teal', className }: { children: ReactNode; 
 
 function Journey() {
     return (
-        <section className="bg-white py-14 sm:py-24">
+        <section className="bg-[var(--tcd-surface,#fff)] py-14 sm:py-24">
             <div className="mx-auto grid max-w-[1312px] gap-10 px-4 sm:px-6 lg:grid-cols-[440px_minmax(0,1fr)] lg:gap-[72px] lg:px-16">
                 <div className="flex flex-col gap-5">
                     <div data-reveal>
@@ -522,11 +522,11 @@ function Journey() {
                     <h2
                         data-reveal
                         style={delay(0.08)}
-                        className="font-heading text-[30px] leading-[1.15] font-bold tracking-[-0.015em] text-balance text-[var(--t-deep)] sm:text-[40px]"
+                        className="font-heading text-[30px] leading-[1.15] font-bold tracking-[-0.015em] text-balance text-[var(--tcd-heading,var(--t-deep))] sm:text-[40px]"
                     >
                         Dari bertanya sampai tuntas, Anda tidak perlu pindah tempat.
                     </h2>
-                    <p data-reveal style={delay(0.16)} className="text-base leading-[1.6] text-[#4a5a68] sm:text-[17px]">
+                    <p data-reveal style={delay(0.16)} className="text-base leading-[1.6] text-[var(--tcd-text-2,#4a5a68)] sm:text-[17px]">
                         TARA menjawab lebih dulu. Bila urusan Anda butuh tindakan, petugas masuk ke percakapan yang sama, menerbitkan tiket, merujuk
                         ke portal yang tepat, bahkan membuatkan akun Anda.
                     </p>
@@ -551,22 +551,28 @@ function Journey() {
                                 <div className="flex w-12 shrink-0 flex-col items-center sm:w-14">
                                     <span
                                         className={cn(
-                                            'flex h-12 w-12 items-center justify-center rounded-full border-[1.5px] border-[var(--t-navy)] sm:h-14 sm:w-14',
-                                            i === 0 ? 'bg-[var(--t-navy)] text-white' : 'bg-white text-[var(--t-navy)]',
+                                            'flex h-12 w-12 items-center justify-center rounded-full border-[1.5px] border-[var(--tcd-link,var(--t-navy))] sm:h-14 sm:w-14',
+                                            i === 0
+                                                ? 'bg-[var(--tcd-primary,var(--t-navy))] text-white'
+                                                : 'bg-[var(--tcd-surface,#fff)] text-[var(--tcd-link,var(--t-navy))]',
                                         )}
                                     >
                                         <s.icon className="h-[22px] w-[22px] sm:h-6 sm:w-6" aria-hidden="true" />
                                     </span>
-                                    {!last && <span className="transi-rail-line w-0.5 flex-1 bg-[#d5dee6]" aria-hidden="true" />}
+                                    {!last && <span className="transi-rail-line w-0.5 flex-1 bg-[var(--tcd-muted-2,#d5dee6)]" aria-hidden="true" />}
                                 </div>
                                 <div className={cn('flex min-w-0 flex-1 flex-col gap-2.5 pt-1.5', !last && 'pb-10')}>
-                                    <span className="text-xs font-semibold tracking-[0.1em] text-[#9a7330]">LANGKAH {i + 1}</span>
-                                    <h3 className="font-heading text-xl leading-[1.25] font-bold text-[var(--t-deep)] sm:text-[22px]">{s.title}</h3>
-                                    <p className="text-[15px] leading-[1.6] text-[#4a5a68] sm:text-base">{s.desc}</p>
+                                    <span className="text-xs font-semibold tracking-[0.1em] text-[var(--tcd-bronze,#8b682b)]">LANGKAH {i + 1}</span>
+                                    <h3 className="font-heading text-xl leading-[1.25] font-bold text-[var(--tcd-heading,var(--t-deep))] sm:text-[22px]">
+                                        {s.title}
+                                    </h3>
+                                    <p className="text-[15px] leading-[1.6] text-[var(--tcd-text-2,#4a5a68)] sm:text-base">{s.desc}</p>
                                     <span
                                         className={cn(
                                             'flex w-fit items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-semibold',
-                                            s.strong ? 'bg-[var(--t-navy)] text-white' : 'bg-[#f2f5f8] text-[var(--t-navy)]',
+                                            s.strong
+                                                ? 'bg-[var(--tcd-primary,var(--t-navy))] text-white'
+                                                : 'bg-[var(--tcd-muted,#f2f5f8)] text-[var(--tcd-link,var(--t-navy))]',
                                             s.mono && 'font-mono',
                                         )}
                                     >
@@ -622,7 +628,7 @@ function Trust() {
                 </div>
 
                 <div data-reveal="zoom" className="order-1 flex items-end gap-2 lg:order-2 lg:flex-col lg:items-center lg:gap-0">
-                    <p className="order-2 mb-16 max-w-[220px] rounded-[18px] rounded-bl-[4px] bg-white px-4 py-3 text-sm leading-[1.45] font-medium text-[var(--t-deep)] sm:text-base lg:order-1 lg:mb-0 lg:max-w-[300px] lg:rounded-bl-[18px]">
+                    <p className="order-2 mb-16 max-w-[220px] rounded-[18px] rounded-bl-[4px] bg-[var(--tcd-surface,#fff)] px-4 py-3 text-sm leading-[1.45] font-medium text-[var(--tcd-heading,var(--t-deep))] sm:text-base lg:order-1 lg:mb-0 lg:max-w-[300px] lg:rounded-bl-[18px]">
                         Kalau saya belum tahu jawabannya, saya panggilkan petugas, ya!
                     </p>
                     <img
@@ -683,18 +689,18 @@ function BeritaSection({ all, items }: { all: string; items: BeritaResmi[] | nul
     };
 
     return (
-        <section aria-labelledby="berita-transmigrasi" className="overflow-x-clip bg-white py-14 sm:py-24">
+        <section aria-labelledby="berita-transmigrasi" className="overflow-x-clip bg-[var(--tcd-surface,#fff)] py-14 sm:py-24">
             <div className="mx-auto flex max-w-[1312px] flex-col gap-8 px-4 sm:px-6 lg:px-16">
                 <div className="flex items-end justify-between gap-8">
                     <div className="flex flex-col gap-3">
                         <Eyebrow tone="bronze">Berita</Eyebrow>
                         <h2
                             id="berita-transmigrasi"
-                            className="font-heading text-[30px] leading-[1.2] font-bold tracking-[-0.015em] text-[var(--t-deep)] sm:text-[40px]"
+                            className="font-heading text-[30px] leading-[1.2] font-bold tracking-[-0.015em] text-[var(--tcd-heading,var(--t-deep))] sm:text-[40px]"
                         >
                             Berita Transmigrasi
                         </h2>
-                        <p className="max-w-[660px] text-base leading-[1.65] text-[#4a5a68] sm:text-[17px]">
+                        <p className="max-w-[660px] text-base leading-[1.65] text-[var(--tcd-text-2,#4a5a68)] sm:text-[17px]">
                             Kabar resmi dari Kementerian Transmigrasi.
                         </p>
                     </div>
@@ -705,7 +711,7 @@ function BeritaSection({ all, items }: { all: string; items: BeritaResmi[] | nul
                                 onClick={() => geser(-1)}
                                 disabled={edge.start}
                                 aria-label="Berita sebelumnya"
-                                className="flex h-12 w-12 items-center justify-center rounded-full border border-[#e8edf2] text-[#5b6b7a] transition-colors hover:border-[var(--t-navy)] hover:text-[var(--t-navy)] disabled:cursor-default disabled:opacity-40 disabled:hover:border-[#e8edf2] disabled:hover:text-[#5b6b7a]"
+                                className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--tcd-border,#e8edf2)] text-[var(--tcd-text-2,#5b6b7a)] transition-colors hover:border-[var(--tcd-link,var(--t-navy))] hover:text-[var(--tcd-link,var(--t-navy))] disabled:cursor-default disabled:opacity-40 disabled:hover:border-[var(--tcd-border,#e8edf2)] disabled:hover:text-[var(--tcd-text-2,#5b6b7a)]"
                             >
                                 <ChevronLeft className="h-[22px] w-[22px]" aria-hidden="true" />
                             </button>
@@ -714,7 +720,7 @@ function BeritaSection({ all, items }: { all: string; items: BeritaResmi[] | nul
                                 onClick={() => geser(1)}
                                 disabled={edge.end}
                                 aria-label="Berita berikutnya"
-                                className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--t-navy)] text-white transition-colors hover:bg-[var(--t-deep)] disabled:cursor-default disabled:opacity-40"
+                                className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--tcd-primary,var(--t-navy))] text-white transition-colors hover:bg-[var(--t-deep)] disabled:cursor-default disabled:opacity-40"
                             >
                                 <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
                             </button>
@@ -732,14 +738,14 @@ function BeritaSection({ all, items }: { all: string; items: BeritaResmi[] | nul
                         ? [0, 1, 2, 3].map((i) => (
                               <li
                                   key={i}
-                                  className="w-[300px] shrink-0 overflow-hidden rounded-[20px] border border-[#e8edf2] sm:w-[340px]"
+                                  className="w-[300px] shrink-0 overflow-hidden rounded-[20px] border border-[var(--tcd-border,#e8edf2)] sm:w-[340px]"
                                   aria-hidden="true"
                               >
-                                  <div className="h-[196px] animate-pulse bg-[#eef2f6]" />
+                                  <div className="h-[196px] animate-pulse bg-[var(--tcd-muted,#eef2f6)]" />
                                   <div className="flex flex-col gap-3 p-6">
-                                      <div className="h-5 w-4/5 animate-pulse rounded bg-[#eef2f6]" />
-                                      <div className="h-4 w-full animate-pulse rounded bg-[#f2f5f8]" />
-                                      <div className="h-4 w-2/3 animate-pulse rounded bg-[#f2f5f8]" />
+                                      <div className="h-5 w-4/5 animate-pulse rounded bg-[var(--tcd-muted,#eef2f6)]" />
+                                      <div className="h-4 w-full animate-pulse rounded bg-[var(--tcd-muted,#f2f5f8)]" />
+                                      <div className="h-4 w-2/3 animate-pulse rounded bg-[var(--tcd-muted,#f2f5f8)]" />
                                   </div>
                               </li>
                           ))
@@ -749,9 +755,9 @@ function BeritaSection({ all, items }: { all: string; items: BeritaResmi[] | nul
                                       href={b.url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="group relative flex h-full flex-col overflow-hidden rounded-[20px] border border-[#e8edf2] bg-white shadow-[0_8px_24px_rgba(2,43,74,0.06)] transition-shadow hover:shadow-[0_14px_32px_rgba(2,43,74,0.12)]"
+                                      className="group relative flex h-full flex-col overflow-hidden rounded-[20px] border border-[var(--tcd-border,#e8edf2)] bg-[var(--tcd-surface,#fff)] shadow-[0_8px_24px_rgba(2,43,74,0.06)] transition-shadow hover:shadow-[0_14px_32px_rgba(2,43,74,0.12)]"
                                   >
-                                      <span className="block h-[196px] overflow-hidden bg-[#eef2f6]">
+                                      <span className="block h-[196px] overflow-hidden bg-[var(--tcd-muted,#eef2f6)]">
                                           {b.gambar && (
                                               <img
                                                   src={b.gambar}
@@ -764,17 +770,19 @@ function BeritaSection({ all, items }: { all: string; items: BeritaResmi[] | nul
                                           )}
                                       </span>
                                       <span className="flex flex-1 flex-col gap-3 p-6">
-                                          <span className="font-heading line-clamp-2 min-h-[52px] text-[19px] leading-[1.37] font-bold tracking-[-0.19px] text-[var(--t-deep)]">
+                                          <span className="font-heading line-clamp-2 min-h-[52px] text-[19px] leading-[1.37] font-bold tracking-[-0.19px] text-[var(--tcd-heading,var(--t-deep))]">
                                               {b.judul}
                                           </span>
-                                          <span className="line-clamp-3 text-[15px] leading-[1.6] text-[#4a5a68]">{b.ringkasan}</span>
-                                          <span className="mt-auto flex items-center justify-between border-t border-[#e8edf2] pt-3">
-                                              <span className="flex items-center gap-1.5 text-[13.5px] text-[#5b6b7a]">
+                                          <span className="line-clamp-3 text-[15px] leading-[1.6] text-[var(--tcd-text-2,#4a5a68)]">
+                                              {b.ringkasan}
+                                          </span>
+                                          <span className="mt-auto flex items-center justify-between border-t border-[var(--tcd-border,#e8edf2)] pt-3">
+                                              <span className="flex items-center gap-1.5 text-[13.5px] text-[var(--tcd-text-2,#5b6b7a)]">
                                                   <CalendarDays className="h-[15px] w-[15px]" aria-hidden="true" />
                                                   {tanggalBerita(b.tanggal)}
                                                   {b.lokasi && ` · ${b.lokasi}`}
                                               </span>
-                                              <ArrowUpRight className="h-[18px] w-[18px] text-[var(--t-navy)]" aria-hidden="true" />
+                                              <ArrowUpRight className="h-[18px] w-[18px] text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" />
                                               <span className="sr-only">(membuka berita di situs Kementerian, tab baru)</span>
                                           </span>
                                       </span>
@@ -788,7 +796,7 @@ function BeritaSection({ all, items }: { all: string; items: BeritaResmi[] | nul
                         href={all}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex h-11 w-fit items-center gap-2 text-[15px] font-semibold text-[var(--t-navy)] hover:underline"
+                        className="flex h-11 w-fit items-center gap-2 text-[15px] font-semibold text-[var(--tcd-link,var(--t-navy))] hover:underline"
                     >
                         Lihat semua berita <ArrowRight className="h-[18px] w-[18px]" aria-hidden="true" />
                     </a>
@@ -817,7 +825,7 @@ function Faq() {
     );
 
     return (
-        <section className="bg-[var(--t-cream)] py-14 sm:py-24">
+        <section className="bg-[var(--tcd-cream,var(--t-cream))] py-14 sm:py-24">
             <div className="mx-auto grid max-w-[1312px] gap-8 px-4 sm:px-6 lg:grid-cols-[420px_minmax(0,1fr)] lg:gap-16 lg:px-16">
                 <div className="flex flex-col gap-[18px]">
                     <img
@@ -838,7 +846,7 @@ function Faq() {
                             <h2
                                 data-reveal
                                 style={delay(0.08)}
-                                className="font-heading text-[30px] leading-[1.15] font-bold tracking-[-0.015em] text-balance text-[var(--t-deep)] sm:text-4xl"
+                                className="font-heading text-[30px] leading-[1.15] font-bold tracking-[-0.015em] text-balance text-[var(--tcd-heading,var(--t-deep))] sm:text-4xl"
                             >
                                 Yang sering ditanyakan warga
                             </h2>
@@ -854,7 +862,7 @@ function Faq() {
                             className="h-32 w-16 shrink-0 object-contain lg:hidden"
                         />
                     </div>
-                    <p data-reveal style={delay(0.12)} className="text-base leading-[1.6] text-[#5b4a36]">
+                    <p data-reveal style={delay(0.12)} className="text-base leading-[1.6] text-[var(--tcd-warm,#5b4a36)]">
                         Tidak menemukan jawabannya? TARA siap menjawab pertanyaan lain, dan memanggil petugas bila perlu.
                     </p>
                     <div data-reveal style={delay(0.16)} className="hidden lg:block">
@@ -871,8 +879,10 @@ function Faq() {
                                 data-reveal
                                 style={delay(0.05 * i)}
                                 className={cn(
-                                    'rounded-[14px] border bg-white transition-[border-color,box-shadow] duration-300',
-                                    open ? 'border-[#c29642]/60 shadow-[0_10px_24px_rgba(59,42,18,0.06)]' : 'border-[#ece3d9] hover:border-[#dccfbf]',
+                                    'rounded-[14px] border bg-[var(--tcd-surface,#fff)] transition-[border-color,box-shadow] duration-300',
+                                    open
+                                        ? 'border-[#c29642]/60 shadow-[0_10px_24px_rgba(59,42,18,0.06)]'
+                                        : 'border-[var(--tcd-border-warm,#ece3d9)] hover:border-[var(--tcd-border-warm,#dccfbf)]',
                                 )}
                             >
                                 <h3>
@@ -882,13 +892,15 @@ function Faq() {
                                         aria-expanded={open}
                                         aria-controls={`faq-isi-${i}`}
                                         onClick={() => setOpenIndex(open ? null : i)}
-                                        className="font-heading flex w-full items-center gap-4 px-5 py-[18px] text-left text-base leading-[1.3] font-semibold text-[var(--t-deep)] sm:px-6 sm:py-5 sm:text-lg"
+                                        className="font-heading flex w-full items-center gap-4 px-5 py-[18px] text-left text-base leading-[1.3] font-semibold text-[var(--tcd-heading,var(--t-deep))] sm:px-6 sm:py-5 sm:text-lg"
                                     >
                                         <span className="flex-1">{f.q}</span>
                                         <span
                                             className={cn(
                                                 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-[transform,background-color] duration-300',
-                                                open ? 'rotate-180 bg-[#f7efe2] text-[var(--t-gold)]' : 'text-[var(--t-navy)]',
+                                                open
+                                                    ? 'rotate-180 bg-[var(--tcd-cream,#f7efe2)] text-[var(--t-gold)]'
+                                                    : 'text-[var(--tcd-link,var(--t-navy))]',
                                             )}
                                             aria-hidden="true"
                                         >
@@ -904,18 +916,20 @@ function Faq() {
                                     data-open={open}
                                 >
                                     <div>
-                                        <p className="px-5 pb-5 text-[15px] leading-[1.6] text-[#4a5a68] sm:px-6 sm:text-base">{f.a}</p>
+                                        <p className="px-5 pb-5 text-[15px] leading-[1.6] text-[var(--tcd-text-2,#4a5a68)] sm:px-6 sm:text-base">
+                                            {f.a}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         );
                     })}
                     <div data-reveal className="flex items-center gap-3.5 px-1 pt-4">
-                        <FileText className="h-5 w-5 shrink-0 text-[var(--t-navy)]" aria-hidden="true" />
-                        <span className="flex-1 text-[15px] text-[#4a5a68]">Maklumat Pelayanan dan Penilaian Contact Center</span>
+                        <FileText className="h-5 w-5 shrink-0 text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" />
+                        <span className="flex-1 text-[15px] text-[var(--tcd-text-2,#4a5a68)]">Maklumat Pelayanan dan Penilaian Contact Center</span>
                         <Link
                             href="/pedoman-layanan"
-                            className="text-[15px] font-semibold text-[var(--t-navy)] underline underline-offset-4 hover:text-[#00508a]"
+                            className="text-[15px] font-semibold text-[var(--tcd-link,var(--t-navy))] underline underline-offset-4 hover:text-[var(--tcd-link,#00508a)]"
                         >
                             Baca
                         </Link>

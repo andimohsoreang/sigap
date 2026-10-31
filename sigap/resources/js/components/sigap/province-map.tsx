@@ -5,6 +5,7 @@ import { MapPin, Minus, Plus, RotateCcw } from 'lucide-react';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { GeoJSON, MapContainer, useMap } from 'react-leaflet';
 
+import { usePreferences } from '@/lib/preferences';
 import { cn } from '@/lib/utils';
 
 /**
@@ -66,14 +67,19 @@ const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', 
 
 function Controls() {
     const map = useMap();
-    const button = 'flex h-10 w-10 items-center justify-center text-[#33414e] hover:bg-[#f1f4f7]';
+    const button = 'flex h-10 w-10 items-center justify-center text-[var(--tcd-text-2,#33414e)] hover:bg-[var(--tcd-muted,#f1f4f7)]';
 
     return (
-        <div className="absolute top-3 right-3 z-[500] flex flex-col overflow-hidden rounded-xl border border-[#e3e8ee] bg-white shadow-sm">
+        <div className="absolute top-3 right-3 z-[500] flex flex-col overflow-hidden rounded-xl border border-[var(--tcd-border,#e3e8ee)] bg-[var(--tcd-surface,#fff)] shadow-sm">
             <button type="button" className={button} onClick={() => map.zoomIn()} aria-label="Perbesar">
                 <Plus className="h-4 w-4" />
             </button>
-            <button type="button" className={cn(button, 'border-y border-[#e3e8ee]')} onClick={() => map.zoomOut()} aria-label="Perkecil">
+            <button
+                type="button"
+                className={cn(button, 'border-y border-[var(--tcd-border,#e3e8ee)]')}
+                onClick={() => map.zoomOut()}
+                aria-label="Perkecil"
+            >
                 <Minus className="h-4 w-4" />
             </button>
             <button type="button" className={button} onClick={() => map.fitBounds(INDONESIA)} aria-label="Kembali ke seluruh Indonesia">
@@ -112,6 +118,13 @@ export default function ProvinceMap<T extends ProvinceDatum>({
     hint?: string;
     className?: string;
 }) {
+    const { dark, a11y } = usePreferences();
+    // Warna garis & provinsi tanpa pengaduan mengikuti tema (terang / gelap / kontras tinggi).
+    const ink = a11y.contrast
+        ? { empty: '#000000', line: '#ffffff', strong: '#ffd400' }
+        : dark
+          ? { empty: '#1b3046', line: '#3d5672', strong: '#e2e9f0' }
+          : { empty: '#ffffff', line: '#94a3b8', strong: '#17232f' };
     const [geo, setGeo] = useState<FeatureCollection<Geometry, { provinsi: string }> | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [hover, setHover] = useState<{ name: string; x: number; y: number } | null>(null);
@@ -131,7 +144,7 @@ export default function ProvinceMap<T extends ProvinceDatum>({
     }, [geo, data]);
 
     const fill = (total: number) =>
-        total <= 0 || max === 0 ? '#ffffff' : SCALE[Math.min(SCALE.length - 1, Math.floor((total / max) * SCALE.length - 1e-9))];
+        total <= 0 || max === 0 ? ink.empty : SCALE[Math.min(SCALE.length - 1, Math.floor((total / max) * SCALE.length - 1e-9))];
 
     const style = (feature?: ProvinceFeature): L.PathOptions => {
         const key = normaliseProvince(feature?.properties.provinsi ?? '');
@@ -140,7 +153,7 @@ export default function ProvinceMap<T extends ProvinceDatum>({
         return {
             fillColor: fill(datum?.total ?? 0),
             fillOpacity: selectedKey && !isSelected ? 0.55 : 1,
-            color: isSelected ? '#17232f' : '#94a3b8',
+            color: isSelected ? ink.strong : ink.line,
             weight: isSelected ? 2.2 : 0.7,
         };
     };
@@ -158,7 +171,7 @@ export default function ProvinceMap<T extends ProvinceDatum>({
         };
         path.on({
             mouseover: (e: L.LeafletMouseEvent) => {
-                path.setStyle({ weight: 2, color: '#17232f' });
+                path.setStyle({ weight: 2, color: ink.strong });
                 path.bringToFront();
                 position(e);
             },
@@ -176,7 +189,10 @@ export default function ProvinceMap<T extends ProvinceDatum>({
 
     return (
         <div className={cn('relative', className)}>
-            <div ref={box} className="province-map relative h-[360px] overflow-hidden rounded-2xl border border-[#dbe5ef] sm:h-[460px] lg:h-[520px]">
+            <div
+                ref={box}
+                className="province-map relative isolate h-[360px] overflow-hidden rounded-2xl border border-[var(--tcd-border,#dbe5ef)] sm:h-[460px] lg:h-[520px]"
+            >
                 {geo ? (
                     <MapContainer
                         bounds={INDONESIA}
@@ -190,7 +206,7 @@ export default function ProvinceMap<T extends ProvinceDatum>({
                     >
                         {/* Kunci berubah saat data/pilihan berubah agar gaya & label dirender ulang. */}
                         <GeoJSON
-                            key={`${selectedKey ?? 'nasional'}-${data.map((d) => `${d.provinsi}:${d.total}`).join('|')}`}
+                            key={`${ink.line}-${selectedKey ?? 'nasional'}-${data.map((d) => `${d.provinsi}:${d.total}`).join('|')}`}
                             data={geo}
                             style={style}
                             onEachFeature={onEachFeature}
@@ -199,7 +215,7 @@ export default function ProvinceMap<T extends ProvinceDatum>({
                         <Scale />
                     </MapContainer>
                 ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-[#667382]">{error ?? 'Memuat peta…'}</div>
+                    <div className="flex h-full items-center justify-center text-sm text-[var(--tcd-text-3,#667382)]">{error ?? 'Memuat peta…'}</div>
                 )}
 
                 {hover && (
@@ -217,10 +233,13 @@ export default function ProvinceMap<T extends ProvinceDatum>({
                     </div>
                 )}
 
-                <div className="pointer-events-none absolute bottom-3 left-3 z-[500] rounded-lg border border-[#e3e8ee] bg-white/95 px-3 py-2 text-[11px] text-[#4a5868]">
+                <div className="pointer-events-none absolute bottom-3 left-3 z-[500] rounded-lg border border-[var(--tcd-border,#e3e8ee)] bg-[var(--tcd-surface,#fff)]/95 px-3 py-2 text-[11px] text-[var(--tcd-text-2,#4a5868)]">
                     <p className="mb-1 font-semibold">Jumlah pengaduan</p>
                     <div className="flex items-center gap-1">
-                        <span className="h-3 w-5 rounded-sm border border-[#cbd5e1] bg-white" aria-hidden="true" />
+                        <span
+                            className="h-3 w-5 rounded-sm border border-[var(--tcd-border-strong,#cbd5e1)] bg-[var(--tcd-surface,#fff)]"
+                            aria-hidden="true"
+                        />
                         {SCALE.map((c) => (
                             <span key={c} className="h-3 w-5 rounded-sm" style={{ background: c }} aria-hidden="true" />
                         ))}
@@ -232,13 +251,13 @@ export default function ProvinceMap<T extends ProvinceDatum>({
                 </div>
             </div>
 
-            <p className="mt-1.5 text-right text-[11px] text-[#667382]">
+            <p className="mt-1.5 text-right text-[11px] text-[var(--tcd-text-3,#667382)]">
                 Batas provinsi ©{' '}
                 <a
                     href="https://www.openstreetmap.org/copyright"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline hover:text-[#33414e]"
+                    className="underline hover:text-[var(--tcd-text-2,#33414e)]"
                 >
                     OpenStreetMap contributors
                 </a>{' '}
@@ -246,7 +265,7 @@ export default function ProvinceMap<T extends ProvinceDatum>({
             </p>
 
             {unmapped.length > 0 && (
-                <p className="mt-2 text-xs text-[#667382]">
+                <p className="mt-2 text-xs text-[var(--tcd-text-3,#667382)]">
                     Belum terpetakan (nama provinsi kawasan tidak dikenali):{' '}
                     {unmapped.map((d) => `${d.provinsi} (${d.total.toLocaleString('id-ID')})`).join(', ')}
                 </p>

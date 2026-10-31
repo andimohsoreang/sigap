@@ -116,16 +116,20 @@ function channelIcon(name: string): LucideIcon {
 
 function statusTone(status: string | null): string {
     const s = (status ?? '').toLowerCase();
-    if (s.includes('memadai') || s.includes('baik')) return 'bg-[#e7f4ef] text-[#0d7a5f]';
-    if (s.includes('berkembang') || s.includes('sedang')) return 'bg-[#fdf3e1] text-[#9a5b00]';
-    if (s.includes('kurang') || s.includes('rusak')) return 'bg-[#fdecea] text-[#b42318]';
-    return 'bg-[#eef1f4] text-[#4a5868]';
+    if (s.includes('memadai') || s.includes('baik')) return 'bg-[var(--tcd-success-soft,#e7f4ef)] text-[var(--tcd-success,#0d7a5f)]';
+    if (s.includes('berkembang') || s.includes('sedang')) return 'bg-[var(--tcd-warning-soft,#fdf3e1)] text-[var(--tcd-warning,#9a5b00)]';
+    if (s.includes('kurang') || s.includes('rusak')) return 'bg-[var(--tcd-danger-soft,#fdecea)] text-[var(--tcd-danger,#b42318)]';
+    return 'bg-[var(--tcd-muted,#eef1f4)] text-[var(--tcd-text-2,#4a5868)]';
 }
 
 const nf = (n: number) => n.toLocaleString('id-ID');
 
 function Card({ className, children }: { className?: string; children: React.ReactNode }) {
-    return <div className={cn('rounded-[20px] border border-[#e8edf2] bg-white p-6 sm:p-7', className)}>{children}</div>;
+    return (
+        <div className={cn('rounded-[20px] border border-[var(--tcd-border,#e8edf2)] bg-[var(--tcd-surface,#fff)] p-6 sm:p-7', className)}>
+            {children}
+        </div>
+    );
 }
 
 export default function Tentang({ stats, regions }: Props) {
@@ -152,16 +156,28 @@ export default function Tentang({ stats, regions }: Props) {
     const totalKk = regions.reduce((s, r) => s + r.kk_count, 0);
 
     const kpis: { icon: LucideIcon; label: string; value: number; hint: string; tone: string }[] = [
-        { icon: Inbox, label: 'Laporan masuk hari ini', value: stats.today, hint: 'Dari semua kanal', tone: 'text-[#003d68]' },
-        { icon: Loader, label: 'Sedang diproses', value: stats.by_status?.diproses ?? 0, hint: 'Ditangani petugas kawasan', tone: 'text-[#9a5b00]' },
+        { icon: Inbox, label: 'Laporan masuk hari ini', value: stats.today, hint: 'Dari semua kanal', tone: 'text-[var(--tcd-link,#003d68)]' },
+        {
+            icon: Loader,
+            label: 'Sedang diproses',
+            value: stats.by_status?.diproses ?? 0,
+            hint: 'Ditangani petugas kawasan',
+            tone: 'text-[var(--tcd-warning,#9a5b00)]',
+        },
         {
             icon: CircleCheck,
             label: 'Selesai ditangani',
             value: stats.by_status?.selesai ?? 0,
             hint: 'Warga diminta mengisi survei',
-            tone: 'text-[#0d7a5f]',
+            tone: 'text-[var(--tcd-success,#0d7a5f)]',
         },
-        { icon: ChartColumn, label: 'Total laporan publik', value: stats.total, hint: 'Sejak layanan dibuka', tone: 'text-[#9a7330]' },
+        {
+            icon: ChartColumn,
+            label: 'Total laporan publik',
+            value: stats.total,
+            hint: 'Sejak layanan dibuka',
+            tone: 'text-[var(--tcd-bronze,#8b682b)]',
+        },
     ];
 
     return (
@@ -176,7 +192,7 @@ export default function Tentang({ stats, regions }: Props) {
             poseAlt="TARA memegang tablet berisi data layanan"
         >
             <div className="mx-auto flex max-w-[1312px] flex-col gap-12 px-4 py-12 sm:px-6 lg:gap-14 lg:px-16 lg:py-14">
-                <p className="flex items-center gap-2 text-sm font-medium text-[#0d7a5f]">
+                <p className="flex items-center gap-2 text-sm font-medium text-[var(--tcd-success,#0d7a5f)]">
                     <RefreshCw className="h-4 w-4" aria-hidden="true" />
                     Diperbarui otomatis{now ? ` · ${now}` : ''}
                 </p>
@@ -188,12 +204,12 @@ export default function Tentang({ stats, regions }: Props) {
                     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
                         {kpis.map(({ icon: Icon, label, value, hint, tone }) => (
                             <Card key={label} className="flex flex-col gap-2.5">
-                                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#eef3f8]">
+                                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--tcd-muted,#eef3f8)]">
                                     <Icon className={cn('h-[22px] w-[22px]', tone)} aria-hidden="true" />
                                 </span>
-                                <p className="text-[15px] font-medium text-[#5b6b7a]">{label}</p>
+                                <p className="text-[15px] font-medium text-[var(--tcd-text-2,#5b6b7a)]">{label}</p>
                                 <p className={cn('font-heading text-[36px] leading-none font-bold tabular-nums sm:text-[44px]', tone)}>{nf(value)}</p>
-                                <p className="text-[13px] text-[#8a96a3]">{hint}</p>
+                                <p className="text-[13px] text-[var(--tcd-text-3,#6d7681)]">{hint}</p>
                             </Card>
                         ))}
                     </div>
@@ -201,9 +217,9 @@ export default function Tentang({ stats, regions }: Props) {
 
                 <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
                     <Card className="flex flex-col gap-5">
-                        <h2 className="font-heading text-xl font-bold text-[var(--t-deep)]">Status penanganan</h2>
+                        <h2 className="font-heading text-xl font-bold text-[var(--tcd-heading,var(--t-deep))]">Status penanganan</h2>
                         <div
-                            className="flex h-[18px] w-full gap-[3px] overflow-hidden rounded-full bg-[#eef1f4]"
+                            className="flex h-[18px] w-full gap-[3px] overflow-hidden rounded-full bg-[var(--tcd-muted,#eef1f4)]"
                             role="img"
                             aria-label="Sebaran status penanganan"
                         >
@@ -213,15 +229,19 @@ export default function Tentang({ stats, regions }: Props) {
                                     return v > 0 ? <span key={key} style={{ width: `${(v / statusTotal) * 100}%`, background: color }} /> : null;
                                 })}
                         </div>
-                        <ul className="divide-y divide-[#e8edf2]">
+                        <ul className="divide-y divide-[var(--tcd-border,#e8edf2)]">
                             {STATUS_ORDER.map(({ key, color }) => {
                                 const v = stats.by_status?.[key] ?? 0;
                                 return (
                                     <li key={key} className="flex items-center gap-3 py-3">
                                         <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color }} aria-hidden="true" />
-                                        <span className="flex-1 text-[15px] font-medium text-[var(--t-deep)]">{statusLabel(key)}</span>
-                                        <span className="font-heading text-[17px] font-bold text-[var(--t-deep)] tabular-nums">{nf(v)}</span>
-                                        <span className="w-12 text-right text-sm text-[#8a96a3] tabular-nums">
+                                        <span className="flex-1 text-[15px] font-medium text-[var(--tcd-heading,var(--t-deep))]">
+                                            {statusLabel(key)}
+                                        </span>
+                                        <span className="font-heading text-[17px] font-bold text-[var(--tcd-heading,var(--t-deep))] tabular-nums">
+                                            {nf(v)}
+                                        </span>
+                                        <span className="w-12 text-right text-sm text-[var(--tcd-text-3,#6d7681)] tabular-nums">
                                             {statusTotal > 0 ? Math.round((v / statusTotal) * 100) : 0}%
                                         </span>
                                     </li>
@@ -257,9 +277,9 @@ export default function Tentang({ stats, regions }: Props) {
 
                 <section className="grid gap-6 lg:grid-cols-2">
                     <Card className="flex flex-col gap-5">
-                        <h2 className="font-heading text-xl font-bold text-[var(--t-deep)]">Top kategori keluhan</h2>
+                        <h2 className="font-heading text-xl font-bold text-[var(--tcd-heading,var(--t-deep))]">Top kategori keluhan</h2>
                         {categories.length === 0 ? (
-                            <p className="text-sm text-[#8a96a3]">Belum ada data kategori.</p>
+                            <p className="text-sm text-[var(--tcd-text-3,#6d7681)]">Belum ada data kategori.</p>
                         ) : (
                             <ul className="flex flex-col gap-4">
                                 {categories.map((c, i) => {
@@ -267,13 +287,26 @@ export default function Tentang({ stats, regions }: Props) {
                                     return (
                                         <li key={c.name} className="flex flex-col gap-2">
                                             <span className="flex items-center gap-2.5">
-                                                <Icon className="h-[18px] w-[18px] shrink-0 text-[var(--t-navy)]" aria-hidden="true" />
-                                                <span className="flex-1 text-[15px] font-medium text-[var(--t-deep)]">{c.name}</span>
-                                                <span className="font-heading font-bold text-[var(--t-deep)] tabular-nums">{nf(c.total)}</span>
+                                                <Icon
+                                                    className="h-[18px] w-[18px] shrink-0 text-[var(--tcd-link,var(--t-navy))]"
+                                                    aria-hidden="true"
+                                                />
+                                                <span className="flex-1 text-[15px] font-medium text-[var(--tcd-heading,var(--t-deep))]">
+                                                    {c.name}
+                                                </span>
+                                                <span className="font-heading font-bold text-[var(--tcd-heading,var(--t-deep))] tabular-nums">
+                                                    {nf(c.total)}
+                                                </span>
                                             </span>
-                                            <span className="h-2.5 w-full overflow-hidden rounded-full bg-[#eef1f4]" aria-hidden="true">
+                                            <span
+                                                className="h-2.5 w-full overflow-hidden rounded-full bg-[var(--tcd-muted,#eef1f4)]"
+                                                aria-hidden="true"
+                                            >
                                                 <span
-                                                    className={cn('block h-full rounded-full', i === 0 ? 'bg-[var(--t-gold)]' : 'bg-[var(--t-navy)]')}
+                                                    className={cn(
+                                                        'block h-full rounded-full',
+                                                        i === 0 ? 'bg-[var(--t-gold)]' : 'bg-[var(--tcd-primary,var(--t-navy))]',
+                                                    )}
                                                     style={{ width: `${(c.total / maxCategory) * 100}%` }}
                                                 />
                                             </span>
@@ -285,31 +318,34 @@ export default function Tentang({ stats, regions }: Props) {
                     </Card>
 
                     <Card className="flex flex-col">
-                        <h2 className="font-heading text-xl font-bold text-[var(--t-deep)]">Distribusi kanal pengaduan</h2>
+                        <h2 className="font-heading text-xl font-bold text-[var(--tcd-heading,var(--t-deep))]">Distribusi kanal pengaduan</h2>
                         <div className="mt-4 overflow-x-auto">
                             <table className="w-full text-[15px]">
                                 <thead>
-                                    <tr className="border-b border-[#e8edf2] text-left text-xs font-semibold tracking-[0.1em] text-[#8a96a3] uppercase">
+                                    <tr className="border-b border-[var(--tcd-border,#e8edf2)] text-left text-xs font-semibold tracking-[0.1em] text-[var(--tcd-text-3,#6d7681)] uppercase">
                                         <th className="py-2.5 font-semibold">Sumber kanal</th>
                                         <th className="w-20 py-2.5 text-right font-semibold">Jumlah</th>
                                         <th className="w-16 py-2.5 text-right font-semibold">%</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-[#e8edf2]">
+                                <tbody className="divide-y divide-[var(--tcd-border,#e8edf2)]">
                                     {channels.map((c) => {
                                         const Icon = channelIcon(c.name);
                                         return (
                                             <tr key={c.name}>
                                                 <td className="py-3">
-                                                    <span className="flex items-center gap-2.5 text-[var(--t-deep)]">
-                                                        <Icon className="h-[17px] w-[17px] shrink-0 text-[var(--t-navy)]" aria-hidden="true" />{' '}
+                                                    <span className="flex items-center gap-2.5 text-[var(--tcd-heading,var(--t-deep))]">
+                                                        <Icon
+                                                            className="h-[17px] w-[17px] shrink-0 text-[var(--tcd-link,var(--t-navy))]"
+                                                            aria-hidden="true"
+                                                        />{' '}
                                                         {c.name}
                                                     </span>
                                                 </td>
-                                                <td className="font-heading py-3 text-right font-bold text-[var(--t-deep)] tabular-nums">
+                                                <td className="font-heading py-3 text-right font-bold text-[var(--tcd-heading,var(--t-deep))] tabular-nums">
                                                     {nf(c.total)}
                                                 </td>
-                                                <td className="py-3 text-right text-sm text-[#8a96a3] tabular-nums">
+                                                <td className="py-3 text-right text-sm text-[var(--tcd-text-3,#6d7681)] tabular-nums">
                                                     {channelTotal > 0 ? ((c.total / channelTotal) * 100).toFixed(1) : '0.0'}%
                                                 </td>
                                             </tr>
@@ -317,7 +353,7 @@ export default function Tentang({ stats, regions }: Props) {
                                     })}
                                     {channels.length === 0 && (
                                         <tr>
-                                            <td colSpan={3} className="py-4 text-sm text-[#8a96a3]">
+                                            <td colSpan={3} className="py-4 text-sm text-[var(--tcd-text-3,#6d7681)]">
                                                 Belum ada data kanal.
                                             </td>
                                         </tr>
@@ -332,27 +368,32 @@ export default function Tentang({ stats, regions }: Props) {
                     <div className="flex flex-wrap items-end justify-between gap-3">
                         <div>
                             <TaraEyebrow>Kawasan transmigrasi</TaraEyebrow>
-                            <h2 id="judul-kawasan" className="font-heading mt-1.5 text-2xl font-bold text-[var(--t-deep)]">
+                            <h2 id="judul-kawasan" className="font-heading mt-1.5 text-2xl font-bold text-[var(--tcd-heading,var(--t-deep))]">
                                 {nf(regions.length)} kawasan · {nf(totalKk)} KK dilayani
                             </h2>
                         </div>
                         <Link
                             href="/peta"
-                            className="flex items-center gap-1.5 text-[15px] font-semibold text-[var(--t-deep)] hover:text-[var(--t-navy)]"
+                            className="flex items-center gap-1.5 text-[15px] font-semibold text-[var(--tcd-heading,var(--t-deep))] hover:text-[var(--tcd-link,var(--t-navy))]"
                         >
                             Lihat di Peta Wilayah <ArrowRight className="h-4 w-4" aria-hidden="true" />
                         </Link>
                     </div>
                     <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                         {regions.map((r) => (
-                            <li key={r.id} className="flex items-center gap-4 rounded-[20px] border border-[#e8edf2] bg-white p-5">
-                                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#eef3f8] text-[var(--t-navy)]">
+                            <li
+                                key={r.id}
+                                className="flex items-center gap-4 rounded-[20px] border border-[var(--tcd-border,#e8edf2)] bg-[var(--tcd-surface,#fff)] p-5"
+                            >
+                                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--tcd-muted,#eef3f8)] text-[var(--tcd-link,var(--t-navy))]">
                                     <House className="h-5 w-5" aria-hidden="true" />
                                 </span>
                                 <span className="min-w-0 flex-1">
-                                    <span className="block font-mono text-[13px] font-semibold text-[#9a7330]">{r.code}</span>
-                                    <span className="font-heading block truncate text-lg font-bold text-[var(--t-deep)]">{r.name}</span>
-                                    <span className="block text-sm text-[#5b6b7a]">
+                                    <span className="block font-mono text-[13px] font-semibold text-[var(--tcd-bronze,#8b682b)]">{r.code}</span>
+                                    <span className="font-heading block truncate text-lg font-bold text-[var(--tcd-heading,var(--t-deep))]">
+                                        {r.name}
+                                    </span>
+                                    <span className="block text-sm text-[var(--tcd-text-2,#5b6b7a)]">
                                         {r.province ?? '—'} · {nf(r.kk_count)} KK
                                     </span>
                                 </span>
@@ -372,24 +413,27 @@ export default function Tentang({ stats, regions }: Props) {
 
                 <section
                     id="sec-dasar-hukum"
-                    className="grid scroll-mt-24 gap-8 rounded-[24px] bg-[#f7f3ee] p-7 sm:p-9 lg:grid-cols-[340px_minmax(0,1fr)] lg:gap-10"
+                    className="grid scroll-mt-24 gap-8 rounded-[24px] bg-[var(--tcd-cream,#f7f3ee)] p-7 sm:p-9 lg:grid-cols-[340px_minmax(0,1fr)] lg:gap-10"
                 >
                     <div className="flex flex-col gap-2.5 lg:sticky lg:top-28 lg:self-start">
                         <TaraEyebrow tone="bronze">Dasar hukum</TaraEyebrow>
-                        <h2 className="font-heading text-2xl leading-tight font-bold text-[var(--t-deep)]">
+                        <h2 className="font-heading text-2xl leading-tight font-bold text-[var(--tcd-heading,var(--t-deep))]">
                             Keterbukaan data ini dijalankan berdasarkan
                         </h2>
-                        <p className="text-[15px] leading-relaxed text-[#5b4a36]">
+                        <p className="text-[15px] leading-relaxed text-[var(--tcd-warm,#5b4a36)]">
                             Data yang tampil tidak memuat identitas pelapor dan tidak termasuk tiket internal pegawai.
                         </p>
                     </div>
                     <ul className="flex flex-col gap-2.5">
                         {DASAR_HUKUM.map((h) => (
-                            <li key={h.judul} className="flex items-start gap-3 rounded-[14px] border border-[#ece6dc] bg-white px-[18px] py-3.5">
-                                <Scale className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[var(--t-navy)]" aria-hidden="true" />
+                            <li
+                                key={h.judul}
+                                className="flex items-start gap-3 rounded-[14px] border border-[var(--tcd-border-warm,#ece6dc)] bg-[var(--tcd-surface,#fff)] px-[18px] py-3.5"
+                            >
+                                <Scale className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" />
                                 <div className="min-w-0">
-                                    <p className="text-[15px] leading-snug font-semibold text-[var(--t-deep)]">{h.judul}</p>
-                                    <p className="mt-1 text-sm leading-relaxed text-[#5b4a36]">{h.peran}</p>
+                                    <p className="text-[15px] leading-snug font-semibold text-[var(--tcd-heading,var(--t-deep))]">{h.judul}</p>
+                                    <p className="mt-1 text-sm leading-relaxed text-[var(--tcd-warm,#5b4a36)]">{h.peran}</p>
                                 </div>
                             </li>
                         ))}

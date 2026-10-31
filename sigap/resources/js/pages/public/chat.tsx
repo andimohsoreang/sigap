@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { echo, echoIsConfigured } from '@laravel/echo-react';
 import {
+    Accessibility,
     ArrowLeft,
     ArrowUpRight,
     BookOpen,
@@ -35,6 +36,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 
+import { openAccessibilityMenu } from '@/components/sigap/accessibility';
 import { external, waLink, type KanalPublik } from '@/components/sigap/kanal-resmi';
 import {
     AiExtras,
@@ -509,7 +511,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                 href="/chat/transkrip"
                 aria-disabled={!hasConversation}
                 className={cn(
-                    'flex h-9 items-center gap-1.5 rounded-full border border-[#d5dee6] px-3.5 text-sm font-semibold text-[var(--t-navy)] transition-colors hover:bg-[#f2f5f8]',
+                    'flex h-9 items-center gap-1.5 rounded-full border border-[var(--tcd-border-strong,#d5dee6)] px-3.5 text-sm font-semibold text-[var(--tcd-link,var(--t-navy))] transition-colors hover:bg-[var(--tcd-muted,#f2f5f8)]',
                     !hasConversation && 'pointer-events-none opacity-40',
                 )}
             >
@@ -519,7 +521,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                 type="button"
                 disabled={!hasConversation || closed}
                 onClick={() => setConfirmEnd(true)}
-                className="flex h-9 items-center gap-1.5 rounded-full border border-[#d5dee6] px-3.5 text-sm font-semibold text-[#b42318] transition-colors hover:bg-[#fef3f2] disabled:opacity-40"
+                className="flex h-9 items-center gap-1.5 rounded-full border border-[var(--tcd-border-strong,#d5dee6)] px-3.5 text-sm font-semibold text-[var(--tcd-danger,#b42318)] transition-colors hover:bg-[var(--tcd-danger-soft,#fef3f2)] disabled:opacity-40"
             >
                 <LogOut className="h-4 w-4" aria-hidden="true" /> Akhiri
             </button>
@@ -537,7 +539,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                 />
             </Head>
 
-            <div className="transi-page flex h-[100dvh] flex-col bg-white text-[#0f2233] antialiased">
+            <div className="transi-page flex h-[100dvh] flex-col bg-[var(--tcd-surface,#fff)] text-[var(--tcd-text,#0f2233)] antialiased">
                 <TransiHeader
                     loggedIn={loggedIn}
                     isAdmin={Boolean(auth?.user?.is_admin)}
@@ -546,11 +548,11 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                     className="hidden lg:block"
                 />
 
-                <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] lg:grid-cols-[264px_minmax(0,1fr)_300px] xl:grid-cols-[300px_minmax(0,1fr)_340px]">
+                <div className="chat-grid grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] lg:grid-cols-[264px_minmax(0,1fr)_300px] xl:grid-cols-[300px_minmax(0,1fr)_340px]">
                     <LeftPanel layanan={layanan} onTopic={askTopic} />
 
                     {/* Percakapan */}
-                    <section className="vt-chat-target flex min-h-0 flex-col bg-white" aria-label="Percakapan dengan TARA">
+                    <section className="vt-chat-target flex min-h-0 flex-col bg-[var(--tcd-surface,#fff)]" aria-label="Percakapan dengan TARA">
                         <MobileTopBar
                             title={title}
                             status={status}
@@ -558,15 +560,15 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                             onMenu={() => setMenuOpen((v) => !v)}
                             menuOpen={menuOpen}
                         >
-                            <div className="absolute top-14 right-3 z-30 w-60 overflow-hidden rounded-xl border border-[#e8edf2] bg-white py-1 text-sm shadow-[0_16px_40px_rgba(2,43,74,0.18)]">
+                            <div className="absolute top-14 right-3 z-30 w-60 overflow-hidden rounded-xl border border-[var(--tcd-border,#e8edf2)] bg-[var(--tcd-surface,#fff)] py-1 text-sm shadow-[0_16px_40px_rgba(2,43,74,0.18)]">
                                 <a
                                     href="/chat/transkrip"
                                     className={cn(
-                                        'flex items-center gap-2.5 px-4 py-3 hover:bg-[#f6f8fa]',
+                                        'flex items-center gap-2.5 px-4 py-3 hover:bg-[var(--tcd-muted,#f6f8fa)]',
                                         !hasConversation && 'pointer-events-none opacity-40',
                                     )}
                                 >
-                                    <Download className="h-4 w-4 text-[var(--t-navy)]" /> Unduh transkrip
+                                    <Download className="h-4 w-4 text-[var(--tcd-link,var(--t-navy))]" /> Unduh transkrip
                                 </a>
                                 <button
                                     type="button"
@@ -575,7 +577,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                         setMenuOpen(false);
                                         setConfirmEnd(true);
                                     }}
-                                    className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-[#b42318] hover:bg-[#fef3f2] disabled:opacity-40"
+                                    className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-[var(--tcd-danger,#b42318)] hover:bg-[var(--tcd-danger-soft,#fef3f2)] disabled:opacity-40"
                                 >
                                     <LogOut className="h-4 w-4" /> Akhiri chat
                                 </button>
@@ -586,17 +588,17 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                             setMenuOpen(false);
                                             setResumeOpen(true);
                                         }}
-                                        className="flex w-full items-center gap-2.5 px-4 py-3 text-left hover:bg-[#f6f8fa]"
+                                        className="flex w-full items-center gap-2.5 px-4 py-3 text-left hover:bg-[var(--tcd-muted,#f6f8fa)]"
                                     >
-                                        <History className="h-4 w-4 text-[var(--t-navy)]" /> Lanjutkan chat dari HP lain
+                                        <History className="h-4 w-4 text-[var(--tcd-link,var(--t-navy))]" /> Lanjutkan chat dari HP lain
                                     </button>
                                 )}
                                 <button
                                     type="button"
                                     onClick={() => leaveChat()}
-                                    className="flex w-full items-center gap-2.5 px-4 py-3 text-left hover:bg-[#f6f8fa]"
+                                    className="flex w-full items-center gap-2.5 px-4 py-3 text-left hover:bg-[var(--tcd-muted,#f6f8fa)]"
                                 >
-                                    <ArrowLeft className="h-4 w-4 text-[var(--t-navy)]" /> Kembali ke beranda
+                                    <ArrowLeft className="h-4 w-4 text-[var(--tcd-link,var(--t-navy))]" /> Kembali ke beranda
                                 </button>
                             </div>
                         </MobileTopBar>
@@ -606,14 +608,14 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                         )}
 
                         {/* Kepala percakapan (desktop) */}
-                        <div className="hidden items-center gap-3 border-b border-[#e8edf2] px-7 py-3.5 lg:flex">
+                        <div className="hidden items-center gap-3 border-b border-[var(--tcd-border,#e8edf2)] px-7 py-3.5 lg:flex">
                             <AvatarGroup staffName={staff?.nama ?? null} size={40} />
                             <div className="min-w-0 flex-1">
-                                <p className="font-heading truncate text-base font-bold text-[var(--t-deep)]">
+                                <p className="font-heading truncate text-base font-bold text-[var(--tcd-heading,var(--t-deep))]">
                                     {title}
-                                    {staff && <span className="font-body text-sm font-medium text-[#5b6b7a]"> ({staff.unit})</span>}
+                                    {staff && <span className="font-body text-sm font-medium text-[var(--tcd-text-2,#5b6b7a)]"> ({staff.unit})</span>}
                                 </p>
-                                <p className="flex items-center gap-1.5 truncate text-[13px] text-[#5b6b7a]">
+                                <p className="flex items-center gap-1.5 truncate text-[13px] text-[var(--tcd-text-2,#5b6b7a)]">
                                     <span
                                         className={cn('h-2 w-2 shrink-0 rounded-full', closed ? 'bg-[#8a96a3]' : 'bg-[#22c55e]')}
                                         aria-hidden="true"
@@ -630,7 +632,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                             role="log"
                             aria-live="polite"
                             aria-label="Riwayat percakapan"
-                            className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto bg-[#f7f9fb] px-3.5 py-5 sm:px-6 lg:px-10"
+                            className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto bg-[var(--tcd-muted,#f7f9fb)] px-3.5 py-5 sm:px-6 lg:px-10"
                         >
                             {!loaded ? (
                                 <ThreadSkeleton />
@@ -655,7 +657,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                                             key={t.label}
                                                             type="button"
                                                             onClick={() => askTopic(t.question)}
-                                                            className="transi-lift rounded-full border border-[#c8d4df] bg-white px-3 py-1.5 text-[13px] font-medium text-[var(--t-navy)] hover:border-[var(--t-navy)]"
+                                                            className="transi-lift rounded-full border border-[var(--tcd-border-strong,#c8d4df)] bg-[var(--tcd-surface,#fff)] px-3 py-1.5 text-[13px] font-medium text-[var(--tcd-link,var(--t-navy))] hover:border-[var(--tcd-link,var(--t-navy))]"
                                                         >
                                                             {t.label}
                                                         </button>
@@ -675,15 +677,15 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
 
                                     {(needsIdentity ? pending : outgoing) && (
                                         <div className="transi-msg-in flex flex-col items-end gap-1">
-                                            <p className="max-w-[85%] rounded-2xl rounded-tr-[4px] bg-[var(--t-navy)] px-3.5 py-2.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap text-white opacity-85 sm:max-w-[420px]">
+                                            <p className="max-w-[85%] rounded-2xl rounded-tr-[4px] bg-[var(--tcd-primary,var(--t-navy))] px-3.5 py-2.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap text-white opacity-85 sm:max-w-[420px]">
                                                 {needsIdentity ? pending : outgoing}
                                             </p>
                                             {needsIdentity ? (
-                                                <span className="flex items-center gap-1.5 text-xs font-medium text-[#9a7330]">
+                                                <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--tcd-bronze,#8b682b)]">
                                                     <Clock3 className="h-3.5 w-3.5" aria-hidden="true" /> Dikirim setelah Anda mengisi nama
                                                 </span>
                                             ) : (
-                                                <span className="flex items-center gap-1 text-xs text-[#8a96a3]">
+                                                <span className="flex items-center gap-1 text-xs text-[var(--tcd-text-3,#6d7681)]">
                                                     <Clock3 className="h-3.5 w-3.5" aria-hidden="true" /> Mengirim…
                                                 </span>
                                             )}
@@ -698,7 +700,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                             <span className="mt-3 flex flex-wrap gap-2">
                                                 <Link
                                                     href="/masuk"
-                                                    className="flex items-center gap-1.5 rounded-full border border-[#c8d4df] px-3 py-1.5 text-[13px] font-medium text-[var(--t-navy)] hover:border-[var(--t-navy)]"
+                                                    className="flex items-center gap-1.5 rounded-full border border-[var(--tcd-border-strong,#c8d4df)] px-3 py-1.5 text-[13px] font-medium text-[var(--tcd-link,var(--t-navy))] hover:border-[var(--tcd-link,var(--t-navy))]"
                                                 >
                                                     <LogIn className="h-3.5 w-3.5" aria-hidden="true" /> Sudah punya akun? Masuk
                                                 </Link>
@@ -706,7 +708,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                                     type="button"
                                                     onClick={() => setResumeOpen((v) => !v)}
                                                     aria-expanded={resumeOpen}
-                                                    className="flex items-center gap-1.5 rounded-full border border-[#c8d4df] px-3 py-1.5 text-[13px] font-medium text-[var(--t-navy)] hover:border-[var(--t-navy)]"
+                                                    className="flex items-center gap-1.5 rounded-full border border-[var(--tcd-border-strong,#c8d4df)] px-3 py-1.5 text-[13px] font-medium text-[var(--tcd-link,var(--t-navy))] hover:border-[var(--tcd-link,var(--t-navy))]"
                                                 >
                                                     <History className="h-3.5 w-3.5" aria-hidden="true" /> Pernah chat dari HP lain?
                                                 </button>
@@ -737,7 +739,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                     {((outgoing && !needsIdentity && (withAi || awaitingStaff)) || assistant?.mengetik) && <Typing />}
 
                                     {assistant?.butuh_kontak && (
-                                        <div className="overflow-hidden rounded-2xl border border-amber-200">
+                                        <div className="overflow-hidden rounded-2xl border border-[var(--tcd-warning-border,oklch(0.924_0.12_95.746))]">
                                             <ContactForm
                                                 reference={assistant.referensi}
                                                 onSaved={(reply, state) => {
@@ -754,12 +756,12 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
 
                         {/* Konfirmasi akhiri */}
                         {confirmEnd && (
-                            <div className="flex flex-wrap items-center gap-3 border-t border-[#fde3e1] bg-[#fef3f2] px-4 py-3 text-sm text-[#7a1f16] sm:px-6 lg:px-10">
+                            <div className="flex flex-wrap items-center gap-3 border-t border-[var(--tcd-danger-border,#fde3e1)] bg-[var(--tcd-danger-soft,#fef3f2)] px-4 py-3 text-sm text-[var(--tcd-danger,#7a1f16)] sm:px-6 lg:px-10">
                                 <span className="min-w-0 flex-1">Akhiri percakapan? Riwayatnya tetap tersimpan dan bisa dilanjutkan kapan saja.</span>
                                 <button
                                     type="button"
                                     onClick={() => setConfirmEnd(false)}
-                                    className="rounded-full px-3 py-1.5 font-medium hover:bg-white/60"
+                                    className="rounded-full px-3 py-1.5 font-medium hover:bg-[var(--tcd-surface,#fff)]/60"
                                 >
                                     Batal
                                 </button>
@@ -775,14 +777,14 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
 
                         {/* Balasan cepat */}
                         {quickReplies.length > 0 && (
-                            <div className="transi-chips flex gap-2 overflow-x-auto border-t border-[#eef2f6] bg-white px-3.5 pt-2.5 sm:px-6 lg:px-10">
+                            <div className="transi-chips flex gap-2 overflow-x-auto border-t border-[var(--tcd-border,#eef2f6)] bg-[var(--tcd-surface,#fff)] px-3.5 pt-2.5 sm:px-6 lg:px-10">
                                 {quickReplies.map((q) => (
                                     <button
                                         key={q.label}
                                         type="button"
                                         onClick={q.onClick}
                                         disabled={sending}
-                                        className="shrink-0 rounded-full border border-[#c8d4df] bg-white px-3.5 py-2 text-[13px] font-medium text-[var(--t-navy)] transition-colors hover:border-[var(--t-navy)] disabled:opacity-50"
+                                        className="shrink-0 rounded-full border border-[var(--tcd-border-strong,#c8d4df)] bg-[var(--tcd-surface,#fff)] px-3.5 py-2 text-[13px] font-medium text-[var(--tcd-link,var(--t-navy))] transition-colors hover:border-[var(--tcd-link,var(--t-navy))] disabled:opacity-50"
                                     >
                                         {q.label}
                                     </button>
@@ -795,8 +797,8 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                             <nav
                                 aria-label="Kanal pengaduan lain"
                                 className={cn(
-                                    'transi-chips flex gap-2 overflow-x-auto bg-white px-3.5 pt-2 sm:px-6 lg:px-10',
-                                    quickReplies.length === 0 && 'border-t border-[#eef2f6] pt-2.5',
+                                    'transi-chips flex gap-2 overflow-x-auto bg-[var(--tcd-surface,#fff)] px-3.5 pt-2 sm:px-6 lg:px-10',
+                                    quickReplies.length === 0 && 'border-t border-[var(--tcd-border,#eef2f6)] pt-2.5',
                                 )}
                             >
                                 {links.map((l) => (
@@ -804,13 +806,13 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                         key={l.key}
                                         href={l.href}
                                         {...external(l.href)}
-                                        className="flex shrink-0 items-center gap-1.5 rounded-full border border-[#e6d6b4] bg-[#fbf7ee] px-3 py-1.5 text-xs font-semibold text-[var(--t-deep)] transition-colors hover:border-[var(--t-gold)] hover:bg-[#f7efdc]"
+                                        className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--tcd-border-warm,#e6d6b4)] bg-[var(--tcd-cream,#fbf7ee)] px-3 py-1.5 text-xs font-semibold text-[var(--tcd-heading,var(--t-deep))] transition-colors hover:border-[var(--t-gold)] hover:bg-[var(--tcd-gold-soft,#f7efdc)]"
                                     >
-                                        <l.icon className="h-3.5 w-3.5 text-[#9a7330]" aria-hidden="true" />
+                                        <l.icon className="h-3.5 w-3.5 text-[var(--tcd-bronze,#8b682b)]" aria-hidden="true" />
                                         {l.label}
                                         {l.href.startsWith('http') && (
                                             <>
-                                                <ArrowUpRight className="h-3.5 w-3.5 text-[#9a7330]" aria-hidden="true" />
+                                                <ArrowUpRight className="h-3.5 w-3.5 text-[var(--tcd-bronze,#8b682b)]" aria-hidden="true" />
                                                 <span className="sr-only">(tab baru)</span>
                                             </>
                                         )}
@@ -822,25 +824,25 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                         {/* Penulis pesan */}
                         <form
                             onSubmit={submit}
-                            className="border-t border-transparent bg-white px-3 pt-2.5 pb-[max(env(safe-area-inset-bottom),12px)] sm:px-6 lg:px-10 lg:pb-4"
+                            className="border-t border-transparent bg-[var(--tcd-surface,#fff)] px-3 pt-2.5 pb-[max(env(safe-area-inset-bottom),12px)] sm:px-6 lg:px-10 lg:pb-4"
                         >
                             {error && !needsIdentity && (
-                                <p role="alert" className="mb-2 text-xs font-semibold text-rose-600">
+                                <p role="alert" className="mb-2 text-xs font-semibold text-[var(--tcd-danger,oklch(0.586_0.253_17.585))]">
                                     {error}
                                 </p>
                             )}
                             {file && (
-                                <div className="transi-msg-in mb-2 flex items-center gap-3 rounded-2xl border border-[#e1e7ed] bg-[#f6f8fa] p-2 pr-3">
+                                <div className="transi-msg-in mb-2 flex items-center gap-3 rounded-2xl border border-[var(--tcd-border,#e1e7ed)] bg-[var(--tcd-muted,#f6f8fa)] p-2 pr-3">
                                     {filePreview ? (
                                         <img src={filePreview} alt="" className="h-12 w-12 rounded-xl object-cover" />
                                     ) : (
-                                        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white">
-                                            <FileText className="h-6 w-6 text-[var(--t-navy)]" aria-hidden="true" />
+                                        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--tcd-surface,#fff)]">
+                                            <FileText className="h-6 w-6 text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" />
                                         </span>
                                     )}
                                     <span className="min-w-0 flex-1">
-                                        <span className="block truncate text-sm font-semibold text-[#1f2d3a]">{file.name}</span>
-                                        <span className="block text-xs text-[#5b6b7a]">
+                                        <span className="block truncate text-sm font-semibold text-[var(--tcd-text,#1f2d3a)]">{file.name}</span>
+                                        <span className="block text-xs text-[var(--tcd-text-2,#5b6b7a)]">
                                             {ukuran(file.size)} · {sending ? 'Mengunggah…' : 'Tambahkan keterangan bila perlu, lalu kirim'}
                                         </span>
                                     </span>
@@ -849,7 +851,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                         onClick={clearFile}
                                         disabled={sending}
                                         aria-label="Batalkan lampiran"
-                                        className="rounded-full p-1.5 text-[#5b6b7a] hover:bg-white"
+                                        className="rounded-full p-1.5 text-[var(--tcd-text-2,#5b6b7a)] hover:bg-[var(--tcd-surface,#fff)]"
                                     >
                                         <X className="h-4 w-4" />
                                     </button>
@@ -872,8 +874,8 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                             />
                             <div
                                 className={cn(
-                                    'flex h-14 items-center gap-1 rounded-full border bg-[#f6f8fa] pr-1.5 pl-2 transition-colors focus-within:bg-white',
-                                    'border-[#d5dee7] focus-within:border-[var(--t-navy)]',
+                                    'flex h-14 items-center gap-1 rounded-full border bg-[var(--tcd-muted,#f6f8fa)] pr-1.5 pl-2 transition-colors focus-within:bg-[var(--tcd-surface,#fff)]',
+                                    'border-[var(--tcd-border-strong,#d5dee7)] focus-within:border-[var(--tcd-link,var(--t-navy))]',
                                     needsIdentity && 'opacity-60',
                                 )}
                             >
@@ -885,7 +887,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                             disabled={sending}
                                             aria-label="Lampirkan foto atau dokumen"
                                             title="Lampirkan foto atau PDF (maks. 5 MB)"
-                                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#5b6b7a] transition-colors hover:bg-white hover:text-[var(--t-navy)] disabled:opacity-50"
+                                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--tcd-text-2,#5b6b7a)] transition-colors hover:bg-[var(--tcd-surface,#fff)] hover:text-[var(--tcd-link,var(--t-navy))] disabled:opacity-50"
                                         >
                                             <Paperclip className="h-5 w-5" />
                                         </button>
@@ -894,7 +896,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                             onClick={() => cameraInputRef.current?.click()}
                                             disabled={sending}
                                             aria-label="Ambil foto"
-                                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#5b6b7a] transition-colors hover:bg-white hover:text-[var(--t-navy)] disabled:opacity-50 lg:hidden"
+                                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--tcd-text-2,#5b6b7a)] transition-colors hover:bg-[var(--tcd-surface,#fff)] hover:text-[var(--tcd-link,var(--t-navy))] disabled:opacity-50 lg:hidden"
                                         >
                                             <Camera className="h-5 w-5" />
                                         </button>
@@ -919,7 +921,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                               ? `Balas ke ${staff.nama.split(' ')[0]} atau tanya TARA…`
                                               : 'Tulis pertanyaan atau keluhan Anda…'
                                     }
-                                    className="min-w-0 flex-1 bg-transparent text-[15px] text-[#1f2d3a] outline-none placeholder:text-[#8a96a3]"
+                                    className="min-w-0 flex-1 bg-transparent text-[15px] text-[var(--tcd-text,#1f2d3a)] outline-none placeholder:text-[var(--tcd-text-3,#6d7681)]"
                                 />
                                 <button
                                     type="submit"
@@ -935,14 +937,14 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                     <span className="sr-only sm:hidden">Kirim</span>
                                 </button>
                             </div>
-                            <p className="mt-2 hidden text-xs text-[#8a96a3] sm:block">
+                            <p className="mt-2 hidden text-xs text-[var(--tcd-text-3,#6d7681)] sm:block">
                                 TARA bisa keliru. Keputusan resmi selalu disampaikan petugas melalui tiket Anda.
                             </p>
                         </form>
                     </section>
 
                     <aside
-                        className="hidden min-h-0 overflow-y-auto border-l border-[#e8edf2] bg-white px-6 py-7 lg:block"
+                        className="hidden min-h-0 overflow-y-auto border-l border-[var(--tcd-border,#e8edf2)] bg-[var(--tcd-surface,#fff)] px-6 py-7 lg:block"
                         aria-label="Tiket dari percakapan ini"
                     >
                         <TicketPanel panel={panel} />
@@ -957,14 +959,14 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                             className="absolute inset-0 bg-[#022b4a]/50"
                             onClick={() => setSheetOpen(false)}
                         />
-                        <div className="transi-sheet-in absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-[26px] bg-white px-5 pt-3 pb-[max(env(safe-area-inset-bottom),20px)]">
-                            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#d5dee6]" aria-hidden="true" />
+                        <div className="transi-sheet-in absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-[26px] bg-[var(--tcd-surface,#fff)] px-5 pt-3 pb-[max(env(safe-area-inset-bottom),20px)]">
+                            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[var(--tcd-muted-2,#d5dee6)]" aria-hidden="true" />
                             <div className="mb-2 flex justify-end">
                                 <button
                                     type="button"
                                     onClick={() => setSheetOpen(false)}
                                     aria-label="Tutup"
-                                    className="rounded-full p-2 text-[#5b6b7a] hover:bg-[#f2f5f8]"
+                                    className="rounded-full p-2 text-[var(--tcd-text-2,#5b6b7a)] hover:bg-[var(--tcd-muted,#f2f5f8)]"
                                 >
                                     <X className="h-5 w-5" />
                                 </button>
@@ -973,7 +975,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                             <div className="mt-5 grid grid-cols-2 gap-3">
                                 <a
                                     href="/chat/transkrip"
-                                    className="flex h-12 items-center justify-center gap-2 rounded-full border border-[#d5dee6] text-sm font-semibold text-[var(--t-navy)]"
+                                    className="flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--tcd-border-strong,#d5dee6)] text-sm font-semibold text-[var(--tcd-link,var(--t-navy))]"
                                 >
                                     <Download className="h-4 w-4" /> Transkrip
                                 </a>
@@ -984,7 +986,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
                                         setSheetOpen(false);
                                         setConfirmEnd(true);
                                     }}
-                                    className="flex h-12 items-center justify-center gap-2 rounded-full border border-[#d5dee6] text-sm font-semibold text-[#b42318] disabled:opacity-40"
+                                    className="flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--tcd-border-strong,#d5dee6)] text-sm font-semibold text-[var(--tcd-danger,#b42318)] disabled:opacity-40"
                                 >
                                     <LogOut className="h-4 w-4" /> Akhiri chat
                                 </button>
@@ -1024,7 +1026,7 @@ function LeftPanel({ layanan, onTopic }: { layanan: Layanan; onTopic: (q: string
                         className="absolute top-[7%] left-[2%] h-auto w-[66%] max-w-none select-none"
                         draggable={false}
                     />
-                    <p className="absolute top-[7%] right-[4%] w-[54%] rounded-2xl bg-white px-3 py-2.5 text-[13.5px] leading-snug font-medium text-[var(--t-deep)] shadow-lg">
+                    <p className="absolute top-[7%] right-[4%] w-[54%] rounded-2xl bg-[var(--tcd-surface,#fff)] px-3 py-2.5 text-[13.5px] leading-snug font-medium text-[var(--tcd-heading,var(--t-deep))] shadow-lg">
                         Halo! Ada yang bisa saya bantu?
                     </p>
                 </div>
@@ -1101,7 +1103,7 @@ function MobileTopBar({
     children: ReactNode;
 }) {
     return (
-        <div className="relative flex h-16 shrink-0 items-center gap-1.5 bg-[var(--t-navy)] px-1 pt-[env(safe-area-inset-top)] text-white lg:hidden">
+        <div className="relative flex h-16 shrink-0 items-center gap-1.5 bg-[var(--tcd-primary,var(--t-navy))] px-1 pt-[env(safe-area-inset-top)] text-white lg:hidden">
             <button
                 type="button"
                 onClick={() => leaveChat()}
@@ -1115,6 +1117,14 @@ function MobileTopBar({
                 <p className="font-heading truncate text-base font-bold">{title}</p>
                 <p className="truncate text-xs text-[#bcd0e0]">{status}</p>
             </div>
+            <button
+                type="button"
+                onClick={() => openAccessibilityMenu()}
+                aria-label="Aksesibilitas"
+                className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10"
+            >
+                <Accessibility className="h-5 w-5" aria-hidden="true" />
+            </button>
             <button
                 type="button"
                 onClick={onMenu}
@@ -1133,13 +1143,16 @@ function AvatarGroup({ staffName, size, ring = false }: { staffName: string | nu
     return (
         <span className="relative flex shrink-0 items-center" style={{ width: staffName ? size * 1.55 : size, height: size }}>
             <span
-                className={cn('absolute left-0 rounded-full bg-[var(--t-cream)] bg-cover bg-center', ring && 'ring-2 ring-[var(--t-navy)]')}
+                className={cn(
+                    'absolute left-0 rounded-full bg-[var(--tcd-cream,var(--t-cream))] bg-cover bg-center',
+                    ring && 'ring-2 ring-[var(--t-navy)]',
+                )}
                 style={{ width: size, height: size, backgroundImage: `url(${AVATAR})` }}
                 aria-hidden="true"
             />
             {staffName && (
                 <span
-                    className="font-heading absolute right-0 bottom-0 flex items-center justify-center rounded-full bg-[#f3e6cc] text-sm font-bold text-[var(--t-deep)] ring-2 ring-white"
+                    className="font-heading absolute right-0 bottom-0 flex items-center justify-center rounded-full bg-[var(--tcd-gold-soft,#f3e6cc)] text-sm font-bold text-[var(--tcd-heading,var(--t-deep))] ring-2 ring-white"
                     style={{ width: size * 0.85, height: size * 0.85 }}
                     aria-hidden="true"
                 >
@@ -1155,22 +1168,22 @@ function AvatarGroup({ staffName, size, ring = false }: { staffName: string | nu
 function TicketStrip({ panel, onDetail }: { panel: Panel; onDetail: () => void }) {
     const t = panel.tiket;
     return (
-        <div className="flex shrink-0 items-center gap-3 border-b border-[#e8edf2] bg-white px-4 py-2.5 lg:hidden">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#eef3f7]">
-                <Ticket className="h-[18px] w-[18px] text-[var(--t-navy)]" aria-hidden="true" />
+        <div className="flex shrink-0 items-center gap-3 border-b border-[var(--tcd-border,#e8edf2)] bg-[var(--tcd-surface,#fff)] px-4 py-2.5 lg:hidden">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--tcd-muted,#eef3f7)]">
+                <Ticket className="h-[18px] w-[18px] text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
-                <p className={cn('truncate text-[13px] font-bold text-[var(--t-deep)]', (t || panel.referensi) && 'font-mono')}>
+                <p className={cn('truncate text-[13px] font-bold text-[var(--tcd-heading,var(--t-deep))]', (t || panel.referensi) && 'font-mono')}>
                     {t?.nomor ?? panel.referensi ?? 'Perkembangan laporan'}
                 </p>
-                <p className="truncate text-xs font-medium text-[#8a6420]">
+                <p className="truncate text-xs font-medium text-[var(--tcd-bronze,#8a6420)]">
                     {t ? (t.status_label ?? 'Diproses') : panel.petugas ? 'Ditangani petugas' : 'Diteruskan ke petugas'}
                 </p>
             </div>
             <button
                 type="button"
                 onClick={onDetail}
-                className="flex items-center gap-1 rounded-full border border-[#d5dee6] px-3 py-1.5 text-xs font-semibold text-[var(--t-navy)]"
+                className="flex items-center gap-1 rounded-full border border-[var(--tcd-border-strong,#d5dee6)] px-3 py-1.5 text-xs font-semibold text-[var(--tcd-link,var(--t-navy))]"
             >
                 Detail <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
@@ -1187,11 +1200,11 @@ function TicketPanel({ panel }: { panel: Panel | null }) {
     if (!panel || (!t && !panel.referensi && !panel.konfirmasi && !panel.petugas)) {
         return (
             <div className="flex flex-col gap-4">
-                <p className="text-[11px] font-semibold tracking-[0.12em] text-[#8a96a3] uppercase">Tiket dari percakapan ini</p>
-                <div className="flex flex-col gap-3 rounded-2xl bg-[#f6f8fa] p-5">
-                    <Ticket className="h-7 w-7 text-[#8a96a3]" aria-hidden="true" />
-                    <p className="font-heading text-[17px] font-bold text-[var(--t-deep)]">Belum ada tiket</p>
-                    <p className="text-sm leading-relaxed text-[#5b6b7a]">
+                <p className="text-[11px] font-semibold tracking-[0.12em] text-[var(--tcd-text-3,#6d7681)] uppercase">Tiket dari percakapan ini</p>
+                <div className="flex flex-col gap-3 rounded-2xl bg-[var(--tcd-muted,#f6f8fa)] p-5">
+                    <Ticket className="h-7 w-7 text-[var(--tcd-text-3,#6d7681)]" aria-hidden="true" />
+                    <p className="font-heading text-[17px] font-bold text-[var(--tcd-heading,var(--t-deep))]">Belum ada tiket</p>
+                    <p className="text-sm leading-relaxed text-[var(--tcd-text-2,#5b6b7a)]">
                         Bila urusan Anda perlu ditindaklanjuti, nomor tiket, petugas, dan perkembangannya muncul di sini.
                     </p>
                 </div>
@@ -1247,30 +1260,38 @@ function TicketPanel({ panel }: { panel: Panel | null }) {
     return (
         <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-2.5">
-                <p className="text-[11px] font-semibold tracking-[0.12em] text-[#8a96a3] uppercase">
+                <p className="text-[11px] font-semibold tracking-[0.12em] text-[var(--tcd-text-3,#6d7681)] uppercase">
                     {t ? 'Tiket dari percakapan ini' : panel.referensi ? 'Nomor referensi percakapan' : 'Perkembangan laporan'}
                 </p>
                 <div className={cn('flex items-center gap-2', !t && !panel.referensi && 'hidden')}>
-                    <span className="font-mono text-xl font-bold text-[var(--t-deep)] select-all">{t?.nomor ?? panel.referensi}</span>
+                    <span className="font-mono text-xl font-bold text-[var(--tcd-heading,var(--t-deep))] select-all">
+                        {t?.nomor ?? panel.referensi}
+                    </span>
                     <button
                         type="button"
                         onClick={() => void copy()}
                         aria-label="Salin nomor"
-                        className="rounded-lg p-1.5 text-[#5b6b7a] hover:bg-[#f2f5f8]"
+                        className="rounded-lg p-1.5 text-[var(--tcd-text-2,#5b6b7a)] hover:bg-[var(--tcd-muted,#f2f5f8)]"
                     >
-                        {copied ? <Check className="h-4 w-4 text-[#0d7a5f]" /> : <Copy className="h-4 w-4" />}
+                        {copied ? <Check className="h-4 w-4 text-[var(--tcd-success,#0d7a5f)]" /> : <Copy className="h-4 w-4" />}
                     </button>
                 </div>
                 {t && (
                     <div className="flex flex-wrap gap-2">
-                        {t.kategori && <span className="rounded-full bg-[#eef2f6] px-2.5 py-1 text-xs font-medium text-[#3d4b59]">{t.kategori}</span>}
+                        {t.kategori && (
+                            <span className="rounded-full bg-[var(--tcd-muted,#eef2f6)] px-2.5 py-1 text-xs font-medium text-[var(--tcd-text-2,#3d4b59)]">
+                                {t.kategori}
+                            </span>
+                        )}
                         {t.prioritas && (
-                            <span className="rounded-full bg-[#f7efe2] px-2.5 py-1 text-xs font-medium text-[#8a6420]">
+                            <span className="rounded-full bg-[var(--tcd-cream,#f7efe2)] px-2.5 py-1 text-xs font-medium text-[var(--tcd-bronze,#8a6420)]">
                                 Prioritas {t.prioritas.toLowerCase()}
                             </span>
                         )}
                         {t.status === 'ditolak' && (
-                            <span className="rounded-full bg-[#fef3f2] px-2.5 py-1 text-xs font-medium text-[#b42318]">Ditolak</span>
+                            <span className="rounded-full bg-[var(--tcd-danger-soft,#fef3f2)] px-2.5 py-1 text-xs font-medium text-[var(--tcd-danger,#b42318)]">
+                                Ditolak
+                            </span>
                         )}
                     </div>
                 )}
@@ -1287,10 +1308,10 @@ function TicketPanel({ panel }: { panel: Panel | null }) {
                                     className={cn(
                                         'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2',
                                         s.done
-                                            ? 'border-[#0d7a5f] bg-[#0d7a5f] text-white'
+                                            ? 'border-[var(--tcd-success,#0d7a5f)] bg-[#0d7a5f] text-white'
                                             : isCurrent
-                                              ? 'border-[var(--t-gold)] bg-white'
-                                              : 'border-[#d5dee6] bg-white',
+                                              ? 'border-[var(--t-gold)] bg-[var(--tcd-surface,#fff)]'
+                                              : 'border-[var(--tcd-border-strong,#d5dee6)] bg-[var(--tcd-surface,#fff)]',
                                     )}
                                 >
                                     {s.done ? (
@@ -1299,11 +1320,23 @@ function TicketPanel({ panel }: { panel: Panel | null }) {
                                         <span className="h-2 w-2 rounded-full bg-[var(--t-gold)]" />
                                     ) : null}
                                 </span>
-                                {!last && <span className={cn('w-0.5 flex-1', s.done ? 'bg-[#0d7a5f]' : 'bg-[#e1e7ed]')} aria-hidden="true" />}
+                                {!last && (
+                                    <span
+                                        className={cn('w-0.5 flex-1', s.done ? 'bg-[#0d7a5f]' : 'bg-[var(--tcd-muted-2,#e1e7ed)]')}
+                                        aria-hidden="true"
+                                    />
+                                )}
                             </div>
                             <div className={cn('min-w-0 flex-1', !last && 'pb-5')}>
-                                <p className={cn('text-sm', s.done || isCurrent ? 'font-semibold text-[#1f2d3a]' : 'text-[#8a96a3]')}>{s.label}</p>
-                                <p className={cn('text-xs', isCurrent ? 'text-[#8a6420]' : 'text-[#8a96a3]')}>
+                                <p
+                                    className={cn(
+                                        'text-sm',
+                                        s.done || isCurrent ? 'font-semibold text-[var(--tcd-text,#1f2d3a)]' : 'text-[var(--tcd-text-3,#6d7681)]',
+                                    )}
+                                >
+                                    {s.label}
+                                </p>
+                                <p className={cn('text-xs', isCurrent ? 'text-[var(--tcd-bronze,#8a6420)]' : 'text-[var(--tcd-text-3,#6d7681)]')}>
                                     {[s.at ? `${tanggalPendek(s.at)} ${jam(s.at)}` : null, s.sub].filter(Boolean).join(' · ') ||
                                         (isCurrent ? 'Sedang berlangsung' : '')}
                                 </p>
@@ -1314,20 +1347,20 @@ function TicketPanel({ panel }: { panel: Panel | null }) {
             </ol>
 
             {panel.petugas && (
-                <div className="flex items-center gap-3 rounded-2xl bg-[#f6f8fa] p-3.5">
-                    <span className="font-heading flex h-10 w-10 items-center justify-center rounded-full bg-[#f3e6cc] font-bold text-[var(--t-deep)]">
+                <div className="flex items-center gap-3 rounded-2xl bg-[var(--tcd-muted,#f6f8fa)] p-3.5">
+                    <span className="font-heading flex h-10 w-10 items-center justify-center rounded-full bg-[var(--tcd-gold-soft,#f3e6cc)] font-bold text-[var(--tcd-heading,var(--t-deep))]">
                         {panel.petugas.nama.charAt(0).toUpperCase()}
                     </span>
                     <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold text-[#1f2d3a]">{panel.petugas.nama}</span>
-                        <span className="block truncate text-xs text-[#5b6b7a]">{panel.petugas.unit}</span>
+                        <span className="block truncate text-sm font-semibold text-[var(--tcd-text,#1f2d3a)]">{panel.petugas.nama}</span>
+                        <span className="block truncate text-xs text-[var(--tcd-text-2,#5b6b7a)]">{panel.petugas.unit}</span>
                     </span>
                 </div>
             )}
 
             {panel.kontak && (
-                <p className="flex gap-2.5 text-[13px] leading-relaxed text-[#3d4b59]">
-                    <Headset className="mt-0.5 h-4 w-4 shrink-0 text-[var(--t-navy)]" aria-hidden="true" />
+                <p className="flex gap-2.5 text-[13px] leading-relaxed text-[var(--tcd-text-2,#3d4b59)]">
+                    <Headset className="mt-0.5 h-4 w-4 shrink-0 text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" />
                     Petugas dapat menghubungi Anda di {panel.kontak}, meskipun halaman ini ditutup.
                 </p>
             )}
@@ -1335,7 +1368,7 @@ function TicketPanel({ panel }: { panel: Panel | null }) {
             {t && (
                 <Link
                     href={t.url}
-                    className="flex h-11 items-center justify-center gap-2 rounded-full border-[1.5px] border-[var(--t-navy)] text-sm font-semibold text-[var(--t-navy)] transition-colors hover:bg-[var(--t-navy)] hover:text-white"
+                    className="flex h-11 items-center justify-center gap-2 rounded-full border-[1.5px] border-[var(--tcd-link,var(--t-navy))] text-sm font-semibold text-[var(--tcd-link,var(--t-navy))] transition-colors hover:bg-[var(--tcd-primary,var(--t-navy))] hover:text-white"
                 >
                     <Search className="h-4 w-4" aria-hidden="true" /> Buka halaman lacak tiket
                 </Link>
@@ -1350,16 +1383,16 @@ function AiBubble({ children, time, author = 'TARA' }: { children: ReactNode; ti
     return (
         <div className="transi-msg-in flex gap-2.5">
             <span
-                className="mt-5 h-8 w-8 shrink-0 rounded-full bg-[var(--t-cream)] bg-cover bg-center"
+                className="mt-5 h-8 w-8 shrink-0 rounded-full bg-[var(--tcd-cream,var(--t-cream))] bg-cover bg-center"
                 style={{ backgroundImage: `url(${AVATAR})` }}
                 aria-hidden="true"
             />
             <div className="flex max-w-[88%] min-w-0 flex-col gap-1 sm:max-w-[520px]">
                 <p className="flex gap-1.5 text-xs">
-                    <span className="font-semibold text-[var(--t-deep)]">{author}</span>
-                    {time && <span className="text-[#8a96a3]">{time}</span>}
+                    <span className="font-semibold text-[var(--tcd-heading,var(--t-deep))]">{author}</span>
+                    {time && <span className="text-[var(--tcd-text-3,#6d7681)]">{time}</span>}
                 </p>
-                <div className="rounded-2xl rounded-tl-[4px] border border-[#e6ebf0] bg-white px-3.5 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap text-[#1f2d3a]">
+                <div className="rounded-2xl rounded-tl-[4px] border border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-surface,#fff)] px-3.5 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap text-[var(--tcd-text,#1f2d3a)]">
                     {children}
                 </div>
             </div>
@@ -1401,9 +1434,11 @@ function MessageList({
             {rows.map((r) =>
                 r.type === 'day' ? (
                     <div key={r.key} className="flex items-center gap-3 py-1">
-                        <span className="h-px flex-1 bg-[#dfe5eb]" />
-                        <span className="rounded-full bg-[#eef2f6] px-3 py-1 text-xs font-medium text-[#5b6b7a]">{r.label}</span>
-                        <span className="h-px flex-1 bg-[#dfe5eb]" />
+                        <span className="h-px flex-1 bg-[var(--tcd-muted-2,#dfe5eb)]" />
+                        <span className="rounded-full bg-[var(--tcd-muted,#eef2f6)] px-3 py-1 text-xs font-medium text-[var(--tcd-text-2,#5b6b7a)]">
+                            {r.label}
+                        </span>
+                        <span className="h-px flex-1 bg-[var(--tcd-muted-2,#dfe5eb)]" />
                     </div>
                 ) : (
                     <MessageRow key={r.m.id} m={r.m} canAskStaff={withAi && !closed} onRate={onRate} onStaff={onStaff} onAnswer={onAnswer} />
@@ -1439,12 +1474,12 @@ function MessageRow({
     if (isMine(m)) {
         return (
             <div className="transi-msg-in flex flex-col items-end gap-1">
-                <div className="flex max-w-[85%] flex-col gap-2 rounded-2xl rounded-tr-[4px] bg-[var(--t-navy)] px-3.5 py-2.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap text-white sm:max-w-[420px]">
+                <div className="flex max-w-[85%] flex-col gap-2 rounded-2xl rounded-tr-[4px] bg-[var(--tcd-primary,var(--t-navy))] px-3.5 py-2.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap text-white sm:max-w-[420px]">
                     {!(m.lampiran && m.body.startsWith('📎')) && <span>{m.body}</span>}
                     {m.lampiran && <AttachmentView a={m.lampiran} mine />}
                 </div>
-                <span className="flex items-center gap-1 text-xs text-[#8a96a3]">
-                    {jam(m.pada)} <CheckCheck className="h-3.5 w-3.5 text-[#0b7fc7]" aria-label="Terkirim" />
+                <span className="flex items-center gap-1 text-xs text-[var(--tcd-text-3,#6d7681)]">
+                    {jam(m.pada)} <CheckCheck className="h-3.5 w-3.5 text-[var(--tcd-info,#0b7fc7)]" aria-label="Terkirim" />
                 </span>
             </div>
         );
@@ -1456,24 +1491,24 @@ function MessageRow({
         <div className="transi-msg-in flex gap-2.5">
             {fromStaff ? (
                 <span
-                    className="font-heading mt-5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f3e6cc] text-sm font-bold text-[var(--t-deep)]"
+                    className="font-heading mt-5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--tcd-gold-soft,#f3e6cc)] text-sm font-bold text-[var(--tcd-heading,var(--t-deep))]"
                     aria-hidden="true"
                 >
                     {m.penulis.charAt(0).toUpperCase()}
                 </span>
             ) : (
                 <span
-                    className="mt-5 h-8 w-8 shrink-0 rounded-full bg-[var(--t-cream)] bg-cover bg-center"
+                    className="mt-5 h-8 w-8 shrink-0 rounded-full bg-[var(--tcd-cream,var(--t-cream))] bg-cover bg-center"
                     style={{ backgroundImage: `url(${AVATAR})` }}
                     aria-hidden="true"
                 />
             )}
             <div className="flex max-w-[88%] min-w-0 flex-col gap-1 sm:max-w-[520px]">
                 <p className="flex gap-1.5 text-xs">
-                    <span className="font-semibold text-[var(--t-deep)]">{fromStaff ? `${m.penulis} · Petugas` : 'TARA'}</span>
-                    <span className="text-[#8a96a3]">{jam(m.pada)}</span>
+                    <span className="font-semibold text-[var(--tcd-heading,var(--t-deep))]">{fromStaff ? `${m.penulis} · Petugas` : 'TARA'}</span>
+                    <span className="text-[var(--tcd-text-3,#6d7681)]">{jam(m.pada)}</span>
                 </p>
-                <div className="rounded-2xl rounded-tl-[4px] border border-[#e6ebf0] bg-white px-3.5 py-2.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap text-[#1f2d3a]">
+                <div className="rounded-2xl rounded-tl-[4px] border border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-surface,#fff)] px-3.5 py-2.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap text-[var(--tcd-text,#1f2d3a)]">
                     {m.konfirmasi ? (
                         <ConfirmationCard card={m.konfirmasi} onAnswer={onAnswer} />
                     ) : (
@@ -1504,15 +1539,22 @@ function AttachmentView({ a, mine = false }: { a: ChatAttachment; mine?: boolean
             href={a.url}
             className={cn(
                 'flex items-center gap-3 rounded-xl p-2.5 pr-3.5 whitespace-normal transition-colors',
-                mine ? 'bg-white/10 hover:bg-white/15' : 'border border-[#e6ebf0] bg-[#f6f8fa] hover:bg-[#eef2f6]',
+                mine
+                    ? 'bg-white/10 hover:bg-white/15'
+                    : 'border border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-muted,#f6f8fa)] hover:bg-[var(--tcd-muted,#eef2f6)]',
             )}
         >
-            <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', mine ? 'bg-white/15' : 'bg-white')}>
-                <FileText className={cn('h-5 w-5', mine ? 'text-white' : 'text-[var(--t-navy)]')} aria-hidden="true" />
+            <span
+                className={cn(
+                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+                    mine ? 'bg-white/15' : 'bg-[var(--tcd-surface,#fff)]',
+                )}
+            >
+                <FileText className={cn('h-5 w-5', mine ? 'text-white' : 'text-[var(--tcd-link,var(--t-navy))]')} aria-hidden="true" />
             </span>
             <span className="min-w-0">
-                <span className={cn('block truncate text-sm font-semibold', mine ? 'text-white' : 'text-[#1f2d3a]')}>{a.nama}</span>
-                <span className={cn('block text-xs', mine ? 'text-[#bcd0e0]' : 'text-[#5b6b7a]')}>
+                <span className={cn('block truncate text-sm font-semibold', mine ? 'text-white' : 'text-[var(--tcd-text,#1f2d3a)]')}>{a.nama}</span>
+                <span className={cn('block text-xs', mine ? 'text-[#bcd0e0]' : 'text-[var(--tcd-text-2,#5b6b7a)]')}>
                     {a.mime === 'application/pdf' ? 'PDF' : 'File'} · {ukuran(a.ukuran)}
                 </span>
             </span>
@@ -1540,18 +1582,18 @@ function ConfirmationCard({
     return (
         <span className="block whitespace-normal">
             <span className="block">{card.pengantar}</span>
-            <dl className="mt-2.5 grid gap-2 rounded-xl border border-[#e6ebf0] bg-[#f6f8fa] p-3">
+            <dl className="mt-2.5 grid gap-2 rounded-xl border border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-muted,#f6f8fa)] p-3">
                 {card.data.map((d) => (
                     <div key={d.label}>
-                        <dt className="text-[11px] text-[#5b6b7a]">{d.label}</dt>
-                        <dd className="text-[13px] font-medium text-[#1f2d3a]">{d.nilai}</dd>
+                        <dt className="text-[11px] text-[var(--tcd-text-2,#5b6b7a)]">{d.label}</dt>
+                        <dd className="text-[13px] font-medium text-[var(--tcd-text,#1f2d3a)]">{d.nilai}</dd>
                     </div>
                 ))}
             </dl>
             {card.status === 'menunggu' ? (
                 editing ? (
                     <span className="mt-2.5 flex flex-col gap-2">
-                        <label htmlFor={`koreksi-${card.id}`} className="text-xs font-semibold text-[#3d4b59]">
+                        <label htmlFor={`koreksi-${card.id}`} className="text-xs font-semibold text-[var(--tcd-text-2,#3d4b59)]">
                             Apa yang perlu diubah?
                         </label>
                         <textarea
@@ -1561,13 +1603,13 @@ function ConfirmationCard({
                             onChange={(e) => setKoreksi(e.target.value)}
                             maxLength={500}
                             placeholder="Mis. lokasi yang benar UPT Mahalona SP3"
-                            className="w-full rounded-xl border border-[#d5dee6] px-3 py-2 text-sm outline-none focus:border-[var(--t-navy)]"
+                            className="w-full rounded-xl border border-[var(--tcd-border-strong,#d5dee6)] px-3 py-2 text-sm outline-none focus:border-[var(--tcd-link,var(--t-navy))]"
                         />
                         <span className="flex justify-end gap-2">
                             <button
                                 type="button"
                                 onClick={() => setEditing(false)}
-                                className="rounded-full px-3 py-1.5 text-xs text-[#5b6b7a] hover:bg-[#f2f5f8]"
+                                className="rounded-full px-3 py-1.5 text-xs text-[var(--tcd-text-2,#5b6b7a)] hover:bg-[var(--tcd-muted,#f2f5f8)]"
                             >
                                 Batal
                             </button>
@@ -1575,7 +1617,7 @@ function ConfirmationCard({
                                 type="button"
                                 disabled={busy || koreksi.trim() === ''}
                                 onClick={() => void answer('ubah')}
-                                className="rounded-full bg-[var(--t-navy)] px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                                className="rounded-full bg-[var(--tcd-primary,var(--t-navy))] px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                             >
                                 Kirim perbaikan
                             </button>
@@ -1587,7 +1629,7 @@ function ConfirmationCard({
                             type="button"
                             disabled={busy}
                             onClick={() => void answer('benar')}
-                            className="flex items-center gap-1.5 rounded-full border border-[var(--t-navy)] px-3 py-1.5 text-xs font-semibold text-[var(--t-navy)] hover:bg-[var(--t-navy)] hover:text-white disabled:opacity-50"
+                            className="flex items-center gap-1.5 rounded-full border border-[var(--tcd-link,var(--t-navy))] px-3 py-1.5 text-xs font-semibold text-[var(--tcd-link,var(--t-navy))] hover:bg-[var(--tcd-primary,var(--t-navy))] hover:text-white disabled:opacity-50"
                         >
                             <Check className="h-3.5 w-3.5" aria-hidden="true" /> Data sudah benar
                         </button>
@@ -1595,7 +1637,7 @@ function ConfirmationCard({
                             type="button"
                             disabled={busy}
                             onClick={() => setEditing(true)}
-                            className="rounded-full border border-[#c8d4df] px-3 py-1.5 text-xs font-semibold text-[var(--t-navy)] hover:border-[var(--t-navy)] disabled:opacity-50"
+                            className="rounded-full border border-[var(--tcd-border-strong,#c8d4df)] px-3 py-1.5 text-xs font-semibold text-[var(--tcd-link,var(--t-navy))] hover:border-[var(--tcd-link,var(--t-navy))] disabled:opacity-50"
                         >
                             Ubah data
                         </button>
@@ -1605,7 +1647,9 @@ function ConfirmationCard({
                 <span
                     className={cn(
                         'mt-2.5 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold',
-                        card.status === 'benar' ? 'bg-[#e7f6ef] text-[#0d7a5f]' : 'bg-[#f7efe2] text-[#8a6420]',
+                        card.status === 'benar'
+                            ? 'bg-[var(--tcd-success-soft,#e7f6ef)] text-[var(--tcd-success,#0d7a5f)]'
+                            : 'bg-[var(--tcd-cream,#f7efe2)] text-[var(--tcd-bronze,#8a6420)]',
                     )}
                 >
                     {card.status === 'benar' ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : null}
@@ -1622,16 +1666,19 @@ function Typing() {
     return (
         <div className="flex items-center gap-2.5" role="status" aria-label={label}>
             <span
-                className="h-8 w-8 shrink-0 rounded-full bg-[var(--t-cream)] bg-cover bg-center"
+                className="h-8 w-8 shrink-0 rounded-full bg-[var(--tcd-cream,var(--t-cream))] bg-cover bg-center"
                 style={{ backgroundImage: `url(${AVATAR})` }}
                 aria-hidden="true"
             />
-            <span className="transi-typing flex gap-1 rounded-2xl border border-[#e6ebf0] bg-white px-3.5 py-3" style={{ animation: 'none' }}>
+            <span
+                className="transi-typing flex gap-1 rounded-2xl border border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-surface,#fff)] px-3.5 py-3"
+                style={{ animation: 'none' }}
+            >
                 <span className="h-1.5 w-1.5 rounded-full bg-[#8a96a3]" />
                 <span className="h-1.5 w-1.5 rounded-full bg-[#8a96a3]" />
                 <span className="h-1.5 w-1.5 rounded-full bg-[#8a96a3]" />
             </span>
-            <span className="text-xs text-[#8a96a3]">{label}</span>
+            <span className="text-xs text-[var(--tcd-text-3,#6d7681)]">{label}</span>
         </div>
     );
 }
@@ -1642,7 +1689,7 @@ function ThreadSkeleton() {
             {[260, 180, 320].map((w, i) => (
                 <div
                     key={i}
-                    className={cn('h-11 animate-pulse rounded-2xl bg-[#e9eef3]', i === 1 && 'self-end')}
+                    className={cn('h-11 animate-pulse rounded-2xl bg-[var(--tcd-muted,#e9eef3)]', i === 1 && 'self-end')}
                     style={{ width: w, maxWidth: '80%' }}
                 />
             ))}
@@ -1698,15 +1745,20 @@ function IdentityCard({
         <form
             onSubmit={submit}
             noValidate
-            className="transi-msg-in flex w-full max-w-[460px] flex-col gap-3 self-start rounded-2xl border border-[#e6ebf0] bg-white p-4 shadow-[0_10px_30px_rgba(2,43,74,0.06)] sm:ml-[42px] sm:p-5"
+            className="transi-msg-in flex w-full max-w-[460px] flex-col gap-3 self-start rounded-2xl border border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-surface,#fff)] p-4 shadow-[0_10px_30px_rgba(2,43,74,0.06)] sm:ml-[42px] sm:p-5"
         >
             <div className="flex items-baseline justify-between gap-3">
-                <p className="font-heading text-[17px] font-bold text-[var(--t-deep)]">Kenalan dulu, yuk</p>
-                <span className={cn('font-mono text-xs', valid ? 'text-[#0d7a5f]' : 'text-[#8a96a3]')}>{valid ? '1/1' : '0/1'} valid</span>
+                <p className="font-heading text-[17px] font-bold text-[var(--tcd-heading,var(--t-deep))]">Kenalan dulu, yuk</p>
+                <span className={cn('font-mono text-xs', valid ? 'text-[var(--tcd-success,#0d7a5f)]' : 'text-[var(--tcd-text-3,#6d7681)]')}>
+                    {valid ? '1/1' : '0/1'} valid
+                </span>
             </div>
-            <span className={cn('h-1 rounded-full transition-colors', valid ? 'bg-[#0d7a5f]' : 'bg-[#e1e7ed]')} aria-hidden="true" />
-            <label htmlFor={NAME_INPUT_ID} className="mt-1 text-sm font-semibold text-[#3d4b59]">
-                Nama lengkap <span className="text-[#d92d20]">*</span>
+            <span
+                className={cn('h-1 rounded-full transition-colors', valid ? 'bg-[#0d7a5f]' : 'bg-[var(--tcd-muted-2,#e1e7ed)]')}
+                aria-hidden="true"
+            />
+            <label htmlFor={NAME_INPUT_ID} className="mt-1 text-sm font-semibold text-[var(--tcd-text-2,#3d4b59)]">
+                Nama lengkap <span className="text-[var(--tcd-danger,#d92d20)]">*</span>
             </label>
             <input
                 id={NAME_INPUT_ID}
@@ -1724,18 +1776,21 @@ function IdentityCard({
                 aria-describedby={`${NAME_INPUT_ID}-info`}
                 placeholder="Nama Anda"
                 className={cn(
-                    'h-12 w-full rounded-xl border bg-white px-3.5 text-[15px] text-[#1f2d3a] transition-[border-color,box-shadow] outline-none placeholder:text-[#8a96a3]',
+                    'h-12 w-full rounded-xl border bg-[var(--tcd-surface,#fff)] px-3.5 text-[15px] text-[var(--tcd-text,#1f2d3a)] transition-[border-color,box-shadow] outline-none placeholder:text-[var(--tcd-text-3,#6d7681)]',
                     message
-                        ? 'border-[#d92d20] ring-4 ring-[#d92d20]/10'
+                        ? 'border-[var(--tcd-danger,#d92d20)] ring-4 ring-[#d92d20]/10'
                         : valid
-                          ? 'border-[#0d7a5f] focus:ring-4 focus:ring-[#0d7a5f]/10'
-                          : 'border-[#d5dee6] focus:border-[var(--t-navy)] focus:ring-4 focus:ring-[#0b5a8c]/10',
+                          ? 'border-[var(--tcd-success,#0d7a5f)] focus:ring-4 focus:ring-[#0d7a5f]/10'
+                          : 'border-[var(--tcd-border-strong,#d5dee6)] focus:border-[var(--tcd-link,var(--t-navy))] focus:ring-4 focus:ring-[#0b5a8c]/10',
                 )}
             />
             <p
                 id={`${NAME_INPUT_ID}-info`}
                 role={message ? 'alert' : undefined}
-                className={cn('text-xs leading-relaxed', message ? 'font-semibold text-[#b42318]' : 'text-[#5b6b7a]')}
+                className={cn(
+                    'text-xs leading-relaxed',
+                    message ? 'font-semibold text-[var(--tcd-danger,#b42318)]' : 'text-[var(--tcd-text-2,#5b6b7a)]',
+                )}
             >
                 {message ?? 'Agar petugas tahu siapa yang bertanya. Jangan tulis NIK atau nomor rekening di sini.'}
             </p>
@@ -1748,7 +1803,7 @@ function IdentityCard({
                 Mulai chat
                 {!busy && <SendHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />}
             </button>
-            <div className="text-xs text-[#5b6b7a]">
+            <div className="text-xs text-[var(--tcd-text-2,#5b6b7a)]">
                 <RecaptchaNotice enabled={recaptcha.enabled} error={recaptcha.error} />
             </div>
         </form>
@@ -1780,18 +1835,19 @@ function ResumeForm({ onDone, onCancel }: { onDone: () => void; onCancel: () => 
         }
     };
 
-    const field = 'h-11 w-full rounded-xl border border-[#d5dee6] bg-white px-3.5 text-[15px] outline-none focus:border-[var(--t-navy)]';
+    const field =
+        'h-11 w-full rounded-xl border border-[var(--tcd-border-strong,#d5dee6)] bg-[var(--tcd-surface,#fff)] px-3.5 text-[15px] outline-none focus:border-[var(--tcd-link,var(--t-navy))]';
 
     return (
         <form
             onSubmit={submit}
-            className="transi-msg-in mx-auto flex w-full max-w-[460px] flex-col gap-3 rounded-2xl border border-[#e6ebf0] bg-white p-4 shadow-[0_10px_30px_rgba(2,43,74,0.06)]"
+            className="transi-msg-in mx-auto flex w-full max-w-[460px] flex-col gap-3 rounded-2xl border border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-surface,#fff)] p-4 shadow-[0_10px_30px_rgba(2,43,74,0.06)]"
         >
-            <p className="font-heading text-base font-bold text-[var(--t-deep)]">Lanjutkan chat dari HP lain</p>
-            <p className="text-sm leading-relaxed text-[#5b6b7a]">
+            <p className="font-heading text-base font-bold text-[var(--tcd-heading,var(--t-deep))]">Lanjutkan chat dari HP lain</p>
+            <p className="text-sm leading-relaxed text-[var(--tcd-text-2,#5b6b7a)]">
                 Masukkan nomor referensi (REF-…) dan nomor WhatsApp atau surel yang Anda tinggalkan di chat sebelumnya.
             </p>
-            <label className="flex flex-col gap-1 text-xs font-semibold text-[#3d4b59]" htmlFor="lanjut-ref">
+            <label className="flex flex-col gap-1 text-xs font-semibold text-[var(--tcd-text-2,#3d4b59)]" htmlFor="lanjut-ref">
                 Nomor referensi
                 <input
                     id="lanjut-ref"
@@ -1802,7 +1858,7 @@ function ResumeForm({ onDone, onCancel }: { onDone: () => void; onCancel: () => 
                     className={cn(field, 'font-mono uppercase')}
                 />
             </label>
-            <label className="flex flex-col gap-1 text-xs font-semibold text-[#3d4b59]" htmlFor="lanjut-kontak">
+            <label className="flex flex-col gap-1 text-xs font-semibold text-[var(--tcd-text-2,#3d4b59)]" htmlFor="lanjut-kontak">
                 Nomor WhatsApp atau surel
                 <input
                     id="lanjut-kontak"
@@ -1814,18 +1870,22 @@ function ResumeForm({ onDone, onCancel }: { onDone: () => void; onCancel: () => 
                 />
             </label>
             {error && (
-                <p role="alert" className="text-xs font-semibold text-rose-600">
+                <p role="alert" className="text-xs font-semibold text-[var(--tcd-danger,oklch(0.586_0.253_17.585))]">
                     {error}
                 </p>
             )}
             <div className="flex justify-end gap-2">
-                <button type="button" onClick={onCancel} className="rounded-full px-4 py-2 text-sm text-[#5b6b7a] hover:bg-[#f2f5f8]">
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="rounded-full px-4 py-2 text-sm text-[var(--tcd-text-2,#5b6b7a)] hover:bg-[var(--tcd-muted,#f2f5f8)]"
+                >
                     Batal
                 </button>
                 <button
                     type="submit"
                     disabled={busy || ref.trim() === '' || kontak.trim() === ''}
-                    className="rounded-full bg-[var(--t-navy)] px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                    className="rounded-full bg-[var(--tcd-primary,var(--t-navy))] px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
                 >
                     {busy ? 'Mencocokkan…' : 'Lanjutkan'}
                 </button>

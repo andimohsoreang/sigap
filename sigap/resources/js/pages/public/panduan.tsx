@@ -419,15 +419,15 @@ export default function Panduan() {
                 <section className="mx-auto max-w-[1312px] px-4 pt-10 sm:px-6 lg:px-16">
                     <ol className="grid grid-cols-2 gap-3 sm:grid-cols-5">
                         {ALUR_SINGKAT.map(({ icon: Icon, label, desc }, i) => (
-                            <li key={label} className="rounded-[18px] border border-[#e6ebf0] bg-white p-4">
+                            <li key={label} className="rounded-[18px] border border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-surface,#fff)] p-4">
                                 <div className="mb-2 flex items-center gap-2">
                                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--t-gold)] text-xs font-bold text-[var(--t-deep)]">
                                         {i + 1}
                                     </span>
-                                    <Icon className="h-4 w-4 text-[var(--t-navy)]" />
+                                    <Icon className="h-4 w-4 text-[var(--tcd-link,var(--t-navy))]" />
                                 </div>
-                                <p className="font-heading text-sm font-bold text-[var(--t-deep)] uppercase">{label}</p>
-                                <p className="mt-0.5 text-xs text-[#5b6b7a]">{desc}</p>
+                                <p className="font-heading text-sm font-bold text-[var(--tcd-heading,var(--t-deep))] uppercase">{label}</p>
+                                <p className="mt-0.5 text-xs text-[var(--tcd-text-2,#5b6b7a)]">{desc}</p>
                             </li>
                         ))}
                     </ol>
@@ -449,8 +449,8 @@ export default function Panduan() {
                                 className={cn(
                                     'font-heading flex items-center gap-2 rounded-full border-2 px-6 py-3 text-sm font-bold tracking-wide uppercase transition',
                                     tab === key
-                                        ? 'border-brand bg-brand text-white shadow-lg'
-                                        : 'border-brand-light/40 text-brand hover:border-brand-light hover:bg-brand-light/10',
+                                        ? 'bg-brand border-[var(--tcd-link,var(--color-brand))] text-white shadow-lg'
+                                        : 'hover:bg-brand-light/10 border-[var(--tcd-link,var(--color-brand-light))]/40 text-[var(--tcd-link,var(--color-brand))] hover:border-[var(--tcd-link,var(--color-brand-light))]',
                                 )}
                             >
                                 <Icon className="h-4 w-4" /> {label}
@@ -459,9 +459,10 @@ export default function Panduan() {
                     </div>
 
                     {/* INDEKS FITUR */}
-                    <div className="mb-12 rounded-xl border border-gray-100 bg-white p-6 shadow-md">
-                        <h2 className="font-heading text-brand mb-4 flex items-center gap-2 text-sm font-bold tracking-[2px] uppercase">
-                            <BookOpen className="text-brand-light h-4 w-4" /> Daftar Fitur — {tab === 'warga' ? 'Masyarakat' : 'Admin'}
+                    <div className="mb-12 rounded-xl border border-[var(--tcd-border,oklch(0.967_0.003_264.542))] bg-[var(--tcd-surface,#fff)] p-6 shadow-md">
+                        <h2 className="font-heading mb-4 flex items-center gap-2 text-sm font-bold tracking-[2px] text-[var(--tcd-link,var(--color-brand))] uppercase">
+                            <BookOpen className="h-4 w-4 text-[var(--tcd-link,var(--color-brand-light))]" /> Daftar Fitur —{' '}
+                            {tab === 'warga' ? 'Masyarakat' : 'Admin'}
                         </h2>
                         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                             {fitur.map((f, i) => (
@@ -469,12 +470,14 @@ export default function Panduan() {
                                     key={f.id}
                                     type="button"
                                     onClick={() => jump(f.id)}
-                                    className="group border-brand-light/30 hover:border-brand-light hover:bg-brand-light/10 flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition"
+                                    className="group hover:bg-brand-light/10 flex items-center gap-2 rounded-lg border border-[var(--tcd-link,var(--color-brand-light))]/30 px-3 py-2 text-left text-sm transition hover:border-[var(--tcd-link,var(--color-brand-light))]"
                                 >
-                                    <span className="bg-brand-light/15 text-brand-light group-hover:bg-brand-light flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition group-hover:text-white">
+                                    <span className="bg-brand-light/15 group-hover:bg-brand-light flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-[var(--tcd-link,var(--color-brand-light))] transition group-hover:text-white">
                                         {i + 1}
                                     </span>
-                                    <span className="group-hover:text-brand truncate font-medium text-gray-700">{f.title}</span>
+                                    <span className="truncate font-medium text-[var(--tcd-text-2,oklch(0.373_0.034_259.733))] group-hover:text-[var(--tcd-link,var(--color-brand))]">
+                                        {f.title}
+                                    </span>
                                 </button>
                             ))}
                         </div>
@@ -489,19 +492,19 @@ export default function Panduan() {
                                         {i + 1}
                                     </span>
                                     <div className="min-w-0">
-                                        <h2 className="font-heading text-brand flex flex-wrap items-center gap-2 text-xl leading-tight font-bold tracking-tight uppercase md:text-2xl">
-                                            <f.icon className="text-brand-light h-6 w-6 shrink-0" />
+                                        <h2 className="font-heading flex flex-wrap items-center gap-2 text-xl leading-tight font-bold tracking-tight text-[var(--tcd-link,var(--color-brand))] uppercase md:text-2xl">
+                                            <f.icon className="h-6 w-6 shrink-0 text-[var(--tcd-link,var(--color-brand-light))]" />
                                             {f.title}
                                         </h2>
                                         <div className="bg-brand-light mt-2 h-[3px] w-14 rounded-full" />
                                     </div>
                                 </div>
-                                <p className="mb-4 leading-relaxed text-gray-600 md:ml-16">{f.desc}</p>
+                                <p className="mb-4 leading-relaxed text-[var(--tcd-text-2,oklch(0.446_0.03_256.802))] md:ml-16">{f.desc}</p>
                                 {f.tips && (
                                     <ul className="mb-5 space-y-2 md:ml-16">
                                         {f.tips.map((t) => (
-                                            <li key={t} className="flex items-start gap-2 text-sm text-gray-600">
-                                                <CheckCircle2 className="text-brand-light mt-0.5 h-4 w-4 shrink-0" />
+                                            <li key={t} className="flex items-start gap-2 text-sm text-[var(--tcd-text-2,oklch(0.446_0.03_256.802))]">
+                                                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--tcd-link,var(--color-brand-light))]" />
                                                 {t}
                                             </li>
                                         ))}
@@ -514,12 +517,12 @@ export default function Panduan() {
                                             <button
                                                 type="button"
                                                 onClick={() => setLightbox({ shots: f.shots, index: si })}
-                                                className="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+                                                className="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-[var(--tcd-border,oklch(0.928_0.006_264.531))] bg-[var(--tcd-surface,#fff)] shadow-md transition duration-300 hover:-translate-y-1 hover:shadow-xl"
                                                 aria-label={`Perbesar gambar: ${shot.caption}`}
                                             >
                                                 <img src={shot.src} alt={shot.alt} loading="lazy" className="w-full" />
                                             </button>
-                                            <figcaption className="mt-2 flex items-start gap-2 text-xs text-gray-500">
+                                            <figcaption className="mt-2 flex items-start gap-2 text-xs text-[var(--tcd-text-3,oklch(0.551_0.027_264.364))]">
                                                 <FileImage className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                                                 {shot.caption}
                                             </figcaption>
@@ -531,14 +534,16 @@ export default function Panduan() {
                     </div>
 
                     {/* KETENTUAN LAMPIRAN */}
-                    <div className="mt-14 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md">
-                        <div className="bg-brand-light/5 border-brand-light flex flex-col items-start gap-4 border-l-4 p-6 md:flex-row md:items-center">
-                            <div className="bg-brand-light/10 text-brand-light flex h-14 w-14 shrink-0 items-center justify-center rounded-full">
+                    <div className="mt-14 overflow-hidden rounded-xl border border-[var(--tcd-border,oklch(0.967_0.003_264.542))] bg-[var(--tcd-surface,#fff)] shadow-md">
+                        <div className="bg-brand-light/5 flex flex-col items-start gap-4 border-l-4 border-[var(--tcd-link,var(--color-brand-light))] p-6 md:flex-row md:items-center">
+                            <div className="bg-brand-light/10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-[var(--tcd-link,var(--color-brand-light))]">
                                 <Lightbulb className="h-6 w-6" />
                             </div>
                             <div>
-                                <h3 className="font-heading text-brand mb-1 font-bold tracking-tight uppercase">Ketentuan Lampiran & Data</h3>
-                                <p className="text-sm leading-relaxed text-gray-600">
+                                <h3 className="font-heading mb-1 font-bold tracking-tight text-[var(--tcd-link,var(--color-brand))] uppercase">
+                                    Ketentuan Lampiran & Data
+                                </h3>
+                                <p className="text-sm leading-relaxed text-[var(--tcd-text-2,oklch(0.446_0.03_256.802))]">
                                     Lampiran bukti menerima berkas <strong>JPG, PNG, atau PDF</strong> dengan ukuran maksimal <strong>5 MB</strong>.
                                     Uraian laporan minimal 10 karakter dan NIK pelapor wajib 16 digit. Dokumen yang sudah diunggah{' '}
                                     <strong>tidak dapat dihapus mandiri</strong> demi akuntabilitas — hubungi admin melalui Live Chat bila perlu
@@ -568,13 +573,13 @@ export default function Panduan() {
                             <Link
                                 key={href}
                                 href={href}
-                                className="group rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                className="group rounded-xl border border-[var(--tcd-border,oklch(0.967_0.003_264.542))] bg-[var(--tcd-surface,#fff)] p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
                             >
-                                <div className="bg-brand-light/10 text-brand-light group-hover:bg-brand-light mb-4 flex h-12 w-12 items-center justify-center rounded-full transition group-hover:text-white">
+                                <div className="bg-brand-light/10 group-hover:bg-brand-light mb-4 flex h-12 w-12 items-center justify-center rounded-full text-[var(--tcd-link,var(--color-brand-light))] transition group-hover:text-white">
                                     <Icon className="h-5 w-5" />
                                 </div>
-                                <h3 className="font-heading text-brand font-bold tracking-tight uppercase">{title}</h3>
-                                <p className="mt-1 text-sm text-gray-500">{desc}</p>
+                                <h3 className="font-heading font-bold tracking-tight text-[var(--tcd-link,var(--color-brand))] uppercase">{title}</h3>
+                                <p className="mt-1 text-sm text-[var(--tcd-text-3,oklch(0.551_0.027_264.364))]">{desc}</p>
                             </Link>
                         ))}
                     </div>
@@ -610,7 +615,7 @@ export default function Panduan() {
                                 <button
                                     type="button"
                                     onClick={() => setLightbox((l) => l && { ...l, index: (l.index - 1 + l.shots.length) % l.shots.length })}
-                                    className="absolute top-1/2 -left-2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-lg transition hover:bg-white md:-left-14"
+                                    className="absolute top-1/2 -left-2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--tcd-surface,#fff)]/90 text-[var(--tcd-text,oklch(0.278_0.033_256.848))] shadow-lg transition hover:bg-[var(--tcd-surface,#fff)] md:-left-14"
                                     aria-label="Gambar sebelumnya"
                                 >
                                     <ChevronLeft className="h-5 w-5" />
@@ -618,7 +623,7 @@ export default function Panduan() {
                                 <button
                                     type="button"
                                     onClick={() => setLightbox((l) => l && { ...l, index: (l.index + 1) % l.shots.length })}
-                                    className="absolute top-1/2 -right-2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-lg transition hover:bg-white md:-right-14"
+                                    className="absolute top-1/2 -right-2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--tcd-surface,#fff)]/90 text-[var(--tcd-text,oklch(0.278_0.033_256.848))] shadow-lg transition hover:bg-[var(--tcd-surface,#fff)] md:-right-14"
                                     aria-label="Gambar berikutnya"
                                 >
                                     <ChevronRight className="h-5 w-5" />
@@ -629,7 +634,7 @@ export default function Panduan() {
                         <button
                             type="button"
                             onClick={() => setLightbox(null)}
-                            className="absolute -top-2 -right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-800 shadow-lg transition hover:bg-gray-200 md:-top-4 md:-right-4"
+                            className="absolute -top-2 -right-2 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--tcd-surface,#fff)] text-[var(--tcd-text,oklch(0.278_0.033_256.848))] shadow-lg transition hover:bg-[var(--tcd-muted-2,oklch(0.928_0.006_264.531))] md:-top-4 md:-right-4"
                             aria-label="Tutup gambar"
                         >
                             <X className="h-4 w-4" />

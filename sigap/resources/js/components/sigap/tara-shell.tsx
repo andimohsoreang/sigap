@@ -15,19 +15,9 @@ import { type SharedData } from '@/types';
 
 export const TARA_IMG = '/images/tara';
 
-/** Huruf halaman bergaya TARA (Space Grotesk, Jost, JetBrains Mono). */
-export function TaraFonts() {
-    return (
-        <>
-            <link rel="preconnect" href="https://fonts.bunny.net" />
-            <link
-                rel="stylesheet"
-                href="https://fonts.bunny.net/css?family=space-grotesk:500,600,700|jost:400,500,600|jetbrains-mono:500,600"
-                head-key="transi-fonts"
-            />
-        </>
-    );
-}
+/** Huruf halaman bergaya TARA. Dipakai langsung sebagai elemen di dalam <Head>:
+ *  Head Inertia hanya merender elemen HTML, bukan komponen. */
+export const TARA_FONTS_HREF = 'https://fonts.bunny.net/css?family=space-grotesk:500,600,700|jost:400,500,600|jetbrains-mono:500,600';
 
 export type TaraPose = 'menyapa' | 'mendengarkan' | 'menunjuk' | 'menjelaskan' | 'tablet' | 'jempol' | 'terima-kasih' | 'menyambut';
 
@@ -61,7 +51,10 @@ export function TaraAvatar({ className }: { className?: string }) {
     return (
         <span
             aria-hidden="true"
-            className={cn('block shrink-0 rounded-full border-2 border-[var(--t-gold)] bg-[var(--t-cream)] bg-cover bg-center', className)}
+            className={cn(
+                'block shrink-0 rounded-full border-2 border-[var(--t-gold)] bg-[var(--tcd-cream,var(--t-cream))] bg-cover bg-center',
+                className,
+            )}
             style={{ backgroundImage: `url(${TARA_IMG}/avatar.webp)` }}
         />
     );
@@ -72,9 +65,9 @@ export function TaraEyebrow({ children, tone = 'teal', className }: { children: 
         <p
             className={cn(
                 'text-xs font-semibold tracking-[0.12em] uppercase sm:text-[13px]',
-                tone === 'teal' && 'text-[#0d6b8a]',
+                tone === 'teal' && 'text-[var(--tcd-info,#0d6b8a)]',
                 tone === 'gold' && 'text-[var(--t-gold)]',
-                tone === 'bronze' && 'text-[#9a7330]',
+                tone === 'bronze' && 'text-[var(--tcd-bronze,#8b682b)]',
                 className,
             )}
         >
@@ -90,7 +83,7 @@ export function TaraLauncher() {
             <button
                 type="button"
                 onClick={(e) => goToChat({ source: e.currentTarget.parentElement })}
-                className="transi-launcher__bubble hidden rounded-2xl rounded-br-sm bg-white px-4 py-2.5 text-sm font-semibold text-[#022b4a] shadow-[0_10px_24px_rgba(0,18,36,0.18)] sm:block"
+                className="transi-launcher__bubble hidden rounded-2xl rounded-br-sm bg-[var(--tcd-surface,#fff)] px-4 py-2.5 text-sm font-semibold text-[var(--tcd-heading,#022b4a)] shadow-[0_10px_24px_rgba(0,18,36,0.18)] sm:block"
             >
                 Ada yang bisa dibantu?
             </button>
@@ -98,7 +91,7 @@ export function TaraLauncher() {
                 type="button"
                 onClick={(e) => goToChat({ source: e.currentTarget })}
                 aria-label="Chat dengan TARA"
-                className="transi-launcher__face h-16 w-16 rounded-full border-[3px] border-[#c29642] bg-[#f8f3ef] bg-cover bg-center shadow-[0_12px_28px_rgba(0,18,36,0.35)] sm:h-[72px] sm:w-[72px]"
+                className="transi-launcher__face h-16 w-16 rounded-full border-[3px] border-[#c29642] bg-[var(--tcd-cream,#f8f3ef)] bg-cover bg-center shadow-[0_12px_28px_rgba(0,18,36,0.35)] sm:h-[72px] sm:w-[72px]"
                 style={{ backgroundImage: `url(${TARA_IMG}/avatar.webp)` }}
             />
         </div>
@@ -166,7 +159,7 @@ export function TaraFooter() {
                         ))}
                     </div>
                 </div>
-                <div className="flex flex-col gap-2 border-t border-white/10 pt-6 text-[13px] text-[#6f8496] sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-2 border-t border-white/10 pt-6 text-[13px] text-[var(--tcd-text-3,#738899)] sm:flex-row sm:items-center sm:justify-between">
                     <span>© 2026 Kementerian Transmigrasi Republik Indonesia. Seluruh hak cipta dilindungi.</span>
                     <span className="flex items-center gap-4">
                         <Link href="/beranda-lama" className="transition-colors hover:text-white">
@@ -187,13 +180,13 @@ export function AskTaraCard({ title, desc, label = 'Tanya TARA', dark = false }:
         <div
             className={cn(
                 'flex flex-col gap-4 rounded-[20px] p-5 sm:flex-row sm:items-center sm:gap-5 sm:px-7',
-                dark ? 'bg-[var(--t-deep)] text-white' : 'border border-[#ece6dc] bg-white',
+                dark ? 'bg-[var(--t-deep)] text-white' : 'border border-[var(--tcd-border-warm,#ece6dc)] bg-[var(--tcd-surface,#fff)]',
             )}
         >
             <TaraAvatar className="h-14 w-14" />
             <div className="min-w-0 flex-1">
-                <p className={cn('font-heading text-lg font-bold', dark ? 'text-white' : 'text-[var(--t-deep)]')}>{title}</p>
-                {desc && <p className={cn('text-[15px]', dark ? 'text-[#bcd0e0]' : 'text-[#4a5868]')}>{desc}</p>}
+                <p className={cn('font-heading text-lg font-bold', dark ? 'text-white' : 'text-[var(--tcd-heading,var(--t-deep))]')}>{title}</p>
+                {desc && <p className={cn('text-[15px]', dark ? 'text-[#bcd0e0]' : 'text-[var(--tcd-text-2,#4a5868)]')}>{desc}</p>}
             </div>
             <button
                 type="button"
@@ -244,20 +237,21 @@ export default function TaraPage({
     return (
         <>
             <Head title={`${title} — Contact Center`}>
-                <TaraFonts />
+                <link rel="preconnect" href="https://fonts.bunny.net" />
+                <link rel="stylesheet" href={TARA_FONTS_HREF} head-key="transi-fonts" />
                 {description && <meta name="description" content={description} />}
             </Head>
 
-            <div className="transi-page min-h-screen bg-white text-[#0f2233] antialiased">
+            <div className="transi-page min-h-screen bg-[var(--tcd-surface,#fff)] text-[var(--tcd-text,#0f2233)] antialiased">
                 <a
                     href="#konten"
-                    className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[110] focus:rounded-lg focus:bg-[var(--t-navy)] focus:px-4 focus:py-2 focus:text-white"
+                    className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[110] focus:rounded-lg focus:bg-[var(--tcd-primary,var(--t-navy))] focus:px-4 focus:py-2 focus:text-white"
                 >
                     Langsung ke konten utama
                 </a>
                 <TransiHeader loggedIn={Boolean(auth?.user)} isAdmin={Boolean(auth?.user?.is_admin)} onChat={() => goToChat()} active={active} />
 
-                <section className="bg-[#f7f3ee]">
+                <section className="bg-[var(--tcd-cream,#f7f3ee)]">
                     <div className="relative mx-auto flex max-w-[1312px] items-end gap-8 px-4 sm:px-6 lg:px-16">
                         <div
                             className={cn(
@@ -269,16 +263,18 @@ export default function TaraPage({
                             <div className="min-w-0">
                                 {breadcrumb && (
                                     <nav aria-label="Jejak halaman" className="mb-5">
-                                        <ol className="flex flex-wrap items-center gap-2 text-sm text-[#4a5565]">
+                                        <ol className="flex flex-wrap items-center gap-2 text-sm text-[var(--tcd-text-2,#4a5565)]">
                                             {breadcrumb.map((b, i) => (
                                                 <li key={b.label} className="flex items-center gap-1.5">
-                                                    {i > 0 && <ChevronRight className="h-3.5 w-3.5 text-[#8a96a3]" aria-hidden="true" />}
+                                                    {i > 0 && (
+                                                        <ChevronRight className="h-3.5 w-3.5 text-[var(--tcd-text-3,#6d7681)]" aria-hidden="true" />
+                                                    )}
                                                     {b.href ? (
-                                                        <Link href={b.href} className="hover:text-[var(--t-deep)] hover:underline">
+                                                        <Link href={b.href} className="hover:text-[var(--tcd-heading,var(--t-deep))] hover:underline">
                                                             {b.label}
                                                         </Link>
                                                     ) : (
-                                                        <span aria-current="page" className="font-semibold text-[var(--t-deep)]">
+                                                        <span aria-current="page" className="font-semibold text-[var(--tcd-heading,var(--t-deep))]">
                                                             {b.label}
                                                         </span>
                                                     )}
@@ -290,14 +286,16 @@ export default function TaraPage({
                                 <TaraEyebrow tone="bronze">{eyebrow}</TaraEyebrow>
                                 <h1
                                     className={cn(
-                                        'font-heading mt-3 text-[34px] leading-[1.08] font-bold text-[var(--t-deep)] sm:text-[44px]',
+                                        'font-heading mt-3 text-[34px] leading-[1.08] font-bold text-[var(--tcd-heading,var(--t-deep))] sm:text-[44px]',
                                         compact ? 'lg:max-w-[760px] lg:leading-[1.18]' : 'lg:text-[52px]',
                                     )}
                                 >
                                     {heading}
                                 </h1>
                                 {subtitle && (
-                                    <div className="mt-4 max-w-[640px] text-base leading-relaxed text-[#4b3f30] sm:text-[17px]">{subtitle}</div>
+                                    <div className="mt-4 max-w-[640px] text-base leading-relaxed text-[var(--tcd-warm,#4b3f30)] sm:text-[17px]">
+                                        {subtitle}
+                                    </div>
                                 )}
                                 {heroChildren && <div className="mt-7">{heroChildren}</div>}
                             </div>

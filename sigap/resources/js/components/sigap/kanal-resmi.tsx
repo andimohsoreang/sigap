@@ -147,26 +147,30 @@ export default function KanalResmi({ kanal, kantor }: { kanal: KanalPublik; kant
     if (cards.length === 0) return null;
 
     return (
-        <section aria-labelledby="kanal-pengaduan" className="bg-[#f2f5f8] py-14 sm:py-24">
+        <section aria-labelledby="kanal-pengaduan" className="bg-[var(--tcd-muted,#f2f5f8)] py-14 sm:py-24">
             <div className="mx-auto flex max-w-[1312px] flex-col gap-10 px-4 sm:px-6 lg:px-16">
                 <div data-reveal className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
                     <div className="flex flex-col gap-3">
-                        <p className="text-xs font-semibold tracking-[0.12em] text-[#87652a] uppercase sm:text-[12.5px]">Kanal pengaduan resmi</p>
+                        <p className="text-xs font-semibold tracking-[0.12em] text-[var(--tcd-bronze,#87652a)] uppercase sm:text-[12.5px]">
+                            Kanal pengaduan resmi
+                        </p>
                         <h2
                             id="kanal-pengaduan"
-                            className="font-heading text-[30px] leading-[1.2] font-bold tracking-[-0.015em] text-balance text-[var(--t-deep)] sm:text-[40px]"
+                            className="font-heading text-[30px] leading-[1.2] font-bold tracking-[-0.015em] text-balance text-[var(--tcd-heading,var(--t-deep))] sm:text-[40px]"
                         >
                             Sampaikan aduan lewat kanal pilihan Anda
                         </h2>
-                        <p className="max-w-[780px] text-base leading-[1.65] text-[#4a5a68] sm:text-[17px]">
+                        <p className="max-w-[780px] text-base leading-[1.65] text-[var(--tcd-text-2,#4a5a68)] sm:text-[17px]">
                             Aduan dari kanal berikut dicatat, diteruskan ke unit terkait, dan dipantau sampai tuntas.
                         </p>
                     </div>
                     <p className="flex shrink-0 items-center gap-3.5">
-                        <span className="font-heading text-5xl leading-none font-bold tracking-[-1.68px] text-[#87652a] sm:text-[56px]">
+                        <span className="font-heading text-5xl leading-none font-bold tracking-[-1.68px] text-[var(--tcd-bronze,#87652a)] sm:text-[56px]">
                             {cards.length}
                         </span>
-                        <span className="w-[110px] text-[15px] leading-[1.33] font-semibold text-[var(--t-deep)]">kanal resmi selain chat</span>
+                        <span className="w-[110px] text-[15px] leading-[1.33] font-semibold text-[var(--tcd-heading,var(--t-deep))]">
+                            kanal resmi selain chat
+                        </span>
                     </p>
                 </div>
 
@@ -175,21 +179,21 @@ export default function KanalResmi({ kanal, kantor }: { kanal: KanalPublik; kant
                         const Arrow = c.href?.startsWith('http') ? ArrowUpRight : ArrowRight;
                         const body = (
                             <>
-                                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#f2f5f8] text-[var(--t-navy)] transition-colors group-hover:bg-[var(--t-navy)] group-hover:text-white">
+                                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--tcd-muted,#f2f5f8)] text-[var(--tcd-link,var(--t-navy))] transition-colors group-hover:bg-[var(--tcd-primary,var(--t-navy))] group-hover:text-white">
                                     <c.icon className="h-[22px] w-[22px]" aria-hidden="true" />
                                 </span>
-                                <span className="font-heading mt-5 block min-h-11 text-[17px] leading-[1.3] font-bold text-[var(--t-deep)]">
+                                <span className="font-heading mt-5 block min-h-11 text-[17px] leading-[1.3] font-bold text-[var(--tcd-heading,var(--t-deep))]">
                                     {c.title}
                                 </span>
-                                <span className="mt-2 block text-[14.5px] leading-[1.52] text-[#4a5a68]">{c.desc}</span>
-                                <span className="mt-auto flex h-10 items-center gap-1.5 pt-4 text-[14.5px] font-semibold text-[var(--t-navy)]">
+                                <span className="mt-2 block text-[14.5px] leading-[1.52] text-[var(--tcd-text-2,#4a5a68)]">{c.desc}</span>
+                                <span className="mt-auto flex h-10 items-center gap-1.5 pt-4 text-[14.5px] font-semibold text-[var(--tcd-link,var(--t-navy))]">
                                     {c.cta}
                                     <Arrow className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden="true" />
                                 </span>
                             </>
                         );
                         const cls =
-                            'group flex h-full min-h-[260px] w-full flex-col rounded-[18px] border border-[#e8edf2] bg-white p-6 text-left transition-shadow hover:shadow-[0_12px_30px_rgba(2,43,74,0.08)]';
+                            'group flex h-full min-h-[260px] w-full flex-col rounded-[18px] border border-[var(--tcd-border,#e8edf2)] bg-[var(--tcd-surface,#fff)] p-6 text-left transition-shadow hover:shadow-[0_12px_30px_rgba(2,43,74,0.08)]';
 
                         return (
                             <li key={c.key} data-reveal style={{ '--d': `${0.05 * i}s` } as CSSProperties}>
@@ -209,10 +213,12 @@ export default function KanalResmi({ kanal, kantor }: { kanal: KanalPublik; kant
             </div>
 
             <Dialog open={open === 'sosmed'} onOpenChange={(v) => !v && setOpen(null)}>
-                <DialogContent className="transi-page max-w-[calc(100%-32px)] rounded-[20px] border-[#e8edf2] bg-white p-6 sm:max-w-md sm:rounded-[20px]">
+                <DialogContent className="transi-page max-w-[calc(100%-32px)] rounded-[20px] border-[var(--tcd-border,#e8edf2)] bg-[var(--tcd-surface,#fff)] p-6 sm:max-w-md sm:rounded-[20px]">
                     <DialogHeader className="text-left">
-                        <DialogTitle className="font-heading text-xl text-[var(--t-deep)]">{kanal.sosmed.label}</DialogTitle>
-                        <DialogDescription className="text-[#5b6b7a]">Akun resmi dan kontak langsung Kementerian Transmigrasi.</DialogDescription>
+                        <DialogTitle className="font-heading text-xl text-[var(--tcd-heading,var(--t-deep))]">{kanal.sosmed.label}</DialogTitle>
+                        <DialogDescription className="text-[var(--tcd-text-2,#5b6b7a)]">
+                            Akun resmi dan kontak langsung Kementerian Transmigrasi.
+                        </DialogDescription>
                     </DialogHeader>
                     <SosmedList sosmed={kanal.sosmed} />
                 </DialogContent>
@@ -259,24 +265,29 @@ function ContactRow({
                 {...external(href)}
                 className={
                     'group flex items-center gap-3 rounded-[12px] border px-4 py-3 transition-colors ' +
-                    (highlight ? 'border-[#cfe9de] bg-[#eef8f3] hover:bg-[#e3f3eb]' : 'border-[#e8edf2] hover:bg-[#f6f8fa]')
+                    (highlight
+                        ? 'border-[var(--tcd-success-border,#cfe9de)] bg-[var(--tcd-success-soft,#eef8f3)] hover:bg-[var(--tcd-success-soft,#e3f3eb)]'
+                        : 'border-[var(--tcd-border,#e8edf2)] hover:bg-[var(--tcd-muted,#f6f8fa)]')
                 }
             >
                 <span
                     className={
                         'flex h-9 w-9 shrink-0 items-center justify-center rounded-full ' +
-                        (highlight ? 'bg-[#0d7a5f] text-white' : 'bg-[#eef3f7] text-[var(--t-navy)]')
+                        (highlight ? 'bg-[#0d7a5f] text-white' : 'bg-[var(--tcd-muted,#eef3f7)] text-[var(--tcd-link,var(--t-navy))]')
                     }
                 >
                     <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
                 </span>
                 <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold text-[var(--t-deep)]" title={title}>
+                    <span className="block truncate font-semibold text-[var(--tcd-heading,var(--t-deep))]" title={title}>
                         {title}
                     </span>
-                    <span className="block text-[13px] text-[#5b6b7a]">{hint}</span>
+                    <span className="block text-[13px] text-[var(--tcd-text-2,#5b6b7a)]">{hint}</span>
                 </span>
-                <ArrowUpRight className="h-4 w-4 shrink-0 text-[#8a96a3] group-hover:text-[var(--t-navy)]" aria-hidden="true" />
+                <ArrowUpRight
+                    className="h-4 w-4 shrink-0 text-[var(--tcd-text-3,#6d7681)] group-hover:text-[var(--tcd-link,var(--t-navy))]"
+                    aria-hidden="true"
+                />
             </a>
         </li>
     );

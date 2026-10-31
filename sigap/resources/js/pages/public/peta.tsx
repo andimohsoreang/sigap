@@ -33,10 +33,10 @@ interface Props {
 
 function statusTone(status: string | null): string {
     const s = (status ?? '').toLowerCase();
-    if (s.includes('memadai') || s.includes('baik')) return 'bg-[#e7f4ef] text-[#0d7a5f]';
-    if (s.includes('berkembang') || s.includes('sedang')) return 'bg-[#fdf3e1] text-[#9a5b00]';
-    if (s.includes('kurang') || s.includes('rusak')) return 'bg-[#fdecea] text-[#b42318]';
-    return 'bg-[#eef1f4] text-[#4a5868]';
+    if (s.includes('memadai') || s.includes('baik')) return 'bg-[var(--tcd-success-soft,#e7f4ef)] text-[var(--tcd-success,#0d7a5f)]';
+    if (s.includes('berkembang') || s.includes('sedang')) return 'bg-[var(--tcd-warning-soft,#fdf3e1)] text-[var(--tcd-warning,#9a5b00)]';
+    if (s.includes('kurang') || s.includes('rusak')) return 'bg-[var(--tcd-danger-soft,#fdecea)] text-[var(--tcd-danger,#b42318)]';
+    return 'bg-[var(--tcd-muted,#eef1f4)] text-[var(--tcd-text-2,#4a5868)]';
 }
 
 export default function Peta({ regions, points, provinsi }: Props) {
@@ -67,24 +67,31 @@ export default function Peta({ regions, points, provinsi }: Props) {
             eyebrow="Peta Wilayah"
             heading="Peta Wilayah Transmigrasi"
             subtitle={
-                <span className="flex flex-wrap items-center gap-x-6 gap-y-2 font-medium text-[var(--t-deep)]">
+                <span className="flex flex-wrap items-center gap-x-6 gap-y-2 font-medium text-[var(--tcd-heading,var(--t-deep))]">
                     <span className="flex items-center gap-2">
-                        <MapPinned className="h-5 w-5 text-[#9a7330]" aria-hidden="true" /> {regions.toLocaleString('id-ID')} Kawasan Transmigrasi
+                        <MapPinned className="h-5 w-5 text-[var(--tcd-bronze,#8b682b)]" aria-hidden="true" /> {regions.toLocaleString('id-ID')}{' '}
+                        Kawasan Transmigrasi
                     </span>
                     <span className="flex items-center gap-2">
-                        <Users className="h-5 w-5 text-[#9a7330]" aria-hidden="true" /> {totalKk.toLocaleString('id-ID')} KK
+                        <Users className="h-5 w-5 text-[var(--tcd-bronze,#8b682b)]" aria-hidden="true" /> {totalKk.toLocaleString('id-ID')} KK
                     </span>
                     <span className="flex items-center gap-2">
-                        <MessageSquareText className="h-5 w-5 text-[#9a7330]" aria-hidden="true" /> {totalPengaduan.toLocaleString('id-ID')} Pengaduan
+                        <MessageSquareText className="h-5 w-5 text-[var(--tcd-bronze,#8b682b)]" aria-hidden="true" />{' '}
+                        {totalPengaduan.toLocaleString('id-ID')} Pengaduan
                     </span>
                 </span>
             }
             heroAside={
                 <div className="w-full lg:w-[300px]">
-                    <label className="mb-2 block text-sm font-semibold text-[var(--t-deep)]">Kawasan / Wilayah</label>
+                    <label id="label-wilayah" className="mb-2 block text-sm font-semibold text-[var(--tcd-heading,var(--t-deep))]">
+                        Kawasan / Wilayah
+                    </label>
                     <Select value={province} onValueChange={selectProvince}>
-                        <SelectTrigger className="h-[52px] gap-2.5 rounded-full border-[#e6ded1] bg-white px-5 text-[15px] font-medium text-[var(--t-deep)] [&>span]:flex-1 [&>span]:text-left">
-                            <MapIcon className="h-[18px] w-[18px] shrink-0 text-[var(--t-navy)]" aria-hidden="true" />
+                        <SelectTrigger
+                            aria-labelledby="label-wilayah"
+                            className="h-[52px] gap-2.5 rounded-full border-[var(--tcd-border-warm,#e6ded1)] bg-[var(--tcd-surface,#fff)] px-5 text-[15px] font-medium text-[var(--tcd-heading,var(--t-deep))] [&>span]:flex-1 [&>span]:text-left"
+                        >
+                            <MapIcon className="h-[18px] w-[18px] shrink-0 text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" />
                             <SelectValue placeholder="Semua Wilayah" />
                         </SelectTrigger>
                         <SelectContent>
@@ -100,17 +107,19 @@ export default function Peta({ regions, points, provinsi }: Props) {
             }
         >
             <div className="mx-auto flex max-w-[1312px] flex-col gap-6 px-4 py-12 sm:px-6 lg:px-16 lg:py-14">
-                <section className="rounded-[24px] border border-[#e6ebf0] bg-white p-5 sm:p-7">
-                    <h2 className="font-heading text-2xl font-bold text-[var(--t-deep)]">Sebaran Pengaduan per Wilayah</h2>
-                    <p className="mt-1 text-[#5b6b7a]">Jumlah pengaduan warga per provinsi. Klik provinsi untuk melihat kawasan transmigrasinya.</p>
-                    <p className="mt-4 mb-3 flex items-center gap-2 font-semibold text-[var(--t-deep)]">
-                        <MapPinned className="h-5 w-5 text-[#9a7330]" aria-hidden="true" />
+                <section className="rounded-[24px] border border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-surface,#fff)] p-5 sm:p-7">
+                    <h2 className="font-heading text-2xl font-bold text-[var(--tcd-heading,var(--t-deep))]">Sebaran Pengaduan per Wilayah</h2>
+                    <p className="mt-1 text-[var(--tcd-text-2,#5b6b7a)]">
+                        Jumlah pengaduan warga per provinsi. Klik provinsi untuk melihat kawasan transmigrasinya.
+                    </p>
+                    <p className="mt-4 mb-3 flex items-center gap-2 font-semibold text-[var(--tcd-heading,var(--t-deep))]">
+                        <MapPinned className="h-5 w-5 text-[var(--tcd-bronze,#8b682b)]" aria-hidden="true" />
                         {province === 'all' ? 'Seluruh Wilayah (Nasional)' : province}
                         {province !== 'all' && (
                             <button
                                 type="button"
                                 onClick={() => selectProvince('all')}
-                                className="ml-1 rounded-full border border-[#e6ded1] px-3 py-0.5 text-sm font-medium hover:bg-[#f7f3ee]"
+                                className="ml-1 rounded-full border border-[var(--tcd-border-warm,#e6ded1)] px-3 py-0.5 text-sm font-medium hover:bg-[var(--tcd-cream,#f7f3ee)]"
                             >
                                 Nasional
                             </button>
@@ -146,7 +155,9 @@ export default function Peta({ regions, points, provinsi }: Props) {
                             }
                         />
                     ) : (
-                        <div className="flex h-[360px] items-center justify-center text-[#5b6b7a] sm:h-[460px] lg:h-[520px]">Memuat peta…</div>
+                        <div className="flex h-[360px] items-center justify-center text-[var(--tcd-text-2,#5b6b7a)] sm:h-[460px] lg:h-[520px]">
+                            Memuat peta…
+                        </div>
                     )}
                 </section>
 
@@ -162,21 +173,29 @@ export default function Peta({ regions, points, provinsi }: Props) {
                                         aria-pressed={active}
                                         className={cn(
                                             'flex w-full items-center gap-4 rounded-[20px] border p-5 text-left transition-colors',
-                                            active ? 'border-[var(--t-gold)] bg-[#f7f3ee]' : 'border-[#e6ebf0] bg-white hover:border-[#cdd6df]',
+                                            active
+                                                ? 'border-[var(--t-gold)] bg-[var(--tcd-cream,#f7f3ee)]'
+                                                : 'border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-surface,#fff)] hover:border-[var(--tcd-border-strong,#cdd6df)]',
                                         )}
                                     >
                                         <span
                                             className={cn(
                                                 'flex h-12 w-12 shrink-0 items-center justify-center rounded-full',
-                                                active ? 'bg-[var(--t-gold)] text-[var(--t-deep)]' : 'bg-[#eef3f8] text-[var(--t-navy)]',
+                                                active
+                                                    ? 'bg-[var(--t-gold)] text-[var(--t-deep)]'
+                                                    : 'bg-[var(--tcd-muted,#eef3f8)] text-[var(--tcd-link,var(--t-navy))]',
                                             )}
                                         >
                                             <House className="h-5 w-5" aria-hidden="true" />
                                         </span>
                                         <span className="min-w-0 flex-1">
-                                            <span className="block font-mono text-[13px] font-semibold text-[#9a7330]">{p.code}</span>
-                                            <span className="font-heading block truncate text-lg font-bold text-[var(--t-deep)]">{p.name}</span>
-                                            <span className="block text-sm text-[#5b6b7a]">
+                                            <span className="block font-mono text-[13px] font-semibold text-[var(--tcd-bronze,#8b682b)]">
+                                                {p.code}
+                                            </span>
+                                            <span className="font-heading block truncate text-lg font-bold text-[var(--tcd-heading,var(--t-deep))]">
+                                                {p.name}
+                                            </span>
+                                            <span className="block text-sm text-[var(--tcd-text-2,#5b6b7a)]">
                                                 {p.province ?? '—'} · {p.kk_count.toLocaleString('id-ID')} KK
                                             </span>
                                         </span>
@@ -195,7 +214,7 @@ export default function Peta({ regions, points, provinsi }: Props) {
                         })}
                     </ul>
                 ) : (
-                    <p className="text-center text-[#5b6b7a]">Belum ada kawasan dengan koordinat di wilayah ini.</p>
+                    <p className="text-center text-[var(--tcd-text-2,#5b6b7a)]">Belum ada kawasan dengan koordinat di wilayah ini.</p>
                 )}
             </div>
         </TaraPage>

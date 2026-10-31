@@ -47,7 +47,12 @@ function ringkasan(k: Kantor): string {
 
 export function KantorEyebrow({ kantor, small = false }: { kantor: Kantor; small?: boolean }) {
     return (
-        <p className={cn('font-semibold text-[#9a7330] uppercase', small ? 'text-xs tracking-[1.4px]' : 'text-[12.5px] tracking-[1.5px]')}>
+        <p
+            className={cn(
+                'font-semibold text-[var(--tcd-bronze,#8b682b)] uppercase',
+                small ? 'text-xs tracking-[1.4px]' : 'text-[12.5px] tracking-[1.5px]',
+            )}
+        >
             {kantor.jenis} · {kantor.provinsi}
         </p>
     );
@@ -57,7 +62,7 @@ export function KantorEyebrow({ kantor, small = false }: { kantor: Kantor; small
 export function KantorList({ offices, selected, onSelect }: { offices: Kantor[]; selected: string | null; onSelect: (kode: string) => void }) {
     return (
         <div className="flex min-w-0 flex-col gap-3">
-            <p className="px-1 text-[12.5px] font-semibold tracking-[1.5px] text-[#5b6b7a] uppercase">{offices.length} lokasi</p>
+            <p className="px-1 text-[12.5px] font-semibold tracking-[1.5px] text-[var(--tcd-text-2,#5b6b7a)] uppercase">{offices.length} lokasi</p>
             <ul className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-col sm:overflow-visible sm:pb-0">
                 {offices.map((k) => {
                     const active = k.kode === selected;
@@ -69,24 +74,35 @@ export function KantorList({ offices, selected, onSelect }: { offices: Kantor[];
                                 aria-current={active ? 'true' : undefined}
                                 className={cn(
                                     'flex w-full items-center gap-3 rounded-[12px] border px-3 py-2.5 text-left transition-colors',
-                                    active ? 'border-[var(--t-navy)] bg-white shadow-sm' : 'border-transparent hover:bg-white/70',
+                                    active
+                                        ? 'border-[var(--tcd-link,var(--t-navy))] bg-[var(--tcd-surface,#fff)] shadow-sm'
+                                        : 'border-transparent hover:bg-[var(--tcd-surface,#fff)]/70',
                                 )}
                             >
                                 <span
                                     className={cn(
                                         'flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px]',
-                                        active ? 'bg-[var(--t-navy)] text-white' : 'bg-white text-[var(--t-navy)]',
+                                        active
+                                            ? 'bg-[var(--tcd-primary,var(--t-navy))] text-white'
+                                            : 'bg-[var(--tcd-surface,#fff)] text-[var(--tcd-link,var(--t-navy))]',
                                     )}
                                 >
                                     <Building2 className="h-[18px] w-[18px]" aria-hidden="true" />
                                 </span>
                                 <span className="min-w-0 flex-1">
-                                    <span className="block text-[15px] font-semibold whitespace-nowrap text-[var(--t-deep)] sm:whitespace-normal">
+                                    <span className="block text-[15px] font-semibold whitespace-nowrap text-[var(--tcd-heading,var(--t-deep))] sm:whitespace-normal">
                                         {k.singkat}
                                     </span>
-                                    <span className="block text-[13px] whitespace-nowrap text-[#5b6b7a] sm:whitespace-normal">{k.lokasi}</span>
+                                    <span className="block text-[13px] whitespace-nowrap text-[var(--tcd-text-2,#5b6b7a)] sm:whitespace-normal">
+                                        {k.lokasi}
+                                    </span>
                                 </span>
-                                {active && <ChevronRight className="hidden h-4 w-4 shrink-0 text-[var(--t-navy)] sm:block" aria-hidden="true" />}
+                                {active && (
+                                    <ChevronRight
+                                        className="hidden h-4 w-4 shrink-0 text-[var(--tcd-link,var(--t-navy))] sm:block"
+                                        aria-hidden="true"
+                                    />
+                                )}
                             </button>
                         </li>
                     );
@@ -100,13 +116,16 @@ export function KantorList({ offices, selected, onSelect }: { offices: Kantor[];
 export function KantorDetail({ kantor }: { kantor: Kantor }) {
     return (
         <div className="flex flex-col gap-5">
-            <dl className="divide-y divide-[#e8edf2] border-t border-[#e8edf2] text-[15px] text-[#2a3a48]">
+            <dl className="divide-y divide-[var(--tcd-border,#e8edf2)] border-t border-[var(--tcd-border,#e8edf2)] text-[15px] text-[var(--tcd-text-2,#2a3a48)]">
                 <Row icon={MapPin} label="Alamat">
                     {kantor.alamat}
                 </Row>
                 {kantor.telepon && (
                     <Row icon={Phone} label="Telepon">
-                        <a href={`tel:${kantor.telepon.replace(/[^\d+]/g, '')}`} className="hover:text-[var(--t-navy)] hover:underline">
+                        <a
+                            href={`tel:${kantor.telepon.replace(/[^\d+]/g, '')}`}
+                            className="hover:text-[var(--tcd-link,var(--t-navy))] hover:underline"
+                        >
                             {kantor.telepon}
                         </a>
                     </Row>
@@ -117,7 +136,7 @@ export function KantorDetail({ kantor }: { kantor: Kantor }) {
                             href={waLink(kantor.whatsapp)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="hover:text-[var(--t-navy)] hover:underline"
+                            className="hover:text-[var(--tcd-link,var(--t-navy))] hover:underline"
                         >
                             {kantor.whatsapp}
                         </a>
@@ -125,7 +144,7 @@ export function KantorDetail({ kantor }: { kantor: Kantor }) {
                 )}
                 {kantor.email && (
                     <Row icon={Mail} label="Email">
-                        <a href={`mailto:${kantor.email}`} className="break-all hover:text-[var(--t-navy)] hover:underline">
+                        <a href={`mailto:${kantor.email}`} className="break-all hover:text-[var(--tcd-link,var(--t-navy))] hover:underline">
                             {kantor.email}
                         </a>
                     </Row>
@@ -136,7 +155,7 @@ export function KantorDetail({ kantor }: { kantor: Kantor }) {
                             href={kantor.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="break-all hover:text-[var(--t-navy)] hover:underline"
+                            className="break-all hover:text-[var(--tcd-link,var(--t-navy))] hover:underline"
                         >
                             {tampilUrl(kantor.website)}
                         </a>
@@ -151,7 +170,7 @@ export function KantorDetail({ kantor }: { kantor: Kantor }) {
 
             {kantor.sosmed.length > 0 && (
                 <div className="flex flex-col gap-2.5">
-                    <p className="text-[13.5px] font-semibold text-[#5b6b7a]">Media sosial</p>
+                    <p className="text-[13.5px] font-semibold text-[var(--tcd-text-2,#5b6b7a)]">Media sosial</p>
                     <ul className="flex flex-wrap gap-2">
                         {kantor.sosmed.map((a) => {
                             const p = PLATFORMS[a.platform] ?? PLATFORMS.lainnya;
@@ -162,9 +181,9 @@ export function KantorDetail({ kantor }: { kantor: Kantor }) {
                                         href={a.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-2 rounded-full border border-[#e3e8ee] px-3.5 py-2 text-sm font-medium text-[var(--t-deep)] hover:border-[var(--t-navy)] hover:bg-[#f6f8fa]"
+                                        className="flex items-center gap-2 rounded-full border border-[var(--tcd-border,#e3e8ee)] px-3.5 py-2 text-sm font-medium text-[var(--tcd-heading,var(--t-deep))] hover:border-[var(--tcd-link,var(--t-navy))] hover:bg-[var(--tcd-muted,#f6f8fa)]"
                                     >
-                                        <Icon className="h-4 w-4 text-[var(--t-navy)]" aria-hidden="true" />
+                                        <Icon className="h-4 w-4 text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" />
                                         {a.nama}
                                         <span className="sr-only">({p.label}, membuka tab baru)</span>
                                     </a>
@@ -180,7 +199,7 @@ export function KantorDetail({ kantor }: { kantor: Kantor }) {
                     href={kantor.maps}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="transi-lift font-heading inline-flex h-11 items-center gap-2 rounded-full bg-[var(--t-navy)] px-5 text-[15px] font-semibold text-white hover:bg-[var(--t-deep)]"
+                    className="transi-lift font-heading inline-flex h-11 items-center gap-2 rounded-full bg-[var(--tcd-primary,var(--t-navy))] px-5 text-[15px] font-semibold text-white hover:bg-[var(--t-deep)]"
                 >
                     <Navigation className="h-4 w-4" aria-hidden="true" /> Buka di Google Maps
                 </a>
@@ -189,7 +208,7 @@ export function KantorDetail({ kantor }: { kantor: Kantor }) {
                         href={waLink(kantor.whatsapp)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="transi-lift font-heading inline-flex h-11 items-center gap-2 rounded-full border-[1.5px] border-[var(--t-navy)] px-5 text-[15px] font-semibold text-[var(--t-navy)] hover:bg-[#f2f6fa]"
+                        className="transi-lift font-heading inline-flex h-11 items-center gap-2 rounded-full border-[1.5px] border-[var(--tcd-link,var(--t-navy))] px-5 text-[15px] font-semibold text-[var(--tcd-link,var(--t-navy))] hover:bg-[var(--tcd-muted,#f2f6fa)]"
                     >
                         <MessageCircle className="h-4 w-4" aria-hidden="true" /> Chat WhatsApp
                     </a>
@@ -202,9 +221,9 @@ export function KantorDetail({ kantor }: { kantor: Kantor }) {
 function Row({ icon: Icon, label, children }: { icon: LucideIcon; label: string; children: ReactNode }) {
     return (
         <div className="grid grid-cols-[18px_1fr] gap-x-3 gap-y-0.5 py-3.5 sm:grid-cols-[18px_104px_1fr]">
-            <Icon className="mt-0.5 h-[18px] w-[18px] text-[var(--t-navy)]" aria-hidden="true" />
-            <dt className="text-[13.5px] leading-[1.63] font-semibold text-[#5b6b7a]">{label}</dt>
-            <dd className="col-start-2 min-w-0 text-[15px] leading-[1.47] text-[#2a3a48] sm:col-start-3">{children}</dd>
+            <Icon className="mt-0.5 h-[18px] w-[18px] text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" />
+            <dt className="text-[13.5px] leading-[1.63] font-semibold text-[var(--tcd-text-2,#5b6b7a)]">{label}</dt>
+            <dd className="col-start-2 min-w-0 text-[15px] leading-[1.47] text-[var(--tcd-text-2,#2a3a48)] sm:col-start-3">{children}</dd>
         </div>
     );
 }
@@ -214,7 +233,7 @@ export function KantorPeta({ kantor, className }: { kantor: Kantor; className?: 
     if (kantor.lat === null || kantor.lng === null) return null;
 
     return (
-        <div className={cn('relative z-0 overflow-hidden bg-[#eef3f7]', className)}>
+        <div className={cn('relative z-0 overflow-hidden bg-[var(--tcd-muted,#eef3f7)]', className)}>
             <Suspense fallback={null}>
                 {/* key: Leaflet tidak memindah pusat peta saat prop berubah. */}
                 <KantorMap key={kantor.kode} lat={kantor.lat} lng={kantor.lng} />
@@ -231,22 +250,26 @@ export function KantorDirectoryDialog({ offices, open, onOpenChange }: { offices
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="transi-page flex max-h-[calc(100dvh-32px)] max-w-[calc(100%-32px)] flex-col gap-0 overflow-hidden rounded-[22px] border-[#e8edf2] bg-white p-0 sm:max-w-[900px] sm:rounded-[22px] [&>button:last-child]:top-6 [&>button:last-child]:right-6 [&>button:last-child]:rounded-full [&>button:last-child]:bg-[#f1f4f7] [&>button:last-child]:p-2 [&>button:last-child]:opacity-100 [&>button:last-child]:hover:bg-[#e6ebf0]">
-                <DialogHeader className="border-b border-[#e8edf2] px-6 py-5 pr-16 text-left sm:px-8">
-                    <DialogTitle className="font-heading text-xl leading-snug text-[var(--t-deep)] sm:text-[22px]">{DIRECTORY_TITLE}</DialogTitle>
-                    <DialogDescription className="text-[15px] text-[#5b6b7a]">
+            <DialogContent className="transi-page flex max-h-[calc(100dvh-32px)] max-w-[calc(100%-32px)] flex-col gap-0 overflow-hidden rounded-[22px] border-[var(--tcd-border,#e8edf2)] bg-[var(--tcd-surface,#fff)] p-0 sm:max-w-[900px] sm:rounded-[22px] [&>button:last-child]:top-6 [&>button:last-child]:right-6 [&>button:last-child]:rounded-full [&>button:last-child]:bg-[var(--tcd-muted,#f1f4f7)] [&>button:last-child]:p-2 [&>button:last-child]:opacity-100 [&>button:last-child]:hover:bg-[var(--tcd-muted-2,#e6ebf0)]">
+                <DialogHeader className="border-b border-[var(--tcd-border,#e8edf2)] px-6 py-5 pr-16 text-left sm:px-8">
+                    <DialogTitle className="font-heading text-xl leading-snug text-[var(--tcd-heading,var(--t-deep))] sm:text-[22px]">
+                        {DIRECTORY_TITLE}
+                    </DialogTitle>
+                    <DialogDescription className="text-[15px] text-[var(--tcd-text-2,#5b6b7a)]">
                         Datang langsung atau hubungi kantor terdekat dari lokasi Anda.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] overflow-x-hidden overflow-y-auto sm:grid-cols-[300px_minmax(0,1fr)] sm:overflow-hidden">
-                    <div className="min-w-0 border-b border-[#e8edf2] bg-[#f3f5f8] p-4 sm:overflow-y-auto sm:border-r sm:border-b-0 sm:p-5">
+                    <div className="min-w-0 border-b border-[var(--tcd-border,#e8edf2)] bg-[var(--tcd-muted,#f3f5f8)] p-4 sm:overflow-y-auto sm:border-r sm:border-b-0 sm:p-5">
                         <KantorList offices={offices} selected={kantor.kode} onSelect={setSelected} />
                     </div>
                     <div className="flex min-w-0 flex-col gap-4 p-6 sm:overflow-y-auto sm:p-8" aria-live="polite">
                         <div>
                             <KantorEyebrow kantor={kantor} />
-                            <h3 className="font-heading mt-1.5 text-[22px] leading-snug font-bold text-[var(--t-deep)]">{judul(kantor)}</h3>
-                            {kantor.kode !== 'pusat' && <p className="mt-1 text-sm text-[#5b6b7a]">{kantor.nama}</p>}
+                            <h3 className="font-heading mt-1.5 text-[22px] leading-snug font-bold text-[var(--tcd-heading,var(--t-deep))]">
+                                {judul(kantor)}
+                            </h3>
+                            {kantor.kode !== 'pusat' && <p className="mt-1 text-sm text-[var(--tcd-text-2,#5b6b7a)]">{kantor.nama}</p>}
                         </div>
                         <KantorDetail kantor={kantor} />
                     </div>
@@ -272,7 +295,7 @@ export function KantorAccordion({ offices, aside }: { offices: Kantor[]; aside?:
     return (
         <div className="grid items-start gap-6 lg:grid-cols-[300px_1fr]">
             <div className="flex min-w-0 flex-col gap-5 lg:sticky lg:top-24">
-                <div className="rounded-[20px] border border-[#e6ebf0] bg-[#f2f5f8] p-4">
+                <div className="rounded-[20px] border border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-muted,#f2f5f8)] p-4">
                     <KantorList offices={offices} selected={open} onSelect={pick} />
                 </div>
                 {aside}
@@ -289,8 +312,10 @@ export function KantorAccordion({ offices, aside }: { offices: Kantor[]; aside?:
                                 refs.current[k.kode] = el;
                             }}
                             className={cn(
-                                'scroll-mt-24 overflow-hidden rounded-[20px] border bg-white transition-shadow',
-                                expanded ? 'border-[var(--t-navy)] shadow-[0_8px_24px_rgba(2,43,74,0.08)]' : 'border-[#e6ebf0]',
+                                'scroll-mt-24 overflow-hidden rounded-[20px] border bg-[var(--tcd-surface,#fff)] transition-shadow',
+                                expanded
+                                    ? 'border-[var(--tcd-link,var(--t-navy))] shadow-[0_8px_24px_rgba(2,43,74,0.08)]'
+                                    : 'border-[var(--tcd-border,#e6ebf0)]',
                             )}
                         >
                             {expanded ? (
@@ -299,17 +324,17 @@ export function KantorAccordion({ offices, aside }: { offices: Kantor[]; aside?:
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="min-w-0">
                                                 <KantorEyebrow kantor={k} />
-                                                <h3 className="font-heading mt-1.5 text-[22px] leading-[1.25] font-bold text-[var(--t-deep)] sm:text-2xl">
+                                                <h3 className="font-heading mt-1.5 text-[22px] leading-[1.25] font-bold text-[var(--tcd-heading,var(--t-deep))] sm:text-2xl">
                                                     {judul(k)}
                                                 </h3>
-                                                {k.kode !== 'pusat' && <p className="mt-1 text-sm text-[#5b6b7a]">{k.nama}</p>}
+                                                {k.kode !== 'pusat' && <p className="mt-1 text-sm text-[var(--tcd-text-2,#5b6b7a)]">{k.nama}</p>}
                                             </div>
                                             <button
                                                 type="button"
                                                 onClick={() => setOpen(null)}
                                                 aria-expanded="true"
                                                 aria-controls={panelId}
-                                                className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-[var(--t-navy)] pr-3 pl-4 text-sm font-semibold text-white hover:bg-[var(--t-deep)]"
+                                                className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-[var(--tcd-primary,var(--t-navy))] pr-3 pl-4 text-sm font-semibold text-white hover:bg-[var(--t-deep)]"
                                             >
                                                 Tutup <ChevronDown className="h-3.5 w-3.5 rotate-180" aria-hidden="true" />
                                             </button>
@@ -323,22 +348,22 @@ export function KantorAccordion({ offices, aside }: { offices: Kantor[]; aside?:
                                     type="button"
                                     onClick={() => pick(k.kode)}
                                     aria-expanded="false"
-                                    className="flex w-full items-center gap-4 px-5 py-5 text-left hover:bg-[#fafbfc] sm:px-6"
+                                    className="flex w-full items-center gap-4 px-5 py-5 text-left hover:bg-[var(--tcd-muted,#fafbfc)] sm:px-6"
                                 >
-                                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#eef3f8] text-[var(--t-navy)]">
+                                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--tcd-muted,#eef3f8)] text-[var(--tcd-link,var(--t-navy))]">
                                         <Building2 className="h-5 w-5" aria-hidden="true" />
                                     </span>
                                     <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
                                         <KantorEyebrow kantor={k} small />
-                                        <span className="font-heading block text-lg leading-[1.3] font-bold text-[var(--t-deep)] sm:text-xl">
+                                        <span className="font-heading block text-lg leading-[1.3] font-bold text-[var(--tcd-heading,var(--t-deep))] sm:text-xl">
                                             {judul(k)}
                                         </span>
-                                        <span className="block text-sm text-[#5b6b7a]">{ringkasan(k)}</span>
+                                        <span className="block text-sm text-[var(--tcd-text-2,#5b6b7a)]">{ringkasan(k)}</span>
                                     </span>
-                                    <span className="hidden h-10 shrink-0 items-center gap-1.5 rounded-full border border-[var(--t-navy)] pr-2.5 pl-3.5 text-sm font-semibold text-[var(--t-navy)] sm:flex">
+                                    <span className="hidden h-10 shrink-0 items-center gap-1.5 rounded-full border border-[var(--tcd-link,var(--t-navy))] pr-2.5 pl-3.5 text-sm font-semibold text-[var(--tcd-link,var(--t-navy))] sm:flex">
                                         Lihat detail <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
                                     </span>
-                                    <ChevronDown className="h-5 w-5 shrink-0 text-[#5b6b7a] sm:hidden" aria-hidden="true" />
+                                    <ChevronDown className="h-5 w-5 shrink-0 text-[var(--tcd-text-2,#5b6b7a)] sm:hidden" aria-hidden="true" />
                                 </button>
                             )}
                         </li>

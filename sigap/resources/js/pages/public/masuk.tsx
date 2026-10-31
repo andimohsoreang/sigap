@@ -2,7 +2,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Eye, EyeOff, LoaderCircle, Lock, LogIn, MessageCircle, ShieldCheck, Ticket, User, UserRoundCog } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 
-import { TaraFonts, TaraFooter, TaraLauncher, TaraPoseImage } from '@/components/sigap/tara-shell';
+import { TARA_FONTS_HREF, TaraFooter, TaraLauncher, TaraPoseImage } from '@/components/sigap/tara-shell';
 import TransiHeader from '@/components/sigap/transi-header';
 import { goToChat } from '@/lib/chat-transition';
 import { type SharedData } from '@/types';
@@ -14,7 +14,7 @@ const BENEFITS = [
 ];
 
 const inputClass =
-    'h-12 w-full rounded-xl border border-[#d9dfe6] bg-white pr-4 pl-11 text-[15px] text-[#0f2233] transition-colors outline-none placeholder:text-[#9aa5b1] focus:border-[var(--t-navy)] focus:ring-4 focus:ring-[#003d68]/10';
+    'h-12 w-full rounded-xl border border-[var(--tcd-border-strong,#d9dfe6)] bg-[var(--tcd-surface,#fff)] pr-4 pl-11 text-[15px] text-[var(--tcd-text,#0f2233)] transition-colors outline-none placeholder:text-[var(--tcd-text-3,#9aa5b1)] focus:border-[var(--tcd-link,var(--t-navy))] focus:ring-4 focus:ring-[#003d68]/10';
 
 /** Halaman masuk bergaya TARA: panel sapaan navy + formulir (warga NIK, petugas username). */
 export default function Masuk({ status, canResetPassword }: { status?: string | null; canResetPassword?: boolean }) {
@@ -34,14 +34,15 @@ export default function Masuk({ status, canResetPassword }: { status?: string | 
     return (
         <>
             <Head title="Masuk — Contact Center">
-                <TaraFonts />
+                <link rel="preconnect" href="https://fonts.bunny.net" />
+                <link rel="stylesheet" href={TARA_FONTS_HREF} head-key="transi-fonts" />
             </Head>
 
-            <div className="transi-page min-h-screen bg-white text-[#0f2233] antialiased">
+            <div className="transi-page min-h-screen bg-[var(--tcd-surface,#fff)] text-[var(--tcd-text,#0f2233)] antialiased">
                 <TransiHeader loggedIn={Boolean(auth?.user)} isAdmin={Boolean(auth?.user?.is_admin)} onChat={() => goToChat()} active={null} />
 
-                <main id="konten" className="bg-[#f7f3ee] px-4 py-10 sm:px-6 sm:py-14 lg:py-16">
-                    <div className="mx-auto grid max-w-[1080px] overflow-hidden rounded-[28px] bg-white shadow-[0_24px_60px_-28px_rgba(2,43,74,0.35)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+                <main id="konten" className="bg-[var(--tcd-cream,#f7f3ee)] px-4 py-10 sm:px-6 sm:py-14 lg:py-16">
+                    <div className="mx-auto grid max-w-[1080px] overflow-hidden rounded-[28px] bg-[var(--tcd-surface,#fff)] shadow-[0_24px_60px_-28px_rgba(2,43,74,0.35)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
                         {/* Panel sapaan */}
                         <section
                             className="relative overflow-hidden px-7 pt-8 pb-0 text-white sm:px-10 sm:pt-10 lg:flex lg:flex-col lg:px-11 lg:pt-12"
@@ -79,12 +80,14 @@ export default function Masuk({ status, canResetPassword }: { status?: string | 
 
                         {/* Formulir */}
                         <section className="px-7 py-9 sm:px-10 sm:py-11 lg:px-14 lg:py-14">
-                            <h1 className="font-heading text-[28px] leading-tight font-bold text-[var(--t-deep)] sm:text-[32px]">Masuk</h1>
-                            <p className="mt-2 text-[15px] text-[#5b6875]">Warga dengan NIK, petugas dan admin dengan username.</p>
+                            <h1 className="font-heading text-[28px] leading-tight font-bold text-[var(--tcd-heading,var(--t-deep))] sm:text-[32px]">
+                                Masuk
+                            </h1>
+                            <p className="mt-2 text-[15px] text-[var(--tcd-text-2,#5b6875)]">Warga dengan NIK, petugas dan admin dengan username.</p>
 
                             {status && (
                                 <p
-                                    className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+                                    className="mt-6 rounded-xl border border-[var(--tcd-success-border,oklch(0.905_0.093_164.15))] bg-[var(--tcd-success-soft,oklch(0.979_0.021_166.113))] px-4 py-3 text-sm text-[var(--tcd-success,oklch(0.432_0.095_166.913))]"
                                     role="status"
                                 >
                                     {status}
@@ -93,12 +96,12 @@ export default function Masuk({ status, canResetPassword }: { status?: string | 
 
                             <form onSubmit={submit} className="mt-8 flex flex-col gap-5">
                                 <div className="flex flex-col gap-2">
-                                    <label htmlFor="identifier" className="text-sm font-semibold text-[var(--t-deep)]">
+                                    <label htmlFor="identifier" className="text-sm font-semibold text-[var(--tcd-heading,var(--t-deep))]">
                                         NIK / Username
                                     </label>
                                     <div className="relative">
                                         <User
-                                            className="pointer-events-none absolute top-1/2 left-4 h-[18px] w-[18px] -translate-y-1/2 text-[#8a96a3]"
+                                            className="pointer-events-none absolute top-1/2 left-4 h-[18px] w-[18px] -translate-y-1/2 text-[var(--tcd-text-3,#6d7681)]"
                                             aria-hidden="true"
                                         />
                                         <input
@@ -112,23 +115,28 @@ export default function Masuk({ status, canResetPassword }: { status?: string | 
                                             required
                                         />
                                     </div>
-                                    {errors.identifier && <p className="text-sm text-red-600">{errors.identifier}</p>}
+                                    {errors.identifier && (
+                                        <p className="text-sm text-[var(--tcd-danger,oklch(0.577_0.245_27.325))]">{errors.identifier}</p>
+                                    )}
                                 </div>
 
                                 <div className="flex flex-col gap-2">
                                     <div className="flex items-center justify-between gap-3">
-                                        <label htmlFor="password" className="text-sm font-semibold text-[var(--t-deep)]">
+                                        <label htmlFor="password" className="text-sm font-semibold text-[var(--tcd-heading,var(--t-deep))]">
                                             Kata Sandi
                                         </label>
                                         {canResetPassword && (
-                                            <Link href="/lupa-sandi" className="text-[13px] font-semibold text-[var(--t-navy)] hover:underline">
+                                            <Link
+                                                href="/lupa-sandi"
+                                                className="text-[13px] font-semibold text-[var(--tcd-link,var(--t-navy))] hover:underline"
+                                            >
                                                 Lupa kata sandi?
                                             </Link>
                                         )}
                                     </div>
                                     <div className="relative">
                                         <Lock
-                                            className="pointer-events-none absolute top-1/2 left-4 h-[18px] w-[18px] -translate-y-1/2 text-[#8a96a3]"
+                                            className="pointer-events-none absolute top-1/2 left-4 h-[18px] w-[18px] -translate-y-1/2 text-[var(--tcd-text-3,#6d7681)]"
                                             aria-hidden="true"
                                         />
                                         <input
@@ -144,23 +152,28 @@ export default function Masuk({ status, canResetPassword }: { status?: string | 
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword((v) => !v)}
-                                            className="absolute top-1/2 right-2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-[#6b7785] hover:bg-[#f1f4f7] hover:text-[var(--t-deep)]"
+                                            className="absolute top-1/2 right-2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--tcd-text-3,#6b7785)] hover:bg-[var(--tcd-muted,#f1f4f7)] hover:text-[var(--tcd-heading,var(--t-deep))]"
                                             aria-label={showPassword ? 'Sembunyikan sandi' : 'Tampilkan sandi'}
                                             aria-pressed={showPassword}
                                         >
                                             {showPassword ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
                                         </button>
                                     </div>
-                                    {errors.password && <p className="text-sm text-red-600">{errors.password}</p>}
+                                    {errors.password && (
+                                        <p className="text-sm text-[var(--tcd-danger,oklch(0.577_0.245_27.325))]">{errors.password}</p>
+                                    )}
                                 </div>
 
-                                <label htmlFor="remember" className="flex w-fit cursor-pointer items-center gap-2.5 text-sm text-[#4a5868]">
+                                <label
+                                    htmlFor="remember"
+                                    className="flex w-fit cursor-pointer items-center gap-2.5 text-sm text-[var(--tcd-text-2,#4a5868)]"
+                                >
                                     <input
                                         id="remember"
                                         type="checkbox"
                                         checked={data.remember}
                                         onChange={(e) => setData('remember', e.target.checked)}
-                                        className="h-[18px] w-[18px] rounded border-[#c5cdd6] accent-[var(--t-navy)]"
+                                        className="h-[18px] w-[18px] rounded border-[var(--tcd-border-strong,#c5cdd6)] accent-[var(--t-navy)]"
                                     />
                                     Ingat saya
                                 </label>
@@ -168,7 +181,7 @@ export default function Masuk({ status, canResetPassword }: { status?: string | 
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="transi-lift font-heading mt-1 flex h-[52px] items-center justify-center gap-2.5 rounded-full bg-[var(--t-deep)] text-[16px] font-bold text-white hover:bg-[var(--t-navy)] disabled:opacity-70"
+                                    className="transi-lift font-heading mt-1 flex h-[52px] items-center justify-center gap-2.5 rounded-full bg-[var(--t-deep)] text-[16px] font-bold text-white hover:bg-[var(--tcd-primary,var(--t-navy))] disabled:opacity-70"
                                 >
                                     {processing ? (
                                         <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
@@ -179,10 +192,10 @@ export default function Masuk({ status, canResetPassword }: { status?: string | 
                                 </button>
                             </form>
 
-                            <div className="mt-8 flex flex-col gap-3 border-t border-[#eceff3] pt-6 text-sm text-[#5b6875]">
+                            <div className="mt-8 flex flex-col gap-3 border-t border-[var(--tcd-border,#eceff3)] pt-6 text-sm text-[var(--tcd-text-2,#5b6875)]">
                                 <p>
                                     Warga belum punya akun?{' '}
-                                    <Link href="/daftar" className="font-semibold text-[var(--t-navy)] hover:underline">
+                                    <Link href="/daftar" className="font-semibold text-[var(--tcd-link,var(--t-navy))] hover:underline">
                                         Daftar di sini
                                     </Link>
                                 </p>
@@ -191,12 +204,12 @@ export default function Masuk({ status, canResetPassword }: { status?: string | 
                                     <button
                                         type="button"
                                         onClick={(e) => goToChat({ source: e.currentTarget })}
-                                        className="font-semibold text-[var(--t-navy)] hover:underline"
+                                        className="font-semibold text-[var(--tcd-link,var(--t-navy))] hover:underline"
                                     >
                                         Chat dengan TARA
                                     </button>{' '}
                                     atau{' '}
-                                    <Link href="/katalog" className="font-semibold text-[var(--t-navy)] hover:underline">
+                                    <Link href="/katalog" className="font-semibold text-[var(--tcd-link,var(--t-navy))] hover:underline">
                                         ajukan pengaduan tanpa masuk
                                     </Link>
                                     .
