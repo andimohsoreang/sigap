@@ -32,6 +32,8 @@ export function Pagination({
     itemLabel = 'data',
     className,
 }: PaginationProps) {
+    // Ukuran halaman dari server yang tidak ada di daftar (mis. 20) tetap tampil di pemilih.
+    const sizes = Array.from(new Set([...perPageOptions, meta.per_page])).sort((x, y) => x - y);
     const current = meta.current_page;
     const last = Math.max(meta.last_page, 1);
     const from = meta.from ?? 0;
@@ -72,7 +74,7 @@ export function Pagination({
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            {perPageOptions.map((n) => (
+                            {sizes.map((n) => (
                                 <SelectItem key={n} value={String(n)} className="text-xs">
                                     {n} / halaman
                                 </SelectItem>
