@@ -100,7 +100,7 @@ export default function Program5T() {
     const go = (step: number) => setActive((i) => (i === null ? i : (i + step + PROGRAMS.length) % PROGRAMS.length));
 
     return (
-        <section aria-labelledby="program-5t" className="bg-[var(--tcd-surface,#fff)] py-14 sm:py-24">
+        <section aria-labelledby="program-5t" className="bg-[var(--tcd-muted,#f6f8fa)] py-14 sm:py-24">
             <div className="mx-auto max-w-[1312px] px-4 sm:px-6 lg:px-16">
                 <div className="flex flex-col gap-3 lg:max-w-[820px]">
                     <p data-reveal className="text-xs font-semibold tracking-[0.12em] text-[var(--tcd-bronze,#8b682b)] uppercase sm:text-[13px]">

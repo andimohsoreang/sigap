@@ -242,10 +242,10 @@ export default function BerandaTransi({ kanal, kantor, beritaSemua }: { kanal: K
                     <Hero aiEnabled={aiEnabled} />
                     <JustType />
                     <Journey />
+                    <Program5T />
                     <Trust />
                     <Berita all={beritaSemua} />
                     <KanalResmi kanal={kanal} kantor={kantor} />
-                    <Program5T />
                     <Faq />
                 </main>
                 <TaraFooter />
