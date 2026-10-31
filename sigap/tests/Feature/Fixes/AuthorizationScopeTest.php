@@ -43,13 +43,14 @@ class AuthorizationScopeTest extends TestCase
         $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/rekap')->assertOk()->assertJsonPath('total', 2);
     }
 
-    public function test_store_admin_requires_region_for_admin_kawasan_and_strong_password(): void
+    /** 31-10-2026: kawasan tugas tidak lagi wajib (wilayah dari pengaduan); sandi kuat tetap wajib. */
+    public function test_store_admin_without_region_and_requires_strong_password(): void
     {
         $super = User::factory()->admin()->create();
 
         $this->actingAs($super)->post('/admin/petugas', [
             'name' => 'Tanpa Kawasan', 'nip' => 'NIP-1', 'role' => 'admin_kawasan', 'password' => 'RahasiaKuat2026',
-        ])->assertSessionHasErrors('region_id');
+        ])->assertSessionHasNoErrors();
 
         $this->actingAs($super)->post('/admin/petugas', [
             'name' => 'Sandi Lemah', 'nip' => 'NIP-2', 'role' => 'super_admin', 'password' => 'rahasia123',
@@ -57,14 +58,14 @@ class AuthorizationScopeTest extends TestCase
 
         $this->actingAs($super, 'sanctum')->postJson('/api/v1/admin/admins', [
             'name' => 'API Kawasan', 'nip' => 'NIP-3', 'role' => 'admin_kawasan', 'password' => 'RahasiaKuat2026',
-        ])->assertStatus(422)->assertJsonValidationErrors('region_id');
+        ])->assertCreated();
 
         $this->actingAs($super, 'sanctum')->postJson('/api/v1/admin/admins', [
             'name' => 'API Kawasan', 'nip' => 'NIP-4', 'role' => 'admin_kawasan',
             'region_id' => Region::factory()->create()->id, 'password' => 'RahasiaKuat2026',
         ])->assertCreated();
 
-        $this->assertDatabaseMissing('users', ['username' => 'NIP-1']);
+        $this->assertDatabaseHas('users', ['username' => 'NIP-1', 'region_id' => null]);
         $this->assertDatabaseHas('activity_logs', ['action' => 'admin.created']);
     }
 

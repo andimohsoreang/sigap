@@ -477,7 +477,7 @@ export function AdminStat({
 }
 
 /** Pil berwarna lembut dengan titik di depan (badge Admin v2). */
-function Pill({ tone, children }: { tone: 'danger' | 'warning' | 'info' | 'success' | 'neutral' | 'primary'; children: ReactNode }) {
+export function Pill({ tone, children }: { tone: 'danger' | 'warning' | 'info' | 'success' | 'neutral' | 'primary'; children: ReactNode }) {
     const styles: Record<string, string> = {
         danger: 'bg-[var(--adm-danger-soft)] text-[var(--adm-danger)]',
         warning: 'bg-[var(--adm-warning-soft)] text-[var(--adm-warning)]',

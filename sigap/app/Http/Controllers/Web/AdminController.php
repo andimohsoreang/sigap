@@ -555,7 +555,6 @@ class AdminController extends Controller
                     'role_value' => $u->role?->value,
                     'status' => $u->is_active ? 'Aktif' : 'Nonaktif',
                 ]),
-            'regions' => Region::query()->orderBy('id')->get(['id', 'name']),
             'roles' => collect([UserRole::AdminKawasan, UserRole::SuperAdmin])
                 ->map(fn (UserRole $r) => ['value' => $r->value, 'label' => $r->label()]),
         ]);
@@ -640,10 +639,8 @@ class AdminController extends Controller
             // Opsional, tetapi tanpa surel petugas hanya menerima notifikasi lonceng.
             'email' => ['nullable', 'email', 'max:150', 'unique:users,email'],
             'role' => ['required', Rule::in(UserRole::adminValues())],
-            'region_id' => [
-                Rule::requiredIf(fn () => $request->input('role') === UserRole::AdminKawasan->value),
-                'nullable', 'integer', 'exists:regions,id',
-            ],
+            // Sejak 31-10-2026 wilayah berasal dari pengaduan; kawasan tugas tidak membatasi akses.
+            'region_id' => ['nullable', 'integer', 'exists:regions,id'],
             'password' => ['required', 'string', self::adminPasswordRule()],
         ];
     }
@@ -652,7 +649,6 @@ class AdminController extends Controller
     public static function adminMessages(): array
     {
         return [
-            'region_id.required' => 'Admin kawasan wajib memiliki kawasan tugas.',
             ...self::emailMessages(),
         ];
     }
