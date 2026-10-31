@@ -1,3 +1,4 @@
+import { ThemeToggle } from '@/components/sigap/accessibility';
 import NotificationBell from '@/components/sigap/notification-bell';
 import {
     DropdownMenu,
@@ -116,7 +117,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
         <div className="flex h-full flex-col bg-[var(--adm-primary-deep)] text-[#c9d6e2]">
             <div className={cn('flex items-center gap-3 px-5 pt-5 pb-4', compact && 'justify-center px-3')}>
                 <Link href="/admin" className="flex min-w-0 items-center gap-3" onClick={onNavigate}>
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-[var(--adm-accent)] text-[var(--adm-primary-deep)]">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-[var(--adm-accent)] text-[var(--acd-heading,var(--adm-primary-deep))]">
                         <Headset className="h-5 w-5" aria-hidden="true" />
                     </span>
                     {!compact && (
@@ -160,7 +161,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                                         <Link
                                             href={`/admin/chat?tab=menunggu&conversation=${w.id}`}
                                             onClick={onNavigate}
-                                            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] text-[#c9d6e2] hover:bg-white/[0.06] hover:text-white"
+                                            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] text-[#c9d6e2] hover:bg-[var(--acd-surface,#fff)]/[0.06] hover:text-white"
                                         >
                                             <MessageCircle className="h-4 w-4 shrink-0 text-[var(--adm-accent)]" aria-hidden="true" />
                                             <span className="min-w-0 flex-1 truncate">
@@ -183,7 +184,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                     type="button"
                     onClick={() => router.post('/keluar')}
                     className={cn(
-                        'flex flex-1 items-center gap-3 rounded-lg px-2.5 py-2.5 text-[13.5px] font-medium text-[#f5a49c] hover:bg-white/[0.06]',
+                        'flex flex-1 items-center gap-3 rounded-lg px-2.5 py-2.5 text-[13.5px] font-medium text-[#f5a49c] hover:bg-[var(--acd-surface,#fff)]/[0.06]',
                         compact && 'w-full justify-center px-0',
                     )}
                     title={compact ? 'Keluar' : undefined}
@@ -195,7 +196,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                     <button
                         type="button"
                         onClick={toggleCollapsed}
-                        className="hidden h-9 w-9 items-center justify-center rounded-lg text-[#9fb2c3] hover:bg-white/10 hover:text-white md:flex"
+                        className="hidden h-9 w-9 items-center justify-center rounded-lg text-[#9fb2c3] hover:bg-[var(--acd-surface,#fff)]/10 hover:text-white md:flex"
                         aria-label="Ciutkan menu"
                         title="Ciutkan menu"
                     >
@@ -206,7 +207,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                     <button
                         type="button"
                         onClick={toggleCollapsed}
-                        className="hidden w-full items-center justify-center rounded-lg py-2.5 text-[#9fb2c3] hover:bg-white/10 hover:text-white md:flex"
+                        className="hidden w-full items-center justify-center rounded-lg py-2.5 text-[#9fb2c3] hover:bg-[var(--acd-surface,#fff)]/10 hover:text-white md:flex"
                         aria-label="Lebarkan menu"
                     >
                         <ChevronsRight className="h-4 w-4" />
@@ -250,7 +251,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                             <button
                                 type="button"
                                 onClick={() => setMobileOpen(false)}
-                                className="absolute top-5 right-3 z-10 rounded-lg p-1.5 text-[#9fb2c3] hover:bg-white/10"
+                                className="absolute top-5 right-3 z-10 rounded-lg p-1.5 text-[#9fb2c3] hover:bg-[var(--acd-surface,#fff)]/10"
                                 aria-label="Tutup menu"
                             >
                                 <X className="h-5 w-5" />
@@ -262,7 +263,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
 
                 <div className="flex min-w-0 flex-1 flex-col">
                     {/* Topbar: remah roti + notifikasi + akun */}
-                    <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-[var(--adm-border)] bg-white px-4 md:px-7 print:hidden">
+                    <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-[var(--adm-border)] bg-[var(--acd-surface,#fff)] px-4 md:px-7 print:hidden">
                         <button
                             type="button"
                             onClick={() => setMobileOpen(true)}
@@ -282,6 +283,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                         </nav>
 
                         <div className="ml-auto flex items-center gap-2 md:gap-3">
+                            <ThemeToggle tone="admin" />
                             <NotificationBell buttonClassName="relative flex h-9 w-9 items-center justify-center rounded-lg text-[var(--adm-text-3)] hover:bg-[var(--adm-surface-2)] hover:text-[var(--adm-text)]" />
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -380,7 +382,9 @@ function NavLink({
             title={compact ? item.label : undefined}
             className={cn(
                 'relative flex h-[38px] items-center gap-3 rounded-lg px-2.5 text-[13.5px] transition-colors',
-                active ? 'bg-white/[0.09] font-semibold text-white' : 'font-medium text-[#c9d6e2] hover:bg-white/[0.06] hover:text-white',
+                active
+                    ? 'bg-[var(--acd-surface,#fff)]/[0.09] font-semibold text-white'
+                    : 'font-medium text-[#c9d6e2] hover:bg-[var(--acd-surface,#fff)]/[0.06] hover:text-white',
                 compact && 'justify-center px-0',
             )}
         >
@@ -389,7 +393,7 @@ function NavLink({
             {count > 0 && (
                 <span
                     className={cn(
-                        'flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--adm-accent)] px-1.5 text-[11px] leading-none font-bold text-[var(--adm-primary-deep)]',
+                        'flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--adm-accent)] px-1.5 text-[11px] leading-none font-bold text-[var(--acd-heading,var(--adm-primary-deep))]',
                         compact && 'absolute -top-1 -right-1',
                     )}
                     aria-label={`${count} perlu ditindaklanjuti`}
@@ -427,7 +431,12 @@ export function AdminStat({
         indigo: 'text-[var(--adm-info)]',
     };
     return (
-        <div className={cn('rounded-xl border bg-white p-5', alert ? 'border-[#f4c7c2]' : 'border-[var(--adm-border)]')}>
+        <div
+            className={cn(
+                'rounded-xl border bg-[var(--acd-surface,#fff)] p-5',
+                alert ? 'border-[var(--acd-danger-border,#f4c7c2)]' : 'border-[var(--adm-border)]',
+            )}
+        >
             <p className="flex items-center gap-2 text-[13px] text-[var(--adm-text-2)]">
                 {Icon && <Icon className={cn('h-4 w-4 shrink-0', iconTones[tone])} aria-hidden="true" />}
                 {label}
@@ -455,8 +464,8 @@ function Pill({ tone, children }: { tone: 'danger' | 'warning' | 'info' | 'succe
         warning: 'bg-[var(--adm-warning-soft)] text-[var(--adm-warning)]',
         info: 'bg-[var(--adm-info-soft)] text-[var(--adm-info)]',
         success: 'bg-[var(--adm-success-soft)] text-[var(--adm-success)]',
-        neutral: 'bg-[#eef1f4] text-[var(--adm-text-2)]',
-        primary: 'bg-[var(--adm-primary-soft)] text-[var(--adm-primary)]',
+        neutral: 'bg-[var(--acd-muted,#eef1f4)] text-[var(--adm-text-2)]',
+        primary: 'bg-[var(--adm-primary-soft)] text-[var(--acd-link,var(--adm-primary))]',
     };
     return (
         <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap', styles[tone])}>

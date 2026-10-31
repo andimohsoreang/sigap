@@ -21,7 +21,7 @@ import { type A11yPrefs, DEFAULT_A11Y, resetA11y, setA11y, setTheme, type ThemeC
 import { cn } from '@/lib/utils';
 
 /** Tombol ☀️/🌙 di header: beralih terang ↔ gelap ("Ikuti sistem" ada di panel aksesibilitas). */
-export function ThemeToggle({ className }: { className?: string }) {
+export function ThemeToggle({ className, tone = 'tara' }: { className?: string; tone?: 'tara' | 'admin' }) {
     const { dark } = usePreferences();
 
     return (
@@ -32,7 +32,10 @@ export function ThemeToggle({ className }: { className?: string }) {
             aria-label="Mode gelap"
             title={dark ? 'Ganti ke mode terang' : 'Ganti ke mode gelap'}
             className={cn(
-                'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--tcd-border-strong,#d5dee6)] text-[var(--tcd-link,var(--t-navy))] transition-colors hover:bg-[var(--tcd-muted,#f2f5f8)]',
+                'flex shrink-0 items-center justify-center transition-colors',
+                tone === 'admin'
+                    ? 'h-9 w-9 rounded-lg text-[var(--adm-text-3)] hover:bg-[var(--adm-surface-2)] hover:text-[var(--adm-text)]'
+                    : 'h-10 w-10 rounded-full border border-[var(--tcd-border-strong,#d5dee6)] text-[var(--tcd-link,var(--t-navy))] hover:bg-[var(--tcd-muted,#f2f5f8)]',
                 className,
             )}
         >
