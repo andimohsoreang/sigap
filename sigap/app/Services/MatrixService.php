@@ -312,7 +312,7 @@ class MatrixService
         return $data
             ->sortByDesc('total')
             ->map(fn (array $metrics, string $province) => $province === ''
-                ? $this->row('', 'Tanpa provinsi', null, $metrics, 'kawasan')
+                ? $this->row('', 'Internal / tanpa provinsi', null, $metrics, 'kawasan')
                 : $this->row($province, $province, ['provinsi' => $province], $metrics, 'kawasan'))
             ->values()
             ->all();
@@ -403,7 +403,8 @@ class MatrixService
         return $byProvince
             ->map(fn (array $m, string $province) => [
                 'provinsi' => $province === '' ? null : $province,
-                'label' => $province === '' ? 'Tanpa provinsi' : $province,
+                // Tiket internal pegawai tidak berprovinsi.
+                'label' => $province === '' ? 'Internal / tanpa provinsi' : $province,
                 'total' => $m['total'],
                 'ews' => $m['ews'],
             ])
