@@ -874,51 +874,52 @@ function Faq() {
                     {FAQS.map((f, i) => {
                         const open = openIndex === i;
                         return (
-                            <div
-                                key={f.q}
-                                data-reveal
-                                style={delay(0.05 * i)}
-                                className={cn(
-                                    'rounded-[14px] border bg-[var(--tcd-surface,#fff)] transition-[border-color,box-shadow] duration-300',
-                                    open
-                                        ? 'border-[#c29642]/60 shadow-[0_10px_24px_rgba(59,42,18,0.06)]'
-                                        : 'border-[var(--tcd-border-warm,#ece3d9)] hover:border-[var(--tcd-border-warm,#dccfbf)]',
-                                )}
-                            >
-                                <h3>
-                                    <button
-                                        type="button"
-                                        id={`faq-tombol-${i}`}
-                                        aria-expanded={open}
-                                        aria-controls={`faq-isi-${i}`}
-                                        onClick={() => setOpenIndex(open ? null : i)}
-                                        className="font-heading flex w-full items-center gap-4 px-5 py-[18px] text-left text-base leading-[1.3] font-semibold text-[var(--tcd-heading,var(--t-deep))] sm:px-6 sm:py-5 sm:text-lg"
-                                    >
-                                        <span className="flex-1">{f.q}</span>
-                                        <span
-                                            className={cn(
-                                                'flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-[transform,background-color] duration-300',
-                                                open
-                                                    ? 'rotate-180 bg-[var(--tcd-cream,#f7efe2)] text-[var(--t-gold)]'
-                                                    : 'text-[var(--tcd-link,var(--t-navy))]',
-                                            )}
-                                            aria-hidden="true"
-                                        >
-                                            {open ? <Minus className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
-                                        </span>
-                                    </button>
-                                </h3>
+                            // data-reveal di pembungkus berkelas tetap: kelas is-in dipasang langsung
+                            // oleh observer dan akan terhapus bila className elemennya dirender ulang.
+                            <div key={f.q} data-reveal style={delay(0.05 * i)}>
                                 <div
-                                    id={`faq-isi-${i}`}
-                                    role="region"
-                                    aria-labelledby={`faq-tombol-${i}`}
-                                    className="transi-accordion"
-                                    data-open={open}
+                                    className={cn(
+                                        'rounded-[14px] border bg-[var(--tcd-surface,#fff)] transition-[border-color,box-shadow] duration-300',
+                                        open
+                                            ? 'border-[#c29642]/60 shadow-[0_10px_24px_rgba(59,42,18,0.06)]'
+                                            : 'border-[var(--tcd-border-warm,#ece3d9)] hover:border-[var(--tcd-border-warm,#dccfbf)]',
+                                    )}
                                 >
-                                    <div>
-                                        <p className="px-5 pb-5 text-[15px] leading-[1.6] text-[var(--tcd-text-2,#4a5a68)] sm:px-6 sm:text-base">
-                                            {f.a}
-                                        </p>
+                                    <h3>
+                                        <button
+                                            type="button"
+                                            id={`faq-tombol-${i}`}
+                                            aria-expanded={open}
+                                            aria-controls={`faq-isi-${i}`}
+                                            onClick={() => setOpenIndex(open ? null : i)}
+                                            className="font-heading flex w-full items-center gap-4 px-5 py-[18px] text-left text-base leading-[1.3] font-semibold text-[var(--tcd-heading,var(--t-deep))] sm:px-6 sm:py-5 sm:text-lg"
+                                        >
+                                            <span className="flex-1">{f.q}</span>
+                                            <span
+                                                className={cn(
+                                                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-[transform,background-color] duration-300',
+                                                    open
+                                                        ? 'rotate-180 bg-[var(--tcd-cream,#f7efe2)] text-[var(--t-gold)]'
+                                                        : 'text-[var(--tcd-link,var(--t-navy))]',
+                                                )}
+                                                aria-hidden="true"
+                                            >
+                                                {open ? <Minus className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+                                            </span>
+                                        </button>
+                                    </h3>
+                                    <div
+                                        id={`faq-isi-${i}`}
+                                        role="region"
+                                        aria-labelledby={`faq-tombol-${i}`}
+                                        className="transi-accordion"
+                                        data-open={open}
+                                    >
+                                        <div>
+                                            <p className="px-5 pb-5 text-[15px] leading-[1.6] text-[var(--tcd-text-2,#4a5a68)] sm:px-6 sm:text-base">
+                                                {f.a}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
