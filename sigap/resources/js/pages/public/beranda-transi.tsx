@@ -31,6 +31,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 
 import KanalResmi, { type KanalPublik } from '@/components/sigap/kanal-resmi';
 import { type Kantor } from '@/components/sigap/kantor-direktori';
+import Program5T from '@/components/sigap/program-5t';
 import { TaraFooter, TaraLauncher } from '@/components/sigap/tara-shell';
 import TransiHeader from '@/components/sigap/transi-header';
 import { goToChat } from '@/lib/chat-transition';
@@ -244,6 +245,7 @@ export default function BerandaTransi({ kanal, kantor, beritaSemua }: { kanal: K
                     <Trust />
                     <Berita all={beritaSemua} />
                     <KanalResmi kanal={kanal} kantor={kantor} />
+                    <Program5T />
                     <Faq />
                 </main>
                 <TaraFooter />
