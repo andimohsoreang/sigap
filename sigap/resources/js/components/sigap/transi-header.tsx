@@ -27,7 +27,8 @@ export default function TransiHeader({
     loggedIn: boolean;
     isAdmin: boolean;
     onChat: () => void;
-    active?: TaraNav;
+    /** Menu yang disorot; null = tidak ada (mis. halaman Masuk). */
+    active?: TaraNav | null;
     className?: string;
 }) {
     const [open, setOpen] = useState(false);

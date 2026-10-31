@@ -15,6 +15,20 @@ import { type SharedData } from '@/types';
 
 export const TARA_IMG = '/images/tara';
 
+/** Huruf halaman bergaya TARA (Space Grotesk, Jost, JetBrains Mono). */
+export function TaraFonts() {
+    return (
+        <>
+            <link rel="preconnect" href="https://fonts.bunny.net" />
+            <link
+                rel="stylesheet"
+                href="https://fonts.bunny.net/css?family=space-grotesk:500,600,700|jost:400,500,600|jetbrains-mono:500,600"
+                head-key="transi-fonts"
+            />
+        </>
+    );
+}
+
 export type TaraPose = 'menyapa' | 'mendengarkan' | 'menunjuk' | 'menjelaskan' | 'tablet' | 'jempol' | 'terima-kasih' | 'menyambut';
 
 /** Rasio lebar:tinggi tiap pose (tinggi berkas 900 px). */
@@ -230,12 +244,7 @@ export default function TaraPage({
     return (
         <>
             <Head title={`${title} — Contact Center`}>
-                <link rel="preconnect" href="https://fonts.bunny.net" />
-                <link
-                    rel="stylesheet"
-                    href="https://fonts.bunny.net/css?family=space-grotesk:500,600,700|jost:400,500,600|jetbrains-mono:500,600"
-                    head-key="transi-fonts"
-                />
+                <TaraFonts />
                 {description && <meta name="description" content={description} />}
             </Head>
 
