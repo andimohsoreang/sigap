@@ -38,7 +38,7 @@ function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTableCell
     return (
         <th
             className={cn(
-                'h-11 px-5 text-left align-middle text-[12.5px] font-semibold whitespace-nowrap text-[var(--acd-text-2,#4a5868)] [&:has([role=checkbox])]:pr-0',
+                'h-11 px-4 text-left align-middle text-[12.5px] font-semibold whitespace-nowrap text-[var(--acd-text-2,#4a5868)] [&:has([role=checkbox])]:pr-0',
                 className,
             )}
             {...props}
@@ -47,7 +47,7 @@ function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTableCell
 }
 
 function TableCell({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
-    return <td className={cn('px-5 py-3.5 align-middle whitespace-nowrap', className)} {...props} />;
+    return <td className={cn('px-4 py-3.5 align-middle whitespace-nowrap', className)} {...props} />;
 }
 
 function TableCaption({ className, ...props }: React.HTMLAttributes<HTMLTableCaptionElement>) {

@@ -50,6 +50,8 @@ interface AdminLayoutProps {
 }
 
 interface NavEntry {
+    /** Kelompok menu di sidebar. */
+    group: NavGroup;
     label: string;
     href: string;
     icon: LucideIcon;
@@ -61,21 +63,31 @@ interface NavEntry {
  * Menu panel admin (Admin v2). Urutan mengikuti desain; Rujukan, Basis
  * Pengetahuan, dan Katalog Portal disisipkan di dekat menu yang berkaitan.
  */
+type NavGroup = 'kerja' | 'pengetahuan' | 'konfigurasi' | 'admin';
+
+/** Urutan & judul kelompok: kerja harian di atas, pengaturan di bawah. */
+const GROUPS: { key: NavGroup; label: string }[] = [
+    { key: 'kerja', label: 'Kerja harian' },
+    { key: 'pengetahuan', label: 'Pengetahuan & wilayah' },
+    { key: 'konfigurasi', label: 'Konfigurasi' },
+    { key: 'admin', label: 'Administrasi' },
+];
+
 const NAV: NavEntry[] = [
-    { label: 'Matriks Rekapan', href: '/admin/matriks', icon: LayoutGrid, match: '/admin/matriks' },
-    { label: 'Manajemen Tiket', href: '/admin/tiket', icon: Ticket, match: '/admin/tiket' },
-    { label: 'Tiket Internal', href: '/admin/tiket-internal', icon: Building2, match: '/admin/tiket-internal', superAdminOnly: true },
-    { label: 'Input Manual', href: '/admin/input-manual', icon: FilePenLine, match: '/admin/input-manual' },
-    { label: 'Pesan Masuk', href: '/admin/chat', icon: MessagesSquare, match: '/admin/chat' },
-    { label: 'Rujukan', href: '/admin/rujukan', icon: Waypoints, match: '/admin/rujukan' },
-    { label: 'Basis Pengetahuan', href: '/admin/pengetahuan', icon: Library, match: '/admin/pengetahuan' },
-    { label: 'Daftar Admin', href: '/admin/petugas', icon: Users, match: '/admin/petugas', superAdminOnly: true },
-    { label: 'Log Aktivitas', href: '/admin/log-aktivitas', icon: ScrollText, match: '/admin/log-aktivitas', superAdminOnly: true },
-    { label: 'Sebaran Wilayah', href: '/admin/kawasan', icon: Map, match: '/admin/kawasan' },
-    { label: 'Manajemen Kanal', href: '/admin/kanal', icon: RadioTower, match: '/admin/kanal' },
-    { label: 'Katalog Portal', href: '/admin/portal', icon: Globe, match: '/admin/portal' },
-    { label: 'Pengaturan', href: '/admin/pengaturan', icon: Settings, match: '/admin/pengaturan' },
-    { label: 'Panduan Layanan', href: '/panduan', icon: BookOpen, match: '/panduan' },
+    { group: 'kerja', label: 'Matriks Rekapan', href: '/admin/matriks', icon: LayoutGrid, match: '/admin/matriks' },
+    { group: 'kerja', label: 'Manajemen Tiket', href: '/admin/tiket', icon: Ticket, match: '/admin/tiket' },
+    { group: 'kerja', label: 'Pesan Masuk', href: '/admin/chat', icon: MessagesSquare, match: '/admin/chat' },
+    { group: 'kerja', label: 'Rujukan', href: '/admin/rujukan', icon: Waypoints, match: '/admin/rujukan' },
+    { group: 'kerja', label: 'Input Manual', href: '/admin/input-manual', icon: FilePenLine, match: '/admin/input-manual' },
+    { group: 'kerja', label: 'Tiket Internal', href: '/admin/tiket-internal', icon: Building2, match: '/admin/tiket-internal', superAdminOnly: true },
+    { group: 'pengetahuan', label: 'Basis Pengetahuan', href: '/admin/pengetahuan', icon: Library, match: '/admin/pengetahuan' },
+    { group: 'pengetahuan', label: 'Sebaran Wilayah', href: '/admin/kawasan', icon: Map, match: '/admin/kawasan' },
+    { group: 'pengetahuan', label: 'Panduan Layanan', href: '/panduan', icon: BookOpen, match: '/panduan' },
+    { group: 'konfigurasi', label: 'Manajemen Kanal', href: '/admin/kanal', icon: RadioTower, match: '/admin/kanal' },
+    { group: 'konfigurasi', label: 'Katalog Portal', href: '/admin/portal', icon: Globe, match: '/admin/portal' },
+    { group: 'konfigurasi', label: 'Pengaturan', href: '/admin/pengaturan', icon: Settings, match: '/admin/pengaturan' },
+    { group: 'admin', label: 'Daftar Admin', href: '/admin/petugas', icon: Users, match: '/admin/petugas', superAdminOnly: true },
+    { group: 'admin', label: 'Log Aktivitas', href: '/admin/log-aktivitas', icon: ScrollText, match: '/admin/log-aktivitas', superAdminOnly: true },
 ];
 
 const COLLAPSE_KEY = 'sigap-admin-sidebar';
@@ -132,24 +144,32 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
             </div>
 
             <nav className={cn('flex-1 overflow-y-auto pb-4', compact ? 'px-2.5' : 'px-3.5')} aria-label="Menu admin">
-                {!compact && (
-                    <p className="px-2.5 pt-1 pb-2 text-[10.5px] font-semibold tracking-[0.12em] text-[#7f97ab] uppercase">
-                        Panel Kontrol Contact Center
-                    </p>
-                )}
-                <ul className="space-y-0.5">
-                    {nav.map((item) => (
-                        <li key={item.href}>
-                            <NavLink
-                                item={item}
-                                active={isActive(item.match)}
-                                compact={compact}
-                                onNavigate={onNavigate}
-                                count={item.href === '/admin/chat' ? chatUnread : item.href === '/admin/rujukan' ? (rujukanPerlu ?? 0) : 0}
-                            />
-                        </li>
-                    ))}
-                </ul>
+                {GROUPS.map((g) => {
+                    const items = nav.filter((n) => n.group === g.key);
+                    if (items.length === 0) return null;
+                    return (
+                        <div key={g.key} className={cn(g.key !== 'kerja' && (compact ? 'mt-3 border-t border-white/10 pt-3' : 'mt-5'))}>
+                            {!compact && (
+                                <p className="px-2.5 pb-1.5 text-[10.5px] font-semibold tracking-[0.12em] text-[#7f97ab] uppercase">{g.label}</p>
+                            )}
+                            <ul className="space-y-0.5">
+                                {items.map((item) => (
+                                    <li key={item.href}>
+                                        <NavLink
+                                            item={item}
+                                            active={isActive(item.match)}
+                                            compact={compact}
+                                            onNavigate={onNavigate}
+                                            count={
+                                                item.href === '/admin/chat' ? chatUnread : item.href === '/admin/rujukan' ? (rujukanPerlu ?? 0) : 0
+                                            }
+                                        />
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    );
+                })}
 
                 {!compact && (
                     <div className="mt-6">
@@ -161,7 +181,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                                         <Link
                                             href={`/admin/chat?tab=menunggu&conversation=${w.id}`}
                                             onClick={onNavigate}
-                                            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] text-[#c9d6e2] hover:bg-[var(--acd-surface,#fff)]/[0.06] hover:text-white"
+                                            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] text-[#c9d6e2] hover:bg-white/[0.06] hover:text-white"
                                         >
                                             <MessageCircle className="h-4 w-4 shrink-0 text-[var(--adm-accent)]" aria-hidden="true" />
                                             <span className="min-w-0 flex-1 truncate">
@@ -184,7 +204,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                     type="button"
                     onClick={() => router.post('/keluar')}
                     className={cn(
-                        'flex flex-1 items-center gap-3 rounded-lg px-2.5 py-2.5 text-[13.5px] font-medium text-[#f5a49c] hover:bg-[var(--acd-surface,#fff)]/[0.06]',
+                        'flex flex-1 items-center gap-3 rounded-lg px-2.5 py-2.5 text-[13.5px] font-medium text-[#f5a49c] hover:bg-white/[0.06]',
                         compact && 'w-full justify-center px-0',
                     )}
                     title={compact ? 'Keluar' : undefined}
@@ -196,7 +216,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                     <button
                         type="button"
                         onClick={toggleCollapsed}
-                        className="hidden h-9 w-9 items-center justify-center rounded-lg text-[#9fb2c3] hover:bg-[var(--acd-surface,#fff)]/10 hover:text-white md:flex"
+                        className="hidden h-9 w-9 items-center justify-center rounded-lg text-[#9fb2c3] hover:bg-white/10 hover:text-white md:flex"
                         aria-label="Ciutkan menu"
                         title="Ciutkan menu"
                     >
@@ -207,7 +227,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                     <button
                         type="button"
                         onClick={toggleCollapsed}
-                        className="hidden w-full items-center justify-center rounded-lg py-2.5 text-[#9fb2c3] hover:bg-[var(--acd-surface,#fff)]/10 hover:text-white md:flex"
+                        className="hidden w-full items-center justify-center rounded-lg py-2.5 text-[#9fb2c3] hover:bg-white/10 hover:text-white md:flex"
                         aria-label="Lebarkan menu"
                     >
                         <ChevronsRight className="h-4 w-4" />
@@ -251,7 +271,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                             <button
                                 type="button"
                                 onClick={() => setMobileOpen(false)}
-                                className="absolute top-5 right-3 z-10 rounded-lg p-1.5 text-[#9fb2c3] hover:bg-[var(--acd-surface,#fff)]/10"
+                                className="absolute top-5 right-3 z-10 rounded-lg p-1.5 text-[#9fb2c3] hover:bg-white/10"
                                 aria-label="Tutup menu"
                             >
                                 <X className="h-5 w-5" />
@@ -325,7 +345,8 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                     <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8 print:p-0">
                         {/* Judul halaman */}
                         <div className="mb-6 flex flex-wrap items-start gap-x-4 gap-y-3">
-                            <div className="min-w-0 flex-1">
+                            {/* Ponsel: judul selebar layar, aksi turun ke baris berikutnya. */}
+                            <div className="min-w-0 basis-full sm:flex-1 sm:basis-0">
                                 <div className="flex flex-wrap items-center gap-2.5">
                                     <h1 className="text-2xl font-bold text-[var(--adm-text)] md:text-[32px] md:leading-tight">{title}</h1>
                                     {badge && (
@@ -334,7 +355,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                                         </span>
                                     )}
                                 </div>
-                                {subtitle && <p className="mt-1 text-sm text-[var(--adm-text-2)]">{subtitle}</p>}
+                                {subtitle && <p className="mt-1 max-w-[72ch] text-sm text-[var(--adm-text-2)]">{subtitle}</p>}
                             </div>
                             {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
                         </div>
@@ -382,9 +403,7 @@ function NavLink({
             title={compact ? item.label : undefined}
             className={cn(
                 'relative flex h-[38px] items-center gap-3 rounded-lg px-2.5 text-[13.5px] transition-colors',
-                active
-                    ? 'bg-[var(--acd-surface,#fff)]/[0.09] font-semibold text-white'
-                    : 'font-medium text-[#c9d6e2] hover:bg-[var(--acd-surface,#fff)]/[0.06] hover:text-white',
+                active ? 'bg-white/[0.09] font-semibold text-white' : 'font-medium text-[#c9d6e2] hover:bg-white/[0.06] hover:text-white',
                 compact && 'justify-center px-0',
             )}
         >

@@ -4,7 +4,7 @@ import type { LegacyColumnDef } from '@tanstack/react-table/legacy';
 import { getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useLegacyTable } from '@tanstack/react-table/legacy';
 import type { ColumnFiltersState, ColumnVisibilityState, SortingState } from '@tanstack/table-core';
 import { ArrowDown, ArrowUp, ChevronsUpDown, Columns3, Search, X } from 'lucide-react';
-import { type ReactNode, useState } from 'react';
+import { Fragment, type ReactNode, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -32,6 +32,8 @@ export interface DataTableColumnMeta {
     disableSorting?: boolean;
     /** Kelas Tailwind untuk th/td. */
     className?: string;
+    /** Tampilan kartu ponsel: 'title' = judul kartu, 'hide' = tidak ditampilkan, 'end' = di kaki kartu (aksi). */
+    mobile?: 'title' | 'hide' | 'end';
 }
 
 export type DataTableColumn<T extends object> = LegacyColumnDef<T> & { meta?: DataTableColumnMeta };
@@ -253,7 +255,8 @@ export function DataTable<T extends object>({
                     {toolbarActions}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-9">
+                            {/* Pilihan kolom tidak relevan di tampilan kartu ponsel. */}
+                            <Button variant="outline" size="sm" className="hidden h-9 md:inline-flex">
                                 <Columns3 className="h-4 w-4" /> Kolom
                             </Button>
                         </DropdownMenuTrigger>
@@ -279,7 +282,50 @@ export function DataTable<T extends object>({
                 </div>
             </div>
 
-            <Table>
+            {/* Ponsel: tiap baris jadi kartu label–nilai (tabel lebar terpotong di layar sempit). */}
+            <ul className="divide-y divide-[var(--acd-border,#e3e8ee)] md:hidden">
+                {table.getRowModel().rows.length === 0 ? (
+                    <li className="px-4 py-10 text-center text-sm text-[var(--acd-text-3,#667382)]">{emptyMessage}</li>
+                ) : (
+                    table.getRowModel().rows.map((row) => {
+                        const cells = row.getVisibleCells();
+                        const metaOf = (c: (typeof cells)[number]) => c.column.columnDef.meta as DataTableColumnMeta | undefined;
+                        const title = cells.find((c) => metaOf(c)?.mobile === 'title') ?? cells[0];
+                        const end = cells.filter((c) => metaOf(c)?.mobile === 'end');
+                        const body = cells.filter((c) => c !== title && !end.includes(c) && metaOf(c)?.mobile !== 'hide');
+                        const label = (c: (typeof cells)[number]) =>
+                            metaOf(c)?.label ?? (typeof c.column.columnDef.header === 'string' ? c.column.columnDef.header : '');
+                        return (
+                            <li key={row.id} className={cn('flex flex-col gap-2.5 px-4 py-3.5', rowClassName?.(row.original))}>
+                                <div className="min-w-0 text-[var(--acd-text,#17232f)]">
+                                    {flexRender(title.column.columnDef.cell, title.getContext())}
+                                </div>
+                                {body.length > 0 && (
+                                    <dl className="grid grid-cols-[minmax(84px,auto)_1fr] gap-x-3 gap-y-1.5 text-sm">
+                                        {body.map((c) => (
+                                            <Fragment key={c.id}>
+                                                <dt className="text-xs leading-6 text-[var(--acd-text-3,#667382)]">{label(c)}</dt>
+                                                <dd className="min-w-0 text-[var(--acd-text,#17232f)]">
+                                                    {flexRender(c.column.columnDef.cell, c.getContext())}
+                                                </dd>
+                                            </Fragment>
+                                        ))}
+                                    </dl>
+                                )}
+                                {end.length > 0 && (
+                                    <div className="flex justify-end gap-2">
+                                        {end.map((c) => (
+                                            <Fragment key={c.id}>{flexRender(c.column.columnDef.cell, c.getContext())}</Fragment>
+                                        ))}
+                                    </div>
+                                )}
+                            </li>
+                        );
+                    })
+                )}
+            </ul>
+
+            <Table className="hidden md:table">
                 <TableHeader className="bg-[var(--acd-muted,#f8fafc)]">
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow key={headerGroup.id} className="hover:bg-transparent">
