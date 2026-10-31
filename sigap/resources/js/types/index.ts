@@ -27,6 +27,7 @@ export interface SharedData {
     auth: Auth;
     app?: {
         brand: string;
+        tagline: string;
         ministry: string;
     };
     /** reCAPTCHA v3 — site_key null = nonaktif (lokal). */
