@@ -288,7 +288,7 @@ export default function Chat({
             {kpi && (
                 <div
                     className={cn(
-                        'mb-4 grid-cols-3 divide-x divide-gray-200 rounded-xl border border-gray-200 bg-white',
+                        'mb-4 grid-cols-3 divide-x divide-gray-200 rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)]',
                         mobileThread && active ? 'hidden lg:grid' : 'grid',
                     )}
                 >
@@ -303,7 +303,7 @@ export default function Chat({
                 <section
                     aria-label="Daftar percakapan"
                     className={cn(
-                        'flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white lg:h-[calc(100vh-15rem)] lg:min-h-[560px]',
+                        'flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)] lg:h-[calc(100vh-15rem)] lg:min-h-[560px]',
                         mobileThread && active ? 'hidden lg:flex' : 'flex',
                     )}
                 >
@@ -319,7 +319,9 @@ export default function Chat({
                                         onClick={() => switchTab(t.value)}
                                         className={cn(
                                             'flex flex-col items-center rounded-md px-1 py-1.5 text-xs font-medium transition-colors',
-                                            tab === t.value ? 'text-primary bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900',
+                                            tab === t.value
+                                                ? 'text-primary bg-[var(--acd-surface,#fff)] shadow-sm'
+                                                : 'text-gray-600 hover:text-gray-900',
                                         )}
                                     >
                                         <span className="text-sm font-semibold tabular-nums">{tabCounts[t.value] ?? 0}</span>
@@ -383,7 +385,7 @@ export default function Chat({
                                                 {c.butuh_dihubungi && <Tag tone="sky">Minta dihubungi</Tag>}
                                                 {c.hasil && <Tag tone="green">{c.hasil}</Tag>}
                                                 {c.unread > 0 && (
-                                                    <span className="ml-auto rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-semibold text-white">
+                                                    <span className="ml-auto rounded-full bg-[oklch(0.577_0.245_27.325)] px-2 py-0.5 text-[11px] font-semibold text-white">
                                                         {c.unread}
                                                     </span>
                                                 )}
@@ -409,7 +411,7 @@ export default function Chat({
                     ) : (
                         <>
                             {/* Kartu konteks */}
-                            <div className="shrink-0 rounded-xl border border-gray-200 bg-white">
+                            <div className="shrink-0 rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)]">
                                 <div className="flex items-center gap-3 p-4">
                                     <button
                                         type="button"
@@ -618,7 +620,7 @@ export default function Chat({
                                                             type="button"
                                                             disabled={!p.tersedia}
                                                             onClick={() => refer(p.kode)}
-                                                            className="hover:border-primary rounded-lg border border-gray-300 bg-white p-3 text-left disabled:cursor-not-allowed disabled:opacity-50"
+                                                            className="hover:border-primary rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] p-3 text-left disabled:cursor-not-allowed disabled:opacity-50"
                                                         >
                                                             <span className="text-primary block text-sm font-semibold">{p.nama}</span>
                                                             <span className="line-clamp-2 text-xs text-gray-600">
@@ -643,7 +645,7 @@ export default function Chat({
                             </div>
 
                             {/* Pesan */}
-                            <div className="min-h-[360px] flex-1 overflow-y-auto rounded-xl border border-gray-200 bg-white p-4 md:p-6">
+                            <div className="min-h-[360px] flex-1 overflow-y-auto rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)] p-4 md:p-6">
                                 {active.mode === 'ai' && !closed && (
                                     <p className="mb-5 rounded-lg bg-violet-50 px-4 py-2.5 text-sm text-violet-900">
                                         Sedang dijawab asisten AI. Membalas atau mengambil percakapan akan menghentikan AI.
@@ -659,7 +661,7 @@ export default function Chat({
 
                             {/* Kolom tulis */}
                             {closed ? (
-                                <p className="shrink-0 rounded-xl border border-gray-200 bg-white px-4 py-3 text-center text-sm text-gray-600">
+                                <p className="shrink-0 rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)] px-4 py-3 text-center text-sm text-gray-600">
                                     Percakapan ditutup. Akan terbuka lagi bila warga menulis pesan baru.
                                 </p>
                             ) : (
@@ -673,7 +675,7 @@ export default function Chat({
                                         onChange={(e) => reply.setData('body', e.target.value)}
                                         placeholder={`Tulis balasan untuk ${active.nama}…`}
                                         autoComplete="off"
-                                        className="focus:border-primary focus:ring-primary/20 h-12 min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-4 text-[15px] outline-none focus:ring-2"
+                                        className="focus:border-primary focus:ring-primary/20 h-12 min-w-0 flex-1 rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-4 text-[15px] outline-none focus:ring-2"
                                     />
                                     <button
                                         type="submit"
@@ -748,7 +750,7 @@ function TicketPanel({ conversationId, options, onCancel }: { conversationId: nu
         suggestion && id !== '' && String(suggestion[field] ?? '') === id ? (
             <span className="ml-1.5 rounded bg-violet-50 px-1.5 py-0.5 text-[11px] font-medium text-violet-800">Saran</span>
         ) : null;
-    const selectClass = 'focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none';
+    const selectClass = 'focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 text-sm outline-none';
 
     if (loading) {
         return <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">Asisten menyiapkan isian tiket…</div>;
@@ -829,7 +831,7 @@ function TicketPanel({ conversationId, options, onCancel }: { conversationId: nu
                                 'rounded-lg border px-2 py-1.5 text-left text-sm',
                                 form.data.impact === d.value
                                     ? 'border-primary bg-primary/5 text-primary'
-                                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400',
+                                    : 'border-gray-300 bg-[var(--acd-surface,#fff)] text-gray-700 hover:border-gray-400',
                             )}
                         >
                             <span className="block font-medium">{d.label}</span>
@@ -854,7 +856,7 @@ function TicketPanel({ conversationId, options, onCancel }: { conversationId: nu
                         rows={6}
                         value={form.data.uraian}
                         onChange={(e) => form.setData('uraian', e.target.value)}
-                        className="focus:border-primary mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none"
+                        className="focus:border-primary mt-2 w-full rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 py-2 text-sm outline-none"
                     />
                 )}
                 {form.errors.uraian && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.uraian}</p>}
@@ -920,7 +922,7 @@ function AccountStrip({
         e.preventDefault();
         form.post(`/admin/chat/${conversationId}/akun`, { preserveScroll: true, onSuccess: () => onMode(null) });
     };
-    const inputClass = 'focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none';
+    const inputClass = 'focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 text-sm outline-none';
 
     if (account) {
         const recovery = account.jenis === 'pemulihan';
@@ -956,7 +958,7 @@ function AccountStrip({
                 <button
                     type="button"
                     onClick={resend}
-                    className="h-9 shrink-0 rounded-lg border border-amber-300 bg-white px-3 text-sm font-medium text-amber-900 hover:border-amber-500"
+                    className="h-9 shrink-0 rounded-lg border border-amber-300 bg-[var(--acd-surface,#fff)] px-3 text-sm font-medium text-amber-900 hover:border-amber-500"
                 >
                     {expired ? 'Kirim tautan baru' : 'Kirim ulang tautan'}
                 </button>
@@ -976,14 +978,14 @@ function AccountStrip({
                     <button
                         type="button"
                         onClick={() => onMode('pulihkan')}
-                        className="hover:border-primary hover:text-primary flex h-9 shrink-0 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 font-medium text-gray-800"
+                        className="hover:border-primary hover:text-primary flex h-9 shrink-0 items-center gap-2 rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 font-medium text-gray-800"
                     >
                         <KeyRound className="h-4 w-4" aria-hidden="true" /> Lupa kata sandi
                     </button>
                     <button
                         type="button"
                         onClick={() => onMode('daftar')}
-                        className="hover:border-primary hover:text-primary flex h-9 shrink-0 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 font-medium text-gray-800"
+                        className="hover:border-primary hover:text-primary flex h-9 shrink-0 items-center gap-2 rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 font-medium text-gray-800"
                     >
                         <UserPlus className="h-4 w-4" aria-hidden="true" /> Daftarkan akun
                     </button>
@@ -1091,7 +1093,7 @@ function AccountStrip({
 function RecoverForm({ conversationId, defaultContact, onDone }: { conversationId: number; defaultContact: string; onDone: () => void }) {
     const form = useForm({ nik: '', telepon: defaultContact, catatan: '', konfirmasi: false as boolean });
     const needsNote = Boolean(form.errors.catatan) || form.data.catatan !== '';
-    const inputClass = 'focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none';
+    const inputClass = 'focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 text-sm outline-none';
     const submit = (e: FormEvent) => {
         e.preventDefault();
         form.post(`/admin/chat/${conversationId}/akun/pulihkan`, { preserveScroll: true, onSuccess: onDone });
@@ -1146,7 +1148,7 @@ function RecoverForm({ conversationId, defaultContact, onDone }: { conversationI
                         value={form.data.catatan}
                         onChange={(e) => form.setData('catatan', e.target.value)}
                         placeholder="Mis. warga datang ke kantor kawasan membawa KTP asli"
-                        className="focus:border-primary w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none"
+                        className="focus:border-primary w-full rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 py-2 text-sm outline-none"
                     />
                     <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.catatan}</p>
                 </div>
@@ -1184,7 +1186,7 @@ function RecoverForm({ conversationId, defaultContact, onDone }: { conversationI
 function DataConfirmStrip({ conversationId, defaultName, verifiedAt }: { conversationId: number; defaultName: string; verifiedAt: string | null }) {
     const [open, setOpen] = useState(false);
     const form = useForm({ nama: defaultName === 'Tamu' ? '' : defaultName, nik: '', lokasi: '', kategori: '', pengantar: '' });
-    const inputClass = 'focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none';
+    const inputClass = 'focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 text-sm outline-none';
     const submit = (e: FormEvent) => {
         e.preventDefault();
         form.post(`/admin/chat/${conversationId}/konfirmasi-data`, { preserveScroll: true, onSuccess: () => setOpen(false) });
@@ -1206,7 +1208,7 @@ function DataConfirmStrip({ conversationId, defaultName, verifiedAt }: { convers
                 <button
                     type="button"
                     onClick={() => setOpen(true)}
-                    className="hover:border-primary hover:text-primary flex h-9 shrink-0 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 font-medium text-gray-800"
+                    className="hover:border-primary hover:text-primary flex h-9 shrink-0 items-center gap-2 rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 font-medium text-gray-800"
                 >
                     <ClipboardCheck className="h-4 w-4" aria-hidden="true" /> {verifiedAt ? 'Kirim ulang konfirmasi' : 'Minta konfirmasi data'}
                 </button>
@@ -1289,7 +1291,7 @@ function MessageItem({ message: m, participant, initial }: { message: Message; p
     return (
         <li className="flex gap-3">
             {fromAi ? (
-                <span className="border-primary/20 text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-white">
+                <span className="border-primary/20 text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-[var(--acd-surface,#fff)]">
                     <Bot className="h-5 w-5" aria-hidden="true" />
                 </span>
             ) : (
@@ -1304,14 +1306,14 @@ function MessageItem({ message: m, participant, initial }: { message: Message; p
                 <div
                     className={cn(
                         'rounded-xl px-4 py-3 text-[15px] leading-relaxed break-words whitespace-pre-wrap',
-                        fromStaff ? 'bg-primary text-white' : 'border border-gray-200 bg-white text-gray-800',
+                        fromStaff ? 'bg-primary text-white' : 'border border-gray-200 bg-[var(--acd-surface,#fff)] text-gray-800',
                         fromAi && 'bg-gray-50',
                     )}
                 >
                     {m.konfirmasi ? (
                         <span className="block whitespace-normal">
                             <span className="block">{m.konfirmasi.pengantar}</span>
-                            <span className="mt-2 grid gap-1 rounded-lg bg-white/10 p-2.5 text-sm">
+                            <span className="mt-2 grid gap-1 rounded-lg bg-[var(--acd-surface,#fff)]/10 p-2.5 text-sm">
                                 {m.konfirmasi.data.map((d) => (
                                     <span key={d.label}>
                                         <span className="opacity-75">{d.label}:</span> {d.nilai}
@@ -1325,7 +1327,7 @@ function MessageItem({ message: m, participant, initial }: { message: Message; p
                                         ? 'bg-emerald-100 text-emerald-800'
                                         : m.konfirmasi.status === 'ubah'
                                           ? 'bg-amber-100 text-amber-900'
-                                          : 'bg-white/20 text-white',
+                                          : 'bg-[var(--acd-surface,#fff)]/20 text-white',
                                 )}
                             >
                                 {m.konfirmasi.status === 'benar'
@@ -1408,7 +1410,7 @@ function MessageItem({ message: m, participant, initial }: { message: Message; p
 function EmptyState({ counts, aiEnabled, onPick }: { counts?: Record<Tab, number>; aiEnabled: boolean; onPick: (t: Tab) => void }) {
     if (!aiEnabled || !counts) {
         return (
-            <div className="flex flex-1 items-center justify-center rounded-xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
+            <div className="flex flex-1 items-center justify-center rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)] p-10 text-center text-sm text-gray-500">
                 <span>
                     <MessageCircleQuestion className="mx-auto mb-3 h-8 w-8 text-gray-400" aria-hidden="true" />
                     Pilih percakapan untuk membalas.
@@ -1424,7 +1426,7 @@ function EmptyState({ counts, aiEnabled, onPick }: { counts?: Record<Tab, number
                     key={t.value}
                     type="button"
                     onClick={() => onPick(t.value)}
-                    className="hover:border-primary flex flex-col items-center rounded-xl border border-gray-200 bg-white p-6 text-center transition-colors"
+                    className="hover:border-primary flex flex-col items-center rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)] p-6 text-center transition-colors"
                 >
                     <span className="text-primary mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-gray-200">
                         <t.icon className="h-5 w-5" aria-hidden="true" />
@@ -1455,7 +1457,7 @@ function ActionButton({
         'flex h-11 items-center justify-center gap-1.5 rounded-lg border px-2 text-[13px] font-medium transition-colors sm:gap-2 sm:px-3 sm:text-sm',
         primary
             ? 'bg-primary border-primary hover:bg-primary/90 text-white'
-            : 'hover:border-primary hover:text-primary border-gray-300 bg-white text-gray-800',
+            : 'hover:border-primary hover:text-primary border-gray-300 bg-[var(--acd-surface,#fff)] text-gray-800',
     );
     const content = (
         <>

@@ -176,7 +176,7 @@ type PaginationMeta = { total: number; current_page: number; last_page: number; 
 const TONE: Record<StatusKey, string> = {
     baru: 'var(--adm-warning)',
     verifikasi: 'var(--adm-info)',
-    diproses: 'var(--adm-primary)',
+    diproses: 'var(--acd-link, var(--adm-primary))',
     selesai: 'var(--adm-success)',
     ditolak: 'var(--adm-danger)',
 };
@@ -356,7 +356,7 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
             actions={
                 <div className="flex flex-wrap items-center gap-2 print:hidden">
                     <Select value={periode.value} onValueChange={(v) => visit({ periode: v })}>
-                        <SelectTrigger className="h-10 w-auto min-w-[168px] gap-2 bg-white font-medium" aria-label="Periode">
+                        <SelectTrigger className="h-10 w-auto min-w-[168px] gap-2 bg-[var(--acd-surface,#fff)] font-medium" aria-label="Periode">
                             <CalendarDays className="h-4 w-4 shrink-0 text-[var(--adm-text-2)]" aria-hidden="true" />
                             <SelectValue />
                         </SelectTrigger>
@@ -370,13 +370,13 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
                         </SelectContent>
                     </Select>
                     {region_locked ? (
-                        <span className="flex h-10 items-center gap-2 rounded-md border border-[var(--adm-border-strong)] bg-white px-3 text-sm font-medium">
+                        <span className="flex h-10 items-center gap-2 rounded-md border border-[var(--adm-border-strong)] bg-[var(--acd-surface,#fff)] px-3 text-sm font-medium">
                             <MapPin className="h-4 w-4 text-[var(--adm-text-2)]" aria-hidden="true" />
                             {regionName}
                         </span>
                     ) : (
                         <Select value={filters.region_id || 'all'} onValueChange={(v) => visit({ region_id: v === 'all' ? '' : v })}>
-                            <SelectTrigger className="h-10 w-auto min-w-[180px] gap-2 bg-white font-medium" aria-label="Kawasan">
+                            <SelectTrigger className="h-10 w-auto min-w-[180px] gap-2 bg-[var(--acd-surface,#fff)] font-medium" aria-label="Kawasan">
                                 <MapPin className="h-4 w-4 shrink-0 text-[var(--adm-text-2)]" aria-hidden="true" />
                                 <SelectValue />
                             </SelectTrigger>
@@ -481,7 +481,7 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
                                     key={c.key}
                                     href={matriksUrl({ [c.key]: '' }, '#daftar-tiket')}
                                     preserveScroll
-                                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--adm-border-strong)] bg-white px-3 py-1 text-xs font-medium hover:bg-[var(--adm-surface-2)]"
+                                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--adm-border-strong)] bg-[var(--acd-surface,#fff)] px-3 py-1 text-xs font-medium hover:bg-[var(--adm-surface-2)]"
                                 >
                                     {c.label}
                                     <X className="h-3.5 w-3.5" aria-label="Hapus saringan" />
@@ -540,7 +540,7 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
 /* ------------------------------ Komponen ------------------------------- */
 
 function Card({ className, children }: { className?: string; children: ReactNode }) {
-    return <section className={cn('rounded-xl border border-[var(--adm-border)] bg-white', className)}>{children}</section>;
+    return <section className={cn('rounded-xl border border-[var(--adm-border)] bg-[var(--acd-surface,#fff)]', className)}>{children}</section>;
 }
 
 function CardHeading({ eyebrow, title, children }: { eyebrow: string; title: string; children?: ReactNode }) {
@@ -588,7 +588,7 @@ function FlowCard({
             <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-stretch">
                 {/* Pintu masuk */}
                 <div className="rounded-xl bg-[var(--adm-primary-soft)] p-4 lg:w-[236px] lg:shrink-0">
-                    <p className="flex items-center gap-2 text-sm font-semibold text-[var(--adm-primary)]">
+                    <p className="flex items-center gap-2 text-sm font-semibold text-[var(--acd-link,var(--adm-primary))]">
                         <Inbox className="h-4 w-4" aria-hidden="true" /> Pintu masuk
                     </p>
                     <ul className="mt-3 space-y-2.5">
@@ -617,7 +617,7 @@ function FlowCard({
                             <Link
                                 href={stageUrl(stage.key)}
                                 className={cn(
-                                    'group flex flex-col rounded-xl border-[1.5px] bg-white p-4 transition-shadow hover:shadow-md lg:min-w-0 lg:flex-1',
+                                    'group flex flex-col rounded-xl border-[1.5px] bg-[var(--acd-surface,#fff)] p-4 transition-shadow hover:shadow-md lg:min-w-0 lg:flex-1',
                                     active && 'ring-2 ring-offset-2',
                                 )}
                                 style={{ borderColor: TONE[stage.key], '--tw-ring-color': TONE[stage.key] } as CSSProperties}
@@ -626,7 +626,10 @@ function FlowCard({
                                 <span className="flex items-center gap-2 text-sm font-semibold text-[var(--adm-text)]">
                                     <span
                                         className="flex h-6 w-6 items-center justify-center rounded-md"
-                                        style={{ backgroundColor: `color-mix(in srgb, ${TONE[stage.key]} 12%, white)`, color: TONE[stage.key] }}
+                                        style={{
+                                            backgroundColor: `color-mix(in srgb, ${TONE[stage.key]} 12%, var(--acd-surface, white))`,
+                                            color: TONE[stage.key],
+                                        }}
                                     >
                                         <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                                     </span>
@@ -713,7 +716,7 @@ function TerminalStage({
                 'flex flex-1 items-center gap-3 rounded-xl px-4 py-3 transition-shadow hover:shadow-md lg:flex-none',
                 active && 'ring-2 ring-offset-2',
             )}
-            style={{ backgroundColor: `color-mix(in srgb, ${tone} 10%, white)`, '--tw-ring-color': tone } as CSSProperties}
+            style={{ backgroundColor: `color-mix(in srgb, ${tone} 10%, var(--acd-surface, white))`, '--tw-ring-color': tone } as CSSProperties}
             aria-label={`${STATUS_LABEL[status]}: ${jumlah} tiket — saring daftar tiket`}
         >
             <Icon className="h-5 w-5 shrink-0" style={{ color: tone }} aria-hidden="true" />
@@ -805,7 +808,8 @@ function MatrixCard({
                                 aria-current={s.key === matriks.sumbu ? 'true' : undefined}
                                 className={cn(
                                     'rounded-md px-3 py-1.5 text-[13px] font-medium text-[var(--adm-text-2)] transition-colors hover:text-[var(--adm-text)]',
-                                    s.key === matriks.sumbu && 'bg-white font-semibold text-[var(--adm-primary)] shadow-sm',
+                                    s.key === matriks.sumbu &&
+                                        'bg-[var(--acd-surface,#fff)] font-semibold text-[var(--acd-link,var(--adm-primary))] shadow-sm',
                                 )}
                             >
                                 {s.label}
@@ -852,7 +856,7 @@ function MatrixCard({
                                 <tr key={row.key || 'kosong'}>
                                     <th scope="row" className="px-6 py-2.5 text-left font-semibold text-[var(--adm-text)]">
                                         <span className="flex items-center gap-3">
-                                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--adm-primary-soft)] text-[var(--adm-primary)]">
+                                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--adm-primary-soft)] text-[var(--acd-link,var(--adm-primary))]">
                                                 <Icon className="h-4 w-4" aria-hidden="true" />
                                             </span>
                                             <span className="truncate">{row.label}</span>
@@ -934,11 +938,11 @@ function MatrixCell({ value, max, status, href, label }: { value: number; max: n
         'inline-flex h-8 w-[52px] items-center justify-center rounded-md font-[family-name:var(--font-mono)] text-[13px] font-semibold tabular-nums';
 
     if (value === 0) {
-        return <span className={cn(base, 'bg-[#f1f4f7] font-medium text-[var(--adm-text-3)]')}>0</span>;
+        return <span className={cn(base, 'bg-[var(--acd-muted,#f1f4f7)] font-medium text-[var(--adm-text-3)]')}>0</span>;
     }
 
     const mix = 10 + Math.round((max > 0 ? value / max : 0) * 22);
-    const style: CSSProperties = { backgroundColor: `color-mix(in srgb, ${TONE[status]} ${mix}%, white)`, color: TONE[status] };
+    const style: CSSProperties = { backgroundColor: `color-mix(in srgb, ${TONE[status]} ${mix}%, var(--acd-surface, white))`, color: TONE[status] };
 
     return href ? (
         <Link
@@ -960,7 +964,7 @@ function MatrixCell({ value, max, status, href, label }: { value: number; max: n
 function SlaBar({ pct }: { pct: number | null }) {
     return (
         <span className="flex items-center justify-center gap-2">
-            <span className="h-1.5 w-[70px] overflow-hidden rounded-full bg-[#e6ebf0]">
+            <span className="h-1.5 w-[70px] overflow-hidden rounded-full bg-[var(--acd-muted-2,#e6ebf0)]">
                 <span className="block h-full rounded-full" style={{ width: `${pct ?? 0}%`, backgroundColor: slaColor(pct) }} />
             </span>
             <span className="w-11 font-[family-name:var(--font-mono)] text-xs tabular-nums">{pct === null ? '—' : `${dec(pct)}%`}</span>
@@ -1051,7 +1055,7 @@ function BarList({
                             )}
                             <span className="font-semibold tabular-nums">{nf(r.total)}</span>
                         </div>
-                        <div className="mt-1.5 h-1.5 rounded-full bg-[#e6ebf0]">
+                        <div className="mt-1.5 h-1.5 rounded-full bg-[var(--acd-muted-2,#e6ebf0)]">
                             <div className="h-full rounded-full" style={{ width: `${(r.total / max) * 100}%`, backgroundColor: color }} />
                         </div>
                     </li>
@@ -1194,7 +1198,7 @@ function OverdueCard({
 }) {
     if (data.total === 0) {
         return luarPeriode > 0 ? (
-            <p className="flex items-center gap-2 rounded-xl border border-[#f4c7c2] bg-[var(--adm-danger-soft)] px-5 py-3 text-sm text-[var(--adm-danger)]">
+            <p className="flex items-center gap-2 rounded-xl border border-[var(--acd-danger-border,#f4c7c2)] bg-[var(--adm-danger-soft)] px-5 py-3 text-sm text-[var(--adm-danger)]">
                 <Siren className="h-4 w-4 shrink-0" aria-hidden="true" />
                 Tidak ada tiket lewat tenggat pada periode ini, tetapi {nf(luarPeriode)} tiket dari periode lain masih melewati tenggat.
                 <Link href={semuaUrl} className="ml-auto font-semibold underline">
@@ -1205,7 +1209,7 @@ function OverdueCard({
     }
 
     return (
-        <Card className="overflow-hidden border-[#f4c7c2]">
+        <Card className="overflow-hidden border-[var(--acd-danger-border,#f4c7c2)]">
             <div className="flex flex-wrap items-center gap-3 bg-[var(--adm-danger-soft)] px-5 py-4 md:px-6">
                 <Siren className="h-5 w-5 shrink-0 text-[var(--adm-danger)]" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
@@ -1218,7 +1222,7 @@ function OverdueCard({
                 </div>
                 <Link
                     href={listUrl}
-                    className="flex items-center gap-1.5 text-sm font-semibold text-[var(--adm-primary)] hover:underline print:hidden"
+                    className="flex items-center gap-1.5 text-sm font-semibold text-[var(--acd-link,var(--adm-primary))] hover:underline print:hidden"
                 >
                     Buka di Manajemen Tiket <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
@@ -1241,7 +1245,7 @@ function OverdueCard({
                                 <td className="px-6 py-3">
                                     <Link
                                         href={`/admin/tiket/${t.nomor}`}
-                                        className="font-[family-name:var(--font-mono)] text-[13px] font-semibold text-[var(--adm-primary)] hover:underline"
+                                        className="font-[family-name:var(--font-mono)] text-[13px] font-semibold text-[var(--acd-link,var(--adm-primary))] hover:underline"
                                     >
                                         #{t.nomor}
                                     </Link>
@@ -1314,7 +1318,7 @@ function EmptyPanel({ rekap }: { rekap: Rekap }) {
     return (
         <Card className="p-5 md:p-7">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--adm-primary-soft)] text-[var(--adm-primary)]">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--adm-primary-soft)] text-[var(--acd-link,var(--adm-primary))]">
                     <Inbox className="h-6 w-6" aria-hidden="true" />
                 </span>
                 <div>
@@ -1335,7 +1339,8 @@ function EmptyPanel({ rekap }: { rekap: Rekap }) {
                             {e.cta} <ArrowRight className="h-4 w-4" aria-hidden="true" />
                         </>
                     );
-                    const ctaClass = 'mt-auto flex items-center gap-1.5 pt-4 text-sm font-semibold text-[var(--adm-primary)] hover:underline';
+                    const ctaClass =
+                        'mt-auto flex items-center gap-1.5 pt-4 text-sm font-semibold text-[var(--acd-link,var(--adm-primary))] hover:underline';
                     return (
                         <div key={e.title} className="flex flex-col rounded-xl border border-[var(--adm-border)] bg-[var(--adm-surface-2)] p-5">
                             <p className="flex items-center gap-2 text-sm font-semibold text-[var(--adm-text)]">

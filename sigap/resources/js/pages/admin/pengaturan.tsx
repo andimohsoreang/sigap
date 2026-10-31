@@ -220,7 +220,7 @@ export default function Pengaturan({ settings, categories, kanal_publik: kanalPu
                             {categories.map((c) => (
                                 <div
                                     key={c.id}
-                                    className="flex items-center justify-between rounded border border-gray-100 bg-white p-2 text-xs font-bold text-gray-700"
+                                    className="flex items-center justify-between rounded border border-gray-100 bg-[var(--acd-surface,#fff)] p-2 text-xs font-bold text-gray-700"
                                 >
                                     <span>{c.name}</span>
                                     {canEdit && (

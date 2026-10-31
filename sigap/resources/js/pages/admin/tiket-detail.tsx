@@ -170,7 +170,7 @@ export default function TiketDetail({ ticket, statuses }: Props) {
                                     {ticket.tanggapan.map((r) => (
                                         <div
                                             key={r.id}
-                                            className={`rounded-lg border p-3 text-sm ${r.is_public ? 'border-gray-100 bg-white' : 'border-amber-200 bg-amber-50'}`}
+                                            className={`rounded-lg border p-3 text-sm ${r.is_public ? 'border-gray-100 bg-[var(--acd-surface,#fff)]' : 'border-amber-200 bg-amber-50'}`}
                                         >
                                             <div className="mb-1 flex items-center justify-between">
                                                 <span className="text-xs font-bold text-gray-700">{r.penulis}</span>

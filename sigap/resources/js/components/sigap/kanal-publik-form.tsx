@@ -26,7 +26,8 @@ const LINKS: { key: 'lapor' | 'kpk' | 'internal'; hint: string }[] = [
     { key: 'internal', hint: 'https://… atau /pengaduan/internal' },
 ];
 
-const selectClass = 'focus:border-primary h-9 w-full rounded-md border border-gray-300 bg-white px-2 text-sm outline-none disabled:opacity-60';
+const selectClass =
+    'focus:border-primary h-9 w-full rounded-md border border-gray-300 bg-[var(--acd-surface,#fff)] px-2 text-sm outline-none disabled:opacity-60';
 
 export default function KanalPublikForm({ initial, canEdit }: { initial: KanalPublik; canEdit: boolean }) {
     const form = useForm<Form>(initial);

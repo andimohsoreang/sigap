@@ -26,7 +26,7 @@ function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTableRowElem
     return (
         <tr
             className={cn(
-                'border-b border-[#e3e8ee] transition-colors hover:bg-[#f8fafc] data-[state=selected]:bg-[#f4f6f9]',
+                'border-b border-[var(--acd-border,#e3e8ee)] transition-colors hover:bg-[var(--acd-muted,#f8fafc)] data-[state=selected]:bg-[var(--acd-muted,#f4f6f9)]',
                 className,
             )}
             {...props}
@@ -38,7 +38,7 @@ function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTableCell
     return (
         <th
             className={cn(
-                'h-11 px-5 text-left align-middle text-[12.5px] font-semibold whitespace-nowrap text-[#4a5868] [&:has([role=checkbox])]:pr-0',
+                'h-11 px-5 text-left align-middle text-[12.5px] font-semibold whitespace-nowrap text-[var(--acd-text-2,#4a5868)] [&:has([role=checkbox])]:pr-0',
                 className,
             )}
             {...props}

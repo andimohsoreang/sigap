@@ -59,7 +59,7 @@ export default function PengetahuanTinjau({ article, remaining, skipped }: Props
                 </div>
 
                 {!article ? (
-                    <div className="rounded-xl border border-gray-200 bg-white p-10 text-center">
+                    <div className="rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)] p-10 text-center">
                         <PartyPopper className="text-primary mx-auto mb-3 h-8 w-8" aria-hidden="true" />
                         <p className="text-lg font-semibold text-gray-900">
                             {remaining === 0 ? 'Semua artikel sudah ditinjau.' : 'Tidak ada lagi artikel di antrean ini.'}
@@ -81,7 +81,7 @@ export default function PengetahuanTinjau({ article, remaining, skipped }: Props
                         </div>
                     </div>
                 ) : (
-                    <div className="rounded-xl border border-gray-200 bg-white">
+                    <div className="rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)]">
                         <div className="border-b border-gray-100 p-5">
                             <p className="text-xs text-gray-500">{article.category ?? 'Tanpa kategori'}</p>
                             <h2 className="mt-1 text-xl font-semibold text-gray-900">{article.title}</h2>
@@ -110,7 +110,7 @@ export default function PengetahuanTinjau({ article, remaining, skipped }: Props
                                     href={article.source_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="hover:border-primary hover:text-primary flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800"
+                                    className="hover:border-primary hover:text-primary flex items-center gap-1.5 rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 py-2 text-sm font-medium text-gray-800"
                                 >
                                     Buka sumber <ExternalLink className="h-4 w-4" aria-hidden="true" />
                                 </a>
@@ -141,7 +141,7 @@ export default function PengetahuanTinjau({ article, remaining, skipped }: Props
                                         value={note}
                                         onChange={(e) => setNote(e.target.value)}
                                         placeholder="Mis. jangka waktu keberatan di sumber 30 hari kerja, bukan 30 hari"
-                                        className="focus:border-primary w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none"
+                                        className="focus:border-primary w-full rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 py-2 text-sm outline-none"
                                     />
                                     <div className="flex justify-end gap-2">
                                         <button
@@ -155,7 +155,7 @@ export default function PengetahuanTinjau({ article, remaining, skipped }: Props
                                             type="button"
                                             disabled={busy}
                                             onClick={() => act(`/admin/pengetahuan/${article.id}/kembalikan`, { catatan: note })}
-                                            className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+                                            className="rounded-lg bg-[oklch(0.278_0.033_256.848)] px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
                                         >
                                             Kembalikan ke draf
                                         </button>

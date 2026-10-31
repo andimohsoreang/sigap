@@ -119,7 +119,7 @@ export default function NotificationBell({ buttonClassName }: { buttonClassName?
             {open && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
-                    <div className="absolute right-0 z-50 mt-3 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
+                    <div className="absolute right-0 z-50 mt-3 w-80 overflow-hidden rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)] shadow-2xl">
                         <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
                             <span className="text-sm font-bold text-gray-800">Notifikasi</span>
                             {unread > 0 && (

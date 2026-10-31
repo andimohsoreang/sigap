@@ -122,7 +122,11 @@ export default function PengetahuanDokumen({ documents, selected, can_delete: ca
                         <span
                             className={cn(
                                 'flex h-5 w-5 items-center justify-center rounded-full text-[11px]',
-                                i < step ? 'bg-primary text-white' : i === step ? 'text-primary bg-white' : 'bg-gray-300 text-gray-700',
+                                i < step
+                                    ? 'bg-primary text-white'
+                                    : i === step
+                                      ? 'text-primary bg-[var(--acd-surface,#fff)]'
+                                      : 'bg-gray-300 text-gray-700',
                             )}
                         >
                             {i < step ? <Check className="h-3 w-3" /> : i + 1}
@@ -212,7 +216,7 @@ export default function PengetahuanDokumen({ documents, selected, can_delete: ca
                         </Card>
                     ) : (
                         <>
-                            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)] p-4">
                                 <div className="flex min-w-0 items-center gap-3">
                                     <span className="flex h-12 w-10 shrink-0 items-end justify-center rounded bg-rose-100 pb-1.5 text-[10px] font-extrabold text-rose-700">
                                         {selected.nama.toLowerCase().endsWith('.docx') ? 'DOCX' : 'PDF'}
@@ -304,7 +308,7 @@ export default function PengetahuanDokumen({ documents, selected, can_delete: ca
                                         <article
                                             key={d.id}
                                             className={cn(
-                                                'flex gap-3 rounded-xl border bg-white p-4',
+                                                'flex gap-3 rounded-xl border bg-[var(--acd-surface,#fff)] p-4',
                                                 d.pilih && !d.tersimpan ? 'border-brand-light border-2' : 'border-gray-200',
                                                 d.tersimpan && 'opacity-60',
                                             )}
@@ -364,7 +368,7 @@ export default function PengetahuanDokumen({ documents, selected, can_delete: ca
                                     ))}
 
                                     {drafts.length > 0 && (
-                                        <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-lg">
+                                        <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)] p-4 shadow-lg">
                                             <span className="text-sm text-gray-600">
                                                 <b className="text-gray-900">
                                                     {chosen.length} dari {drafts.filter((d) => !d.tersimpan).length}

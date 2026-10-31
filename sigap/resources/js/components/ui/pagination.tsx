@@ -58,12 +58,12 @@ export function Pagination({
     return (
         <div
             className={cn(
-                'flex flex-col items-center justify-between gap-3 border-t border-[#e3e8ee] px-5 py-3.5 sm:flex-row',
+                'flex flex-col items-center justify-between gap-3 border-t border-[var(--acd-border,#e3e8ee)] px-5 py-3.5 sm:flex-row',
                 className,
             )}
         >
             <div className="flex items-center gap-4">
-                <span className="text-[13px] text-[#4a5868]">
+                <span className="text-[13px] text-[var(--acd-text-2,#4a5868)]">
                     Menampilkan {from}–{to} dari {meta.total} {itemLabel}
                 </span>
                 {onPerPageChange && (

@@ -105,7 +105,7 @@ export default function Rujukan({ tab, milik, tab_counts: counts, referrals, act
         <AdminLayout title="Rujukan" subtitle="Warga yang dirujuk ke portal lain. Dampingi sampai warga mengirim kode bukti dari portal tujuan.">
             <div
                 className={cn(
-                    'mb-4 grid-cols-3 divide-x divide-gray-200 rounded-xl border border-gray-200 bg-white',
+                    'mb-4 grid-cols-3 divide-x divide-gray-200 rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)]',
                     mobileDetail && active ? 'hidden lg:grid' : 'grid',
                 )}
             >
@@ -118,7 +118,7 @@ export default function Rujukan({ tab, milik, tab_counts: counts, referrals, act
                 <section
                     aria-label="Daftar rujukan"
                     className={cn(
-                        'flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white lg:h-[calc(100vh-15rem)] lg:min-h-[520px]',
+                        'flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)] lg:h-[calc(100vh-15rem)] lg:min-h-[520px]',
                         mobileDetail && active ? 'hidden lg:flex' : 'flex',
                     )}
                 >
@@ -133,7 +133,7 @@ export default function Rujukan({ tab, milik, tab_counts: counts, referrals, act
                                     onClick={() => router.get('/admin/rujukan', { tab: t.value, milik }, { preserveScroll: true })}
                                     className={cn(
                                         'flex flex-col items-center rounded-md px-1 py-1.5 text-xs font-medium transition-colors',
-                                        tab === t.value ? 'text-primary bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900',
+                                        tab === t.value ? 'text-primary bg-[var(--acd-surface,#fff)] shadow-sm' : 'text-gray-600 hover:text-gray-900',
                                     )}
                                 >
                                     <span
@@ -213,13 +213,13 @@ export default function Rujukan({ tab, milik, tab_counts: counts, referrals, act
                     {active ? (
                         <DetailPanel key={active.kode} detail={active} admins={admins} onBack={() => setMobileDetail(false)} />
                     ) : (
-                        <div className="flex flex-1 items-center justify-center rounded-xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
+                        <div className="flex flex-1 items-center justify-center rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)] p-10 text-center text-sm text-gray-500">
                             Pilih rujukan di sebelah kiri. Kerjakan tab <b className="mx-1 text-gray-800">Perlu tindakan</b> lebih dulu.
                         </div>
                     )}
 
                     {board && board.length > 0 && !active && (
-                        <div className="rounded-xl border border-gray-200 bg-white">
+                        <div className="rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)]">
                             <p className="border-b border-gray-100 px-4 py-3 text-sm font-semibold text-gray-900">Papan penanggung jawab</p>
                             <table className="w-full text-sm">
                                 <thead className="text-left text-xs text-gray-500">
@@ -294,7 +294,7 @@ function DetailPanel({ detail: d, admins, onBack }: { detail: Detail; admins: { 
 
     return (
         <>
-            <div className="rounded-xl border border-gray-200 bg-white">
+            <div className="rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)]">
                 <div className="flex items-start gap-3 p-4">
                     <button
                         type="button"
@@ -377,7 +377,7 @@ function DetailPanel({ detail: d, admins, onBack }: { detail: Detail; admins: { 
                 </dl>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white">
+            <div className="rounded-xl border border-gray-200 bg-[var(--acd-surface,#fff)]">
                 <button
                     type="button"
                     onClick={() => setHistoryOpen((v) => !v)}
@@ -493,7 +493,7 @@ function Composer({ detail: d, viaChat, template, collapsed }: { detail: Detail;
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="hover:border-primary hover:text-primary mt-3 flex h-9 items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700"
+                className="hover:border-primary hover:text-primary mt-3 flex h-9 items-center gap-1.5 rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 text-sm font-medium text-gray-700"
             >
                 <SendHorizontal className="h-4 w-4" aria-hidden="true" /> {viaChat ? 'Kirim pengingat ke warga' : 'Catat hasil menghubungi warga'}
             </button>
@@ -516,7 +516,7 @@ function Composer({ detail: d, viaChat, template, collapsed }: { detail: Detail;
                 value={form.data[field]}
                 onChange={(e) => form.setData(field, e.target.value)}
                 placeholder={viaChat ? '' : 'Mis. sudah ditelepon, warga sedang menyiapkan KTP'}
-                className="focus:border-primary w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none"
+                className="focus:border-primary w-full rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 py-2 text-sm outline-none"
             />
             {form.errors[field] && <p className="text-xs font-semibold text-rose-600">{form.errors[field]}</p>}
             <button
@@ -582,7 +582,7 @@ function ExtraForm({
                     id="aksi-tambahan"
                     value={form.data.admin_id}
                     onChange={(e) => form.setData('admin_id', e.target.value)}
-                    className="focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none"
+                    className="focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 text-sm outline-none"
                 >
                     <option value="">Pilih petugas…</option>
                     {admins
@@ -599,7 +599,7 @@ function ExtraForm({
                     value={form.data.bukti}
                     onChange={(e) => form.setData('bukti', e.target.value)}
                     placeholder={spec.placeholder}
-                    className="focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-white px-3 font-mono text-sm uppercase outline-none placeholder:font-sans placeholder:normal-case"
+                    className="focus:border-primary h-10 w-full rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 font-mono text-sm uppercase outline-none placeholder:font-sans placeholder:normal-case"
                 />
             ) : (
                 <textarea
@@ -608,7 +608,7 @@ function ExtraForm({
                     value={form.data[spec.field]}
                     onChange={(e) => form.setData(spec.field, e.target.value)}
                     placeholder={spec.placeholder}
-                    className="focus:border-primary w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none"
+                    className="focus:border-primary w-full rounded-lg border border-gray-300 bg-[var(--acd-surface,#fff)] px-3 py-2 text-sm outline-none"
                 />
             )}
             {form.errors[spec.field] && <p className="text-xs font-semibold text-rose-600">{form.errors[spec.field]}</p>}

@@ -180,14 +180,16 @@ export function DataTable<T extends object>({
     };
 
     return (
-        <Card className="gap-0 overflow-hidden rounded-xl border-[#e3e8ee] py-0 shadow-none">
+        <Card className="gap-0 overflow-hidden rounded-xl border-[var(--acd-border,#e3e8ee)] py-0 shadow-none">
             {/* Toolbar: judul di kiri, pencarian + filter + kolom di kanan */}
-            <div className="flex flex-col gap-2.5 border-b border-[#e3e8ee] px-5 py-3.5 lg:flex-row lg:flex-wrap lg:items-center">
-                {toolbarTitle && <h3 className="text-[15px] font-semibold whitespace-nowrap text-[#17232f] lg:mr-auto">{toolbarTitle}</h3>}
+            <div className="flex flex-col gap-2.5 border-b border-[var(--acd-border,#e3e8ee)] px-5 py-3.5 lg:flex-row lg:flex-wrap lg:items-center">
+                {toolbarTitle && (
+                    <h3 className="text-[15px] font-semibold whitespace-nowrap text-[var(--acd-text,#17232f)] lg:mr-auto">{toolbarTitle}</h3>
+                )}
 
                 {isServer && serverSide ? (
                     <div className="relative w-full lg:w-[220px] 2xl:w-[280px]">
-                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#667382]" />
+                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--acd-text-3,#667382)]" />
                         <Input
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
@@ -202,7 +204,7 @@ export function DataTable<T extends object>({
                     </div>
                 ) : (
                     <div className="relative w-full lg:w-[220px] 2xl:w-[280px]">
-                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#667382]" />
+                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--acd-text-3,#667382)]" />
                         <Input
                             value={globalFilter}
                             onChange={(e) => setGlobalFilter(e.target.value)}
@@ -278,7 +280,7 @@ export function DataTable<T extends object>({
             </div>
 
             <Table>
-                <TableHeader className="bg-[#f8fafc]">
+                <TableHeader className="bg-[var(--acd-muted,#f8fafc)]">
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow key={headerGroup.id} className="hover:bg-transparent">
                             {headerGroup.headers.map((header) => {
@@ -305,7 +307,7 @@ export function DataTable<T extends object>({
                                             <button
                                                 type="button"
                                                 onClick={toggleSort}
-                                                className="-ml-1 flex cursor-pointer items-center gap-1 hover:text-[#17232f]"
+                                                className="-ml-1 flex cursor-pointer items-center gap-1 hover:text-[var(--acd-text,#17232f)]"
                                                 aria-label={`Urutkan ${typeof header.column.columnDef.header === 'string' ? header.column.columnDef.header : header.column.id}`}
                                             >
                                                 {flexRender(header.column.columnDef.header, header.getContext())}
@@ -329,7 +331,7 @@ export function DataTable<T extends object>({
                 <TableBody>
                     {table.getRowModel().rows.length === 0 ? (
                         <TableRow className="hover:bg-transparent">
-                            <TableCell colSpan={columns.length} className="py-10 text-center text-[#667382]">
+                            <TableCell colSpan={columns.length} className="py-10 text-center text-[var(--acd-text-3,#667382)]">
                                 {emptyMessage}
                             </TableCell>
                         </TableRow>
@@ -339,7 +341,7 @@ export function DataTable<T extends object>({
                                 {row.getVisibleCells().map((cell) => {
                                     const meta = cell.column.columnDef.meta as DataTableColumnMeta | undefined;
                                     return (
-                                        <TableCell key={cell.id} className={cn('text-[#17232f]', meta?.className)}>
+                                        <TableCell key={cell.id} className={cn('text-[var(--acd-text,#17232f)]', meta?.className)}>
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </TableCell>
                                     );

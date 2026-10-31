@@ -103,13 +103,16 @@ export default function ManajemenTiket({ tickets, filters, chips, statuses }: Pr
                         <Link
                             key={c.key}
                             href={withoutFilters([c.key])}
-                            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--adm-border-strong)] bg-white px-3 py-1 text-xs font-medium hover:bg-[var(--adm-surface-2)]"
+                            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--adm-border-strong)] bg-[var(--acd-surface,#fff)] px-3 py-1 text-xs font-medium hover:bg-[var(--adm-surface-2)]"
                         >
                             {c.label}
                             <X className="h-3.5 w-3.5" aria-label="Hapus saringan" />
                         </Link>
                     ))}
-                    <Link href={withoutFilters(chips.map((c) => c.key))} className="text-xs font-semibold text-[var(--adm-primary)] hover:underline">
+                    <Link
+                        href={withoutFilters(chips.map((c) => c.key))}
+                        className="text-xs font-semibold text-[var(--acd-link,var(--adm-primary))] hover:underline"
+                    >
                         Hapus semua
                     </Link>
                 </div>
