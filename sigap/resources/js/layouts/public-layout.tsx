@@ -66,9 +66,9 @@ export default function PublicLayout({ children, title }: PublicLayoutProps) {
                                 <h1 className="text-primary text-xl leading-tight font-bold">{app?.brand ?? 'Contact Center'}</h1>
                                 <p
                                     className="hidden max-w-[200px] truncate text-[10px] font-medium text-gray-500 md:block lg:max-w-xs"
-                                    title={app?.tagline}
+                                    title={app?.ministry}
                                 >
-                                    {app?.tagline}
+                                    {app?.ministry}
                                 </p>
                             </div>
                         </Link>
@@ -249,7 +249,7 @@ export default function PublicLayout({ children, title }: PublicLayoutProps) {
                 <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 text-center sm:px-6 md:grid-cols-2 md:text-left lg:px-8">
                     <div>
                         <h3 className="mb-1 text-xl font-bold">{app?.brand ?? 'Contact Center'}</h3>
-                        <p className="mb-1 text-sm text-gray-400">{app?.tagline}.</p>
+                        <p className="mb-1 text-sm text-gray-400">{app?.ministry}</p>
                         <p className="text-secondary mt-2 text-xs font-bold italic">"Komitmen Melayani, Menuntaskan Tanpa Henti"</p>
                     </div>
                     <div>

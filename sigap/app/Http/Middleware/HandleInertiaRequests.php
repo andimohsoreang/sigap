@@ -38,7 +38,6 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'app' => [
                 'brand' => 'Contact Center',
-                'tagline' => 'Suara Masyarakat, Inisiatif Gerak Aksi, Penyelesaian Tuntas',
                 'ministry' => 'Kementerian Transmigrasi Republik Indonesia',
             ],
             'auth' => [
