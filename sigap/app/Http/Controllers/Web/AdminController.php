@@ -147,7 +147,25 @@ class AdminController extends Controller
             'filters' => TicketFilters::props($request, $periode),
             'chips' => TicketFilters::chips($request, $periode),
             'statuses' => collect(TicketStatus::cases())->mapWithKeys(fn (TicketStatus $s) => [$s->value => $s->label()]),
+            'impacts' => collect(TicketImpact::cases())->mapWithKeys(fn (TicketImpact $i) => [$i->value => $i->label()]),
+            // Jumlah per tab cepat (cakupan peran, tanpa saringan lain).
+            'tab_counts' => $this->ticketTabCounts(),
         ]);
+    }
+
+    /** @return array<string, int> */
+    private function ticketTabCounts(): array
+    {
+        $base = fn () => $this->scopedTickets(Ticket::query())->public();
+        $open = TicketFilters::openStatuses();
+
+        return [
+            'semua' => $base()->count(),
+            'aktif' => $base()->whereIn('status', $open)->count(),
+            'ews' => $base()->whereIn('status', $open)->whereNotNull('sla_due_at')->where('sla_due_at', '<', now())->count(),
+            'belum' => $base()->whereIn('status', $open)->whereNull('assignee_id')->count(),
+            'selesai' => $base()->where('status', TicketStatus::Selesai->value)->count(),
+        ];
     }
 
     public function showTicket(Ticket $ticket): Response
@@ -1075,6 +1093,7 @@ class AdminController extends Controller
             'kategori' => $t->category?->name,
             'kawasan' => $t->wilayahLabel(),
             'provinsi' => $t->province,
+            'petugas' => $t->relationLoaded('assignee') ? $t->assignee?->name : null,
             'is_internal' => (bool) $t->is_internal,
             'created_at' => $t->created_at?->toIso8601String(),
             'tenggat_sla' => $t->sla_due_at?->toIso8601String(),

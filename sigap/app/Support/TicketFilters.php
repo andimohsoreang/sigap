@@ -56,7 +56,10 @@ final class TicketFilters
     public static function apply($query, Request $request, string $periode = ''): void
     {
         if ($request->filled('status')) {
-            $query->where('status', $request->string('status'));
+            // "aktif" = semua tahap yang masih berjalan (tab Manajemen Tiket).
+            $request->string('status')->toString() === 'aktif'
+                ? $query->whereIn('status', self::openStatuses())
+                : $query->where('status', $request->string('status'));
         }
         if ($request->filled('region_id')) {
             $query->where('region_id', $request->integer('region_id'));
