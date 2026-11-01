@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\AdminController;
+use App\Http\Controllers\Web\AiHealthController;
 use App\Http\Controllers\Web\AktivasiAkunController;
 use App\Http\Controllers\Web\ChatController;
 use App\Http\Controllers\Web\ContactCenterController;
@@ -210,6 +211,7 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
         Route::post('/petugas', [AdminController::class, 'storeAdmin'])->name('admin.petugas.store');
         Route::put('/petugas/{petugas}/email', [AdminController::class, 'updateAdminEmail'])->whereNumber('petugas')->name('admin.petugas.email');
         Route::get('/log-aktivitas', [AdminController::class, 'activityLog'])->name('admin.log');
+        Route::get('/kesehatan-ai', AiHealthController::class)->name('admin.kesehatan-ai');
     });
 
     // Alias path lama — hanya super_admin yang boleh (agar tidak membocorkan keberadaan halaman).

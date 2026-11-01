@@ -23,6 +23,22 @@ final class CircuitBreaker
         return now()->getTimestamp() >= (int) Cache::get(self::OPEN_UNTIL, 0);
     }
 
+    /** Waktu sirkuit menutup kembali; null = sirkuit tertutup (normal). */
+    public function openUntil(): ?int
+    {
+        $until = (int) Cache::get(self::OPEN_UNTIL, 0);
+
+        return $until > now()->getTimestamp() ? $until : null;
+    }
+
+    /** Kegagalan dalam jendela 2 menit terakhir (sirkuit terbuka di ambang). */
+    public function recentFailures(): int
+    {
+        $now = now()->getTimestamp();
+
+        return count(array_filter((array) Cache::get(self::FAILURES, []), fn ($t) => is_int($t) && $t > $now - self::WINDOW_SECONDS));
+    }
+
     public function failure(): void
     {
         $now = now()->getTimestamp();

@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
+    Activity,
     BookOpen,
     Building2,
     ChevronDown,
@@ -87,6 +88,7 @@ const NAV: NavEntry[] = [
     { group: 'konfigurasi', label: 'Katalog Portal', href: '/admin/portal', icon: Globe, match: '/admin/portal' },
     { group: 'konfigurasi', label: 'Pengaturan', href: '/admin/pengaturan', icon: Settings, match: '/admin/pengaturan' },
     { group: 'admin', label: 'Daftar Admin', href: '/admin/petugas', icon: Users, match: '/admin/petugas', superAdminOnly: true },
+    { group: 'admin', label: 'Kesehatan AI', href: '/admin/kesehatan-ai', icon: Activity, match: '/admin/kesehatan-ai', superAdminOnly: true },
     { group: 'admin', label: 'Log Aktivitas', href: '/admin/log-aktivitas', icon: ScrollText, match: '/admin/log-aktivitas', superAdminOnly: true },
 ];
 

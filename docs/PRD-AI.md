@@ -430,6 +430,17 @@ sudah di `app/Modules/*`; kontrak `KnowledgeSearch` (§8) terpasang; listener ja
 Eloquent tetap di `App\Models`** (nama kelas tersimpan di `activity_logs.subject_type`), dan tes lama
 hanya diubah baris `use`-nya. `UjiAsistenCommand` tetap di `app/Console/Commands` (titik masuk CLI).
 
+**Status Tahap 5 (2026-11-01):** halaman **Kesehatan AI** (`/admin/kesehatan-ai`, menu Administrasi, khusus
+Super Admin) menampilkan status penyedia (normal / sirkuit terbuka / anggaran habis / AI dimatikan / mode
+uji), panggilan hari ini per tugas, tingkat galat, P50/P95, token vs anggaran, token per percakapan,
+cadangan, antrean `ai`, tren 14 hari, galat terakhir (kode saja), dan riwayat uji kualitas — semua dari
+`ai_calls`, `ai_quality_runs`, dan cache sirkuit/anggaran, tanpa isi percakapan. "Hari ini" = hari WIB.
+`sigap:uji-asisten --simpan --laporkan` menyimpan ringkasan angka ke tabel baru `ai_quality_runs` dan
+mengirimnya ke Super Admin; terjadwal **Senin 03.00 WIB** dengan ambang produksi, di latar belakang, dan
+hanya bila `AI_ENABLED=true` dengan driver sungguhan. Anggaran: selain peringatan 80% (`ai_anggaran`),
+Super Admin kini diberi tahu saat anggaran **habis** (`ai_anggaran_habis`, sekali per hari); tautan
+notifikasi menuju Kesehatan AI.
+
 Urutan dapat diubah satu hal: **Tahap 2 boleh didahulukan** bila AI sungguhan dinyalakan sebelum
 refaktor selesai, karena T1 paling berdampak ke warga.
 
