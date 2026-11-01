@@ -198,6 +198,10 @@
        Inter untuk isi, JetBrains Mono untuk kode tiket/NIP/IP. */
     --adm-primary: #003d68;
     --adm-primary-deep: #022b4a;
+    /* Warna kategorikal tambahan untuk grafik (pie/batang) Matriks. */
+    --chart-violet: #6f4fb3;
+    --chart-teal: #1f7f7f;
+    --chart-rose: #b4456c;
     --adm-primary-soft: #e8f0f7;
     --adm-accent: #c29642;
     --adm-accent-soft: #fbf3e3;
@@ -1005,6 +1009,9 @@ html.a11y-gray:has(.transi-page) {
 html.dark:has(.absol-admin),
 html.dark .absol-admin {
     color-scheme: dark;
+    --chart-violet: #a98bea;
+    --chart-teal: #5cc4c4;
+    --chart-rose: #f08aae;
     --adm-primary: #2a74b0;
     --adm-primary-soft: #13304a;
     --adm-accent: #d6a94f;
