@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\KnowledgeSource;
-use App\Services\Knowledge\SourceIngestor;
+use App\Modules\Knowledge\Ingestion\SourceIngestor;
 use Illuminate\Console\Command;
 
 /** Ambil ulang situs Sumber Resmi agar kutipan asisten mengikuti isi terbaru. */

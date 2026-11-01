@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\ProcessKnowledgeDocument;
 use App\Models\KnowledgeDocument;
 use App\Models\User;
+use App\Modules\Knowledge\Ingestion\KnowledgeDocumentService;
+use App\Modules\Knowledge\Jobs\ProcessKnowledgeDocument;
 use App\Services\AuditService;
-use App\Services\Knowledge\KnowledgeDocumentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;

@@ -3,7 +3,6 @@
 namespace Tests\Feature\Web;
 
 use App\Enums\UserRole;
-use App\Jobs\SyncKnowledgeSource;
 use App\Models\AiCall;
 use App\Models\ChatConversation;
 use App\Models\KnowledgeDocument;
@@ -12,10 +11,11 @@ use App\Models\KnowledgeSource;
 use App\Models\Portal;
 use App\Models\Region;
 use App\Models\User;
+use App\Modules\Knowledge\Ingestion\OfficialWebFetcher;
+use App\Modules\Knowledge\Ingestion\SourceIngestor;
+use App\Modules\Knowledge\Jobs\SyncKnowledgeSource;
+use App\Modules\Knowledge\Retrieval\KnowledgeRetriever;
 use App\Services\Ai\LlmClient;
-use App\Services\Knowledge\KnowledgeRetriever;
-use App\Services\Knowledge\OfficialWebFetcher;
-use App\Services\Knowledge\SourceIngestor;
 use Database\Seeders\MasterSeeder;
 use Database\Seeders\OfficialSourceSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

@@ -3,7 +3,7 @@
 namespace App\Modules\Referral;
 
 use App\Models\Portal;
-use App\Services\Knowledge\IndonesianText;
+use App\Modules\Knowledge\Retrieval\IndonesianText;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;

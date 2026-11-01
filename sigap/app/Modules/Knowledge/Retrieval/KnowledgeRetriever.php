@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Services\Knowledge;
+namespace App\Modules\Knowledge\Retrieval;
 
 use App\Models\KnowledgeArticle;
 use App\Models\KnowledgePassage;
 use App\Models\KnowledgeSource;
+use App\Modules\Knowledge\KnowledgeSearch;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -29,7 +30,7 @@ use Illuminate\Support\Facades\Cache;
  * dicari per segmen, hasilnya digabung bergiliran, dan kutipannya diperbanyak
  * ({@see spread()}).
  */
-class KnowledgeRetriever
+class KnowledgeRetriever implements KnowledgeSearch
 {
     private const FIELD_WEIGHT = 3;
 

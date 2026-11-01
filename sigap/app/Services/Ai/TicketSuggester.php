@@ -10,7 +10,7 @@ use App\Modules\Ai\AiContext;
 use App\Modules\Ai\AiGateway;
 use App\Modules\Ai\AiTask;
 use App\Modules\Assistant\Assistant;
-use App\Services\Knowledge\IndonesianText;
+use App\Modules\Knowledge\Retrieval\IndonesianText;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 

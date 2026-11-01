@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\SyncKnowledgeSource;
 use App\Models\KnowledgePassage;
 use App\Models\KnowledgeSource;
 use App\Models\User;
+use App\Modules\Knowledge\Ingestion\OfficialWebFetcher;
+use App\Modules\Knowledge\Jobs\SyncKnowledgeSource;
+use App\Modules\Knowledge\Retrieval\KnowledgeRetriever;
 use App\Services\AuditService;
-use App\Services\Knowledge\KnowledgeRetriever;
-use App\Services\Knowledge\OfficialWebFetcher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;

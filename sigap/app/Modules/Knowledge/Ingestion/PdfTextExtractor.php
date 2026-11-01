@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Knowledge;
+namespace App\Modules\Knowledge\Ingestion;
 
 use RuntimeException;
 use Smalot\PdfParser\Parser;

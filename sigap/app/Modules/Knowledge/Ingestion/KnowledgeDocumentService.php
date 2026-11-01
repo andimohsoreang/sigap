@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Knowledge;
+namespace App\Modules\Knowledge\Ingestion;
 
 use App\Models\KnowledgeArticle;
 use App\Models\KnowledgeDocument;
@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Modules\Ai\AiGateway;
 use App\Modules\Ai\AiResult;
 use App\Modules\Ai\AiTask;
+use App\Modules\Knowledge\Retrieval\KnowledgeRetriever;
 use App\Services\Ai\AiException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;

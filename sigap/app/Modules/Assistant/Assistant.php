@@ -7,9 +7,9 @@ use App\Models\ChatMessage;
 use App\Models\KnowledgeArticle;
 use App\Models\User;
 use App\Modules\ContactCenter\ServiceHours;
+use App\Modules\Knowledge\KnowledgeSearch;
 use App\Modules\Referral\PortalDirectory;
 use App\Services\Ai\AiException;
-use App\Services\Knowledge\KnowledgeRetriever;
 
 /**
  * Asisten AI contact center (TARA) — pintu masuk modul Assistant.
@@ -34,7 +34,7 @@ final class Assistant
         private readonly ResponsePolicy $policy,
         private readonly ReplyComposer $composer,
         private readonly Handoff $handoff,
-        private readonly KnowledgeRetriever $retriever,
+        private readonly KnowledgeSearch $retriever,
         private readonly PortalDirectory $portals,
         private readonly TicketLookup $tickets,
         private readonly ServiceHours $hours,

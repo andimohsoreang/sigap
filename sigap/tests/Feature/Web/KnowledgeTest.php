@@ -6,7 +6,7 @@ use App\Enums\UserRole;
 use App\Models\KnowledgeArticle;
 use App\Models\Region;
 use App\Models\User;
-use App\Services\Knowledge\KnowledgeRetriever;
+use App\Modules\Knowledge\Retrieval\KnowledgeRetriever;
 use Database\Seeders\KnowledgeSeeder;
 use Database\Seeders\MasterSeeder;
 use Database\Seeders\OfficialKnowledgeSeeder;

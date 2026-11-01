@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Knowledge;
+namespace App\Modules\Knowledge\Retrieval;
 
 /**
  * Pengolah teks Bahasa Indonesia untuk pencarian Basis Pengetahuan.

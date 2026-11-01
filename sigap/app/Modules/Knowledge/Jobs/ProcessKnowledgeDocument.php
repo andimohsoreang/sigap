@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Modules\Knowledge\Jobs;
 
 use App\Models\KnowledgeDocument;
-use App\Services\Knowledge\KnowledgeDocumentService;
+use App\Modules\Knowledge\Ingestion\KnowledgeDocumentService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
