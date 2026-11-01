@@ -1,5 +1,4 @@
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
@@ -96,10 +95,11 @@ export function LegalBasisFields({
 
 function BasisField({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
     return (
-        <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-gray-600">{label}</Label>
+        // <label> pembungkus: label tertaut ke isian di dalamnya (termasuk isian tanggal).
+        <label className="block space-y-1.5">
+            <span className="block text-[13px] font-semibold text-[var(--adm-text)]">{label}</span>
             {children}
-            {error && <p className="text-xs font-semibold text-rose-500">{error}</p>}
-        </div>
+            {error && <span className="block text-xs font-semibold text-[var(--adm-danger)]">{error}</span>}
+        </label>
     );
 }
