@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Ai;
+namespace App\Modules\Ai;
 
 /**
  * Penghubung ke model bahasa. Implementasi dipilih lewat `services.ai.driver`

@@ -9,6 +9,7 @@ use App\Models\Region;
 use App\Modules\Ai\AiContext;
 use App\Modules\Ai\AiGateway;
 use App\Modules\Ai\AiTask;
+use App\Modules\Ai\PiiMasker;
 use App\Modules\Assistant\Assistant;
 use App\Modules\Knowledge\Retrieval\IndonesianText;
 use Illuminate\Support\Collection;

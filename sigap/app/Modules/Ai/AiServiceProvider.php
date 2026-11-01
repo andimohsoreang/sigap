@@ -2,7 +2,6 @@
 
 namespace App\Modules\Ai;
 
-use App\Services\Ai\LlmClient;
 use Illuminate\Support\ServiceProvider;
 
 /** Modul Ai: driver model dipasang di sini, hanya dipakai {@see AiGateway}. */

@@ -6,10 +6,10 @@ use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\KnowledgeArticle;
 use App\Models\User;
+use App\Modules\Ai\AiException;
 use App\Modules\ContactCenter\ServiceHours;
 use App\Modules\Knowledge\KnowledgeSearch;
 use App\Modules\Referral\PortalDirectory;
-use App\Services\Ai\AiException;
 
 /**
  * Asisten AI contact center (TARA) — pintu masuk modul Assistant.

@@ -2,9 +2,8 @@
 
 namespace App\Modules\Ai;
 
-use App\Services\Ai\FakeLlmClient;
-use App\Services\Ai\LlmClient;
-use App\Services\Ai\OpenAiCompatibleClient;
+use App\Modules\Ai\Drivers\FakeLlmClient;
+use App\Modules\Ai\Drivers\OpenAiCompatibleClient;
 use Illuminate\Contracts\Container\Container;
 
 /**

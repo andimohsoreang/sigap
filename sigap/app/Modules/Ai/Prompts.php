@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Ai;
+namespace App\Modules\Ai;
 
 use App\Modules\Ai\Prompts\JawabPrompt;
 use App\Modules\Ai\Prompts\SaranTiketPrompt;

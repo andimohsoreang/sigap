@@ -4,10 +4,10 @@ namespace App\Console\Commands;
 
 use App\Models\KnowledgeArticle;
 use App\Models\KnowledgePassage;
+use App\Modules\Ai\AiException;
 use App\Modules\Assistant\Consultation;
 use App\Modules\Assistant\ResponsePolicy;
 use App\Modules\Knowledge\Retrieval\KnowledgeRetriever;
-use App\Services\Ai\AiException;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;

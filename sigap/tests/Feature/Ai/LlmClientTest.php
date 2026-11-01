@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Ai;
 
-use App\Services\Ai\AiException;
-use App\Services\Ai\FakeLlmClient;
-use App\Services\Ai\LlmClient;
-use App\Services\Ai\OpenAiCompatibleClient;
-use App\Services\Ai\PiiMasker;
-use App\Services\Ai\Prompts;
+use App\Modules\Ai\AiException;
+use App\Modules\Ai\Drivers\FakeLlmClient;
+use App\Modules\Ai\Drivers\OpenAiCompatibleClient;
+use App\Modules\Ai\LlmClient;
+use App\Modules\Ai\PiiMasker;
+use App\Modules\Ai\Prompts;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;

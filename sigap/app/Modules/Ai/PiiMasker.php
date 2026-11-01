@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Ai;
+namespace App\Modules\Ai;
 
 /**
  * Menyamarkan data pribadi sebelum teks dikirim ke model AI (UU 27/2022).

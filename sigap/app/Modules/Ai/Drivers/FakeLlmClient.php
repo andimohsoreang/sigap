@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Services\Ai;
+namespace App\Modules\Ai\Drivers;
 
 use Illuminate\Support\Str;
+use App\Modules\Ai\LlmClient;
+use App\Modules\Ai\Prompts;
 
 /**
  * Model tiruan untuk pengembangan lokal & pengujian (tanpa API key).

@@ -1,11 +1,14 @@
 <?php
 
-namespace App\Services\Ai;
+namespace App\Modules\Ai\Drivers;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Modules\Ai\AiException;
+use App\Modules\Ai\LlmClient;
+use App\Modules\Ai\ReportsUsage;
 
 /**
  * Endpoint Chat Completions kompatibel OpenAI:

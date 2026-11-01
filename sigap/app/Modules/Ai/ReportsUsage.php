@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Ai;
+namespace App\Modules\Ai;
 
 /** Driver yang dapat melaporkan pemakaian token dari panggilan terakhirnya. */
 interface ReportsUsage
