@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Listeners;
+namespace App\Modules\Assistant\Listeners;
 
-use App\Jobs\RespondToMessage;
+use App\Modules\Assistant\Jobs\RespondToMessage;
 use App\Modules\ContactCenter\Events\CitizenMessageReceived;
 
-/** Antrekan jawaban TARA di antrean `ai` (didaftarkan otomatis lewat event discovery). */
+/** Antrekan jawaban TARA di antrean `ai` (didaftarkan {@see \App\Modules\Assistant\AssistantServiceProvider}). */
 final class QueueAssistantReply
 {
     public function handle(CitizenMessageReceived $event): void

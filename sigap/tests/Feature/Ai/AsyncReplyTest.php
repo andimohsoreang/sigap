@@ -4,7 +4,6 @@ namespace Tests\Feature\Ai;
 
 use App\Enums\UserRole;
 use App\Events\ChatMessageSent;
-use App\Jobs\RespondToMessage;
 use App\Models\AiCall;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
@@ -13,6 +12,7 @@ use App\Models\Referral;
 use App\Models\User;
 use App\Modules\Ai\LlmClient;
 use App\Modules\Assistant\Assistant;
+use App\Modules\Assistant\Jobs\RespondToMessage;
 use App\Modules\ContactCenter\ChatService;
 use Database\Seeders\MasterSeeder;
 use Database\Seeders\PortalSeeder;

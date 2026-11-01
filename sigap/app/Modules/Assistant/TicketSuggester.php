@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Ai;
+namespace App\Modules\Assistant;
 
 use App\Enums\TicketImpact;
 use App\Models\Category;

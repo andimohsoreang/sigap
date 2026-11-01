@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Modules\Assistant\Jobs;
 
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
