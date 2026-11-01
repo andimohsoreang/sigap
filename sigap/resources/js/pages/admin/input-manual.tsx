@@ -137,13 +137,13 @@ export default function InputManual({ options, impacts = DEFAULT_IMPACTS, prefil
             <form onSubmit={submit} className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
                 <div className="min-w-0 space-y-6">
                     <Step no={1} title="Sumber laporan" hint="Dari mana pengaduan ini diterima?">
-                        <fieldset>
+                        <fieldset className="@container">
                             <legend className="sr-only">Sumber laporan</legend>
                             <div className="space-y-4">
                                 {SUMBER.map((g) => (
                                     <div key={g.group}>
                                         <p className="mb-2 text-xs font-semibold tracking-[0.06em] text-[var(--adm-text-3)] uppercase">{g.group}</p>
-                                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                        <div className="grid grid-cols-2 gap-2 @xl:grid-cols-4">
                                             {g.items.map(({ value, label, icon: Icon }) => {
                                                 const on = data.sumber_laporan === value;
                                                 return (
@@ -261,11 +261,11 @@ export default function InputManual({ options, impacts = DEFAULT_IMPACTS, prefil
                             </Field>
                         </div>
 
-                        <fieldset className="mt-5">
+                        <fieldset className="@container mt-5">
                             <legend className="mb-2 text-[13px] font-semibold text-[var(--adm-text)]">
                                 Tingkat dampak <span className="text-[var(--adm-danger)]">*</span>
                             </legend>
-                            <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+                            <div className="grid grid-cols-2 gap-2 @2xl:grid-cols-4">
                                 {impacts.map((i) => {
                                     const on = data.impact === i.value;
                                     return (

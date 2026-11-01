@@ -114,7 +114,7 @@ export default function LogAktivitas({ logs, filters, actions }: Props) {
             accessorKey: 'description',
             header: 'Keterangan',
             cell: ({ getValue }) => (
-                <span className="block truncate text-[13px]" title={getValue<string | null>() ?? undefined}>
+                <span className="block text-[13px] md:line-clamp-2" title={getValue<string | null>() ?? undefined}>
                     {getValue<string | null>() ?? '—'}
                 </span>
             ),

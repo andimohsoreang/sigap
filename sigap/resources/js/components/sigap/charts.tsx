@@ -170,7 +170,7 @@ export function DonutChart({ segments, centerLabel, onSelect }: { segments: Donu
                             )}
                         >
                             <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: s.color }} aria-hidden="true" />
-                            <span className="min-w-0 flex-1 truncate text-[var(--adm-text-2)]">{s.label}</span>
+                            <span className="min-w-0 flex-1 leading-snug text-[var(--adm-text-2)]">{s.label}</span>
                             <span className="font-semibold text-[var(--adm-text)] tabular-nums">{nf(s.value)}</span>
                             <span className="w-10 text-right text-xs text-[var(--adm-text-3)] tabular-nums">
                                 {total > 0 ? `${Math.round((s.value / total) * 100)}%` : '—'}
@@ -222,67 +222,71 @@ export function PieChart({ slices, label, onSelect }: { slices: PieSlice[]; labe
         return <p className="py-10 text-center text-sm text-[var(--adm-text-2)]">Belum ada data.</p>;
     }
 
+    // Tata letak mengikuti lebar kartu (container query), bukan lebar layar: pie di
+    // samping legenda hanya bila kartu cukup lebar agar label legenda tidak hilang.
     return (
-        <div className="flex flex-col items-center gap-5 sm:flex-row xl:flex-col 2xl:flex-row">
-            <div className="relative shrink-0">
-                <svg
-                    viewBox="0 0 160 160"
-                    className="h-[170px] w-[170px]"
-                    role="img"
-                    aria-label={`${label}: ${data.map((s) => `${s.label} ${s.value} (${pct(s.value, total)}%)`).join(', ')}`}
-                >
-                    {data.map((s) => {
-                        const sweep = (s.value / total) * Math.PI * 2;
-                        const start = angle;
-                        const end = angle + sweep;
-                        angle = end;
-                        const mid = (start + end) / 2;
-                        const lift = active === s.key ? 6 : 0;
-                        const dx = Math.cos(mid) * lift;
-                        const dy = Math.sin(mid) * lift;
-                        const large = sweep > Math.PI ? 1 : 0;
-                        const p = (a: number, r = R) => `${(C + Math.cos(a) * r).toFixed(2)},${(C + Math.sin(a) * r).toFixed(2)}`;
-                        const d = data.length === 1 ? null : `M${C},${C} L${p(start)} A${R},${R} 0 ${large} 1 ${p(end)} Z`;
-                        const share = pct(s.value, total);
-                        return (
-                            <g
-                                key={s.key}
-                                transform={`translate(${dx.toFixed(2)} ${dy.toFixed(2)})`}
-                                className={cn('transition-transform duration-200', onSelect && 'cursor-pointer')}
-                                onMouseEnter={() => setActive(s.key)}
-                                onMouseLeave={() => setActive(null)}
-                                onClick={() => onSelect?.(s.key)}
-                            >
-                                {d ? (
-                                    <path d={d} fill={s.color} stroke="var(--acd-surface, #fff)" strokeWidth="2" strokeLinejoin="round" />
-                                ) : (
-                                    <circle cx={C} cy={C} r={R} fill={s.color} />
-                                )}
-                                {share >= 9 && (
-                                    <text
-                                        x={C + Math.cos(mid) * R * 0.62}
-                                        y={C + Math.sin(mid) * R * 0.62 + 4}
-                                        textAnchor="middle"
-                                        fontSize="11"
-                                        fontWeight="700"
-                                        fill="#fff"
-                                        style={{ paintOrder: 'stroke', stroke: 'rgba(0,0,0,.35)', strokeWidth: 2 }}
-                                        pointerEvents="none"
-                                    >
-                                        {share}%
-                                    </text>
-                                )}
-                            </g>
-                        );
-                    })}
-                </svg>
-                {current && (
-                    <span className="pointer-events-none absolute inset-x-0 -bottom-2 mx-auto w-max max-w-[200px] truncate rounded-md bg-[var(--adm-text)] px-2 py-0.5 text-xs font-medium text-[var(--acd-surface,#fff)]">
-                        {current.label}: {nf(current.value)} ({pct(current.value, total)}%)
-                    </span>
-                )}
+        <div className="@container">
+            <div className="flex flex-col items-center gap-5 @[26rem]:flex-row">
+                <div className="relative shrink-0">
+                    <svg
+                        viewBox="0 0 160 160"
+                        className="h-[170px] w-[170px]"
+                        role="img"
+                        aria-label={`${label}: ${data.map((s) => `${s.label} ${s.value} (${pct(s.value, total)}%)`).join(', ')}`}
+                    >
+                        {data.map((s) => {
+                            const sweep = (s.value / total) * Math.PI * 2;
+                            const start = angle;
+                            const end = angle + sweep;
+                            angle = end;
+                            const mid = (start + end) / 2;
+                            const lift = active === s.key ? 6 : 0;
+                            const dx = Math.cos(mid) * lift;
+                            const dy = Math.sin(mid) * lift;
+                            const large = sweep > Math.PI ? 1 : 0;
+                            const p = (a: number, r = R) => `${(C + Math.cos(a) * r).toFixed(2)},${(C + Math.sin(a) * r).toFixed(2)}`;
+                            const d = data.length === 1 ? null : `M${C},${C} L${p(start)} A${R},${R} 0 ${large} 1 ${p(end)} Z`;
+                            const share = pct(s.value, total);
+                            return (
+                                <g
+                                    key={s.key}
+                                    transform={`translate(${dx.toFixed(2)} ${dy.toFixed(2)})`}
+                                    className={cn('transition-transform duration-200', onSelect && 'cursor-pointer')}
+                                    onMouseEnter={() => setActive(s.key)}
+                                    onMouseLeave={() => setActive(null)}
+                                    onClick={() => onSelect?.(s.key)}
+                                >
+                                    {d ? (
+                                        <path d={d} fill={s.color} stroke="var(--acd-surface, #fff)" strokeWidth="2" strokeLinejoin="round" />
+                                    ) : (
+                                        <circle cx={C} cy={C} r={R} fill={s.color} />
+                                    )}
+                                    {share >= 9 && (
+                                        <text
+                                            x={C + Math.cos(mid) * R * 0.62}
+                                            y={C + Math.sin(mid) * R * 0.62 + 4}
+                                            textAnchor="middle"
+                                            fontSize="11"
+                                            fontWeight="700"
+                                            fill="#fff"
+                                            style={{ paintOrder: 'stroke', stroke: 'rgba(0,0,0,.35)', strokeWidth: 2 }}
+                                            pointerEvents="none"
+                                        >
+                                            {share}%
+                                        </text>
+                                    )}
+                                </g>
+                            );
+                        })}
+                    </svg>
+                    {current && (
+                        <span className="pointer-events-none absolute inset-x-0 -bottom-2 mx-auto w-max max-w-[200px] truncate rounded-md bg-[var(--adm-text)] px-2 py-0.5 text-xs font-medium text-[var(--acd-surface,#fff)]">
+                            {current.label}: {nf(current.value)} ({pct(current.value, total)}%)
+                        </span>
+                    )}
+                </div>
+                <Legend items={slices} total={total} active={active} onHover={setActive} onSelect={onSelect} />
             </div>
-            <Legend items={slices} total={total} active={active} onHover={setActive} onSelect={onSelect} />
         </div>
     );
 }
@@ -319,7 +323,7 @@ function Legend({
                         )}
                     >
                         <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: s.color }} aria-hidden="true" />
-                        <span className="min-w-0 flex-1 truncate text-[var(--adm-text-2)]">{s.label}</span>
+                        <span className="min-w-0 flex-1 leading-snug text-[var(--adm-text-2)]">{s.label}</span>
                         <span className="font-semibold text-[var(--adm-text)] tabular-nums">{nf(s.value)}</span>
                         <span className="w-10 text-right text-xs text-[var(--adm-text-3)] tabular-nums">
                             {total > 0 ? `${pct(s.value, total)}%` : '—'}

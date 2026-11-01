@@ -225,7 +225,9 @@ function SourceList({
                                 >
                                     <StatusDot status={s.status} />
                                     <span className="min-w-0 flex-1">
-                                        <span className="block truncate text-sm font-semibold text-gray-800">{s.nama}</span>
+                                        <span className="line-clamp-2 text-sm leading-snug font-semibold text-gray-800" title={s.nama}>
+                                            {s.nama}
+                                        </span>
                                         <span className="block text-xs text-gray-500">
                                             {!s.aktif
                                                 ? 'Nonaktif'
