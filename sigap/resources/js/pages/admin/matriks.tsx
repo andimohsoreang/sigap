@@ -3,6 +3,7 @@ import {
     AlertTriangle,
     ArrowRight,
     AtSign,
+    BarChart3,
     Building2,
     CalendarCheck,
     CalendarDays,
@@ -33,7 +34,7 @@ import {
     Siren,
     Sparkles,
     Sprout,
-    Star,
+    Table2,
     Tag,
     Ticket,
     Timer,
@@ -44,9 +45,18 @@ import {
     X,
     type LucideIcon,
 } from 'lucide-react';
-import type { CSSProperties, ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 
-import { DonutChart, TrendChart, type TrendPoint } from '@/components/sigap/charts';
+import {
+    CHART_PALETTE,
+    ColumnChart,
+    DonutChart,
+    GaugeChart,
+    PieChart,
+    StackedBarChart,
+    TrendChart,
+    type TrendPoint,
+} from '@/components/sigap/charts';
 import { DataTable, type DataTableColumn } from '@/components/sigap/data-table';
 import ProvinceMap, { TooltipRow } from '@/components/sigap/province-map';
 import { Button } from '@/components/ui/button';
@@ -319,12 +329,12 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
             header: 'SLA / EWS',
             cell: ({ row }) =>
                 row.original.overdue ? (
-                    <span className="flex w-fit items-center gap-1.5 rounded bg-red-50 px-2 py-0.5 font-bold text-red-600">
-                        <AlertTriangle className="h-3.5 w-3.5" /> EWS
+                    <span className="flex w-fit items-center gap-1.5 rounded bg-[var(--adm-danger-soft)] px-2 py-0.5 font-bold text-[var(--adm-danger)]">
+                        <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" /> EWS
                     </span>
                 ) : (
-                    <span className="flex items-center gap-1.5 text-gray-600">
-                        <Clock className="h-3.5 w-3.5 text-green-500" /> Aman
+                    <span className="flex items-center gap-1.5 text-[var(--adm-text-2)]">
+                        <Clock className="h-3.5 w-3.5 text-[var(--adm-success)]" aria-hidden="true" /> Aman
                     </span>
                 ),
         },
@@ -443,17 +453,25 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
                     </div>
                 )}
 
+                {!isEmpty && (
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
+                        <KanalCard rows={rekap.kanal} />
+                        <DampakPieCard rows={rekap.dampak} />
+                        <KinerjaCard kpi={rekap.kpi} survei={rekap.survei} />
+                    </div>
+                )}
+
                 <MatrixCard matriks={rekap.matriks} isEmpty={isEmpty} sumbuUrl={(s) => matriksUrl({ sumbu: s })} ticketUrl={ticketUrl} />
 
                 {isEmpty ? (
                     <EmptyPanel rekap={rekap} />
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-[1.5fr_1fr_1fr]">
+                        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                             <ImpactCard rows={rekap.dampak} />
-                            <KanalCard rows={rekap.kanal} total={rekap.total} />
-                            <KawasanCard rows={rekap.kawasan} total={rekap.total} survei={rekap.survei} />
+                            <SlaDampakCard rows={rekap.dampak} />
                         </div>
+                        <ProvinsiStatusCard rows={rekap.provinsi} ticketUrl={ticketUrl} />
                         <OverdueCard
                             data={rekap.perlu_tindakan}
                             luarPeriode={rekap.kpi.ews_luar_periode}
@@ -782,36 +800,80 @@ function MatrixCard({
     // Intensitas warna sel relatif terhadap jumlah terbesar pada kolom tahap yang sama.
     const max = Object.fromEntries(STATUSES.map((s) => [s, Math.max(0, ...matriks.rows.map((r) => r.counts[s]))])) as Record<StatusKey, number>;
     const total = matriks.total;
+    const [view, setView] = useState<'tabel' | 'grafik'>('tabel');
 
     return (
         <Card className="overflow-hidden">
             <div className="p-5 md:px-6">
                 <CardHeading eyebrow="Matriks rekapitulasi" title={sumbu.title}>
-                    <nav
-                        className="flex rounded-lg border border-[var(--adm-border)] bg-[var(--adm-surface-2)] p-1 print:hidden"
-                        aria-label="Sumbu baris matriks"
-                    >
-                        {SUMBU.map((s) => (
-                            <Link
-                                key={s.key}
-                                href={sumbuUrl(s.key)}
-                                preserveScroll
-                                preserveState
-                                aria-current={s.key === matriks.sumbu ? 'true' : undefined}
-                                className={cn(
-                                    'rounded-md px-3 py-1.5 text-[13px] font-medium text-[var(--adm-text-2)] transition-colors hover:text-[var(--adm-text)]',
-                                    s.key === matriks.sumbu &&
-                                        'bg-[var(--acd-surface,#fff)] font-semibold text-[var(--acd-link,var(--adm-primary))] shadow-sm',
-                                )}
-                            >
-                                {s.label}
-                            </Link>
-                        ))}
-                    </nav>
+                    <div className="flex flex-wrap items-center gap-2 print:hidden">
+                        <div
+                            className="flex rounded-lg border border-[var(--adm-border)] bg-[var(--adm-surface-2)] p-1"
+                            role="group"
+                            aria-label="Tampilan matriks"
+                        >
+                            {(
+                                [
+                                    { key: 'tabel', label: 'Tabel', Icon: Table2 },
+                                    { key: 'grafik', label: 'Grafik', Icon: BarChart3 },
+                                ] as const
+                            ).map(({ key, label, Icon }) => (
+                                <button
+                                    key={key}
+                                    type="button"
+                                    aria-pressed={view === key}
+                                    onClick={() => setView(key)}
+                                    className={cn(
+                                        'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] font-medium text-[var(--adm-text-2)] transition-colors hover:text-[var(--adm-text)]',
+                                        view === key &&
+                                            'bg-[var(--acd-surface,#fff)] font-semibold text-[var(--acd-link,var(--adm-primary))] shadow-sm',
+                                    )}
+                                >
+                                    <Icon className="h-4 w-4" aria-hidden="true" /> {label}
+                                </button>
+                            ))}
+                        </div>
+                        <nav
+                            className="flex rounded-lg border border-[var(--adm-border)] bg-[var(--adm-surface-2)] p-1 print:hidden"
+                            aria-label="Sumbu baris matriks"
+                        >
+                            {SUMBU.map((s) => (
+                                <Link
+                                    key={s.key}
+                                    href={sumbuUrl(s.key)}
+                                    preserveScroll
+                                    preserveState
+                                    aria-current={s.key === matriks.sumbu ? 'true' : undefined}
+                                    className={cn(
+                                        'rounded-md px-3 py-1.5 text-[13px] font-medium text-[var(--adm-text-2)] transition-colors hover:text-[var(--adm-text)]',
+                                        s.key === matriks.sumbu &&
+                                            'bg-[var(--acd-surface,#fff)] font-semibold text-[var(--acd-link,var(--adm-primary))] shadow-sm',
+                                    )}
+                                >
+                                    {s.label}
+                                </Link>
+                            ))}
+                        </nav>
+                    </div>
                 </CardHeading>
             </div>
 
-            <div className="overflow-x-auto">
+            {view === 'grafik' && (
+                <div className="border-t border-[var(--adm-border)] p-5 md:px-6 print:hidden">
+                    <StackedBarChart
+                        label={sumbu.title}
+                        series={STATUSES.map((st) => ({ key: st, label: STATUS_LABEL[st], color: TONE[st] }))}
+                        rows={matriks.rows.map((r) => ({
+                            key: r.key || 'kosong',
+                            label: r.label,
+                            values: r.counts,
+                            href: r.param ? ticketUrl(r.param) : null,
+                        }))}
+                    />
+                </div>
+            )}
+
+            <div className={cn('overflow-x-auto', view === 'grafik' && 'hidden print:block')}>
                 <table className="w-full min-w-[880px] border-t border-[var(--adm-border)] text-sm">
                     <thead className="bg-[var(--adm-surface-2)] text-[11px] font-semibold tracking-[0.06em] text-[var(--adm-text-3)] uppercase">
                         <tr>
@@ -917,8 +979,9 @@ function MatrixCard({
             {!isEmpty && (
                 <p className="flex items-center gap-2 border-t border-[var(--adm-border)] px-6 py-3 text-xs text-[var(--adm-text-3)]">
                     <MousePointerClick className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                    Klik angka di sel untuk membuka daftar tiket dengan saringan {sumbu.label.toLowerCase()} + status tersebut. Intensitas warna
-                    mengikuti jumlah tiket. SLA = tiket selesai sebelum tenggat.
+                    {view === 'grafik'
+                        ? `Klik nama ${sumbu.label.toLowerCase()} untuk membuka tiketnya. Klik label status di atas grafik untuk menyembunyikan/menampilkan tahap.`
+                        : `Klik angka di sel untuk membuka daftar tiket dengan saringan ${sumbu.label.toLowerCase()} + status tersebut. Intensitas warna mengikuti jumlah tiket. SLA = tiket selesai sebelum tenggat.`}
                 </p>
             )}
         </Card>
@@ -968,7 +1031,7 @@ function ImpactCard({ rows }: { rows: Rekap['dampak'] }) {
     return (
         <Card className="flex flex-col p-5 md:p-6">
             <CardHeading eyebrow="Tingkat dampak × SLA" title="Target Pedoman Layanan Contact Center" />
-            <div className="-mx-1 mt-4 overflow-x-auto">
+            <div className="-mx-1 mt-4 overflow-x-auto" tabIndex={0} role="region" aria-label="Tabel target SLA per dampak">
                 <table className="w-full min-w-[480px] text-sm">
                     <thead className="bg-[var(--adm-surface-2)] text-[11px] font-semibold tracking-[0.06em] text-[var(--adm-text-3)] uppercase">
                         <tr>
@@ -1066,41 +1129,136 @@ function TotalLine({ total }: { total: number }) {
     );
 }
 
-function KanalCard({ rows, total }: { rows: Rekap['kanal']; total: number }) {
+function KanalCard({ rows }: { rows: Rekap['kanal'] }) {
     return (
         <Card className="p-5 md:p-6">
             <CardHeading eyebrow="Kanal masuk" title="Dari mana tiket datang" />
             <div className="mt-4">
-                <BarList rows={rows} color="var(--adm-primary)" icon={(k) => ROW_ICON[k] ?? Tag} />
-                <TotalLine total={total} />
+                <PieChart
+                    label="Tiket per kanal masuk"
+                    slices={rows.map((r, i) => ({ key: r.key, label: r.label, value: r.total, color: CHART_PALETTE[i % CHART_PALETTE.length] }))}
+                />
             </div>
         </Card>
     );
 }
 
-function KawasanCard({ rows, total, survei }: { rows: Rekap['kawasan']; total: number; survei: Rekap['survei'] }) {
+/** Warna dampak mengikuti ImpactBadge (kritis merah, tinggi kuning, sedang biru, rendah netral). */
+const IMPACT_COLOR: Record<string, string> = {
+    kritis: 'var(--adm-danger)',
+    tinggi: 'var(--adm-warning)',
+    sedang: 'var(--adm-info)',
+    rendah: 'var(--adm-text-3)',
+};
+
+function DampakPieCard({ rows }: { rows: Rekap['dampak'] }) {
     return (
-        <Card className="flex flex-col p-5 md:p-6">
-            <CardHeading eyebrow="Wilayah asal pengaduan" title="Sebaran per provinsi" />
+        <Card className="p-5 md:p-6">
+            <CardHeading eyebrow="Tingkat dampak" title="Komposisi dampak aduan" />
             <div className="mt-4">
-                <BarList rows={rows.map((r) => ({ ...r, key: r.provinsi ?? 'kosong' }))} color="var(--adm-accent)" icon={() => MapPin} />
-                <TotalLine total={total} />
+                <PieChart
+                    label="Tiket per tingkat dampak"
+                    slices={rows.map((r) => ({ key: r.value, label: r.label, value: r.tiket, color: IMPACT_COLOR[r.value] ?? 'var(--adm-text-3)' }))}
+                />
             </div>
-            {survei.rata !== null && (
-                <div className="mt-auto pt-5">
-                    <div className="rounded-lg bg-[var(--adm-accent-soft)] px-4 py-3">
-                        <p className="flex items-center gap-1.5 text-xs font-semibold text-[var(--adm-text)]">
-                            <Star className="h-3.5 w-3.5 text-[var(--adm-accent)]" aria-hidden="true" /> Survei kepuasan warga
-                        </p>
-                        <p className="mt-1 flex items-baseline gap-1.5">
-                            <span className="font-[family-name:var(--font-heading)] text-[26px] leading-none font-bold">{dec(survei.rata)}</span>
-                            <span className="text-xs text-[var(--adm-text-2)]">
-                                / 5 · {nf(survei.responden)} dari {nf(survei.selesai)} tiket selesai
-                            </span>
-                        </p>
-                    </div>
-                </div>
-            )}
+        </Card>
+    );
+}
+
+function KinerjaCard({ kpi, survei }: { kpi: Rekap['kpi']; survei: Rekap['survei'] }) {
+    return (
+        <Card className="flex flex-col p-5 md:p-6 lg:col-span-2 xl:col-span-1">
+            <CardHeading eyebrow="Kinerja layanan" title="Kepatuhan SLA & kepuasan" />
+            <div className="mt-5 grid flex-1 grid-cols-2 content-center gap-4">
+                <GaugeChart
+                    value={kpi.sla_pct}
+                    display={kpi.sla_pct === null ? '—' : `${dec(kpi.sla_pct)}%`}
+                    label="SLA terpenuhi"
+                    caption={`${nf(kpi.sla_tepat)} dari ${nf(kpi.sla_selesai)} tiket selesai`}
+                    good={85}
+                    warn={60}
+                />
+                <GaugeChart
+                    value={survei.rata === null ? null : (survei.rata / 5) * 100}
+                    display={survei.rata === null ? '—' : survei.rata.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                    label="Kepuasan warga"
+                    caption={survei.rata === null ? 'Belum ada survei' : `dari 5 · ${nf(survei.responden)} responden`}
+                    good={80}
+                    warn={60}
+                />
+            </div>
+        </Card>
+    );
+}
+
+function SlaDampakCard({ rows }: { rows: Rekap['dampak'] }) {
+    return (
+        <Card className="p-5 md:p-6">
+            <CardHeading eyebrow="SLA per dampak" title="Ketepatan waktu tiap tingkat dampak" />
+            <div className="mt-4">
+                <ColumnChart
+                    label="Ketepatan SLA per tingkat dampak"
+                    series={[
+                        { key: 'tepat', label: 'Selesai tepat waktu', color: 'var(--adm-success)' },
+                        { key: 'telat', label: 'Selesai terlambat', color: 'var(--adm-warning)' },
+                        { key: 'aman', label: 'Berjalan, masih aman', color: 'var(--adm-info)' },
+                        { key: 'lewat', label: 'Berjalan, lewat SLA', color: 'var(--adm-danger)' },
+                    ]}
+                    groups={rows.map((r) => ({
+                        key: r.value,
+                        label: r.label,
+                        values: {
+                            tepat: r.tepat,
+                            telat: Math.max(0, r.selesai - r.tepat),
+                            aman: Math.max(0, r.berjalan - r.lewat),
+                            lewat: r.lewat,
+                        },
+                    }))}
+                />
+            </div>
+        </Card>
+    );
+}
+
+const PROVINSI_TOP = 10;
+
+function ProvinsiStatusCard({ rows, ticketUrl }: { rows: ProvinceRow[]; ticketUrl: (param: Record<string, string> | null) => string }) {
+    const [all, setAll] = useState(false);
+    const sorted = [...rows].sort((a, b) => b.total - a.total);
+    const shown = all ? sorted : sorted.slice(0, PROVINSI_TOP);
+
+    return (
+        <Card className="p-5 md:p-6">
+            <CardHeading eyebrow="Wilayah asal pengaduan" title="Status penanganan per provinsi">
+                <Link
+                    href="/admin/kawasan"
+                    className="text-[13px] font-semibold text-[var(--acd-link,var(--adm-primary))] hover:underline print:hidden"
+                >
+                    Sebaran Wilayah lengkap
+                </Link>
+            </CardHeading>
+            <div className="mt-4">
+                <StackedBarChart
+                    label="Status penanganan per provinsi"
+                    series={STATUSES.map((st) => ({ key: st, label: STATUS_LABEL[st], color: TONE[st] }))}
+                    rows={shown.map((r) => ({
+                        key: r.provinsi,
+                        label: r.provinsi,
+                        values: r.counts,
+                        // Baris "Tanpa provinsi" (tiket internal / lama) tidak punya saringan provinsi.
+                        href: (PROVINCE_OPTIONS as readonly string[]).includes(r.provinsi) ? ticketUrl({ provinsi: r.provinsi }) : null,
+                    }))}
+                />
+                {sorted.length > PROVINSI_TOP && (
+                    <button
+                        type="button"
+                        onClick={() => setAll((v) => !v)}
+                        className="mt-4 text-[13px] font-semibold text-[var(--acd-link,var(--adm-primary))] hover:underline print:hidden"
+                    >
+                        {all ? `Tampilkan ${PROVINSI_TOP} teratas` : `Tampilkan semua ${sorted.length} provinsi`}
+                    </button>
+                )}
+            </div>
         </Card>
     );
 }
