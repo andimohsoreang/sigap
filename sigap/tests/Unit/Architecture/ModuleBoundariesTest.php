@@ -11,26 +11,17 @@ use PHPUnit\Framework\TestCase;
  *   Pelanggaran yang sudah ada dicatat sebagai BASELINE dan wajib dihapus di
  *   Tahap 1; pelanggaran baru langsung gagal, dan entri baseline yang sudah
  *   beres juga gagal agar daftarnya terus menyusut.
- * - Arah ketergantungan antarmodul `App\Modules\*` (§4.2). Folder modul dibuat
- *   di Tahap 4; aturan ini sudah aktif agar modul pertama langsung terjaga.
+ * - Arah ketergantungan antarmodul `App\Modules\*` (§4.2).
+ * - Tahap 4: kode modul hanya di `app/Modules/*`, tanpa daftar pengecualian;
+ *   lokasi lama (`Services\Ai`, `Services\Knowledge`, `Jobs`, `Listeners`)
+ *   tidak boleh terisi lagi.
  */
 final class ModuleBoundariesTest extends TestCase
 {
-    private const LLM_CLIENT = 'App\\Services\\Ai\\LlmClient';
+    private const LLM_CLIENT = 'App\\Modules\\Ai\\LlmClient';
 
-    /**
-     * Anggota modul Ai di lokasi sementara (`app/Services/Ai`) sampai dipindah
-     * ke `app/Modules/Ai` (PRD-AI Lampiran A).
-     */
-    private const AI_MODULE_TRANSITIONAL = [
-        'App\\Services\\Ai\\LlmClient',
-        'App\\Services\\Ai\\OpenAiCompatibleClient',
-        'App\\Services\\Ai\\FakeLlmClient',
-        'App\\Services\\Ai\\AiException',
-        'App\\Services\\Ai\\ReportsUsage',
-        'App\\Services\\Ai\\PiiMasker',
-        'App\\Services\\Ai\\Prompts',
-    ];
+    /** Lokasi lama kode modul (PRD-AI Lampiran A); kosong sejak Tahap 4. */
+    private const LEGACY_NAMESPACES = ['App\\Services\\Ai\\', 'App\\Services\\Knowledge\\', 'App\\Jobs\\', 'App\\Listeners\\'];
 
     /**
      * Pemakai `LlmClient` di luar modul Ai yang masih ditoleransi. Kosong sejak
@@ -57,7 +48,7 @@ final class ModuleBoundariesTest extends TestCase
 
     private static function inAiModule(string $class): bool
     {
-        return str_starts_with($class, 'App\\Modules\\Ai\\') || in_array($class, self::AI_MODULE_TRANSITIONAL, true);
+        return str_starts_with($class, 'App\\Modules\\Ai\\');
     }
 
     /** @return list<string> */
@@ -119,29 +110,39 @@ final class ModuleBoundariesTest extends TestCase
         $this->assertSame([], $violations, "Melanggar arah ketergantungan PRD-AI §4.2:\n".implode("\n", $violations));
     }
 
+    public function test_module_code_lives_only_in_app_modules(): void
+    {
+        $legacy = array_values(array_filter(
+            array_keys(self::app()),
+            fn ($class) => array_filter(self::LEGACY_NAMESPACES, fn ($ns) => str_starts_with((string) $class, $ns)) !== [],
+        ));
+
+        $this->assertSame([], $legacy, "Kode modul harus di app/Modules/* (PRD-AI §4.3):\n".implode("\n", $legacy));
+    }
+
     public function test_scanner_detects_imports_same_namespace_references_and_ignores_comments(): void
     {
         $imported = DependencyScanner::parse(<<<'PHP'
             <?php
-            namespace App\Services\Knowledge;
+            namespace App\Modules\Knowledge;
             use App\Models\Region, App\Models\Category as Kategori;
-            use App\Services\Ai\{LlmClient, PiiMasker as Masker};
+            use App\Modules\Ai\{LlmClient, PiiMasker as Masker};
             final class Contoh { use \Illuminate\Support\Traits\Macroable; }
             PHP);
         $this->assertTrue(DependencyScanner::dependsOn($imported, self::LLM_CLIENT));
-        $this->assertTrue(DependencyScanner::dependsOn($imported, 'App\\Services\\Ai\\PiiMasker'));
+        $this->assertTrue(DependencyScanner::dependsOn($imported, 'App\\Modules\\Ai\\PiiMasker'));
         $this->assertTrue(DependencyScanner::dependsOn($imported, 'App\\Models\\Region'));
 
         $sameNamespace = DependencyScanner::parse(<<<'PHP'
             <?php
-            namespace App\Services\Ai;
+            namespace App\Modules\Ai;
             class Contoh { public function __construct(private LlmClient $llm) {} }
             PHP);
         $this->assertTrue(DependencyScanner::dependsOn($sameNamespace, self::LLM_CLIENT));
 
         $commentOnly = DependencyScanner::parse(<<<'PHP'
             <?php
-            namespace App\Services\Ai;
+            namespace App\Modules\Ai;
             /** Dipakai {@see LlmClient} untuk mengenali tugas. */
             class Contoh { private string $name = 'OpenAiCompatibleLlmClientX'; }
             PHP);

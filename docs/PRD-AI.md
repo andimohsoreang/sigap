@@ -424,6 +424,12 @@ Perkiraan untuk 1 pengembang dibantu AI agent; setiap tahap dapat dirilis sendir
 | **4. Batas modul** | Pindah ke `app/Modules/*`, kontrak §8, event ContactCenter, uji arsitektur ditegakkan | 2–3 hari | Uji arsitektur hijau tanpa pengecualian |
 | **5. Pemantauan** | Halaman Kesehatan AI, laporan uji kualitas mingguan, notifikasi anggaran | 2 hari | Super Admin melihat angka §FR-AI-08 dari data nyata |
 
+**Status Tahap 4 (2026-11-01):** service & job modul Ai, Knowledge, Assistant, ContactCenter, Referral
+sudah di `app/Modules/*`; kontrak `KnowledgeSearch` (§8) terpasang; listener jawaban TARA didaftarkan
+`AssistantServiceProvider`; uji arsitektur tanpa daftar pengecualian. Atas keputusan pemilik, **model
+Eloquent tetap di `App\Models`** (nama kelas tersimpan di `activity_logs.subject_type`), dan tes lama
+hanya diubah baris `use`-nya. `UjiAsistenCommand` tetap di `app/Console/Commands` (titik masuk CLI).
+
 Urutan dapat diubah satu hal: **Tahap 2 boleh didahulukan** bila AI sungguhan dinyalakan sebelum
 refaktor selesai, karena T1 paling berdampak ke warga.
 
