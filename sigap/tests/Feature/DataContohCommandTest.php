@@ -36,6 +36,7 @@ class DataContohCommandTest extends TestCase
         $this->assertGreaterThan(0, Ticket::query()->where('status', 'selesai')->where('resolved_at', '>', \DB::raw('sla_due_at'))->count(), 'Ada kasus selesai terlambat.');
         $this->assertGreaterThan(0, Survey::query()->count());
         $this->assertGreaterThan(0, Referral::query()->count());
+        $this->assertSame(0, Referral::query()->where('status', Referral::STATUS_DONE)->whereNull('closed_at')->count(), 'Rujukan berhasil punya closed_at (KPI Berhasil 30 hari).');
         $this->assertTrue(ChatConversation::query()->whereNull('outcome')->whereNotNull('handoff_at')->exists(), 'Ada percakapan menunggu petugas.');
         Mail::assertNothingQueued();
         Mail::assertNothingSent();

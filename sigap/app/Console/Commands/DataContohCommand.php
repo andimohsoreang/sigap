@@ -349,6 +349,8 @@ class DataContohCommand extends Command
                     'assigned_to' => $this->staff[1]->id,
                     'opened_at' => $at->copy()->addMinutes(5),
                     'confirmed_at' => $status === Referral::STATUS_DONE ? $at->copy()->addDays(2) : null,
+                    // Sama seperti ReferralService: rujukan berhasil = ditutup (KPI "Berhasil 30 hari" membaca closed_at).
+                    'closed_at' => $status === Referral::STATUS_DONE ? $at->copy()->addDays(2) : null,
                     'follow_up_due_at' => $at->copy()->addDays(3),
                 ]);
                 $ref->forceFill(['created_at' => $at, 'updated_at' => $at])->saveQuietly();
