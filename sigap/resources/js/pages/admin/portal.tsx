@@ -1,16 +1,16 @@
 import { router, useForm } from '@inertiajs/react';
-import { CircleCheckBig, ExternalLink, Globe, Pencil, Plus, RefreshCw, Send, Unplug, X } from 'lucide-react';
+import { CircleCheckBig, ExternalLink, Globe, Info, Pencil, Plus, RefreshCw, Send, Unplug } from 'lucide-react';
 import { type FormEvent, type ReactNode, useState } from 'react';
 
 import { DataTable, type DataTableColumn } from '@/components/sigap/data-table';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
-import AdminLayout, { AdminStat } from '@/layouts/admin-layout';
+import AdminLayout, { AdminStat, Pill } from '@/layouts/admin-layout';
 import { cn } from '@/lib/utils';
 
 type Audience = 'publik' | 'internal';
@@ -87,7 +87,6 @@ export default function PortalPage({ portals, can_edit: canEdit }: Props) {
         form.clearErrors();
         form.setData({ ...EMPTY });
         setFormOpen(true);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const openEdit = (p: Portal) => {
@@ -113,7 +112,6 @@ export default function PortalPage({ portals, can_edit: canEdit }: Props) {
             sort: p.sort,
         });
         setFormOpen(true);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const close = () => {
@@ -146,22 +144,33 @@ export default function PortalPage({ portals, can_edit: canEdit }: Props) {
             id: 'name',
             accessorFn: (p) => `${p.name} ${p.code} ${p.purpose}`,
             header: 'Portal',
+            meta: { label: 'Portal', mobile: 'title', className: 'w-[40%] max-w-0 whitespace-normal' },
             cell: ({ row }) => {
                 const p = row.original;
                 return (
-                    <div className="max-w-md min-w-[16rem] whitespace-normal">
+                    <div className="min-w-0">
                         <div className="flex flex-wrap items-baseline gap-x-2">
-                            <span className="font-semibold text-gray-800">{p.name}</span>
-                            <code className="text-xs text-gray-500">{p.code}</code>
+                            {canEdit ? (
+                                <button
+                                    type="button"
+                                    onClick={() => openEdit(p)}
+                                    className="text-left font-semibold text-[var(--adm-text)] hover:text-[var(--acd-link,var(--adm-primary))] hover:underline"
+                                >
+                                    {p.name}
+                                </button>
+                            ) : (
+                                <span className="font-semibold text-[var(--adm-text)]">{p.name}</span>
+                            )}
+                            <code className="text-xs text-[var(--adm-text-3)]">{p.code}</code>
                         </div>
-                        <p className="line-clamp-2 text-xs text-gray-500" title={p.purpose}>
+                        <p className="mt-0.5 line-clamp-2 text-xs text-[var(--adm-text-2)]" title={p.purpose}>
                             {p.purpose}
                         </p>
                         <a
                             href={p.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-primary mt-0.5 inline-flex max-w-full items-center gap-1 text-xs hover:underline"
+                            className="mt-0.5 inline-flex max-w-full items-center gap-1 text-xs text-[var(--acd-link,var(--adm-primary))] hover:underline"
                         >
                             <span className="truncate">{p.url.replace(/^https?:\/\//, '')}</span>
                             <ExternalLink className="h-3 w-3 shrink-0" aria-hidden="true" />
@@ -174,11 +183,12 @@ export default function PortalPage({ portals, can_edit: canEdit }: Props) {
         {
             accessorKey: 'audience',
             header: 'Untuk',
+            meta: { label: 'Untuk' },
             cell: ({ row }) => (
                 <div className="flex flex-col items-start gap-1">
-                    <AudiencePill audience={row.original.audience} />
+                    <Pill tone={row.original.audience === 'publik' ? 'primary' : 'neutral'}>{AUDIENCE_LABEL[row.original.audience]}</Pill>
                     {row.original.track_completion && row.original.audience === 'publik' && (
-                        <Pill className="bg-sky-50 text-sky-800 ring-sky-200">Dilacak sampai berhasil</Pill>
+                        <span className="text-xs text-[var(--adm-text-2)]">Dilacak sampai berhasil</span>
                     )}
                 </div>
             ),
@@ -186,52 +196,53 @@ export default function PortalPage({ portals, can_edit: canEdit }: Props) {
         {
             accessorKey: 'is_active',
             header: 'Status',
-            cell: ({ row }) =>
-                row.original.is_active ? (
-                    <Pill className="bg-emerald-50 text-emerald-800 ring-emerald-200">Aktif</Pill>
-                ) : (
-                    <Pill className="bg-gray-50 text-gray-600 ring-gray-200">Nonaktif</Pill>
-                ),
+            meta: { label: 'Status' },
+            cell: ({ row }) => <Pill tone={row.original.is_active ? 'success' : 'neutral'}>{row.original.is_active ? 'Aktif' : 'Nonaktif'}</Pill>,
         },
         {
             accessorKey: 'is_reachable',
             header: 'Tautan',
+            meta: { label: 'Tautan' },
             cell: ({ row }) => <Reachability portal={row.original} />,
         },
         {
             accessorKey: 'rujukan_30',
             header: '30 hari',
+            meta: { label: 'Rujukan 30 hari' },
             cell: ({ row }) => (
-                <span className="text-sm whitespace-nowrap text-gray-700 tabular-nums">
-                    {row.original.rujukan_30} rujukan <span className="text-gray-500">· {row.original.berhasil_30} berhasil</span>
+                <span className="text-sm whitespace-nowrap text-[var(--adm-text)] tabular-nums">
+                    {row.original.rujukan_30} rujukan
+                    {row.original.track_completion && (
+                        <span className="block text-xs text-[var(--adm-text-2)]">{row.original.berhasil_30} berhasil</span>
+                    )}
                 </span>
             ),
         },
         {
             id: 'aksi',
-            header: 'Aksi',
-            meta: { label: 'Aksi', disableToggle: true, disableSorting: true, className: 'text-center' },
+            header: '',
+            meta: { label: 'Aksi', disableToggle: true, disableSorting: true, mobile: 'end' },
             cell: ({ row }) => (
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center justify-end gap-1.5">
                     <Button
                         size="sm"
                         variant="outline"
-                        className="h-7 px-2 text-xs"
+                        className="h-8 px-2.5 text-xs"
                         disabled={checking === row.original.id}
                         onClick={() => check(row.original)}
-                        title={`Cek tautan ${row.original.name} sekarang`}
+                        aria-label={`Cek tautan ${row.original.name}`}
                     >
                         <RefreshCw className={cn('h-3.5 w-3.5', checking === row.original.id && 'animate-spin')} aria-hidden="true" />
-                        Cek tautan
+                        Cek
                     </Button>
                     {canEdit && (
                         <Button
                             size="sm"
                             variant="outline"
-                            className="h-7 w-7 p-0"
+                            className="h-8 w-8 p-0"
                             onClick={() => openEdit(row.original)}
-                            title={`Edit ${row.original.name}`}
-                            aria-label={`Edit ${row.original.name}`}
+                            title={`Ubah ${row.original.name}`}
+                            aria-label={`Ubah ${row.original.name}`}
                         >
                             <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                         </Button>
@@ -246,41 +257,40 @@ export default function PortalPage({ portals, can_edit: canEdit }: Props) {
             title="Katalog Portal"
             subtitle="Portal Kementerian Transmigrasi yang dapat dirujuk asisten AI dan petugas. Portal internal tidak pernah ditawarkan ke warga."
             actions={
-                canEdit &&
-                (formOpen ? (
-                    <Button variant="outline" size="sm" onClick={close}>
-                        <X className="h-4 w-4" /> Tutup formulir
+                canEdit ? (
+                    <Button className="h-10" onClick={openNew}>
+                        <Plus className="h-4 w-4" aria-hidden="true" /> Portal baru
                     </Button>
-                ) : (
-                    <Button size="sm" onClick={openNew}>
-                        <Plus className="h-4 w-4" /> Portal baru
-                    </Button>
-                ))
+                ) : undefined
             }
         >
             <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
                 <AdminStat label="Portal publik aktif" value={stats.publik} icon={Globe} />
                 <AdminStat label="Dilacak sampai berhasil" value={stats.dilacak} tone="green" icon={CircleCheckBig} />
-                <AdminStat label="Tidak dapat diakses" value={stats.putus} tone="red" icon={Unplug} />
+                <AdminStat label="Tidak dapat diakses" value={stats.putus} tone={stats.putus > 0 ? 'red' : 'brand'} icon={Unplug} />
                 <AdminStat label="Rujukan 30 hari" value={stats.rujukan} tone="indigo" icon={Send} />
             </div>
 
             {!canEdit && (
-                <p className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
+                <p className="mb-6 flex items-start gap-2 rounded-lg border border-[var(--adm-border)] bg-[var(--adm-info-soft)] px-4 py-3 text-sm text-[var(--adm-text)]">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--adm-info)]" aria-hidden="true" />
                     Katalog ini hanya dapat diubah oleh Super Admin. Anda tetap dapat mengecek tautan portal.
                 </p>
             )}
 
-            {canEdit && formOpen && (
-                <Card className="mb-6 border-gray-200">
-                    <CardHeader className="border-b border-gray-100 pb-3">
-                        <CardTitle className="flex items-center gap-2 text-base text-gray-800">
-                            {editing ? <Pencil className="text-brand-light h-5 w-5" /> : <Plus className="text-brand-light h-5 w-5" />}
-                            {editing ? `Edit ${editing.name}` : 'Portal baru'}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <form onSubmit={submit} className="space-y-6">
+            <Sheet open={canEdit && formOpen} onOpenChange={(v) => !v && close()}>
+                <SheetContent
+                    side="right"
+                    className="flex w-full flex-col gap-0 border-[var(--adm-border)] bg-[var(--acd-surface,#fff)] p-0 sm:max-w-2xl"
+                >
+                    <SheetHeader className="border-b border-[var(--adm-border)] px-6 py-4 pr-12 text-left">
+                        <SheetTitle className="text-[17px] text-[var(--adm-text)]">{editing ? `Ubah ${editing.name}` : 'Portal baru'}</SheetTitle>
+                        <SheetDescription className="text-[13px] text-[var(--adm-text-2)]">
+                            Kolom bertanda * wajib diisi. Portal internal tidak pernah ditawarkan ke warga.
+                        </SheetDescription>
+                    </SheetHeader>
+                    <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
+                        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
                             <Section title="Identitas">
                                 <Field id="portal-name" label="Nama" required error={form.errors.name} className="md:col-span-2">
                                     <Input
@@ -463,7 +473,7 @@ export default function PortalPage({ portals, can_edit: canEdit }: Props) {
                                         onChange={(v) => form.setData('track_completion', v)}
                                     />
                                     {form.errors.track_completion && (
-                                        <p className="mt-1.5 text-xs font-semibold text-rose-500">{form.errors.track_completion}</p>
+                                        <p className="mt-1.5 text-xs font-semibold text-[var(--adm-danger)]">{form.errors.track_completion}</p>
                                     )}
                                 </div>
                                 {form.data.track_completion && !isInternal && (
@@ -482,19 +492,18 @@ export default function PortalPage({ portals, can_edit: canEdit }: Props) {
                                     </Field>
                                 )}
                             </Section>
-
-                            <div className="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
-                                <Button type="button" variant="outline" onClick={close}>
-                                    Batal
-                                </Button>
-                                <Button type="submit" disabled={form.processing}>
-                                    {editing ? 'Simpan perubahan' : 'Simpan portal'}
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
-            )}
+                        </div>
+                        <div className="flex flex-col-reverse gap-2 border-t border-[var(--adm-border)] px-6 py-4 sm:flex-row sm:justify-end">
+                            <Button type="button" variant="outline" onClick={close}>
+                                Batal
+                            </Button>
+                            <Button type="submit" disabled={form.processing}>
+                                {editing ? 'Simpan perubahan' : 'Simpan portal'}
+                            </Button>
+                        </div>
+                    </form>
+                </SheetContent>
+            </Sheet>
 
             <DataTable<Portal>
                 columns={columns}
@@ -518,16 +527,16 @@ export default function PortalPage({ portals, can_edit: canEdit }: Props) {
 
 function Reachability({ portal }: { portal: Portal }) {
     if (!portal.last_checked_at) {
-        return <span className="text-sm text-gray-500">Belum dicek</span>;
+        return <span className="text-sm text-[var(--adm-text-3)]">Belum dicek</span>;
     }
     const ok = portal.is_reachable;
     return (
         <div className="text-sm whitespace-nowrap">
-            <span className={cn('inline-flex items-center gap-1.5 font-medium', ok ? 'text-emerald-700' : 'text-red-700')}>
-                <span className={cn('h-2 w-2 rounded-full', ok ? 'bg-emerald-500' : 'bg-red-500')} aria-hidden="true" />
+            <span className={cn('inline-flex items-center gap-1.5 font-medium', ok ? 'text-[var(--adm-success)]' : 'text-[var(--adm-danger)]')}>
+                <span className={cn('h-2 w-2 rounded-full', 'bg-current')} aria-hidden="true" />
                 {ok ? 'Dapat diakses' : 'Tidak dapat diakses'}
             </span>
-            <div className="text-xs text-gray-500" title={formatDateTime(portal.last_checked_at)}>
+            <div className="text-xs text-[var(--adm-text-3)]" title={formatDateTime(portal.last_checked_at)}>
                 {portal.last_status !== null && <span className="tabular-nums">HTTP {portal.last_status} · </span>}
                 {relativeTime(portal.last_checked_at)}
             </div>
@@ -535,22 +544,10 @@ function Reachability({ portal }: { portal: Portal }) {
     );
 }
 
-function AudiencePill({ audience }: { audience: Audience }) {
-    return audience === 'publik' ? (
-        <Pill className="bg-emerald-50 text-emerald-800 ring-emerald-200">Publik</Pill>
-    ) : (
-        <Pill className="bg-gray-100 text-gray-700 ring-gray-200">Khusus pegawai</Pill>
-    );
-}
-
-function Pill({ className, children }: { className: string; children: ReactNode }) {
-    return <span className={cn('rounded-md px-2 py-0.5 text-xs font-medium whitespace-nowrap ring-1 ring-inset', className)}>{children}</span>;
-}
-
 function Section({ title, children }: { title: string; children: ReactNode }) {
     return (
         <fieldset className="space-y-3">
-            <legend className="text-sm font-semibold text-gray-900">{title}</legend>
+            <legend className="text-[13px] font-semibold tracking-[0.04em] text-[var(--adm-text-2)] uppercase">{title}</legend>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">{children}</div>
         </fieldset>
     );
@@ -574,8 +571,8 @@ function CheckRow({
     return (
         <div
             className={cn(
-                'flex w-full items-start gap-3 rounded-lg border border-gray-200 p-3',
-                disabled ? 'cursor-not-allowed opacity-60' : 'hover:bg-gray-50',
+                'flex w-full items-start gap-3 rounded-lg border border-[var(--adm-border)] p-3',
+                disabled ? 'cursor-not-allowed opacity-60' : 'hover:bg-[var(--adm-surface-2)]',
             )}
         >
             <Checkbox
@@ -587,11 +584,11 @@ function CheckRow({
                 className="mt-0.5"
             />
             <div className="min-w-0">
-                <Label htmlFor={id} className={cn('text-sm font-semibold text-gray-800', !disabled && 'cursor-pointer')}>
+                <Label htmlFor={id} className={cn('text-sm font-semibold text-[var(--adm-text)]', !disabled && 'cursor-pointer')}>
                     {label}
                 </Label>
                 {hint && (
-                    <p id={`${id}-hint`} className="mt-0.5 text-xs text-gray-500">
+                    <p id={`${id}-hint`} className="mt-0.5 text-xs text-[var(--adm-text-2)]">
                         {hint}
                     </p>
                 )}
@@ -619,12 +616,12 @@ function Field({
 }) {
     return (
         <div className={cn('space-y-1.5', className)}>
-            <Label htmlFor={id} className="text-xs font-bold text-gray-600">
-                {label} {required && <span className="text-red-500">*</span>}
+            <Label htmlFor={id} className="text-[13px] font-semibold text-[var(--adm-text)]">
+                {label} {required && <span className="text-[var(--adm-danger)]">*</span>}
             </Label>
             {children}
-            {help && !error && <p className="text-xs text-gray-500">{help}</p>}
-            {error && <p className="text-xs font-semibold text-rose-500">{error}</p>}
+            {help && !error && <p className="text-xs text-[var(--adm-text-3)]">{help}</p>}
+            {error && <p className="text-xs font-semibold text-[var(--adm-danger)]">{error}</p>}
         </div>
     );
 }
