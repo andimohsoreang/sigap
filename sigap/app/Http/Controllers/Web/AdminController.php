@@ -234,7 +234,7 @@ class AdminController extends Controller
     {
         $this->authorize('viewInternal', Ticket::class);
 
-        $query = $this->scopedTickets(Ticket::query())->internal()->with('category');
+        $query = $this->scopedTickets(Ticket::query())->internal()->with(['category', 'assignee:id,name']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
@@ -263,6 +263,7 @@ class AdminController extends Controller
             'tickets' => [
                 'data' => collect($paginator->items())->map(fn (Ticket $t) => [
                     'nomor' => $t->ticket_no,
+                    'judul' => $t->title,
                     'nama' => $t->reporter_name,
                     'kontak' => $t->reporter_phone,
                     'nip' => $t->reporter_nip,
@@ -270,9 +271,13 @@ class AdminController extends Controller
                     'lokasi' => $t->location,
                     'kategori' => $t->category?->name,
                     'urgensi' => $t->impact?->label(),
+                    'impact' => $t->impact?->value,
                     'status' => $t->status?->value,
                     'status_label' => $t->status?->label(),
+                    'petugas' => $t->assignee?->name,
                     'created_at' => $t->created_at?->toIso8601String(),
+                    'tenggat_sla' => $t->sla_due_at?->toIso8601String(),
+                    'overdue' => $t->isOverdue(),
                 ]),
                 'meta' => $this->paginationMeta($paginator),
             ],
@@ -281,6 +286,8 @@ class AdminController extends Controller
                 'this_month' => $this->stats->thisMonthCount($base),
                 'top_category' => $topCategory?->category?->name ?? '—',
                 'avg_resolution_hours' => $this->stats->averageResolutionHours($base),
+                'berjalan' => (clone $base)->whereIn('status', TicketFilters::openStatuses())->count(),
+                'ews' => (clone $base)->whereIn('status', TicketFilters::openStatuses())->whereNotNull('sla_due_at')->where('sla_due_at', '<', now())->count(),
             ],
             'filters' => [
                 'q' => $request->string('q')->toString(),
@@ -308,6 +315,13 @@ class AdminController extends Controller
             'own_region' => $user->region ? ['id' => $user->region->id, 'name' => $user->region->name] : null,
             // Tiket dari percakapan contact center: formulir diisi dari ringkasan AI.
             'prefill' => $conversation ? $this->ticketPrefill($conversation) : null,
+            // Target SLA per dampak (Pedoman Layanan) untuk panduan petugas di formulir.
+            'impacts' => collect([TicketImpact::Kritis, TicketImpact::Tinggi, TicketImpact::Sedang, TicketImpact::Rendah])->map(fn (TicketImpact $i) => [
+                'value' => $i->value,
+                'label' => $i->label(),
+                'respons_jam' => $i->responseHours(),
+                'selesai_hari' => $i->resolveDays(),
+            ])->all(),
         ]);
     }
 
