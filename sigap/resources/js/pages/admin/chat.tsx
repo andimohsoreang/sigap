@@ -217,12 +217,25 @@ export default function Chat({
     };
 
     // Pastikan URL memuat ?conversation=… agar reload berikutnya tetap di utas yang sama.
+    // Cukup ganti URL di sisi klien. Saat muat pertama router Inertia belum menulis
+    // riwayatnya (memanggilnya langsung melempar galat), jadi tunggu sampai siap.
     useEffect(() => {
         if (!activeId) return;
         const params = new URLSearchParams(window.location.search);
-        if (params.get('conversation') !== String(activeId)) {
-            router.get('/admin/chat', { tab, conversation: activeId }, { replace: true, preserveState: true, preserveScroll: true });
-        }
+        if (params.get('conversation') === String(activeId)) return;
+        params.set('tab', tab);
+        params.set('conversation', String(activeId));
+        let t = 0;
+        let tries = 0;
+        const sync = () => {
+            if (!window.history.state?.page) {
+                if (++tries < 40) t = window.setTimeout(sync, 25);
+                return;
+            }
+            router.replace({ url: `/admin/chat?${params}`, preserveState: true, preserveScroll: true });
+        };
+        t = window.setTimeout(sync, 0);
+        return () => window.clearTimeout(t);
     }, [activeId, tab]);
 
     // Formulir akun tertutup lagi saat pindah percakapan.
@@ -372,7 +385,7 @@ export default function Chat({
                                                 <span
                                                     className={cn(
                                                         'shrink-0 text-xs',
-                                                        c.diteruskan_at && !c.hasil ? 'font-semibold text-amber-700' : 'text-gray-500',
+                                                        c.diteruskan_at && !c.hasil ? 'font-semibold text-amber-800' : 'text-gray-500',
                                                     )}
                                                 >
                                                     {formatRelative(c.diteruskan_at && !c.hasil ? c.diteruskan_at : c.last_message_at)}
@@ -568,7 +581,7 @@ export default function Chat({
                                                 )}
                                             </div>
                                         ) : (
-                                            <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
+                                            <div className="grid grid-cols-2 gap-2 2xl:grid-cols-4">
                                                 {ticketOptions ? (
                                                     <ActionButton
                                                         icon={Ticket}
@@ -1466,7 +1479,7 @@ function ActionButton({
     primary?: boolean;
 }) {
     const className = cn(
-        'flex h-11 items-center justify-center gap-1.5 rounded-lg border px-2 text-[13px] font-medium transition-colors sm:gap-2 sm:px-3 sm:text-sm',
+        'flex min-h-11 items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-[13px] leading-tight font-medium transition-colors sm:gap-2 sm:px-3 sm:text-sm',
         primary
             ? 'bg-primary border-primary hover:bg-primary/90 text-white'
             : 'hover:border-primary hover:text-primary border-gray-300 bg-[var(--acd-surface,#fff)] text-gray-800',
@@ -1474,7 +1487,7 @@ function ActionButton({
     const content = (
         <>
             <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span className="truncate">{children}</span>
+            <span className="text-left">{children}</span>
         </>
     );
     return href ? (
