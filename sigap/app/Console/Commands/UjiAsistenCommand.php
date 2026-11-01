@@ -2,12 +2,16 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\UserRole;
+use App\Models\AiQualityRun;
 use App\Models\KnowledgeArticle;
 use App\Models\KnowledgePassage;
+use App\Models\User;
 use App\Modules\Ai\AiException;
 use App\Modules\Assistant\Consultation;
 use App\Modules\Assistant\ResponsePolicy;
 use App\Modules\Knowledge\Retrieval\KnowledgeRetriever;
+use App\Services\NotificationService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -40,6 +44,10 @@ use Illuminate\Support\Str;
  * kode gagal bila tidak terpenuhi, mis.
  *   sigap:uji-asisten --min-pencarian=95 --min-klasifikasi=85 --maks-tanpa-sumber=0 --maks-p95=12
  * Tanpa ambang, perintah hanya melaporkan (selalu sukses) seperti sebelumnya.
+ *
+ * `--simpan` menyimpan ringkasan angka ke `ai_quality_runs` (halaman Kesehatan
+ * AI); `--laporkan` mengirim ringkasan ke Super Admin — dipakai uji terjadwal
+ * mingguan (FR-AI-07/08). Pertanyaan & jawaban tidak pernah disimpan.
  */
 class UjiAsistenCommand extends Command
 {
@@ -49,12 +57,21 @@ class UjiAsistenCommand extends Command
         {--min-pencarian= : Ambang minimum % pencarian tepat}
         {--min-klasifikasi= : Ambang minimum % klasifikasi tepat (panggilan gagal dihitung salah)}
         {--maks-tanpa-sumber= : Batas jumlah jawaban informasi tanpa sumber}
-        {--maks-p95= : Batas waktu jawab P95 dalam detik}';
+        {--maks-p95= : Batas waktu jawab P95 dalam detik}
+        {--simpan : Simpan ringkasan angka ke riwayat Kesehatan AI}
+        {--laporkan : Kirim ringkasan ke Super Admin}';
 
     protected $description = 'Uji pencarian dan jawaban Asisten Contact Center dengan paket pertanyaan warga';
 
+    /** @var list<string> ambang yang tidak terpenuhi pada gate() terakhir */
+    private array $failures = [];
+
+    /** Jumlah ambang yang diperiksa pada gate() terakhir. */
+    private int $checked = 0;
+
     public function handle(KnowledgeRetriever $retriever, Consultation $consultation, ResponsePolicy $policy): int
     {
+        $startedAt = microtime(true);
         $cases = require database_path('data/uji-asisten.php');
         $withModel = ! $this->option('hanya-pencarian');
 
@@ -173,7 +190,84 @@ class UjiAsistenCommand extends Command
             }
         }
 
-        return $this->gate($score, $durations, $withModel);
+        $code = $this->gate($score, $durations, $withModel);
+
+        if ($this->option('simpan') || $this->option('laporkan')) {
+            $run = $this->summary($score, $durations, $withModel, $startedAt);
+            if ($this->option('simpan')) {
+                $run->save();
+            }
+            if ($this->option('laporkan')) {
+                $this->report($run);
+            }
+        }
+
+        return $code;
+    }
+
+    /**
+     * Ringkasan angka untuk riwayat Kesehatan AI (tanpa teks pertanyaan/jawaban).
+     *
+     * @param  array{cari: array{int, int}, jenis: array{int, int}, tebak: int, gagal: int, angka: list<string>}  $score
+     * @param  list<float>  $durations  sudah terurut naik
+     */
+    private function summary(array $score, array $durations, bool $withModel, float $startedAt): AiQualityRun
+    {
+        return new AiQualityRun([
+            'model' => $withModel ? Str::limit(config('services.ai.driver').' · '.config('services.ai.model'), 120, '') : null,
+            'with_model' => $withModel,
+            'passed' => $this->checked === 0 ? null : $this->failures === [],
+            'retrieval_hits' => $score['cari'][0],
+            'retrieval_total' => $score['cari'][1],
+            'classification_hits' => $score['jenis'][0],
+            'classification_total' => $score['jenis'][1],
+            'unsourced' => $score['tebak'],
+            'failed_calls' => $score['gagal'],
+            'number_rejections' => count($score['angka']),
+            'median_ms' => $durations === [] ? null : (int) round($durations[intdiv(count($durations), 2)] * 1000),
+            'p95_ms' => $durations === [] ? null : (int) round($this->p95($durations) * 1000),
+            'failures' => $this->failures === [] ? null : Str::limit(implode('; ', $this->failures), 255, ''),
+            'duration_s' => (int) round(microtime(true) - $startedAt),
+        ]);
+    }
+
+    /** Kirim ringkasan uji ke Super Admin aktif (lonceng + surel). */
+    private function report(AiQualityRun $run): void
+    {
+        $verdict = match ($run->passed) {
+            true => 'LULUS',
+            false => 'GAGAL',
+            null => 'selesai',
+        };
+        $pct = fn (int $hits, int $total) => $total === 0 ? '—' : round($hits / $total * 100).'% ('.$hits.'/'.$total.')';
+        $seconds = fn (?int $ms) => $ms === null ? '—' : number_format($ms / 1000, 1, ',', '.').' dtk';
+
+        $meta = ['Pencarian tepat' => $pct($run->retrieval_hits, $run->retrieval_total)];
+        if ($run->with_model) {
+            $meta += [
+                'Klasifikasi tepat' => $pct($run->classification_hits, $run->classification_total),
+                'Jawaban tanpa sumber' => (string) $run->unsourced,
+                'Panggilan gagal' => (string) $run->failed_calls,
+                'Ditolak pengaman angka' => (string) $run->number_rejections,
+                'Waktu jawab P95' => $seconds($run->p95_ms),
+                'Model' => (string) $run->model,
+            ];
+        }
+
+        $body = "Uji kualitas TARA {$verdict}: pencarian {$meta['Pencarian tepat']}"
+            .($run->with_model ? ", klasifikasi {$meta['Klasifikasi tepat']}, {$run->unsourced} jawaban tanpa sumber, P95 {$meta['Waktu jawab P95']}." : '.')
+            .($run->failures ? " Tidak memenuhi ambang: {$run->failures}." : '');
+
+        app(NotificationService::class)->notify([
+            'event' => 'ai_uji',
+            'subject' => "[Contact Center] Uji kualitas TARA: {$verdict}",
+            'title' => "Uji kualitas TARA: {$verdict}",
+            'body' => $body,
+            'message' => $body,
+            'cta_url' => '/admin/kesehatan-ai',
+            'cta_label' => 'Buka Kesehatan AI',
+            'meta' => $meta,
+        ], User::query()->where('is_active', true)->where('role', UserRole::SuperAdmin->value)->orderBy('id')->get());
     }
 
     /**
@@ -185,14 +279,14 @@ class UjiAsistenCommand extends Command
      */
     private function gate(array $score, array $durations, bool $withModel): int
     {
-        $failures = [];
-        $checked = 0;
+        $this->failures = [];
+        $this->checked = 0;
         $percent = fn (array $pair) => $pair[1] === 0 ? 0.0 : $pair[0] / $pair[1] * 100;
 
         if (($min = $this->threshold('min-pencarian')) !== null) {
-            $checked++;
+            $this->checked++;
             if ($percent($score['cari']) < $min) {
-                $failures[] = sprintf('pencarian %.0f%% < %s%%', $percent($score['cari']), $min);
+                $this->failures[] = sprintf('pencarian %.0f%% < %s%%', $percent($score['cari']), $min);
             }
         }
 
@@ -204,33 +298,33 @@ class UjiAsistenCommand extends Command
             }
         } else {
             if (($min = $this->threshold('min-klasifikasi')) !== null) {
-                $checked++;
+                $this->checked++;
                 if ($percent($score['jenis']) < $min) {
-                    $failures[] = sprintf('klasifikasi %.0f%% < %s%%', $percent($score['jenis']), $min);
+                    $this->failures[] = sprintf('klasifikasi %.0f%% < %s%%', $percent($score['jenis']), $min);
                 }
             }
             if (($max = $this->threshold('maks-tanpa-sumber')) !== null) {
-                $checked++;
+                $this->checked++;
                 if ($score['tebak'] > $max) {
-                    $failures[] = "jawaban tanpa sumber {$score['tebak']} > {$max}";
+                    $this->failures[] = "jawaban tanpa sumber {$score['tebak']} > {$max}";
                 }
             }
             if (($max = $this->threshold('maks-p95')) !== null) {
-                $checked++;
+                $this->checked++;
                 $p95 = $durations === [] ? INF : $this->p95($durations);
                 if ($p95 > $max) {
-                    $failures[] = $durations === [] ? 'P95 tidak terukur (semua panggilan gagal)' : sprintf('P95 %.1f dtk > %s dtk', $p95, $max);
+                    $this->failures[] = $durations === [] ? 'P95 tidak terukur (semua panggilan gagal)' : sprintf('P95 %.1f dtk > %s dtk', $p95, $max);
                 }
             }
         }
 
-        if ($checked === 0) {
+        if ($this->checked === 0) {
             return self::SUCCESS;
         }
 
         $this->newLine();
-        if ($failures !== []) {
-            $this->error('Gerbang kualitas GAGAL: '.implode('; ', $failures));
+        if ($this->failures !== []) {
+            $this->error('Gerbang kualitas GAGAL: '.implode('; ', $this->failures));
 
             return self::FAILURE;
         }

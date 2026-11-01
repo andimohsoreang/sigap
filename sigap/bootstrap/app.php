@@ -35,6 +35,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('sigap:ai-macet')->everyFifteenSeconds()->withoutOverlapping();
         // Kutipan Sumber Resmi mengikuti isi terbaru situs Kementerian.
         $schedule->command('sigap:sinkron-sumber')->weeklyOn(1, '02:00')->withoutOverlapping();
+        // Uji kualitas TARA mingguan dengan model sungguhan; ringkasan ke Super Admin dan
+        // riwayat Kesehatan AI (PRD-AI FR-AI-07/08). Di latar belakang agar sigap:ai-macet
+        // (tiap 15 dtk) tidak tertahan ±2 menit. Tidak berjalan tanpa model sungguhan.
+        $schedule->command('sigap:uji-asisten --min-pencarian=95 --min-klasifikasi=85 --maks-tanpa-sumber=0 --maks-p95=12 --simpan --laporkan')
+            ->weeklyOn(1, '03:00')->timezone('Asia/Jakarta')
+            ->when(fn () => config('services.ai.enabled') && config('services.ai.driver') !== 'fake')
+            ->runInBackground()->withoutOverlapping();
 
         // Retensi data (D-01): hapus percakapan tamu kedaluwarsa & log audit lama.
         $schedule->command('model:prune', [
