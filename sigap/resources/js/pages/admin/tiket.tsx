@@ -4,6 +4,7 @@ import { AlertTriangle, ChevronRight, FilePenLine, X } from 'lucide-react';
 import { DataTable, type DataTableColumn } from '@/components/sigap/data-table';
 import { Button } from '@/components/ui/button';
 import AdminLayout, { ImpactBadge, StatusBadge } from '@/layouts/admin-layout';
+import { OPEN_STATUSES, slaDeadline } from '@/lib/admin-format';
 import { PROVINCE_OPTIONS } from '@/lib/provinces';
 import { cn } from '@/lib/utils';
 
@@ -47,20 +48,6 @@ const TABS: { key: TabKey; label: string; params: Record<string, string> }[] = [
     { key: 'semua', label: 'Semua', params: {} },
 ];
 const TAB_KEYS = ['status', 'ews', 'petugas'];
-
-const DAY = 86_400_000;
-
-/** "Lewat 3 hari" / "Sisa 5 jam" relatif terhadap sekarang. */
-function deadline(iso: string | null, open: boolean): { text: string; tone: 'late' | 'soon' | 'ok' | 'none' } {
-    if (!iso || !open) return { text: '—', tone: 'none' };
-    const diff = new Date(iso).getTime() - Date.now();
-    const abs = Math.abs(diff);
-    const span = abs >= DAY ? `${Math.round(abs / DAY)} hari` : `${Math.max(1, Math.round(abs / 3_600_000))} jam`;
-    if (diff < 0) return { text: `Lewat ${span}`, tone: 'late' };
-    return { text: `Sisa ${span}`, tone: diff < 2 * DAY ? 'soon' : 'ok' };
-}
-
-const OPEN = ['baru', 'verifikasi', 'diproses'];
 
 export default function ManajemenTiket({ tickets, filters, chips, impacts, tab_counts: counts }: Props) {
     const url = (params: Record<string, string>) => {
@@ -115,7 +102,7 @@ export default function ManajemenTiket({ tickets, filters, chips, impacts, tab_c
             header: 'Tenggat SLA',
             meta: { label: 'Tenggat SLA' },
             cell: ({ row }) => {
-                const d = deadline(row.original.tenggat_sla, OPEN.includes(row.original.status));
+                const d = slaDeadline(row.original.tenggat_sla, OPEN_STATUSES.includes(row.original.status));
                 return (
                     <span
                         className={cn(
