@@ -438,12 +438,12 @@ export default function Chat({
                                         <UserRound className="h-5 w-5" aria-hidden="true" />
                                     </span>
                                     <div className="min-w-0 flex-1">
-                                        <p className="flex items-center gap-1.5 text-base font-semibold text-gray-900">
+                                        <h2 className="flex items-center gap-1.5 text-base font-semibold text-gray-900">
                                             <span className="truncate">{active.nama}</span>
                                             {active.tipe === 'warga' && (
                                                 <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-600" aria-label="Warga terdaftar" />
                                             )}
-                                        </p>
+                                        </h2>
                                         <p className="truncate text-sm text-gray-600">
                                             {active.tipe === 'warga'
                                                 ? `Warga terdaftar${active.username ? ` · ${active.username}` : ''}`
