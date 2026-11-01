@@ -39,6 +39,10 @@ test.describe('Alur utama SIGAP (TECH-SPEC §10)', () => {
         await page.getByLabel('Judul Laporan').fill('Jalan kawasan rusak parah');
         await page.getByLabel('Uraian Laporan').fill('Badan jalan berlubang sepanjang 200 meter setelah hujan deras.');
 
+        // Provinsi wajib sejak sebaran pengaduan dihitung dari asal pengaduan.
+        await page.getByRole('combobox', { name: 'Provinsi' }).click();
+        await page.getByRole('option', { name: 'Jambi', exact: true }).click();
+
         await page.getByRole('combobox', { name: 'Tingkat Dampak' }).click();
         await page.getByRole('option', { name: 'Tinggi' }).click();
 
@@ -71,7 +75,7 @@ test.describe('Alur utama SIGAP (TECH-SPEC §10)', () => {
 
         // 4) Halaman lacak publik kini menampilkan tombol survei.
         await page.goto(`/lacak/${ticketNo}`);
-        await expect(page.getByText('Laporan Selesai Ditangani')).toBeVisible();
+        await expect(page.getByText('Laporan Anda sudah selesai ditangani.')).toBeVisible();
 
         await page.getByRole('button', { name: 'Isi Survei Kepuasan' }).click();
         await expect(page.getByRole('dialog', { name: 'Survei Kepuasan' })).toBeVisible();
@@ -79,7 +83,7 @@ test.describe('Alur utama SIGAP (TECH-SPEC §10)', () => {
         await page.getByRole('radio', { name: '5 bintang' }).click();
         await page.getByRole('button', { name: 'Kirim Penilaian' }).click();
 
-        await expect(page.getByText(/Survei kepuasan sudah Anda kirim/i)).toBeVisible();
+        await expect(page.getByText(/Survei sudah Anda kirim/i)).toBeVisible();
     });
 
     test('tamukan tidak bisa membuka panel admin', async ({ page }) => {

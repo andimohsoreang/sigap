@@ -15,7 +15,8 @@ test.describe('Live chat: identitas tamu & badge belum dibaca', () => {
         // --- Tamu (konteks browser sendiri) ---
         const guestCtx = await browser.newContext();
         const guest = await guestCtx.newPage();
-        await guest.goto('/');
+        // Beranda kini halaman Chat TARA; widget live chat ada di halaman ber-tata letak publik.
+        await guest.goto('/pengaduan/baru');
         await guest.getByRole('button', { name: /buka live chat/i }).click();
 
         const dialog = guest.getByRole('dialog', { name: 'Live chat Contact Center' });
@@ -24,7 +25,8 @@ test.describe('Live chat: identitas tamu & badge belum dibaca', () => {
 
         await dialog.getByLabel(/^Nama/).fill('Budi Tamu Ujicoba');
         await dialog.getByRole('button', { name: 'Mulai chat' }).click();
-        await expect(dialog.getByText('Anda: Budi Tamu Ujicoba · Tamu')).toBeVisible();
+        // Widget kini dibuka TARA; nama tamu dipakai di sapaan.
+        await expect(dialog.getByText(/Halo, Budi Tamu Ujicoba!/)).toBeVisible();
 
         await dialog.getByLabel('Ketik pesan').fill('Kapan sertifikat lahan saya terbit?');
         await dialog.getByRole('button', { name: 'Kirim pesan' }).click();
@@ -32,6 +34,8 @@ test.describe('Live chat: identitas tamu & badge belum dibaca', () => {
         await expect(bubble).toBeVisible();
         // Pesan sendiri tampil di sisi kanan (baris justify-end).
         await expect(bubble.locator('xpath=ancestor::div[contains(@class,"justify-end")][1]')).toHaveCount(1);
+        // Pesan sampai ke petugas setelah tamu meminta dialihkan.
+        await dialog.getByRole('button', { name: 'Bicara dengan petugas' }).click();
         await guest.screenshot({ path: 'test-results/chat-tamu.png' });
 
         // --- Admin ---
@@ -44,19 +48,21 @@ test.describe('Live chat: identitas tamu & badge belum dibaca', () => {
         await admin.getByRole('button', { name: 'Masuk' }).click();
         await admin.waitForURL(/\/admin/);
 
-        const badge = admin.getByLabel(/pesan belum dibaca/);
-        await expect(badge.first()).toBeVisible();
+        // Badge di menu Pesan Masuk (label bersama "N perlu ditindaklanjuti" juga dipakai Rujukan).
+        const chatMenu = admin.getByRole('navigation', { name: 'Menu admin' }).getByRole('link', { name: /Pesan Masuk/ });
+        const badge = chatMenu.getByLabel(/perlu ditindaklanjuti/);
+        await expect(badge).toBeVisible();
         await admin.screenshot({ path: 'test-results/chat-admin-badge.png' });
 
-        await admin.getByRole('link', { name: /Kotak Masuk/ }).first().click();
+        await chatMenu.click();
         await admin.waitForURL(/\/admin\/chat/);
         await expect(admin.getByRole('heading', { name: /Budi Tamu Ujicoba/ }).first()).toBeVisible();
         await expect(admin.getByText(/Tamu · nama diisi sendiri/)).toBeVisible();
-        await expect(admin.getByLabel(/pesan belum dibaca/)).toHaveCount(0);
+        await expect(badge).toHaveCount(0);
         await admin.screenshot({ path: 'test-results/chat-admin-dibaca.png' });
 
-        await admin.getByPlaceholder('Ketik balasan Anda...').fill('Halo Budi, sedang kami cek.');
-        await admin.getByPlaceholder('Ketik balasan Anda...').press('Enter');
+        await admin.getByLabel('Balasan untuk warga').fill('Halo Budi, sedang kami cek.');
+        await admin.getByLabel('Balasan untuk warga').press('Enter');
         await expect(admin.getByText('Halo Budi, sedang kami cek.')).toBeVisible();
 
         // Tamu menerima balasan lewat polling (tanpa WebSocket), di sisi kiri.
