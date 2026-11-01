@@ -9,7 +9,7 @@ use App\Models\Category;
 use App\Models\ChatConversation;
 use App\Models\Ticket;
 use App\Models\User;
-use App\Services\ChatService;
+use App\Modules\ContactCenter\ChatService;
 use App\Services\SlaCalculator;
 use App\Services\StatsService;
 use App\Services\TicketService;

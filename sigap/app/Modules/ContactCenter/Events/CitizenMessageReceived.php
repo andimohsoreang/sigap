@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Events;
+namespace App\Modules\ContactCenter\Events;
 
 use Illuminate\Foundation\Events\Dispatchable;
 

@@ -8,9 +8,9 @@ use App\Models\KnowledgeArticle;
 use App\Models\KnowledgePassage;
 use App\Models\KnowledgeSource;
 use App\Models\Portal;
+use App\Modules\ContactCenter\ChatService;
 use App\Modules\Referral\ReferralService;
 use App\Services\Ai\PiiMasker;
-use App\Services\ChatService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 

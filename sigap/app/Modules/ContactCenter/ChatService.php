@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Modules\ContactCenter;
 
 use App\Events\ChatMessageSent;
 use App\Events\ChatUnreadChanged;

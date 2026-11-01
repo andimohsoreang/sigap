@@ -3,7 +3,7 @@
 namespace App\Events;
 
 use App\Models\ChatMessage;
-use App\Services\ChatService;
+use App\Modules\ContactCenter\ChatService;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;

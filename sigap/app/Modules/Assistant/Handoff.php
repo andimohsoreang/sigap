@@ -4,8 +4,8 @@ namespace App\Modules\Assistant;
 
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
-use App\Services\Ai\ServiceHours;
-use App\Services\ChatService;
+use App\Modules\ContactCenter\ChatService;
+use App\Modules\ContactCenter\ServiceHours;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 

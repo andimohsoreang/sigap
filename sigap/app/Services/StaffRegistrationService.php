@@ -7,6 +7,7 @@ use App\Models\AccountActivation;
 use App\Models\ChatConversation;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Modules\ContactCenter\ChatService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;

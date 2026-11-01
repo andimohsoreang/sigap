@@ -6,9 +6,9 @@ use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\KnowledgeArticle;
 use App\Models\User;
+use App\Modules\ContactCenter\ServiceHours;
 use App\Modules\Referral\PortalDirectory;
 use App\Services\Ai\AiException;
-use App\Services\Ai\ServiceHours;
 use App\Services\Knowledge\KnowledgeRetriever;
 
 /**

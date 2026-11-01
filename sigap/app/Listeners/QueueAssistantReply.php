@@ -2,8 +2,8 @@
 
 namespace App\Listeners;
 
-use App\Events\CitizenMessageReceived;
 use App\Jobs\RespondToMessage;
+use App\Modules\ContactCenter\Events\CitizenMessageReceived;
 
 /** Antrekan jawaban TARA di antrean `ai` (didaftarkan otomatis lewat event discovery). */
 final class QueueAssistantReply

@@ -9,7 +9,7 @@ use App\Models\ChatMessage;
 use App\Models\Region;
 use App\Models\Ticket;
 use App\Models\User;
-use App\Services\ContactCenterStats;
+use App\Modules\ContactCenter\ContactCenterStats;
 use Database\Seeders\MasterSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;

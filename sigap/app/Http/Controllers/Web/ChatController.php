@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Web;
 
-use App\Events\CitizenMessageReceived;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StartChatRequest;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Modules\Assistant\Assistant;
+use App\Modules\ContactCenter\ChatService;
+use App\Modules\ContactCenter\ContactCenterStats;
+use App\Modules\ContactCenter\Events\CitizenMessageReceived;
+use App\Modules\ContactCenter\ServiceHours;
 use App\Modules\Referral\ReferralService;
-use App\Services\Ai\ServiceHours;
 use App\Services\ChatAttachmentService;
-use App\Services\ChatService;
-use App\Services\ContactCenterStats;
 use App\Services\PublicChannels;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

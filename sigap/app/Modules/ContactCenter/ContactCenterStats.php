@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Modules\ContactCenter;
 
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
