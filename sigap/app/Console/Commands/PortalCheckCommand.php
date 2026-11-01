@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Portal;
-use App\Services\PortalHealthCheck;
+use App\Modules\Referral\PortalHealthCheck;
 use Illuminate\Console\Command;
 
 /** Cek ketersediaan semua portal aktif (dijadwalkan per jam). */

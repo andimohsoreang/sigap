@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Modules\Referral;
 
 use App\Enums\UserRole;
 use App\Models\ChatConversation;
@@ -12,6 +12,8 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Services\ChatService;
+use App\Services\NotificationService;
 
 /**
  * Siklus hidup rujukan ke portal lain beserta penanggung jawabnya.

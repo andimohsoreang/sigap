@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\ReferralService;
+use App\Modules\Referral\ReferralService;
 use Illuminate\Console\Command;
 
 /**

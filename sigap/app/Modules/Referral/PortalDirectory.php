@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Modules\Referral;
 
 use App\Models\Portal;
 use App\Services\Knowledge\IndonesianText;

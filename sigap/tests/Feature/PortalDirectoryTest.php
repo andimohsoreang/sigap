@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Portal;
-use App\Services\PortalDirectory;
+use App\Modules\Referral\PortalDirectory;
 use Database\Seeders\PortalSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
