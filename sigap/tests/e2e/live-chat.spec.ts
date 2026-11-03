@@ -15,8 +15,8 @@ test.describe('Live chat: identitas tamu & badge belum dibaca', () => {
         // --- Tamu (konteks browser sendiri) ---
         const guestCtx = await browser.newContext();
         const guest = await guestCtx.newPage();
-        // Beranda kini halaman Chat TARA; widget live chat ada di halaman ber-tata letak publik.
-        await guest.goto('/pengaduan/baru');
+        // Beranda & formulir pengaduan kini bertema TARA; widget live chat lama ada di halaman ber-tata letak publik (mis. Daftar).
+        await guest.goto('/daftar');
         await guest.getByRole('button', { name: /buka live chat/i }).click();
 
         const dialog = guest.getByRole('dialog', { name: 'Live chat Contact Center' });
