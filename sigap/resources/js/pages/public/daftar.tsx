@@ -1,25 +1,25 @@
-import { RecaptchaNotice } from '@/components/sigap/recaptcha-notice';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useRecaptcha } from '@/hooks/use-recaptcha';
-import PublicLayout from '@/layouts/public-layout';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { LoaderCircle, UserPlus } from 'lucide-react';
-import { type FormEvent, type ReactNode } from 'react';
+import { Link, useForm } from '@inertiajs/react';
+import { FolderOpen, LoaderCircle, Mail, ShieldCheck, UserPlus } from 'lucide-react';
+import { type FormEvent } from 'react';
 
-function Field({ id, label, error, hint, children }: { id: string; label: string; error?: string; hint?: string; children: ReactNode }) {
-    return (
-        <div className="space-y-2">
-            <Label htmlFor={id}>{label}</Label>
-            {children}
-            {hint && !error && <p className="text-xs text-gray-500">{hint}</p>}
-            {error && <p className="text-destructive text-sm">{error}</p>}
-        </div>
-    );
-}
+import { RecaptchaNotice } from '@/components/sigap/recaptcha-notice';
+import TaraAuthShell, {
+    AuthField,
+    AuthFooter,
+    AuthHeading,
+    AuthPanel,
+    authA11y,
+    authInputClass,
+    authLinkClass,
+    authPrimaryButtonClass,
+} from '@/components/sigap/tara-auth-shell';
+import { useRecaptcha } from '@/hooks/use-recaptcha';
+
+const BENEFITS = [
+    { icon: FolderOpen, text: 'Semua pengaduan Anda tersimpan di Portal Warga' },
+    { icon: Mail, text: 'Kabar perkembangan pengaduan dikirim lewat email' },
+    { icon: ShieldCheck, text: 'NIK dipakai untuk masuk dan disimpan terenkripsi' },
+];
 
 export default function Daftar() {
     const { data, setData, post, transform, processing, errors, reset } = useForm({
@@ -44,125 +44,165 @@ export default function Daftar() {
     const busy = processing || recaptcha.verifying;
 
     return (
-        <PublicLayout title="Daftar Akun Warga">
-            <Head title="Daftar Akun Warga — Contact Center" />
+        <TaraAuthShell
+            title="Daftar Akun Warga"
+            panel={
+                <AuthPanel
+                    eyebrow="Akun Warga"
+                    heading="Satu akun untuk semua pengaduan Anda."
+                    text="Dengan akun, semua pengaduan Anda tersimpan di Portal Warga dan Anda menerima kabar perkembangannya lewat email."
+                    items={BENEFITS}
+                    note={
+                        <>
+                            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                            Data pribadi Anda dilindungi sesuai UU Pelindungan Data Pribadi.
+                        </>
+                    }
+                    pose="menyambut"
+                />
+            }
+        >
+            <AuthHeading title="Daftar Akun Warga">Isi data di bawah. Kolom bertanda * wajib diisi.</AuthHeading>
 
-            <div className="mx-auto flex max-w-lg flex-col px-4 py-12 sm:px-6">
-                <Card className="border-gray-100 shadow-lg">
-                    <CardContent className="p-8">
-                        <div className="mb-6 text-center">
-                            <h1 className="text-primary text-2xl font-bold">Daftar Akun Warga</h1>
-                            <p className="mt-1 text-sm text-gray-500">
-                                Dengan akun, semua pengaduan Anda tersimpan di Portal Warga dan Anda menerima kabar perkembangannya lewat email.
-                            </p>
-                        </div>
+            <form onSubmit={submit} className="mt-8 flex flex-col gap-5">
+                <AuthField
+                    id="nik"
+                    label="NIK (KTP)"
+                    required
+                    error={errors.nik}
+                    hint="16 digit angka. NIK dipakai untuk masuk dan disimpan terenkripsi."
+                >
+                    <input
+                        id="nik"
+                        inputMode="numeric"
+                        maxLength={16}
+                        value={data.nik}
+                        onChange={(e) => setData('nik', e.target.value.replace(/\D/g, ''))}
+                        autoComplete="username"
+                        className={`${authInputClass} font-mono tracking-wider`}
+                        required
+                        {...authA11y('nik', errors.nik, true)}
+                    />
+                </AuthField>
 
-                        <form onSubmit={submit} className="space-y-5">
-                            <Field
-                                id="nik"
-                                label="NIK (KTP) *"
-                                error={errors.nik}
-                                hint="16 digit angka. NIK dipakai untuk masuk dan disimpan terenkripsi."
-                            >
-                                <Input
-                                    id="nik"
-                                    inputMode="numeric"
-                                    maxLength={16}
-                                    value={data.nik}
-                                    onChange={(e) => setData('nik', e.target.value.replace(/\D/g, ''))}
-                                    autoComplete="username"
-                                    required
-                                />
-                            </Field>
+                <AuthField id="nama" label="Nama Lengkap" required error={errors.nama}>
+                    <input
+                        id="nama"
+                        value={data.nama}
+                        onChange={(e) => setData('nama', e.target.value)}
+                        autoComplete="name"
+                        className={authInputClass}
+                        required
+                        {...authA11y('nama', errors.nama)}
+                    />
+                </AuthField>
 
-                            <Field id="nama" label="Nama Lengkap *" error={errors.nama}>
-                                <Input id="nama" value={data.nama} onChange={(e) => setData('nama', e.target.value)} autoComplete="name" required />
-                            </Field>
+                <div className="grid gap-5 sm:grid-cols-2">
+                    <AuthField id="email" label="Email" required error={errors.email} hint="Kami kirim tautan verifikasi ke email ini.">
+                        <input
+                            id="email"
+                            type="email"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            autoComplete="email"
+                            placeholder="nama@contoh.com"
+                            className={authInputClass}
+                            required
+                            {...authA11y('email', errors.email, true)}
+                        />
+                    </AuthField>
 
-                            <Field id="email" label="Email *" error={errors.email} hint="Kami kirim tautan verifikasi ke email ini.">
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    value={data.email}
-                                    onChange={(e) => setData('email', e.target.value)}
-                                    autoComplete="email"
-                                    required
-                                />
-                            </Field>
+                    <AuthField id="telepon" label="No. Telepon / WA" error={errors.telepon}>
+                        <input
+                            id="telepon"
+                            type="tel"
+                            placeholder="08xx-xxxx-xxxx"
+                            value={data.telepon}
+                            onChange={(e) => setData('telepon', e.target.value)}
+                            autoComplete="tel"
+                            className={authInputClass}
+                            {...authA11y('telepon', errors.telepon)}
+                        />
+                    </AuthField>
+                </div>
 
-                            <Field id="telepon" label="No. Telepon / WA" error={errors.telepon}>
-                                <Input
-                                    id="telepon"
-                                    type="tel"
-                                    placeholder="08xx-xxxx-xxxx"
-                                    value={data.telepon}
-                                    onChange={(e) => setData('telepon', e.target.value)}
-                                    autoComplete="tel"
-                                />
-                            </Field>
+                <div className="grid gap-5 sm:grid-cols-2">
+                    <AuthField id="password" label="Kata Sandi" required error={errors.password} hint="Minimal 8 karakter, berisi huruf dan angka.">
+                        <input
+                            id="password"
+                            type="password"
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
+                            autoComplete="new-password"
+                            className={authInputClass}
+                            required
+                            {...authA11y('password', errors.password, true)}
+                        />
+                    </AuthField>
 
-                            <Field id="password" label="Kata Sandi *" error={errors.password} hint="Minimal 8 karakter, berisi huruf dan angka.">
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    value={data.password}
-                                    onChange={(e) => setData('password', e.target.value)}
-                                    autoComplete="new-password"
-                                    required
-                                />
-                            </Field>
+                    <AuthField id="password_confirmation" label="Ulangi Kata Sandi" required error={errors.password_confirmation}>
+                        <input
+                            id="password_confirmation"
+                            type="password"
+                            value={data.password_confirmation}
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
+                            autoComplete="new-password"
+                            className={authInputClass}
+                            required
+                            {...authA11y('password_confirmation', errors.password_confirmation)}
+                        />
+                    </AuthField>
+                </div>
 
-                            <Field id="password_confirmation" label="Ulangi Kata Sandi *" error={errors.password_confirmation}>
-                                <Input
-                                    id="password_confirmation"
-                                    type="password"
-                                    value={data.password_confirmation}
-                                    onChange={(e) => setData('password_confirmation', e.target.value)}
-                                    autoComplete="new-password"
-                                    required
-                                />
-                            </Field>
+                <RecaptchaNotice enabled={recaptcha.enabled} error={recaptcha.error ?? errors.recaptcha_token} />
 
-                            <RecaptchaNotice enabled={recaptcha.enabled} error={recaptcha.error ?? errors.recaptcha_token} />
-
-                            <div>
-                                <label className="flex items-start gap-3 text-sm text-gray-600">
-                                    <Checkbox
-                                        aria-label="Setuju syarat dan kebijakan privasi"
-                                        checked={data.setuju}
-                                        onCheckedChange={(v) => setData('setuju', Boolean(v))}
-                                        className="mt-0.5"
-                                    />
-                                    <span>
-                                        Saya menyetujui{' '}
-                                        <Link href="/syarat-ketentuan" className="text-brand-light font-bold hover:underline">
-                                            Syarat &amp; Ketentuan
-                                        </Link>{' '}
-                                        serta{' '}
-                                        <Link href="/kebijakan-privasi" className="text-brand-light font-bold hover:underline">
-                                            Kebijakan Privasi
-                                        </Link>{' '}
-                                        Contact Center.
-                                    </span>
-                                </label>
-                                {errors.setuju && <p className="text-destructive mt-1 text-sm">{errors.setuju}</p>}
-                            </div>
-
-                            <Button type="submit" disabled={busy || !data.setuju} className="w-full">
-                                {busy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-                                Daftar
-                            </Button>
-                        </form>
-
-                        <p className="mt-6 text-center text-sm text-gray-500">
-                            Sudah punya akun?{' '}
-                            <Link href="/masuk" className="text-brand-light font-bold hover:underline">
-                                Masuk
-                            </Link>
+                <div>
+                    <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-[var(--tcd-text-2,#4a5868)]">
+                        <input
+                            type="checkbox"
+                            aria-label="Setuju syarat dan kebijakan privasi"
+                            checked={data.setuju}
+                            onChange={(e) => setData('setuju', e.target.checked)}
+                            className="mt-0.5 h-[18px] w-[18px] shrink-0 rounded accent-[var(--t-navy)]"
+                            {...authA11y('setuju', errors.setuju)}
+                        />
+                        <span>
+                            Saya menyetujui{' '}
+                            <Link href="/syarat-ketentuan" className={authLinkClass}>
+                                Syarat &amp; Ketentuan
+                            </Link>{' '}
+                            serta{' '}
+                            <Link href="/kebijakan-privasi" className={authLinkClass}>
+                                Kebijakan Privasi
+                            </Link>{' '}
+                            Contact Center.
+                        </span>
+                    </label>
+                    {errors.setuju && (
+                        <p id="setuju-error" className="mt-1 text-sm font-medium text-[var(--tcd-danger,#b42318)]">
+                            {errors.setuju}
                         </p>
-                    </CardContent>
-                </Card>
-            </div>
-        </PublicLayout>
+                    )}
+                </div>
+
+                <button type="submit" disabled={busy || !data.setuju} className={`${authPrimaryButtonClass} mt-1`}>
+                    {busy ? (
+                        <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
+                    ) : (
+                        <UserPlus className="h-5 w-5" aria-hidden="true" />
+                    )}
+                    Daftar
+                </button>
+            </form>
+
+            <AuthFooter>
+                <p>
+                    Sudah punya akun?{' '}
+                    <Link href="/masuk" className={authLinkClass}>
+                        Masuk
+                    </Link>
+                </p>
+            </AuthFooter>
+        </TaraAuthShell>
     );
 }

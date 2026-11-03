@@ -1,11 +1,16 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import PublicLayout from '@/layouts/public-layout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import { LoaderCircle, LockKeyhole } from 'lucide-react';
 import { type FormEvent } from 'react';
+
+import TaraAuthShell, {
+    AuthField,
+    AuthFooter,
+    AuthHeading,
+    authA11y,
+    authInputClass,
+    authLinkClass,
+    authPrimaryButtonClass,
+} from '@/components/sigap/tara-auth-shell';
 
 export default function AturUlangSandi({ token, email }: { token: string; email: string }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -21,70 +26,60 @@ export default function AturUlangSandi({ token, email }: { token: string; email:
     };
 
     return (
-        <PublicLayout title="Atur Ulang Kata Sandi">
-            <Head title="Atur Ulang Kata Sandi — Contact Center" />
+        <TaraAuthShell title="Atur Ulang Kata Sandi">
+            <AuthHeading icon={LockKeyhole} title="Buat Kata Sandi Baru">
+                Setelah disimpan, semua perangkat lain yang masuk dengan akun ini akan dikeluarkan.
+            </AuthHeading>
 
-            <div className="mx-auto flex max-w-md flex-col px-4 py-12 sm:px-6">
-                <Card className="border-gray-100 shadow-lg">
-                    <CardContent className="p-8">
-                        <div className="mb-6 text-center">
-                            <h1 className="text-primary text-2xl font-bold">Buat Kata Sandi Baru</h1>
-                            <p className="mt-1 text-sm text-gray-500">
-                                Setelah disimpan, semua perangkat lain yang masuk dengan akun ini akan dikeluarkan.
-                            </p>
-                        </div>
+            <form onSubmit={submit} className="mt-8 flex flex-col gap-5">
+                <AuthField id="email" label="Email akun" error={errors.email}>
+                    <input id="email" type="email" value={data.email} readOnly className={authInputClass} {...authA11y('email', errors.email)} />
+                </AuthField>
 
-                        <form onSubmit={submit} className="space-y-5">
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email akun</Label>
-                                <Input id="email" type="email" value={data.email} readOnly className="bg-gray-50" />
-                                {errors.email && <p className="text-destructive text-sm">{errors.email}</p>}
-                            </div>
+                <AuthField id="password" label="Kata Sandi Baru" error={errors.password} hint="Minimal 8 karakter, berisi huruf dan angka.">
+                    <input
+                        id="password"
+                        type="password"
+                        value={data.password}
+                        onChange={(e) => setData('password', e.target.value)}
+                        autoComplete="new-password"
+                        className={authInputClass}
+                        required
+                        {...authA11y('password', errors.password, true)}
+                    />
+                </AuthField>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="password">Kata Sandi Baru</Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    value={data.password}
-                                    onChange={(e) => setData('password', e.target.value)}
-                                    autoComplete="new-password"
-                                    required
-                                />
-                                {errors.password ? (
-                                    <p className="text-destructive text-sm">{errors.password}</p>
-                                ) : (
-                                    <p className="text-xs text-gray-500">Minimal 8 karakter, berisi huruf dan angka.</p>
-                                )}
-                            </div>
+                <AuthField id="password_confirmation" label="Ulangi Kata Sandi Baru" error={errors.password_confirmation}>
+                    <input
+                        id="password_confirmation"
+                        type="password"
+                        value={data.password_confirmation}
+                        onChange={(e) => setData('password_confirmation', e.target.value)}
+                        autoComplete="new-password"
+                        className={authInputClass}
+                        required
+                        {...authA11y('password_confirmation', errors.password_confirmation)}
+                    />
+                </AuthField>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="password_confirmation">Ulangi Kata Sandi Baru</Label>
-                                <Input
-                                    id="password_confirmation"
-                                    type="password"
-                                    value={data.password_confirmation}
-                                    onChange={(e) => setData('password_confirmation', e.target.value)}
-                                    autoComplete="new-password"
-                                    required
-                                />
-                            </div>
+                <button type="submit" disabled={processing} className={`${authPrimaryButtonClass} mt-1`}>
+                    {processing ? (
+                        <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
+                    ) : (
+                        <LockKeyhole className="h-5 w-5" aria-hidden="true" />
+                    )}
+                    Simpan kata sandi
+                </button>
+            </form>
 
-                            <Button type="submit" disabled={processing} className="w-full">
-                                {processing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <LockKeyhole className="h-4 w-4" />}
-                                Simpan kata sandi
-                            </Button>
-                        </form>
-
-                        <p className="mt-6 text-center text-sm text-gray-500">
-                            Tautan kedaluwarsa?{' '}
-                            <Link href="/lupa-sandi" className="text-brand-light font-bold hover:underline">
-                                Minta tautan baru
-                            </Link>
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
-        </PublicLayout>
+            <AuthFooter>
+                <p>
+                    Tautan kedaluwarsa?{' '}
+                    <Link href="/lupa-sandi" className={authLinkClass}>
+                        Minta tautan baru
+                    </Link>
+                </p>
+            </AuthFooter>
+        </TaraAuthShell>
     );
 }

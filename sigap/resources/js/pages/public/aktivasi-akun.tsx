@@ -1,11 +1,16 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import PublicLayout from '@/layouts/public-layout';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { Eye, EyeOff, LoaderCircle, LockKeyhole, MessageCircleWarning } from 'lucide-react';
+import { Link, useForm } from '@inertiajs/react';
+import { Eye, EyeOff, LoaderCircle, LockKeyhole, MessageCircleWarning, UserRoundCheck } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
+
+import TaraAuthShell, {
+    AuthField,
+    AuthHeading,
+    AuthNotice,
+    authA11y,
+    authInputClass,
+    authLinkClass,
+    authPrimaryButtonClass,
+} from '@/components/sigap/tara-auth-shell';
 
 interface Akun {
     nama: string;
@@ -38,107 +43,100 @@ export default function AktivasiAkun({
         post(`/aktivasi/${token}`, { onFinish: () => reset('password', 'password_confirmation') });
     };
 
+    const largeInput = `${authInputClass} text-base`;
+
     return (
-        <PublicLayout title={title}>
-            <Head title={`${title} — Contact Center`} />
-
-            <div className="mx-auto flex max-w-md flex-col px-4 py-12 sm:px-6">
-                <Card className="border-gray-100 shadow-lg">
-                    <CardContent className="p-8">
-                        {!token || !akun ? (
-                            <div className="text-center">
-                                <MessageCircleWarning className="mx-auto mb-3 h-10 w-10 text-amber-500" aria-hidden="true" />
-                                <h1 className="text-primary text-2xl font-bold">Tautan tidak berlaku</h1>
-                                <p className="mt-2 text-base text-gray-600">
-                                    Tautan ini sudah dipakai atau sudah lewat batas waktunya. Tulis pesan di chat Contact Center dan minta petugas
-                                    mengirim tautan baru.
-                                </p>
-                                <p className="mt-4 text-base text-gray-600">
-                                    Sudah pernah membuat kata sandi?{' '}
-                                    <Link href="/masuk" className="text-brand-light font-bold hover:underline">
-                                        Masuk di sini
-                                    </Link>
-                                </p>
-                            </div>
-                        ) : (
+        <TaraAuthShell title={title}>
+            {!token || !akun ? (
+                <>
+                    <AuthHeading icon={MessageCircleWarning} tone="warning" title="Tautan tidak berlaku" large>
+                        Tautan ini sudah dipakai atau sudah lewat batas waktunya. Tulis pesan di chat Contact Center dan minta petugas mengirim tautan
+                        baru.
+                    </AuthHeading>
+                    <p className="mt-6 text-center text-base text-[var(--tcd-text-2,#4a5868)]">
+                        Sudah pernah membuat kata sandi?{' '}
+                        <Link href="/masuk" className={authLinkClass}>
+                            Masuk di sini
+                        </Link>
+                    </p>
+                </>
+            ) : (
+                <>
+                    <AuthHeading icon={UserRoundCheck} title={recovery ? 'Buat Kata Sandi Baru' : 'Buat Kata Sandi'} large>
+                        Akun atas nama <b className="text-[var(--tcd-heading,var(--t-deep))]">{akun.nama}</b>
+                        {akun.nik && (
                             <>
-                                <div className="mb-6 text-center">
-                                    <h1 className="text-primary text-2xl font-bold">{recovery ? 'Buat Kata Sandi Baru' : 'Buat Kata Sandi'}</h1>
-                                    <p className="mt-2 text-base text-gray-600">
-                                        Akun atas nama <b className="text-gray-900">{akun.nama}</b>
-                                        {akun.nik && (
-                                            <>
-                                                {' '}
-                                                (NIK <span className="font-mono">{akun.nik}</span>)
-                                            </>
-                                        )}{' '}
-                                        {recovery
-                                            ? 'sudah dicocokkan petugas. Buat kata sandi baru; kata sandi lama tidak berlaku lagi.'
-                                            : 'sudah dibuat petugas. Tinggal buat kata sandi Anda.'}
-                                    </p>
-                                </div>
-
-                                <form onSubmit={submit} className="space-y-5">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="password" className="text-base">
-                                            Kata sandi
-                                        </Label>
-                                        <div className="relative">
-                                            <Input
-                                                id="password"
-                                                type={visible ? 'text' : 'password'}
-                                                value={data.password}
-                                                onChange={(e) => setData('password', e.target.value)}
-                                                autoComplete="new-password"
-                                                className="h-12 pr-12 text-base"
-                                                required
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setVisible((v) => !v)}
-                                                aria-label={visible ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
-                                                className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-gray-500 hover:text-gray-800"
-                                            >
-                                                {visible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                            </button>
-                                        </div>
-                                        {errors.password ? (
-                                            <p className="text-destructive text-sm">{errors.password}</p>
-                                        ) : (
-                                            <p className="text-sm text-gray-500">Paling sedikit 8 huruf, dan harus ada angkanya.</p>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="password_confirmation" className="text-base">
-                                            Ketik ulang kata sandi
-                                        </Label>
-                                        <Input
-                                            id="password_confirmation"
-                                            type={visible ? 'text' : 'password'}
-                                            value={data.password_confirmation}
-                                            onChange={(e) => setData('password_confirmation', e.target.value)}
-                                            autoComplete="new-password"
-                                            className="h-12 text-base"
-                                            required
-                                        />
-                                    </div>
-
-                                    <Button type="submit" disabled={processing} className="h-12 w-full text-base">
-                                        {processing ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <LockKeyhole className="h-5 w-5" />}
-                                        Simpan dan masuk
-                                    </Button>
-                                </form>
-
-                                <p className="mt-6 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                                    Catat kata sandi ini di tempat aman. Lain kali, masuk dengan <b>NIK</b> dan <b>kata sandi</b> ini. Petugas tidak
-                                    akan pernah menanyakan kata sandi Anda.
-                                </p>
+                                {' '}
+                                (NIK <span className="font-mono">{akun.nik}</span>)
                             </>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
-        </PublicLayout>
+                        )}{' '}
+                        {recovery
+                            ? 'sudah dicocokkan petugas. Buat kata sandi baru; kata sandi lama tidak berlaku lagi.'
+                            : 'sudah dibuat petugas. Tinggal buat kata sandi Anda.'}
+                    </AuthHeading>
+
+                    <form onSubmit={submit} className="mt-8 flex flex-col gap-5">
+                        <AuthField
+                            id="password"
+                            label="Kata sandi"
+                            error={errors.password}
+                            hint="Paling sedikit 8 huruf, dan harus ada angkanya."
+                            large
+                        >
+                            <div className="relative">
+                                <input
+                                    id="password"
+                                    type={visible ? 'text' : 'password'}
+                                    value={data.password}
+                                    onChange={(e) => setData('password', e.target.value)}
+                                    autoComplete="new-password"
+                                    className={`${largeInput} pr-12`}
+                                    required
+                                    {...authA11y('password', errors.password, true)}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setVisible((v) => !v)}
+                                    aria-label={visible ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                                    aria-pressed={visible}
+                                    className="absolute top-1/2 right-2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--tcd-text-3,#6b7785)] hover:bg-[var(--tcd-muted,#f1f4f7)] hover:text-[var(--tcd-heading,var(--t-deep))]"
+                                >
+                                    {visible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
+                            </div>
+                        </AuthField>
+
+                        <AuthField id="password_confirmation" label="Ketik ulang kata sandi" error={errors.password_confirmation} large>
+                            <input
+                                id="password_confirmation"
+                                type={visible ? 'text' : 'password'}
+                                value={data.password_confirmation}
+                                onChange={(e) => setData('password_confirmation', e.target.value)}
+                                autoComplete="new-password"
+                                className={largeInput}
+                                required
+                                {...authA11y('password_confirmation', errors.password_confirmation)}
+                            />
+                        </AuthField>
+
+                        <button type="submit" disabled={processing} className={`${authPrimaryButtonClass} mt-1`}>
+                            {processing ? (
+                                <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
+                            ) : (
+                                <LockKeyhole className="h-5 w-5" aria-hidden="true" />
+                            )}
+                            Simpan dan masuk
+                        </button>
+                    </form>
+
+                    <div className="mt-6">
+                        <AuthNotice>
+                            Catat kata sandi ini di tempat aman. Lain kali, masuk dengan <b>NIK</b> dan <b>kata sandi</b> ini. Petugas tidak akan
+                            pernah menanyakan kata sandi Anda.
+                        </AuthNotice>
+                    </div>
+                </>
+            )}
+        </TaraAuthShell>
     );
 }

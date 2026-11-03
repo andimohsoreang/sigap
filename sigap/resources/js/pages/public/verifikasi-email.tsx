@@ -1,12 +1,19 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import PublicLayout from '@/layouts/public-layout';
-import type { SharedData } from '@/types';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { router, useForm, usePage } from '@inertiajs/react';
 import { LoaderCircle, MailCheck, RefreshCw } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
+
+import TaraAuthShell, {
+    AuthField,
+    AuthFooter,
+    AuthHeading,
+    AuthStatus,
+    authA11y,
+    authInputClass,
+    authLinkClass,
+    authPrimaryButtonClass,
+    authSecondaryButtonClass,
+} from '@/components/sigap/tara-auth-shell';
+import type { SharedData } from '@/types';
 
 interface Props {
     email: string | null;
@@ -36,77 +43,74 @@ export default function VerifikasiEmail({ email, hasEmail }: Props) {
     };
 
     return (
-        <PublicLayout title="Verifikasi Email">
-            <Head title="Verifikasi Email — Contact Center" />
+        <TaraAuthShell title="Verifikasi Email">
+            <AuthHeading icon={MailCheck} title="Periksa email Anda">
+                {hasEmail ? (
+                    <>
+                        Kami sudah mengirim tautan verifikasi ke <strong className="text-[var(--tcd-heading,var(--t-deep))]">{email}</strong>. Klik
+                        tautan itu untuk membuka Portal Warga. Tautan berlaku 60 menit.
+                    </>
+                ) : (
+                    'Akun Anda belum memiliki email. Isi email di bawah untuk menerima tautan verifikasi.'
+                )}
+            </AuthHeading>
 
-            <div className="mx-auto flex max-w-md flex-col px-4 py-12 sm:px-6">
-                <Card className="border-gray-100 shadow-lg">
-                    <CardContent className="p-8">
-                        <div className="mb-6 text-center">
-                            <MailCheck className="text-brand-light mx-auto mb-3 h-10 w-10" />
-                            <h1 className="text-primary text-2xl font-bold">Periksa email Anda</h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                {hasEmail ? (
-                                    <>
-                                        Kami sudah mengirim tautan verifikasi ke <strong>{email}</strong>. Klik tautan itu untuk membuka Portal Warga.
-                                        Tautan berlaku 60 menit.
-                                    </>
-                                ) : (
-                                    'Akun Anda belum memiliki email. Isi email di bawah untuk menerima tautan verifikasi.'
-                                )}
-                            </p>
-                        </div>
+            {flash?.status && (
+                <div className="mt-6">
+                    <AuthStatus>{flash.status}</AuthStatus>
+                </div>
+            )}
 
-                        {flash?.status && (
-                            <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-                                {flash.status}
-                            </p>
-                        )}
-
-                        {hasEmail && (
-                            <form onSubmit={submitResend}>
-                                <Button type="submit" variant="outline" disabled={resend.processing} className="w-full">
-                                    {resend.processing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                                    Kirim ulang tautan
-                                </Button>
-                            </form>
-                        )}
-
-                        {changing ? (
-                            <form onSubmit={submitChange} className="mt-6 space-y-3 border-t border-gray-100 pt-6">
-                                <Label htmlFor="email">{hasEmail ? 'Email yang benar' : 'Email'}</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    value={change.data.email}
-                                    onChange={(e) => change.setData('email', e.target.value)}
-                                    autoComplete="email"
-                                    required
-                                />
-                                {change.errors.email && <p className="text-destructive text-sm">{change.errors.email}</p>}
-                                <Button type="submit" disabled={change.processing} className="w-full">
-                                    {change.processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                                    Simpan &amp; kirim tautan
-                                </Button>
-                            </form>
+            {hasEmail && (
+                <form onSubmit={submitResend} className="mt-8">
+                    <button type="submit" disabled={resend.processing} className={authSecondaryButtonClass}>
+                        {resend.processing ? (
+                            <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
                         ) : (
-                            <p className="mt-6 text-center text-sm text-gray-500">
-                                Salah menulis email?{' '}
-                                <button type="button" onClick={() => setChanging(true)} className="text-brand-light font-bold hover:underline">
-                                    Ganti email
-                                </button>
-                            </p>
+                            <RefreshCw className="h-4 w-4" aria-hidden="true" />
                         )}
+                        Kirim ulang tautan
+                    </button>
+                </form>
+            )}
 
-                        <p className="mt-6 text-center text-xs text-gray-500">
-                            Tidak menerima email? Periksa folder Spam atau Promosi.{' '}
-                            <button type="button" onClick={() => router.post('/keluar')} className="font-semibold hover:underline">
-                                Keluar
-                            </button>
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
-        </PublicLayout>
+            {changing ? (
+                <form onSubmit={submitChange} className="mt-6 flex flex-col gap-4 border-t border-[var(--tcd-border,#eceff3)] pt-6">
+                    <AuthField id="email" label={hasEmail ? 'Email yang benar' : 'Email'} error={change.errors.email}>
+                        <input
+                            id="email"
+                            type="email"
+                            value={change.data.email}
+                            onChange={(e) => change.setData('email', e.target.value)}
+                            autoComplete="email"
+                            placeholder="nama@contoh.com"
+                            className={authInputClass}
+                            required
+                            {...authA11y('email', change.errors.email)}
+                        />
+                    </AuthField>
+                    <button type="submit" disabled={change.processing} className={authPrimaryButtonClass}>
+                        {change.processing && <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />}
+                        Simpan &amp; kirim tautan
+                    </button>
+                </form>
+            ) : (
+                <p className="mt-6 text-center text-sm text-[var(--tcd-text-2,#5b6875)]">
+                    Salah menulis email?{' '}
+                    <button type="button" onClick={() => setChanging(true)} className={authLinkClass}>
+                        Ganti email
+                    </button>
+                </p>
+            )}
+
+            <AuthFooter>
+                <p className="text-center text-[13px]">
+                    Tidak menerima email? Periksa folder Spam atau Promosi.{' '}
+                    <button type="button" onClick={() => router.post('/keluar')} className={authLinkClass}>
+                        Keluar
+                    </button>
+                </p>
+            </AuthFooter>
+        </TaraAuthShell>
     );
 }
