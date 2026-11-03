@@ -1,4 +1,3 @@
-import { Card, CardContent } from '@/components/ui/card';
 import { Head } from '@inertiajs/react';
 import { CheckCircle2 } from 'lucide-react';
 import StaticShell, { Section } from './static-shell';
@@ -21,18 +20,23 @@ const SLA = [
 
 export default function PedomanLayanan() {
     return (
-        <StaticShell title="Pedoman Layanan Contact Center" subtitle="Panduan resmi alur, kanal, dan standar waktu penanganan pengaduan masyarakat">
+        <StaticShell
+            eyebrow="Pedoman Layanan"
+            pose="menunjuk"
+            title="Pedoman Layanan Contact Center"
+            subtitle="Panduan resmi alur, kanal, dan standar waktu penanganan pengaduan masyarakat"
+        >
             <Head title="Pedoman Layanan — Contact Center" />
 
             <Section title="Alur Penanganan Pengaduan">
                 <ol className="space-y-4">
                     {ALUR.map(([step, desc], idx) => (
                         <li key={step} className="flex gap-4">
-                            <span className="bg-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold text-white">
+                            <span className="font-heading flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--tcd-primary,var(--t-deep))] font-bold text-white">
                                 {idx + 1}
                             </span>
                             <div>
-                                <p className="font-bold text-gray-800">{step}</p>
+                                <p className="font-semibold text-[var(--tcd-heading,var(--t-deep))]">{step}</p>
                                 <p className="text-sm">{desc}</p>
                             </div>
                         </li>
@@ -44,7 +48,10 @@ export default function PedomanLayanan() {
                 <p>Contact Center menyediakan 5 kanal resmi berikut. Laporan di luar kanal ini tidak dapat dijamin diproses.</p>
                 <div className="flex flex-wrap gap-3">
                     {KANAL.map((k) => (
-                        <span key={k} className="border-secondary/60 text-primary rounded-full border bg-white px-4 py-2 text-sm font-medium">
+                        <span
+                            key={k}
+                            className="rounded-full border border-[var(--tcd-border-warm,#e6ded1)] bg-[var(--tcd-cream,#f7f3ee)] px-4 py-2 text-sm font-semibold text-[var(--tcd-heading,var(--t-deep))]"
+                        >
                             {k}
                         </span>
                     ))}
@@ -52,35 +59,38 @@ export default function PedomanLayanan() {
             </Section>
 
             <Section title="Standar Waktu Layanan (SLA)">
-                <Card className="overflow-hidden border-gray-100">
-                    <CardContent className="overflow-x-auto p-0">
-                        <table className="w-full text-sm">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-5 py-3 text-left font-bold text-gray-600">Kategori Aduan</th>
-                                    <th className="px-5 py-3 text-left font-bold text-gray-600">Target Respons Awal</th>
-                                    <th className="px-5 py-3 text-left font-bold text-gray-600">Target Penyelesaian</th>
+                <div
+                    className="overflow-x-auto rounded-[20px] border border-[var(--tcd-border,#e6ebf0)]"
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Tabel standar waktu layanan"
+                >
+                    <table className="w-full min-w-[520px] text-[15px]">
+                        <thead className="bg-[var(--tcd-muted,#f6f8fa)]">
+                            <tr>
+                                <th className="px-5 py-3 text-left font-semibold text-[var(--tcd-heading,var(--t-deep))]">Kategori Aduan</th>
+                                <th className="px-5 py-3 text-left font-semibold text-[var(--tcd-heading,var(--t-deep))]">Target Respons Awal</th>
+                                <th className="px-5 py-3 text-left font-semibold text-[var(--tcd-heading,var(--t-deep))]">Target Penyelesaian</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {SLA.map(([kat, resp, done]) => (
+                                <tr key={kat} className="border-t border-[var(--tcd-border,#e6ebf0)]">
+                                    <td className="px-5 py-3 font-semibold text-[var(--tcd-heading,var(--t-deep))]">{kat}</td>
+                                    <td className="px-5 py-3">{resp}</td>
+                                    <td className="px-5 py-3">{done}</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {SLA.map(([kat, resp, done]) => (
-                                    <tr key={kat} className="border-t border-gray-50">
-                                        <td className="px-5 py-3 font-semibold text-gray-800">{kat}</td>
-                                        <td className="px-5 py-3 text-gray-600">{resp}</td>
-                                        <td className="px-5 py-3 text-gray-600">{done}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-                </Card>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
                 <p className="text-sm">
                     Target waktu bersifat estimasi terbaik (best-effort) dan dapat berubah untuk kasus yang memerlukan koordinasi lintas instansi.
                     Jika SLA terlewati, laporan dapat dieskalasi melalui Call Center.
                 </p>
             </Section>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 [&>section]:rounded-[20px] [&>section]:border [&>section]:border-[var(--tcd-border,#e6ebf0)] [&>section]:p-6">
                 <Section title="Hak Pelapor">
                     <ul className="space-y-2">
                         {[
@@ -90,7 +100,7 @@ export default function PedomanLayanan() {
                             'Mengajukan eskalasi bila tidak ada respons.',
                         ].map((h) => (
                             <li key={h} className="flex gap-2 text-sm">
-                                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" /> {h}
+                                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--tcd-success,#047857)]" /> {h}
                             </li>
                         ))}
                     </ul>
@@ -104,7 +114,7 @@ export default function PedomanLayanan() {
                             'Menjaga kerahasiaan nomor tiket miliknya.',
                         ].map((h) => (
                             <li key={h} className="flex gap-2 text-sm">
-                                <CheckCircle2 className="text-brand-light mt-0.5 h-4 w-4 shrink-0" /> {h}
+                                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--tcd-link,var(--t-navy))]" /> {h}
                             </li>
                         ))}
                     </ul>
