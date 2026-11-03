@@ -29,12 +29,12 @@ use Illuminate\Support\Facades\Route;
 
 // Beranda utama: contact center TARA, semua dimulai dari chat (keputusan 29 Okt 2026).
 Route::get('/', [PublicController::class, 'home'])->name('home');
-// Tampilan beranda lama tetap tersedia sebagai pembanding.
-Route::get('/beranda-lama', [PublicController::class, 'homeAbsol'])->name('beranda.lama');
-Route::get('/beranda-standar', [PublicController::class, 'homeStandard'])->name('beranda.standar');
-// Alamat lama diarahkan agar tautan yang sudah tersebar tidak 404.
+// Tampilan beranda lama sudah dihapus; alamat lamanya diarahkan ke beranda
+// agar tautan yang sudah tersebar tidak 404.
 Route::redirect('/beranda-baru', '/', 301);
-Route::redirect('/beranda-absol', '/beranda-lama', 301);
+Route::redirect('/beranda-lama', '/', 301);
+Route::redirect('/beranda-standar', '/', 301);
+Route::redirect('/beranda-absol', '/', 301);
 // Panduan lengkap pengaduan & penanganan tiket.
 Route::get('/panduan', [PublicController::class, 'guide'])->name('panduan');
 Route::get('/tentang', [PublicController::class, 'about'])->name('tentang');

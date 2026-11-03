@@ -6,8 +6,6 @@ use App\Enums\TicketStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSurveyRequest;
 use App\Http\Resources\V1\TicketResource;
-use App\Models\Channel;
-use App\Models\KnowledgeArticle;
 use App\Models\Ticket;
 use App\Services\OfficialNews;
 use App\Services\PublicChannels;
@@ -46,31 +44,6 @@ class PublicController extends Controller
             'berita' => Inertia::defer(fn () => $news->latest()),
             'beritaSemua' => OfficialNews::ALL_URL,
         ]);
-    }
-
-    /** Beranda lama (tampilan gaya absol.id) sebagai pembanding. */
-    public function homeAbsol(): Response
-    {
-        return Inertia::render('public/beranda-absol', $this->homeProps());
-    }
-
-    /**
-     * Beranda tampilan standar (lama) sebagai pembanding — data SAMA dengan
-     * {@see homeAbsol()}, hanya komponen tampilannya yang berbeda.
-     */
-    public function homeStandard(): Response
-    {
-        return Inertia::render('public/beranda', $this->homeProps());
-    }
-
-    /** @return array<string, mixed> */
-    private function homeProps(): array
-    {
-        return [
-            'stats' => $this->stats->publicOverview(),
-            'channels' => $this->channelList(),
-            'faqs' => $this->faqs(),
-        ];
     }
 
     /** Panduan lengkap pengaduan (masyarakat) & penanganan tiket (admin). */
@@ -219,53 +192,5 @@ class PublicController extends Controller
     public function aboutUs(): Response
     {
         return Inertia::render('public/tentang-kami');
-    }
-
-    /** @return array<int, array<string, mixed>> */
-    private function channelList(): array
-    {
-        return Channel::query()
-            ->whereIn('type', ['sosmed', 'kantor', 'nasional', 'internal'])
-            ->orderBy('id')
-            ->get()
-            ->map(fn ($c) => [
-                'id' => $c->id,
-                'type' => $c->type?->value,
-                'type_label' => $c->type?->label(),
-                'name' => $c->name,
-                'account_name' => $c->account_name,
-                'url' => $c->url,
-                'status' => $c->status,
-            ])
-            ->all();
-    }
-
-    /**
-     * FAQ beranda dari Basis Pengetahuan (artikel terbit yang paling sering
-     * dipakai). Daftar bawaan dipakai hanya bila belum ada artikel terbit.
-     *
-     * @return array<int, array{question: string, answer: string}>
-     */
-    private function faqs(): array
-    {
-        $articles = KnowledgeArticle::query()
-            ->published()
-            ->orderByDesc('used_count')
-            ->orderBy('id')
-            ->limit(8)
-            ->get(['title', 'body']);
-
-        if ($articles->isNotEmpty()) {
-            return $articles->map(fn (KnowledgeArticle $a) => ['question' => $a->title, 'answer' => $a->body])->all();
-        }
-
-        return [
-            ['question' => 'Bagaimana cara mengadukan layanan?', 'answer' => 'Anda dapat membuat tiket aduan melalui menu "Katalog Pengaduan" memilih Contact Center di portal ini, mengisi formulir dengan detail lokasi, lalu menyimpannya.'],
-            ['question' => 'Bagaimana caranya mendapatkan Hak Akses log in ke Contact Center?', 'answer' => 'Masyarakat umum dapat login lewat Portal Warga. Hak akses Admin dikhususkan bagi Pegawai terdaftar.'],
-            ['question' => 'Bagaimana jika status tiket saya sudah RESOLVE?', 'answer' => 'Status Resolve menandakan keluhan Anda telah diselesaikan. Anda akan diminta mengisi survei kepuasan pelanggan.'],
-            ['question' => 'Bagaimana Cara Mengajukan Permohonan Baru?', 'answer' => 'Pilih menu "Katalog Pengaduan" di halaman beranda, pilih layanan yang sesuai, lalu isi kolom formulir.'],
-            ['question' => 'Bagaimana cara memperbaiki permohonan yang ditolak?', 'answer' => 'Jika tiket ditolak karena kurang lengkap, Anda dapat membuat tiket baru dengan mereferensikan nomor lama dan melampirkan bukti.'],
-            ['question' => 'Bagaimana Cara Menghapus Dokumen yang sudah di Unggah?', 'answer' => 'Untuk alasan akuntabilitas, dokumen yang disubmit tidak dapat dihapus mandiri. Silakan hubungi admin via Live Chat.'],
-        ];
     }
 }

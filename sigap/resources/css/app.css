@@ -151,42 +151,6 @@
     animation: sigap-fade-in 0.4s ease-in-out;
 }
 
-/* Latar hero beranimasi (halaman pembanding gaya absol.id). */
-@keyframes absol-drift {
-    0%,
-    100% {
-        transform: translate3d(0, 0, 0) scale(1);
-    }
-    50% {
-        transform: translate3d(3rem, -2rem, 0) scale(1.12);
-    }
-}
-
-@keyframes absol-grid-pan {
-    from {
-        background-position: 0 0;
-    }
-    to {
-        background-position: 56px 56px;
-    }
-}
-
-.absol-orb {
-    animation: absol-drift 16s ease-in-out infinite;
-    will-change: transform;
-}
-
-.absol-grid-pan {
-    animation: absol-grid-pan 24s linear infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .absol-orb,
-    .absol-grid-pan {
-        animation: none;
-    }
-}
-
 /* --------------------------------------------------------------------------
    Scope gaya panel admin (tidak memengaruhi halaman publik).
    Tipografi: Inter untuk semua teks (x-height tinggi, terbaca di tabel padat

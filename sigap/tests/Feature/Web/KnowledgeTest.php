@@ -132,16 +132,6 @@ class KnowledgeTest extends TestCase
                 ->where('can_publish', true));
     }
 
-    public function test_home_faq_comes_from_published_articles(): void
-    {
-        $this->article();
-        $this->article(['title' => 'Draf tersembunyi', 'status' => KnowledgeArticle::STATUS_DRAFT]);
-
-        $this->get('/beranda-lama')->assertInertia(fn (Assert $page) => $page
-            ->has('faqs', 1)
-            ->where('faqs.0.question', 'Apa syarat menjadi peserta transmigrasi?'));
-    }
-
     public function test_seeder_only_runs_on_empty_table(): void
     {
         $this->seed(KnowledgeSeeder::class);

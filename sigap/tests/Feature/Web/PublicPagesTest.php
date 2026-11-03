@@ -10,28 +10,14 @@ class PublicPagesTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_beranda_lama_keeps_absol_design(): void
+    public function test_old_home_designs_are_removed_and_redirect_home(): void
     {
-        $this->get('/beranda-lama')
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('public/beranda-absol')
-                ->has('stats')
-                ->has('channels')
-                ->has('faqs')
-            );
-    }
-
-    public function test_beranda_standar_still_available_with_same_data(): void
-    {
-        $this->get('/beranda-standar')
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('public/beranda')
-                ->has('stats')
-                ->has('channels')
-                ->has('faqs')
-            );
+        // Tampilan lama (absol & standar) dihapus; alamatnya tetap diarahkan agar tidak 404.
+        foreach (['/beranda-lama', '/beranda-standar', '/beranda-absol'] as $old) {
+            $this->get($old)->assertRedirect('/')->assertStatus(301);
+        }
+        $this->assertFileDoesNotExist(resource_path('js/pages/public/beranda-absol.tsx'));
+        $this->assertFileDoesNotExist(resource_path('js/pages/public/beranda.tsx'));
     }
 
     public function test_beranda_utama_is_tara_contact_center(): void
@@ -44,11 +30,6 @@ class PublicPagesTest extends TestCase
         foreach (['08-selamat-datang', '01-menunjuk-kanan', '03-jempol-sukses', '06-berpikir', '00-menyapa', 'avatar'] as $image) {
             $this->assertFileExists(public_path("images/transi/{$image}.webp"));
         }
-    }
-
-    public function test_old_absol_url_redirects_to_beranda_lama(): void
-    {
-        $this->get('/beranda-absol')->assertRedirect('/beranda-lama')->assertStatus(301);
     }
 
     public function test_public_static_pages_render(): void

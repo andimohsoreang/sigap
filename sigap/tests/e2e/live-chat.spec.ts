@@ -15,27 +15,23 @@ test.describe('Live chat: identitas tamu & badge belum dibaca', () => {
         // --- Tamu (konteks browser sendiri) ---
         const guestCtx = await browser.newContext();
         const guest = await guestCtx.newPage();
-        // Beranda & formulir pengaduan kini bertema TARA; widget live chat lama ada di halaman ber-tata letak publik (mis. Daftar).
-        await guest.goto('/daftar');
-        await guest.getByRole('button', { name: /buka live chat/i }).click();
+        // Widget live chat lama sudah dihapus; tamu memakai halaman Chat TARA layar penuh.
+        await guest.goto('/chat');
+        const chat = guest.getByRole('region', { name: 'Percakapan dengan TARA' });
+        await expect(guest.getByLabel(/^Nama lengkap/)).toBeVisible();
+        await expect(guest.getByLabel('Pesan', { exact: true })).toBeDisabled();
 
-        const dialog = guest.getByRole('dialog', { name: 'Live chat Contact Center' });
-        await expect(dialog.getByLabel(/^Nama/)).toBeVisible();
-        await expect(dialog.getByLabel('Ketik pesan')).toHaveCount(0);
+        await guest.getByLabel(/^Nama lengkap/).fill('Budi Tamu Ujicoba');
+        await guest.getByLabel(/^Provinsi asal/).selectOption('Jambi');
+        await guest.getByRole('button', { name: 'Mulai chat' }).click();
+        await expect(guest.getByLabel('Pesan', { exact: true })).toBeEnabled();
 
-        await dialog.getByLabel(/^Nama/).fill('Budi Tamu Ujicoba');
-        await dialog.getByRole('button', { name: 'Mulai chat' }).click();
-        // Widget kini dibuka TARA; nama tamu dipakai di sapaan.
-        await expect(dialog.getByText(/Halo, Budi Tamu Ujicoba!/)).toBeVisible();
-
-        await dialog.getByLabel('Ketik pesan').fill('Kapan sertifikat lahan saya terbit?');
-        await dialog.getByRole('button', { name: 'Kirim pesan' }).click();
-        const bubble = dialog.getByText('Kapan sertifikat lahan saya terbit?');
+        await guest.getByLabel('Pesan', { exact: true }).fill('Kapan sertifikat lahan saya terbit?');
+        await guest.getByRole('button', { name: 'Kirim', exact: true }).click();
+        const bubble = chat.getByText('Kapan sertifikat lahan saya terbit?');
         await expect(bubble).toBeVisible();
-        // Pesan sendiri tampil di sisi kanan (baris justify-end).
-        await expect(bubble.locator('xpath=ancestor::div[contains(@class,"justify-end")][1]')).toHaveCount(1);
         // Pesan sampai ke petugas setelah tamu meminta dialihkan.
-        await dialog.getByRole('button', { name: 'Bicara dengan petugas' }).click();
+        await guest.getByRole('button', { name: 'Bicara dengan petugas' }).click();
         await guest.screenshot({ path: 'test-results/chat-tamu.png' });
 
         // --- Admin ---
@@ -66,9 +62,8 @@ test.describe('Live chat: identitas tamu & badge belum dibaca', () => {
         await expect(admin.getByText('Halo Budi, sedang kami cek.')).toBeVisible();
 
         // Tamu menerima balasan lewat polling (tanpa WebSocket), di sisi kiri.
-        const reply = dialog.getByText('Halo Budi, sedang kami cek.');
+        const reply = chat.getByText('Halo Budi, sedang kami cek.');
         await expect(reply).toBeVisible({ timeout: 15_000 });
-        await expect(reply.locator('xpath=ancestor::div[contains(@class,"justify-end")][1]')).toHaveCount(0);
         await guest.screenshot({ path: 'test-results/chat-tamu-balasan.png' });
 
         await guestCtx.close();

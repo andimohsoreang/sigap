@@ -183,15 +183,15 @@ const FITUR_WARGA: Feature[] = [
     {
         id: 'w-chat',
         icon: MessageSquare,
-        title: 'Live Chat Bantuan',
+        title: 'Chat TARA',
         desc: (
             <>
-                Widget obrolan di pojok kanan bawah menghubungkan Anda langsung dengan petugas Contact Center tanpa formulir. Cocok untuk pertanyaan
-                cepat atau klarifikasi laporan yang sedang berjalan.
+                Tombol TARA di pojok kanan bawah membuka Chat TARA layar penuh. Isi nama dan provinsi, lalu tulis pertanyaan Anda; TARA menjawab dari
+                sumber resmi dan bisa menghubungkan Anda dengan petugas Contact Center bila perlu.
             </>
         ),
-        tips: ['Balasan petugas masuk ke halaman Kotak Masuk panel admin.', 'Untuk laporan resmi tetap gunakan formulir pengaduan.'],
-        shots: [s('m11-livechat.jpeg', 'Widget live chat', 'Widget live chat: kirim pertanyaan dan terima balasan petugas.')],
+        tips: ['Pilih "Bicara dengan petugas" untuk diteruskan ke petugas.', 'Untuk laporan resmi tetap gunakan formulir pengaduan.'],
+        shots: [s('m11-livechat.jpeg', 'Chat TARA', 'Chat TARA: tanya jawab dengan asisten dan petugas Contact Center.')],
     },
 ];
 
@@ -305,7 +305,7 @@ const FITUR_ADMIN: Feature[] = [
         desc: (
             <>
                 Seluruh percakapan live chat warga terkumpul di sini. Pilih percakapan pada daftar kiri, baca riwayatnya, lalu balas melalui kolom di
-                bawah. Balasan langsung terkirim ke widget chat pelapor.
+                bawah. Balasan langsung tampil di Chat TARA pelapor.
             </>
         ),
         shots: [
