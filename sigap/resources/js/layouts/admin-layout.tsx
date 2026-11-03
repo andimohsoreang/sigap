@@ -312,9 +312,13 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
                                     <button
                                         type="button"
                                         className="flex items-center gap-2.5 rounded-lg py-1 pr-1 pl-1 hover:bg-[var(--adm-surface-2)] md:pr-2"
-                                        aria-label="Menu akun"
                                     >
-                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--adm-primary)] text-sm font-semibold text-white">
+                                        {/* Nama tombol = "Menu akun" + nama & peran yang terlihat (WCAG 2.5.3). */}
+                                        <span className="sr-only">Menu akun</span>
+                                        <span
+                                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--adm-primary)] text-sm font-semibold text-white"
+                                            aria-hidden="true"
+                                        >
                                             {userName.trim().charAt(0).toUpperCase()}
                                         </span>
                                         <span className="hidden text-left md:block">

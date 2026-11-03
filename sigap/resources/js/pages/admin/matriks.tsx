@@ -51,6 +51,7 @@ import {
     CHART_PALETTE,
     ColumnChart,
     DonutChart,
+    FunnelChart,
     GaugeChart,
     PieChart,
     StackedBarChart,
@@ -152,6 +153,21 @@ interface Rekap {
     tren: { satuan: 'hari' | 'bulan'; titik: TrendPoint[] };
     survei: { rata: number | null; responden: number; selesai: number };
     perlu_tindakan: { total: number; items: OverdueItem[] };
+    layanan: {
+        percakapan: number;
+        tahap: { key: string; label: string; total: number }[];
+        hasil_petugas: { key: string; label: string; total: number }[];
+    };
+    petugas: StaffRow[];
+}
+
+interface StaffRow {
+    key: string;
+    label: string;
+    total: number;
+    nilai: Record<'selesai_tepat' | 'selesai_lambat' | 'berjalan' | 'lewat' | 'ditolak', number>;
+    sla_pct: number | null;
+    respons_jam: number | null;
 }
 
 interface ProvinceRow {
@@ -365,7 +381,10 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
             actions={
                 <div className="flex flex-wrap items-center gap-2 print:hidden">
                     <Select value={periode.value} onValueChange={(v) => visit({ periode: v })}>
-                        <SelectTrigger className="h-10 w-auto min-w-[168px] gap-2 bg-[var(--acd-surface,#fff)] font-medium" aria-label="Periode">
+                        <SelectTrigger
+                            className="h-10 w-auto min-w-[168px] gap-2 bg-[var(--acd-surface,#fff)] font-medium"
+                            aria-label={`Periode: ${periode.label}`}
+                        >
                             <CalendarDays className="h-4 w-4 shrink-0 text-[var(--adm-text-2)]" aria-hidden="true" />
                             <SelectValue />
                         </SelectTrigger>
@@ -379,7 +398,10 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
                         </SelectContent>
                     </Select>
                     <Select value={filters.provinsi || 'all'} onValueChange={(v) => visit({ provinsi: v === 'all' ? '' : v, region_id: '' })}>
-                        <SelectTrigger className="h-10 w-auto min-w-[180px] gap-2 bg-[var(--acd-surface,#fff)] font-medium" aria-label="Provinsi">
+                        <SelectTrigger
+                            className="h-10 w-auto min-w-[180px] gap-2 bg-[var(--acd-surface,#fff)] font-medium"
+                            aria-label={`Provinsi: ${regionName}`}
+                        >
                             <MapPin className="h-4 w-4 shrink-0 text-[var(--adm-text-2)]" aria-hidden="true" />
                             <SelectValue />
                         </SelectTrigger>
@@ -460,6 +482,11 @@ export default function Matriks({ tickets, rekap, periode, filters, chips, optio
                         <KinerjaCard kpi={rekap.kpi} survei={rekap.survei} />
                     </div>
                 )}
+
+                <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
+                    <LayananCard layanan={rekap.layanan} tanpa={rekap.alur.tanpa_tiket} periode={periode.label} />
+                    {!isEmpty && <PetugasCard rows={rekap.petugas} ticketUrl={ticketUrl} />}
+                </div>
 
                 <MatrixCard matriks={rekap.matriks} isEmpty={isEmpty} sumbuUrl={(s) => matriksUrl({ sumbu: s })} ticketUrl={ticketUrl} />
 
@@ -631,7 +658,6 @@ function FlowCard({
                                     active && 'ring-2 ring-offset-2',
                                 )}
                                 style={{ borderColor: TONE[stage.key], '--tw-ring-color': TONE[stage.key] } as CSSProperties}
-                                aria-label={`${STATUS_LABEL[stage.key]}: ${data.jumlah} tiket — saring daftar tiket`}
                             >
                                 <span className="flex items-center gap-2 text-sm font-semibold text-[var(--adm-text)]">
                                     <span
@@ -654,6 +680,7 @@ function FlowCard({
                                         <Siren className="h-3 w-3" aria-hidden="true" /> {nf(data.ews)} lewat tenggat
                                     </span>
                                 )}
+                                <span className="sr-only"> — saring daftar tiket</span>
                             </Link>
                         </div>
                     );
@@ -727,7 +754,6 @@ function TerminalStage({
                 active && 'ring-2 ring-offset-2',
             )}
             style={{ backgroundColor: `color-mix(in srgb, ${tone} 10%, var(--acd-surface, white))`, '--tw-ring-color': tone } as CSSProperties}
-            aria-label={`${STATUS_LABEL[status]}: ${jumlah} tiket — saring daftar tiket`}
         >
             <Icon className="h-5 w-5 shrink-0" style={{ color: tone }} aria-hidden="true" />
             <span className="min-w-0 flex-1">
@@ -739,6 +765,7 @@ function TerminalStage({
             <span className="font-[family-name:var(--font-heading)] text-[26px] leading-none font-bold tabular-nums" style={{ color: tone }}>
                 {nf(jumlah)}
             </span>
+            <span className="sr-only"> — saring daftar tiket</span>
         </Link>
     );
 }
@@ -800,7 +827,7 @@ function MatrixCard({
     // Intensitas warna sel relatif terhadap jumlah terbesar pada kolom tahap yang sama.
     const max = Object.fromEntries(STATUSES.map((s) => [s, Math.max(0, ...matriks.rows.map((r) => r.counts[s]))])) as Record<StatusKey, number>;
     const total = matriks.total;
-    const [view, setView] = useState<'tabel' | 'grafik'>('tabel');
+    const [view, setView] = useState<'tabel' | 'grafik'>('grafik');
 
     return (
         <Card className="overflow-hidden">
@@ -1221,6 +1248,132 @@ function SlaDampakCard({ rows }: { rows: Rekap['dampak'] }) {
 }
 
 const PROVINSI_TOP = 10;
+
+/** Warna corong layanan (terang & gelap): TARA hijau, petugas biru, hasil petugas dari palet grafik. */
+const LAYANAN_COLOR: Record<string, string> = {
+    tara: 'var(--adm-success)',
+    petugas: 'var(--acd-link, var(--adm-primary))',
+    tanpa_jawaban: 'var(--adm-text-3)',
+    tiket: 'var(--chart-violet, #6f4fb3)',
+    rujuk_portal: 'var(--adm-info)',
+    diarahkan: 'var(--chart-rose, #b4456c)',
+    terjawab_petugas: 'var(--chart-teal, #1f7f7f)',
+    berjalan: 'var(--adm-warning)',
+    lainnya: 'var(--adm-text-3)',
+};
+
+function LayananCard({ layanan, tanpa, periode }: { layanan: Rekap['layanan']; tanpa: Rekap['alur']['tanpa_tiket']; periode: string }) {
+    const color = (key: string) => LAYANAN_COLOR[key] ?? 'var(--adm-text-3)';
+
+    return (
+        <Card className="p-5 md:p-6">
+            <CardHeading eyebrow="Layanan Contact Center" title="Corong layanan TARA">
+                <Link href="/admin/chat" className="text-[13px] font-semibold text-[var(--acd-link,var(--adm-primary))] hover:underline print:hidden">
+                    Buka Pesan Masuk
+                </Link>
+            </CardHeading>
+            <p className="mt-1 text-[13px] text-[var(--adm-text-2)]">
+                Ke mana percakapan warga berakhir · {periode}. Semua percakapan, tidak dibatasi provinsi.
+            </p>
+            <div className="mt-5">
+                <FunnelChart
+                    total={layanan.percakapan}
+                    totalLabel="Semua percakapan"
+                    stages={layanan.tahap.map((t) => ({ key: t.key, label: t.label, value: t.total, color: color(t.key) }))}
+                    drill={{
+                        from: 'petugas',
+                        label: 'Hasil percakapan yang ditangani petugas',
+                        segments: layanan.hasil_petugas.map((h) => ({ key: h.key, label: h.label, value: h.total, color: color(h.key) })),
+                    }}
+                />
+            </div>
+            {layanan.percakapan > 0 && (tanpa.ppid > 0 || tanpa.rujukan > 0) && (
+                <p className="mt-4 border-t border-[var(--adm-border)] pt-3 text-xs text-[var(--adm-text-2)]">
+                    {tanpa.ppid > 0 && <>TARA mengarahkan {nf(tanpa.ppid)} pertanyaan kebijakan ke PPID. </>}
+                    {tanpa.rujukan > 0 && (
+                        <>
+                            Rujukan portal: {nf(tanpa.rujukan)} dibuat, {nf(tanpa.rujukan_berhasil)} berhasil.
+                        </>
+                    )}
+                </p>
+            )}
+        </Card>
+    );
+}
+
+const PETUGAS_TOP = 8;
+
+const PETUGAS_SERIES = [
+    { key: 'selesai_tepat', label: 'Selesai tepat waktu', color: 'var(--adm-success)' },
+    { key: 'selesai_lambat', label: 'Selesai terlambat', color: 'var(--adm-warning)' },
+    { key: 'berjalan', label: 'Berjalan', color: 'var(--acd-link, var(--adm-primary))' },
+    { key: 'lewat', label: 'Lewat tenggat', color: 'var(--adm-danger)' },
+    { key: 'ditolak', label: 'Ditolak', color: 'var(--adm-text-3)' },
+];
+
+function PetugasCard({ rows, ticketUrl }: { rows: StaffRow[]; ticketUrl: (param: Record<string, string> | null) => string }) {
+    const [all, setAll] = useState(false);
+    const shown = all ? rows : rows.slice(0, PETUGAS_TOP);
+
+    return (
+        <Card className="p-5 md:p-6">
+            <CardHeading eyebrow="Kinerja petugas" title="Tiket per petugas" />
+            <p className="mt-1 text-[13px] text-[var(--adm-text-2)]">Status tiket yang ditangani tiap petugas. Klik nama untuk membuka tiketnya.</p>
+            <div className="mt-5">
+                <StackedBarChart
+                    label="Tiket per petugas"
+                    series={PETUGAS_SERIES}
+                    rows={shown.map((r) => ({ key: r.key, label: r.label, values: r.nilai, href: ticketUrl({ petugas: r.key }) }))}
+                />
+            </div>
+            {shown.length > 0 && (
+                <div className="-mx-1 mt-5 overflow-x-auto" tabIndex={0} role="region" aria-label="Ringkasan kinerja petugas">
+                    <table className="w-full min-w-[460px] text-[13px]">
+                        <thead className="text-[11px] font-semibold tracking-[0.06em] text-[var(--adm-text-3)] uppercase">
+                            <tr className="border-b border-[var(--adm-border)]">
+                                <th scope="col" className="px-1 py-2 text-left font-semibold">
+                                    Petugas
+                                </th>
+                                <th scope="col" className="px-1 py-2 text-right font-semibold">
+                                    Tiket
+                                </th>
+                                <th scope="col" className="px-1 py-2 text-right font-semibold">
+                                    Selesai tepat SLA
+                                </th>
+                                <th scope="col" className="px-1 py-2 text-right font-semibold">
+                                    Rata-rata respons
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {shown.map((r) => (
+                                <tr key={r.key} className="border-b border-[var(--adm-border)] last:border-b-0">
+                                    <td className="max-w-[200px] truncate px-1 py-2 text-[var(--adm-text)]">{r.label}</td>
+                                    <td className="px-1 py-2 text-right font-semibold text-[var(--adm-text)] tabular-nums">{nf(r.total)}</td>
+                                    <td className="px-1 py-2 text-right text-[var(--adm-text-2)] tabular-nums">
+                                        {r.sla_pct === null ? '—' : `${r.sla_pct.toLocaleString('id-ID')}%`}
+                                    </td>
+                                    <td className="px-1 py-2 text-right text-[var(--adm-text-2)] tabular-nums">
+                                        {r.respons_jam === null ? '—' : `${r.respons_jam.toLocaleString('id-ID')} jam`}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+            {rows.length > PETUGAS_TOP && (
+                <button
+                    type="button"
+                    onClick={() => setAll((v) => !v)}
+                    className="mt-4 text-[13px] font-semibold text-[var(--acd-link,var(--adm-primary))] hover:underline print:hidden"
+                >
+                    {all ? `Tampilkan ${PETUGAS_TOP} teratas` : `Tampilkan semua ${rows.length} petugas`}
+                </button>
+            )}
+        </Card>
+    );
+}
 
 function ProvinsiStatusCard({ rows, ticketUrl }: { rows: ProvinceRow[]; ticketUrl: (param: Record<string, string> | null) => string }) {
     const [all, setAll] = useState(false);

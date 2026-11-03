@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Channel;
 use App\Models\Ticket;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -180,22 +181,41 @@ class StatsService
      */
     public function averageHours(Builder $query, string $from, string $to): ?float
     {
-        $driver = (clone $query)->getConnection()->getDriverName();
+        $value = (clone $query)
+            ->reorder()
+            ->whereNotNull($to)
+            ->toBase()
+            ->selectRaw($this->averageHoursExpression($query, $from, $to).' as hours')
+            ->value('hours');
 
-        $expression = match ($driver) {
+        return $value === null ? null : round((float) $value, 1);
+    }
+
+    /**
+     * Seperti {@see averageHours()}, dikelompokkan per kolom `$group`
+     * (kunci string; null → ''). Nama kolom HARUS berasal dari kode.
+     *
+     * @return Collection<string, float>
+     */
+    public function averageHoursBy(Builder $query, string $from, string $to, string $group): Collection
+    {
+        return (clone $query)
+            ->reorder()
+            ->whereNotNull($to)
+            ->toBase()
+            ->selectRaw("{$group} as grp, ".$this->averageHoursExpression($query, $from, $to).' as hours')
+            ->groupBy('grp')
+            ->get()
+            ->mapWithKeys(fn (object $row) => [(string) ($row->grp ?? '') => round((float) $row->hours, 1)]);
+    }
+
+    private function averageHoursExpression(Builder $query, string $from, string $to): string
+    {
+        return match ($query->getConnection()->getDriverName()) {
             'pgsql' => "AVG(EXTRACT(EPOCH FROM ({$to} - {$from})) / 3600.0)",
             'mysql', 'mariadb' => "AVG(TIMESTAMPDIFF(SECOND, {$from}, {$to}) / 3600.0)",
             'sqlsrv' => "AVG(DATEDIFF(SECOND, {$from}, {$to}) / 3600.0)",
             default => "AVG((julianday({$to}) - julianday({$from})) * 24.0)",
         };
-
-        $value = (clone $query)
-            ->reorder()
-            ->whereNotNull($to)
-            ->toBase()
-            ->selectRaw($expression.' as hours')
-            ->value('hours');
-
-        return $value === null ? null : round((float) $value, 1);
     }
 }

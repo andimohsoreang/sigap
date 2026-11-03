@@ -71,6 +71,8 @@ class MatrixService
                 'tahap' => $this->stages($period, $all, $now),
                 'tanpa_tiket' => $this->withoutTicket($range),
             ],
+            'layanan' => $this->serviceFunnel($range),
+            'petugas' => $this->staffPerformance($period, $now),
             'kpi' => [
                 'berjalan' => $counts['baru'] + $counts['verifikasi'] + $counts['diproses'],
                 'ews' => $all['ews'],
@@ -267,6 +269,104 @@ class MatrixService
             'rujukan_berhasil' => (int) ($referrals->berhasil ?? 0),
             'ppid' => $ppid,
         ];
+    }
+
+    /**
+     * Corong layanan Contact Center: semua percakapan dalam periode dibagi
+     * habis menjadi selesai oleh TARA / ditangani petugas / tanpa jawaban,
+     * lalu yang ditangani petugas dibagi habis menurut hasil akhirnya.
+     * Definisi "selesai oleh TARA" sama dengan ContactCenterStats. Tidak
+     * terikat kawasan (sama seperti {@see withoutTicket()}).
+     *
+     * @return array{percakapan: int, tahap: list<array{key: string, label: string, total: int}>, hasil_petugas: list<array{key: string, label: string, total: int}>}
+     */
+    private function serviceFunnel(?array $range): array
+    {
+        $conversations = ChatConversation::query()
+            ->when($range, fn ($q) => $q->whereBetween('created_at', $range))
+            ->get(['id', 'handled_by', 'handoff_at', 'outcome', 'ticket_id', 'closed_at']);
+
+        $answered = ChatMessage::query()
+            ->whereIn('conversation_id', $conversations->pluck('id'))
+            ->where('sender_type', 'ai')
+            ->where('meta->kind', 'jawaban')
+            ->distinct()
+            ->pluck('conversation_id')
+            ->flip();
+
+        $staff = $conversations->filter(fn (ChatConversation $c) => $c->handoff_at !== null || $c->handled_by === ChatConversation::HANDLED_STAFF);
+        $byAi = $conversations->diffKeys($staff)->filter(fn (ChatConversation $c) => $answered->has($c->id));
+
+        $result = fn (ChatConversation $c): string => match (true) {
+            $c->ticket_id !== null || $c->outcome === 'tiket' => 'tiket',
+            $c->outcome === 'rujuk_portal' => 'rujuk_portal',
+            in_array($c->outcome, ['lapor', 'wbs'], true) => 'diarahkan',
+            $c->outcome === 'terjawab_petugas' => 'terjawab_petugas',
+            $c->closed_at === null => 'berjalan',
+            default => 'lainnya',
+        };
+        $results = $staff->countBy($result);
+
+        $item = fn (string $key, string $label, int $total) => compact('key', 'label', 'total');
+
+        return [
+            'percakapan' => $conversations->count(),
+            'tahap' => [
+                $item('tara', 'Selesai oleh TARA', $byAi->count()),
+                $item('petugas', 'Ditangani petugas', $staff->count()),
+                $item('tanpa_jawaban', 'Tanpa jawaban / ditinggalkan', $conversations->count() - $byAi->count() - $staff->count()),
+            ],
+            'hasil_petugas' => [
+                $item('tiket', 'Jadi tiket', $results['tiket'] ?? 0),
+                $item('rujuk_portal', 'Dirujuk ke portal', $results['rujuk_portal'] ?? 0),
+                $item('diarahkan', 'Diarahkan ke LAPOR! / Inspektorat', $results['diarahkan'] ?? 0),
+                $item('terjawab_petugas', 'Dijawab petugas', $results['terjawab_petugas'] ?? 0),
+                $item('berjalan', 'Masih ditangani', $results['berjalan'] ?? 0),
+                $item('lainnya', 'Tidak selesai / diakhiri warga', $results['lainnya'] ?? 0),
+            ],
+        ];
+    }
+
+    /**
+     * Kinerja petugas atas tiket dalam periode & cakupan: tiket dibagi habis
+     * menjadi selesai tepat waktu / terlambat, berjalan sesuai jadwal / lewat
+     * tenggat, dan ditolak; ditambah rata-rata respons awal per petugas.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function staffPerformance(Builder $period, CarbonInterface $now): array
+    {
+        $data = $this->aggregate($period, 'tickets.assignee_id', $now);
+        $response = $this->stats->averageHoursBy($period, 'created_at', 'responded_at', 'tickets.assignee_id');
+        $names = User::query()
+            ->whereKey($data->keys()->filter()->map(fn ($id) => (int) $id)->all())
+            ->pluck('name', 'id');
+
+        return $data
+            ->map(function (array $m, string $id) use ($names, $response) {
+                $c = $m['counts'];
+                $berjalan = $c['baru'] + $c['verifikasi'] + $c['diproses'];
+
+                return [
+                    'key' => $id === '' ? 'none' : $id,
+                    'label' => $id === '' ? 'Belum ditugaskan' : ($names[(int) $id] ?? 'Petugas #'.$id),
+                    'total' => $m['total'],
+                    'nilai' => [
+                        // Selesai tanpa tenggat SLA dihitung tepat waktu.
+                        'selesai_tepat' => $c['selesai'] - ($m['selesai_sla'] - $m['tepat']),
+                        'selesai_lambat' => $m['selesai_sla'] - $m['tepat'],
+                        'berjalan' => $berjalan - $m['ews'],
+                        'lewat' => $m['ews'],
+                        'ditolak' => $c['ditolak'],
+                    ],
+                    'sla_pct' => $m['sla_pct'],
+                    'respons_jam' => $response[$id] ?? null,
+                ];
+            })
+            // Petugas dengan tiket terbanyak di atas; "Belum ditugaskan" paling bawah.
+            ->sortBy([fn ($a, $b) => ($a['key'] === 'none') <=> ($b['key'] === 'none'), fn ($a, $b) => $b['total'] <=> $a['total']])
+            ->values()
+            ->all();
     }
 
     /* ----------------------------- Matriks ----------------------------- */

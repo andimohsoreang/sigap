@@ -609,3 +609,105 @@ export function GaugeChart({
         </figure>
     );
 }
+
+/** Satu batang tersegmen (100% = jumlah semua segmen); persentase ada di legenda & label aksesibel. */
+function SegmentBar({
+    segments,
+    label,
+    active,
+    onHover,
+}: {
+    segments: PieSlice[];
+    label: string;
+    active: string | null;
+    onHover: (key: string | null) => void;
+}) {
+    const total = segments.reduce((n, s) => n + s.value, 0);
+    const shown = segments.filter((s) => s.value > 0);
+
+    return (
+        <div
+            className="flex h-10 overflow-hidden rounded-lg bg-[var(--adm-surface-2)]"
+            role="img"
+            aria-label={`${label}: ${shown.map((s) => `${s.label} ${nf(s.value)} (${pct(s.value, total)}%)`).join(', ')}`}
+        >
+            {shown.map((s) => (
+                <span
+                    key={s.key}
+                    className={cn(
+                        'h-full min-w-0 border-r-2 border-[var(--acd-surface,#fff)] transition-opacity last:border-r-0',
+                        active && active !== s.key && 'opacity-40',
+                    )}
+                    style={{ width: `${(s.value / total) * 100}%`, background: s.color }}
+                    onMouseEnter={() => onHover(s.key)}
+                    onMouseLeave={() => onHover(null)}
+                    title={`${s.label}: ${nf(s.value)}`}
+                ></span>
+            ))}
+        </div>
+    );
+}
+
+/**
+ * Corong dua tingkat: batang atas membagi semua item, lalu satu segmennya
+ * (`drill.from`) dirinci pada batang bawah; penghubung trapesium menautkan
+ * posisi segmen itu dengan lebar penuh batang rincian.
+ */
+export function FunnelChart({
+    total,
+    totalLabel,
+    stages,
+    drill,
+}: {
+    total: number;
+    totalLabel: string;
+    stages: PieSlice[];
+    drill: { from: string; label: string; segments: PieSlice[] };
+}) {
+    const [active, setActive] = useState<string | null>(null);
+    const [activeDrill, setActiveDrill] = useState<string | null>(null);
+
+    if (total === 0) {
+        return <p className="py-10 text-center text-sm text-[var(--adm-text-2)]">Belum ada data pada periode ini.</p>;
+    }
+
+    // Posisi segmen yang dirinci pada batang atas (persen dari lebar).
+    let start = 0;
+    let width = 0;
+    for (const s of stages) {
+        if (s.key === drill.from) {
+            width = (s.value / total) * 100;
+            break;
+        }
+        start += (s.value / total) * 100;
+    }
+    const drillTotal = drill.segments.reduce((n, s) => n + s.value, 0);
+    const drillColor = stages.find((s) => s.key === drill.from)?.color ?? 'var(--adm-border)';
+
+    return (
+        <div>
+            <p className="mb-2 text-[13px] font-semibold text-[var(--adm-text)]">
+                {totalLabel} <span className="font-normal text-[var(--adm-text-2)] tabular-nums">· {nf(total)}</span>
+            </p>
+            <SegmentBar segments={stages} label={totalLabel} active={active} onHover={setActive} />
+            <div className="mt-3">
+                <Legend items={stages} total={total} active={active} onHover={setActive} />
+            </div>
+
+            {drillTotal > 0 && (
+                <>
+                    <svg viewBox="0 0 100 24" preserveAspectRatio="none" className="mt-2 block h-8 w-full" aria-hidden="true">
+                        <polygon points={`${start},0 ${start + width},0 100,24 0,24`} fill={drillColor} opacity="0.14" />
+                    </svg>
+                    <p className="mb-2 text-[13px] font-semibold text-[var(--adm-text)]">
+                        {drill.label} <span className="font-normal text-[var(--adm-text-2)] tabular-nums">· {nf(drillTotal)}</span>
+                    </p>
+                    <SegmentBar segments={drill.segments} label={drill.label} active={activeDrill} onHover={setActiveDrill} />
+                    <div className="mt-3">
+                        <Legend items={drill.segments} total={drillTotal} active={activeDrill} onHover={setActiveDrill} />
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
