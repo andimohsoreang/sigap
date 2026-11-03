@@ -1,11 +1,9 @@
 import { Head, useForm } from '@inertiajs/react';
 import { CheckCircle2, ClipboardCheck, Copy, ExternalLink, LifeBuoy, ListChecks, ShieldCheck, TriangleAlert, UserRound } from 'lucide-react';
-import { type FormEvent, type ReactNode, useState } from 'react';
+import { type FormEvent, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import PublicLayout from '@/layouts/public-layout';
+import { cardClass, ErrorText, fieldA11y, FlashNotice, inputClass, outlineButtonClass, TaraCard, textareaClass } from '@/components/sigap/tara-form';
+import TaraPage from '@/components/sigap/tara-shell';
 import { cn } from '@/lib/utils';
 
 interface PortalInfo {
@@ -68,22 +66,25 @@ export default function Rujukan({ portal, rujukan }: Props) {
     };
 
     return (
-        <PublicLayout title={`Rujukan ke ${portal.nama}`}>
-            <Head title={`Pengantar ke ${portal.nama} — Contact Center`}>
+        <TaraPage
+            flash={false}
+            title={`Pengantar ke ${portal.nama}`}
+            eyebrow={`Rujukan ${rujukan.kode} · dari Contact Center`}
+            heading={done ? 'Aduan Anda sudah tercatat' : `Anda akan diarahkan ke ${portal.nama}`}
+            subtitle={`${portal.kegunaan}.`}
+            pose={done ? 'jempol' : 'menunjuk'}
+            poseAlt={done ? 'TARA mengacungkan jempol' : `TARA menunjuk ke ${portal.nama}`}
+            compact
+        >
+            <Head>
                 <meta name="robots" content="noindex, nofollow" />
             </Head>
 
-            <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-                <p className="text-primary mb-2 text-sm font-semibold">
-                    Rujukan <span className="font-mono">{rujukan.kode}</span> · dari Contact Center
-                </p>
-                <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-                    {done ? 'Aduan Anda sudah tercatat' : `Anda akan diarahkan ke ${portal.nama}`}
-                </h1>
-                <p className="mt-2 text-gray-600">{portal.kegunaan}.</p>
+            <div className="mx-auto flex max-w-[880px] flex-col gap-5 px-4 py-10 sm:px-6 lg:py-14">
+                <FlashNotice />
 
-                <div className="mt-4 flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
-                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <div className="flex items-start gap-3 rounded-[20px] border border-[var(--tcd-success-border,#a7e3c7)] bg-[var(--tcd-success-soft,#ecfaf3)] p-4 text-[15px] text-[var(--tcd-success,#0f6b48)]">
+                    <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
                     <span>
                         Portal resmi {portal.pengelola ?? 'Kementerian Transmigrasi'} di <b className="font-mono">{portal.domain}</b>. Periksa alamat
                         ini di peramban sebelum mengisi data pribadi.
@@ -93,7 +94,7 @@ export default function Rujukan({ portal, rujukan }: Props) {
                 {done ? (
                     <DoneCard portal={portal} rujukan={rujukan} />
                 ) : closed ? (
-                    <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 text-gray-700">
+                    <div className={cn(cardClass, 'p-6 text-[15px] text-[var(--tcd-text,#0f2233)]')}>
                         Rujukan ini sudah ditutup petugas. Bila masih membutuhkan bantuan, mulai chat baru di Contact Center.
                     </div>
                 ) : (
@@ -102,75 +103,85 @@ export default function Rujukan({ portal, rujukan }: Props) {
 
                         {!portal.tersedia && (
                             <div
-                                className="mt-6 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
+                                className="flex items-start gap-3 rounded-[20px] border border-[var(--tcd-warning-border,#f1d9a6)] bg-[var(--tcd-warning-soft,#fdf6e7)] p-4 text-[15px] text-[var(--tcd-text,#0f2233)]"
                                 role="status"
                             >
-                                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                                <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-[var(--tcd-warning,#9a6400)]" aria-hidden="true" />
                                 {portal.nama} sedang tidak dapat diakses. Coba beberapa saat lagi, atau beri tahu kami di bagian “Mengalami kendala?”.
                             </div>
                         )}
 
                         {rujukan.status === 'butuh_bantuan' && (
                             <div
-                                className="mt-6 flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900"
+                                className="flex items-start gap-3 rounded-[20px] border border-[var(--tcd-info-border,#bcd8ee)] bg-[var(--tcd-info-soft,#eef5fb)] p-4 text-[15px] text-[var(--tcd-text,#0f2233)]"
                                 role="status"
                             >
-                                <LifeBuoy className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                                <LifeBuoy className="mt-0.5 h-5 w-5 shrink-0 text-[var(--tcd-info,#0d6b8a)]" aria-hidden="true" />
                                 Kendala Anda sudah diterima. Petugas pendamping akan menghubungi Anda
                                 {rujukan.ada_chat ? ' dan membalas di chat Contact Center' : ''}.
                             </div>
                         )}
 
-                        <div className="mt-6 grid gap-4 md:grid-cols-2">
-                            {portal.siapkan.length > 0 && (
-                                <Section icon={ClipboardCheck} title="Siapkan dulu">
-                                    <ul className="space-y-2 text-sm text-gray-700">
-                                        {portal.siapkan.map((item) => (
-                                            <li key={item} className="flex gap-2">
-                                                <CheckCircle2 className="text-brand-light mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                                                {item}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </Section>
-                            )}
-                            {portal.langkah.length > 0 && (
-                                <Section icon={ListChecks} title={`Langkah di ${portal.nama}`}>
-                                    <ol className="space-y-2 text-sm text-gray-700">
-                                        {portal.langkah.map((item, i) => (
-                                            <li key={item} className="flex gap-2">
-                                                <span className="bg-primary/10 text-primary flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold">
-                                                    {i + 1}
-                                                </span>
-                                                {item}
-                                            </li>
-                                        ))}
-                                    </ol>
-                                </Section>
-                            )}
-                        </div>
+                        {(portal.siapkan.length > 0 || portal.langkah.length > 0) && (
+                            <div className="grid gap-5 md:grid-cols-2">
+                                {portal.siapkan.length > 0 && (
+                                    <TaraCard icon={ClipboardCheck} title="Siapkan dulu">
+                                        <ul className="space-y-2.5 text-[15px] text-[var(--tcd-text,#0f2233)]">
+                                            {portal.siapkan.map((item) => (
+                                                <li key={item} className="flex gap-2.5">
+                                                    <CheckCircle2
+                                                        className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[var(--tcd-success,#0f6b48)]"
+                                                        aria-hidden="true"
+                                                    />
+                                                    {item}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </TaraCard>
+                                )}
+                                {portal.langkah.length > 0 && (
+                                    <TaraCard icon={ListChecks} title={`Langkah di ${portal.nama}`}>
+                                        <ol className="space-y-2.5 text-[15px] text-[var(--tcd-text,#0f2233)]">
+                                            {portal.langkah.map((item, i) => (
+                                                <li key={item} className="flex gap-2.5">
+                                                    <span className="font-heading flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--tcd-gold-soft,#f6ecd9)] text-xs font-bold text-[var(--tcd-bronze,#8b682b)]">
+                                                        {i + 1}
+                                                    </span>
+                                                    {item}
+                                                </li>
+                                            ))}
+                                        </ol>
+                                    </TaraCard>
+                                )}
+                            </div>
+                        )}
 
                         {rujukan.ringkasan && <SummaryCard text={rujukan.ringkasan} />}
 
-                        <div className="mt-6 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5 sm:flex-row sm:items-center">
-                            <div className="flex flex-1 items-start gap-3 text-sm text-gray-700">
-                                <UserRound className="text-primary mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+                        <div className="flex flex-col gap-4 rounded-[24px] bg-[var(--t-deep)] p-6 text-white sm:flex-row sm:items-center sm:p-7">
+                            <div className="flex flex-1 items-start gap-3 text-[15px] leading-relaxed text-[#d6e2ec]">
+                                <UserRound className="mt-0.5 h-5 w-5 shrink-0 text-[var(--t-gold)]" aria-hidden="true" />
                                 <span>
                                     {rujukan.pendamping ? (
                                         <>
-                                            <b>{rujukan.pendamping}</b>, petugas Contact Center, mendampingi Anda sampai aduan tercatat.
+                                            <b className="text-white">{rujukan.pendamping}</b>, petugas Contact Center, mendampingi Anda sampai aduan
+                                            tercatat.
                                         </>
                                     ) : (
                                         'Petugas Contact Center mendampingi Anda sampai aduan tercatat.'
                                     )}
                                 </span>
                             </div>
-                            <Button asChild size="lg" className="shrink-0">
-                                <a href={portal.url} target="_blank" rel="noopener noreferrer" onClick={go}>
-                                    {portal.tombol} <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                                    <span className="sr-only">(membuka tab baru)</span>
-                                </a>
-                            </Button>
+                            <a
+                                href={portal.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={go}
+                                className="transi-lift font-heading flex h-[52px] shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--t-gold)] px-7 text-[16px] font-bold text-[var(--t-deep)] hover:bg-[#d0a552]"
+                            >
+                                {portal.tombol} <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                                <span className="sr-only">(membuka tab baru)</span>
+                            </a>
                         </div>
 
                         <ProofForm token={rujukan.token} label={portal.bukti} portal={portal.nama} highlight={opened} />
@@ -179,12 +190,12 @@ export default function Rujukan({ portal, rujukan }: Props) {
                 )}
 
                 {portal.kontak && (
-                    <p className="mt-8 text-center text-xs text-gray-500">
+                    <p className="mt-3 text-center text-sm text-[var(--tcd-text-2,#4a5868)]">
                         Kontak {portal.nama}: {portal.kontak}
                     </p>
                 )}
             </div>
-        </PublicLayout>
+        </TaraPage>
     );
 }
 
@@ -192,7 +203,7 @@ function Progress({ step }: { step: number }) {
     const steps = ['Siapkan', 'Isi di portal', 'Masukkan bukti di sini'];
 
     return (
-        <ol className="mt-6 grid grid-cols-3 gap-2" aria-label="Tahapan">
+        <ol className="grid grid-cols-3 gap-2 sm:gap-3" aria-label="Tahapan">
             {steps.map((label, i) => {
                 const n = i + 1;
                 const state = n < step ? 'done' : n === step ? 'current' : 'next';
@@ -201,28 +212,33 @@ function Progress({ step }: { step: number }) {
                         key={label}
                         aria-current={state === 'current' ? 'step' : undefined}
                         className={cn(
-                            'rounded-lg border px-3 py-2 text-xs font-medium sm:text-sm',
-                            state === 'current' && 'border-primary bg-primary/5 text-primary',
-                            state === 'done' && 'border-emerald-200 bg-emerald-50 text-emerald-800',
-                            state === 'next' && 'border-gray-200 bg-white text-gray-500',
+                            'flex flex-col gap-1 rounded-2xl border px-3 py-3 text-[13px] leading-snug font-semibold sm:flex-row sm:items-center sm:gap-2.5 sm:px-4 sm:text-sm',
+                            state === 'current' &&
+                                'border-[var(--tcd-link,var(--t-navy))] bg-[var(--tcd-info-soft,#eef5fb)] text-[var(--tcd-heading,var(--t-deep))]',
+                            state === 'done' &&
+                                'border-[var(--tcd-success-border,#a7e3c7)] bg-[var(--tcd-success-soft,#ecfaf3)] text-[var(--tcd-success,#0f6b48)]',
+                            state === 'next' && 'border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-surface,#fff)] text-[var(--tcd-text-2,#4a5868)]',
                         )}
                     >
-                        <span className="tabular-nums">{n}.</span> {label}
+                        <span
+                            className={cn(
+                                'font-heading flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums',
+                                state === 'current' && 'bg-[var(--tcd-primary,var(--t-deep))] text-white',
+                                state === 'done' && 'bg-[var(--tcd-success,#0f6b48)] text-white',
+                                state === 'next' && 'bg-[var(--tcd-muted,#f1f4f7)] text-[var(--tcd-text-2,#4a5868)]',
+                            )}
+                            aria-hidden="true"
+                        >
+                            {n}
+                        </span>
+                        <span>
+                            <span className="sr-only">{n}. </span>
+                            {label}
+                        </span>
                     </li>
                 );
             })}
         </ol>
-    );
-}
-
-function Section({ icon: Icon, title, children }: { icon: typeof ListChecks; title: string; children: ReactNode }) {
-    return (
-        <section className="rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900">
-                <Icon className="text-brand-light h-4 w-4" aria-hidden="true" /> {title}
-            </h2>
-            {children}
-        </section>
     );
 }
 
@@ -240,16 +256,22 @@ function SummaryCard({ text }: { text: string }) {
     };
 
     return (
-        <section className="mt-4 rounded-xl border border-gray-200 bg-white p-5">
-            <div className="mb-2 flex items-center justify-between gap-2">
-                <h2 className="text-sm font-semibold text-gray-900">Ringkasan aduan Anda</h2>
-                <Button type="button" size="sm" variant="outline" onClick={copy}>
-                    <Copy className="h-3.5 w-3.5" aria-hidden="true" /> {copied ? 'Tersalin' : 'Salin'}
-                </Button>
-            </div>
-            <p className="rounded-lg bg-gray-50 p-3 text-sm whitespace-pre-line text-gray-700">{text}</p>
-            <p className="mt-2 text-xs text-gray-500">Tempel ke kolom isi pengaduan di portal tujuan, lalu lengkapi bila perlu.</p>
-        </section>
+        <TaraCard
+            title="Ringkasan aduan Anda"
+            action={
+                <button type="button" onClick={copy} className={cn(outlineButtonClass, 'h-10 shrink-0 px-4 text-sm')}>
+                    <Copy className="h-4 w-4" aria-hidden="true" /> {copied ? 'Tersalin' : 'Salin'}
+                </button>
+            }
+        >
+            <p className="rounded-2xl bg-[var(--tcd-muted,#f6f8fa)] p-4 text-[15px] leading-relaxed whitespace-pre-line text-[var(--tcd-text,#0f2233)]">
+                {text}
+            </p>
+            <p className="mt-3 text-sm text-[var(--tcd-text-2,#4a5868)]">Tempel ke kolom isi pengaduan di portal tujuan, lalu lengkapi bila perlu.</p>
+            <span className="sr-only" role="status">
+                {copied ? 'Ringkasan tersalin' : ''}
+            </span>
+        </TaraCard>
     );
 }
 
@@ -262,29 +284,40 @@ function ProofForm({ token, label, portal, highlight }: { token: string; label: 
     };
 
     return (
-        <section className={cn('mt-6 rounded-xl border p-5', highlight ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white')}>
-            <h2 className="text-sm font-semibold text-gray-900">Sudah mengirim aduan di {portal}?</h2>
-            <p className="mt-1 text-sm text-gray-600">
+        <section
+            className={cn(
+                'rounded-[24px] border p-6 sm:p-7',
+                highlight
+                    ? 'border-[var(--tcd-link,var(--t-navy))] bg-[var(--tcd-info-soft,#eef5fb)]'
+                    : 'border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-surface,#fff)]',
+            )}
+        >
+            <h2 className="font-heading text-lg font-bold text-[var(--tcd-heading,var(--t-deep))]">Sudah mengirim aduan di {portal}?</h2>
+            <p className="mt-1 text-[15px] text-[var(--tcd-text-2,#4a5868)]">
                 Masukkan {label.charAt(0).toLowerCase() + label.slice(1)} yang Anda terima. Dengan begitu petugas tahu aduan Anda sudah tercatat.
             </p>
-            <form onSubmit={submit} className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <form onSubmit={submit} className="mt-4 flex flex-col gap-3 sm:flex-row">
                 <label htmlFor="bukti-rujukan" className="sr-only">
                     {label}
                 </label>
-                <Input
+                <input
                     id="bukti-rujukan"
                     value={form.data.bukti}
                     onChange={(e) => form.setData('bukti', e.target.value)}
                     placeholder={label}
                     maxLength={100}
-                    aria-invalid={form.errors.bukti ? true : undefined}
-                    className="font-mono uppercase placeholder:font-sans placeholder:normal-case"
+                    className={cn(inputClass, 'font-mono uppercase placeholder:font-sans placeholder:normal-case')}
+                    {...fieldA11y('bukti-rujukan', form.errors.bukti)}
                 />
-                <Button type="submit" disabled={form.processing || form.data.bukti.trim().length < 3}>
+                <button
+                    type="submit"
+                    disabled={form.processing || form.data.bukti.trim().length < 3}
+                    className="font-heading flex h-12 shrink-0 items-center justify-center rounded-full bg-[var(--t-deep)] px-7 font-bold text-white hover:bg-[var(--tcd-primary,var(--t-navy))] disabled:cursor-not-allowed disabled:opacity-60"
+                >
                     Simpan bukti
-                </Button>
+                </button>
             </form>
-            {form.errors.bukti && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.bukti}</p>}
+            {form.errors.bukti && <ErrorText id="bukti-rujukan-error">{form.errors.bukti}</ErrorText>}
         </section>
     );
 }
@@ -299,51 +332,56 @@ function HelpForm({ token, askContact }: { token: string; askContact: boolean })
     };
 
     return (
-        <section className="mt-4 rounded-xl border border-gray-200 bg-white p-5">
+        <section className={cn(cardClass, 'p-6 sm:p-7')}>
             <button
                 type="button"
-                className="flex w-full items-center justify-between text-left text-sm font-semibold text-gray-900"
+                className="flex w-full items-center justify-between gap-3 text-left"
                 aria-expanded={open}
+                aria-controls="bantuan-rujukan"
                 onClick={() => setOpen((v) => !v)}
             >
-                <span className="flex items-center gap-2">
-                    <LifeBuoy className="text-brand-light h-4 w-4" aria-hidden="true" /> Mengalami kendala?
+                <span className="font-heading flex items-center gap-2.5 text-lg font-bold text-[var(--tcd-heading,var(--t-deep))]">
+                    <LifeBuoy className="h-5 w-5 text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" /> Mengalami kendala?
                 </span>
-                <span className="text-primary text-xs">{open ? 'Tutup' : 'Minta bantuan petugas'}</span>
+                <span className="text-sm font-semibold text-[var(--tcd-link,var(--t-navy))]">{open ? 'Tutup' : 'Minta bantuan petugas'}</span>
             </button>
             {open && (
-                <form onSubmit={submit} className="mt-3 space-y-3">
-                    <div>
-                        <label htmlFor="pesan-bantuan" className="mb-1 block text-xs font-semibold text-gray-700">
+                <form id="bantuan-rujukan" onSubmit={submit} className="mt-5 flex flex-col gap-4">
+                    <div className="flex flex-col gap-2">
+                        <label htmlFor="pesan-bantuan" className="text-sm font-semibold text-[var(--tcd-heading,var(--t-deep))]">
                             Ceritakan kendalanya
                         </label>
-                        <Textarea
+                        <textarea
                             id="pesan-bantuan"
                             rows={3}
                             value={form.data.pesan}
                             onChange={(e) => form.setData('pesan', e.target.value)}
                             placeholder="Mis. formulir tidak bisa dikirim, tidak punya KTP-el, tidak menerima kode tracking"
+                            className={cn(textareaClass, 'min-h-[110px]')}
+                            {...fieldA11y('pesan-bantuan', form.errors.pesan)}
                         />
-                        {form.errors.pesan && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.pesan}</p>}
+                        {form.errors.pesan && <ErrorText id="pesan-bantuan-error">{form.errors.pesan}</ErrorText>}
                     </div>
                     {askContact && (
-                        <div>
-                            <label htmlFor="kontak-bantuan" className="mb-1 block text-xs font-semibold text-gray-700">
+                        <div className="flex flex-col gap-2">
+                            <label htmlFor="kontak-bantuan" className="text-sm font-semibold text-[var(--tcd-heading,var(--t-deep))]">
                                 Nomor WhatsApp atau surel (agar petugas dapat menghubungi)
                             </label>
-                            <Input
+                            <input
                                 id="kontak-bantuan"
                                 value={form.data.kontak}
                                 onChange={(e) => form.setData('kontak', e.target.value)}
                                 placeholder="08xxxxxxxxxx"
                                 maxLength={100}
+                                className={inputClass}
+                                {...fieldA11y('kontak-bantuan', form.errors.kontak)}
                             />
-                            {form.errors.kontak && <p className="mt-1 text-xs font-semibold text-rose-600">{form.errors.kontak}</p>}
+                            {form.errors.kontak && <ErrorText id="kontak-bantuan-error">{form.errors.kontak}</ErrorText>}
                         </div>
                     )}
-                    <Button type="submit" variant="outline" disabled={form.processing}>
+                    <button type="submit" disabled={form.processing} className={cn(outlineButtonClass, 'w-fit')}>
                         Kirim ke petugas
-                    </Button>
+                    </button>
                 </form>
             )}
         </section>
@@ -352,21 +390,20 @@ function HelpForm({ token, askContact }: { token: string; askContact: boolean })
 
 function DoneCard({ portal, rujukan }: Props) {
     return (
-        <div className="mt-6 rounded-xl border border-emerald-200 bg-white p-6">
-            <div className="flex items-start gap-3">
-                <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-600" aria-hidden="true" />
-                <div>
-                    <p className="text-gray-800">
+        <div className="rounded-[24px] border border-[var(--tcd-success-border,#a7e3c7)] bg-[var(--tcd-surface,#fff)] p-6 sm:p-8">
+            <div className="flex items-start gap-4">
+                <CheckCircle2 className="h-7 w-7 shrink-0 text-[var(--tcd-success,#0f6b48)]" aria-hidden="true" />
+                <div className="min-w-0">
+                    <p className="text-[17px] text-[var(--tcd-heading,var(--t-deep))]">
                         {portal.bukti} Anda di {portal.nama}: <b className="font-mono">{rujukan.bukti}</b>
                     </p>
-                    <p className="mt-1 text-sm text-gray-600">
+                    <p className="mt-2 text-[15px] text-[var(--tcd-text-2,#4a5868)]">
                         Simpan kode ini untuk memantau perkembangan aduan langsung di {portal.nama}. Terima kasih sudah melapor.
                     </p>
-                    <Button asChild variant="outline" size="sm" className="mt-4">
-                        <a href={portal.url} target="_blank" rel="noopener noreferrer">
-                            Buka {portal.nama} <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                        </a>
-                    </Button>
+                    <a href={portal.url} target="_blank" rel="noopener noreferrer" className={cn(outlineButtonClass, 'mt-5 w-fit')}>
+                        Buka {portal.nama} <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                        <span className="sr-only">(membuka tab baru)</span>
+                    </a>
                 </div>
             </div>
         </div>

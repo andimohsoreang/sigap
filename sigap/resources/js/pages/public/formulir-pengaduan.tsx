@@ -1,8 +1,22 @@
 import { Link, useForm } from '@inertiajs/react';
-import { AlertTriangle, BriefcaseBusiness, Crosshair, FileText, LoaderCircle, MessageCircle, Paperclip, Send, Upload, X } from 'lucide-react';
-import { type FormEvent, type ReactNode, useState } from 'react';
+import { BriefcaseBusiness, Crosshair, LoaderCircle, MessageCircle, Send } from 'lucide-react';
+import { type FormEvent, useState } from 'react';
 
 import { RecaptchaNotice } from '@/components/sigap/recaptcha-notice';
+import {
+    attachmentError,
+    AttachmentPicker,
+    ErrorSummary,
+    ErrorText,
+    Field,
+    fieldA11y,
+    inputClass,
+    RequiredNote,
+    FormSection as Section,
+    SubmitButton,
+    textareaClass,
+    triggerClass,
+} from '@/components/sigap/tara-form';
 import TaraPage, { TaraAvatar } from '@/components/sigap/tara-shell';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRecaptcha } from '@/hooks/use-recaptcha';
@@ -40,8 +54,6 @@ const NEXT_STEPS = [
     { title: 'Anda menerima kabar', desc: 'Setiap perubahan status dikirim ke email Anda, bila diisi.' },
 ];
 
-const MAX_FILE_MB = 5;
-
 /** Urutan kolom untuk ringkasan galat (sama dengan urutan formulir). */
 const FIELD_ORDER: [string, string][] = [
     ['nik', 'NIK'],
@@ -58,12 +70,6 @@ const FIELD_ORDER: [string, string][] = [
     ['visibility', 'Privasi'],
     ['attachment', 'Lampiran'],
 ];
-
-const inputClass =
-    'h-12 w-full rounded-xl border border-[var(--tcd-border-strong,#d9dfe6)] bg-[var(--tcd-surface,#fff)] px-4 text-[15px] text-[var(--tcd-text,#0f2233)] transition-colors outline-none placeholder:text-[var(--tcd-text-3,#647280)] focus:border-[var(--tcd-link,var(--t-navy))] focus:ring-4 focus:ring-[#003d68]/10 aria-[invalid=true]:border-[var(--tcd-danger,#b42318)]';
-
-const triggerClass =
-    'h-12 rounded-xl border-[var(--tcd-border-strong,#d9dfe6)] bg-[var(--tcd-surface,#fff)] px-4 text-[15px] text-[var(--tcd-text,#0f2233)] focus:ring-4 focus:ring-[#003d68]/10 focus:ring-offset-0 aria-[invalid=true]:border-[var(--tcd-danger,#b42318)] data-[placeholder]:text-[var(--tcd-text-3,#647280)]';
 
 /** Formulir pengaduan masyarakat bergaya TARA (tanpa login). */
 export default function FormulirPengaduan({ categories }: Props) {
@@ -128,15 +134,15 @@ export default function FormulirPengaduan({ categories }: Props) {
     };
 
     const pickFile = (file: File | null) => {
-        if (file && file.size > MAX_FILE_MB * 1024 * 1024) {
-            setError('attachment', `Ukuran berkas melebihi ${MAX_FILE_MB} MB. Pilih berkas yang lebih kecil.`);
+        const tooBig = attachmentError(file);
+        if (tooBig) {
+            setError('attachment', tooBig);
             return;
         }
         clearErrors('attachment');
         setData('attachment', file);
     };
 
-    const errorList = FIELD_ORDER.filter(([key]) => errors[key as keyof typeof errors]);
     const impact = IMPACTS.find((i) => i.value === data.impact);
 
     return (
@@ -154,33 +160,8 @@ export default function FormulirPengaduan({ categories }: Props) {
         >
             <div className="mx-auto grid max-w-[1312px] gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10 lg:px-16 lg:py-14">
                 <form onSubmit={submit} noValidate className="flex min-w-0 flex-col gap-6" aria-describedby="keterangan-wajib">
-                    <p id="keterangan-wajib" className="text-sm text-[var(--tcd-text-2,#4a5868)]">
-                        Kolom bertanda <Req /> wajib diisi.
-                    </p>
-
-                    {errorList.length > 0 && (
-                        <div
-                            id="ringkasan-galat"
-                            tabIndex={-1}
-                            role="alert"
-                            className="rounded-[20px] border border-[var(--tcd-danger-border,#f5c2bd)] bg-[var(--tcd-danger-soft,#fdecea)] p-5 text-[var(--tcd-danger,#b42318)] outline-none focus-visible:ring-4 focus-visible:ring-[#b42318]/20"
-                        >
-                            <p className="flex items-center gap-2 font-semibold">
-                                <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden="true" />
-                                Periksa kembali {errorList.length} isian berikut:
-                            </p>
-                            <ul className="mt-2 ml-7 list-disc space-y-1 text-sm">
-                                {errorList.map(([key, label]) => (
-                                    <li key={key}>
-                                        <a href={`#${key}`} className="underline underline-offset-2">
-                                            {label}
-                                        </a>
-                                        : {errors[key as keyof typeof errors]}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
+                    <RequiredNote />
+                    <ErrorSummary errors={errors} order={FIELD_ORDER} />
 
                     <Section step={1} title="Data pelapor" desc="NIK dipakai untuk verifikasi dan tidak pernah ditampilkan ke publik.">
                         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -273,7 +254,7 @@ export default function FormulirPengaduan({ categories }: Props) {
                                 onChange={(e) => setData('uraian', e.target.value)}
                                 rows={6}
                                 placeholder="Jelaskan kejadiannya selengkap mungkin…"
-                                className={cn(inputClass, 'h-auto min-h-[150px] resize-y py-3 leading-relaxed')}
+                                className={textareaClass}
                                 {...fieldA11y('uraian', errors.uraian, true)}
                             />
                         </Field>
@@ -410,55 +391,17 @@ export default function FormulirPengaduan({ categories }: Props) {
                             {errors.visibility && <ErrorText id="visibility-error">{errors.visibility}</ErrorText>}
                         </fieldset>
 
-                        <div className="flex flex-col gap-2">
-                            <span id="attachment-label" className="text-sm font-semibold text-[var(--tcd-heading,var(--t-deep))]">
-                                Lampiran bukti <span className="font-normal text-[var(--tcd-text-3,#6d7681)]">(opsional)</span>
-                            </span>
-                            {data.attachment ? (
-                                <div className="flex items-center gap-3 rounded-2xl border border-[var(--tcd-border-strong,#d9dfe6)] bg-[var(--tcd-muted,#f6f8fa)] p-4">
-                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--tcd-info-soft,#e6f0f8)] text-[var(--tcd-link,var(--t-navy))]">
-                                        {data.attachment.type === 'application/pdf' ? (
-                                            <FileText className="h-5 w-5" aria-hidden="true" />
-                                        ) : (
-                                            <Paperclip className="h-5 w-5" aria-hidden="true" />
-                                        )}
-                                    </span>
-                                    <span className="min-w-0 flex-1">
-                                        <span className="block truncate text-sm font-semibold text-[var(--tcd-heading,var(--t-deep))]">
-                                            {data.attachment.name}
-                                        </span>
-                                        <span className="block text-xs text-[var(--tcd-text-2,#4a5868)]">
-                                            {(data.attachment.size / 1024 / 1024).toFixed(2)} MB
-                                            {progress && ` · Mengunggah ${progress.percentage}%`}
-                                        </span>
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => pickFile(null)}
-                                        aria-label={`Hapus lampiran ${data.attachment.name}`}
-                                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--tcd-text-2,#4a5868)] hover:bg-[var(--tcd-muted-2,#e8edf2)] hover:text-[var(--tcd-danger,#b42318)]"
-                                    >
-                                        <X className="h-5 w-5" aria-hidden="true" />
-                                    </button>
-                                </div>
-                            ) : (
-                                <label className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-[var(--tcd-border-strong,#cfd7df)] bg-[var(--tcd-muted,#f8fafb)] px-6 py-8 text-center transition-colors focus-within:border-[var(--tcd-link,var(--t-navy))] focus-within:ring-4 focus-within:ring-[#003d68]/10 hover:border-[var(--tcd-link,var(--t-navy))]">
-                                    <Upload className="mb-1 h-6 w-6 text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" />
-                                    <span className="text-[15px] font-semibold text-[var(--tcd-heading,var(--t-deep))]">Pilih foto atau dokumen</span>
-                                    <span className="text-[13px] text-[var(--tcd-text-2,#4a5868)]">JPG, PNG, atau PDF · maks. {MAX_FILE_MB} MB</span>
-                                    <input
-                                        id="attachment"
-                                        type="file"
-                                        accept=".jpg,.jpeg,.png,.pdf"
-                                        className="sr-only"
-                                        aria-labelledby="attachment-label"
-                                        {...fieldA11y('attachment', errors.attachment)}
-                                        onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
-                                    />
-                                </label>
-                            )}
-                            {errors.attachment && <ErrorText id="attachment-error">{errors.attachment}</ErrorText>}
-                        </div>
+                        <AttachmentPicker
+                            label={
+                                <>
+                                    Lampiran bukti <span className="font-normal text-[var(--tcd-text-3,#6d7681)]">(opsional)</span>
+                                </>
+                            }
+                            file={data.attachment}
+                            error={errors.attachment}
+                            progress={progress?.percentage ?? null}
+                            onPick={pickFile}
+                        />
                     </Section>
 
                     <section className="flex flex-col gap-5 rounded-[24px] border border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-cream,#f7f3ee)] p-6 sm:p-8">
@@ -492,18 +435,9 @@ export default function FormulirPengaduan({ categories }: Props) {
                         <RecaptchaNotice enabled={recaptcha.enabled} error={recaptcha.error ?? errors.recaptcha_token} />
 
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                            <button
-                                type="submit"
-                                disabled={busy || !data.agree}
-                                className="transi-lift font-heading flex h-[52px] items-center justify-center gap-2.5 rounded-full bg-[var(--t-deep)] px-8 text-[16px] font-bold text-white hover:bg-[var(--tcd-primary,var(--t-navy))] disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                                {busy ? (
-                                    <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
-                                ) : (
-                                    <Send className="h-5 w-5" aria-hidden="true" />
-                                )}
-                                {busy ? 'Mengirim…' : 'Kirim Pengaduan'}
-                            </button>
+                            <SubmitButton busy={busy} disabled={!data.agree} icon={Send}>
+                                Kirim Pengaduan
+                            </SubmitButton>
                             {!data.agree && <p className="text-sm text-[var(--tcd-text-2,#4a5868)]">Centang pernyataan di atas untuk mengirim.</p>}
                         </div>
                     </section>
@@ -559,85 +493,5 @@ export default function FormulirPengaduan({ categories }: Props) {
                 </aside>
             </div>
         </TaraPage>
-    );
-}
-
-/** Atribut aksesibilitas kolom: tautkan galat (dan petunjuk) ke kolomnya. */
-function fieldA11y(id: string, error?: string, hasHint = false) {
-    const describedBy = [error ? `${id}-error` : null, hasHint ? `${id}-hint` : null].filter(Boolean).join(' ');
-    return { 'aria-invalid': error ? true : undefined, 'aria-describedby': describedBy || undefined };
-}
-
-function Req() {
-    return (
-        <span className="text-[var(--tcd-danger,#b42318)]" aria-hidden="true">
-            *
-        </span>
-    );
-}
-
-function ErrorText({ id, children }: { id: string; children: ReactNode }) {
-    return (
-        <p id={id} className="mt-1 flex items-start gap-1.5 text-sm font-medium text-[var(--tcd-danger,#b42318)]">
-            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {children}
-        </p>
-    );
-}
-
-function Section({ step, title, desc, children }: { step: number; title: string; desc: string; children: ReactNode }) {
-    const headingId = `bagian-${step}`;
-
-    return (
-        <section
-            aria-labelledby={headingId}
-            className="flex flex-col gap-5 rounded-[24px] border border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-surface,#fff)] p-6 shadow-[0_10px_30px_rgba(2,43,74,0.04)] sm:p-8"
-        >
-            <header className="flex items-start gap-4">
-                <span
-                    className="font-heading flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--tcd-primary,var(--t-deep))] text-[15px] font-bold text-white"
-                    aria-hidden="true"
-                >
-                    {step}
-                </span>
-                <div className="min-w-0">
-                    <h2 id={headingId} className="font-heading text-xl leading-tight font-bold text-[var(--tcd-heading,var(--t-deep))]">
-                        {title}
-                    </h2>
-                    <p className="mt-1 text-sm text-[var(--tcd-text-2,#4a5868)]">{desc}</p>
-                </div>
-            </header>
-            {children}
-        </section>
-    );
-}
-
-function Field({
-    label,
-    htmlFor,
-    required,
-    error,
-    hint,
-    children,
-}: {
-    label: string;
-    htmlFor: string;
-    required?: boolean;
-    error?: string;
-    hint?: string;
-    children: ReactNode;
-}) {
-    return (
-        <div className="flex min-w-0 flex-col gap-2">
-            <label htmlFor={htmlFor} className="text-sm font-semibold text-[var(--tcd-heading,var(--t-deep))]">
-                {label} {required && <Req />}
-            </label>
-            {children}
-            {hint && (
-                <p id={`${htmlFor}-hint`} className="text-[13px] text-[var(--tcd-text-2,#4a5868)]">
-                    {hint}
-                </p>
-            )}
-            {error && <ErrorText id={`${htmlFor}-error`}>{error}</ErrorText>}
-        </div>
     );
 }

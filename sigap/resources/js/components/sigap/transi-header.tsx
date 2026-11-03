@@ -65,7 +65,7 @@ export default function TransiHeader({
                     />
                     {/* 1024–1279 px: lambang saja agar menu tidak bertumpuk. */}
                     <span className="min-w-0 lg:hidden xl:block">
-                        <span className="font-heading block text-lg leading-tight font-bold tracking-[0.01em] whitespace-nowrap text-[var(--tcd-link,var(--t-navy))] uppercase xl:text-xl">
+                        <span className="font-heading block text-base leading-tight font-bold tracking-[0.01em] whitespace-nowrap text-[var(--tcd-link,var(--t-navy))] uppercase sm:text-lg xl:text-xl">
                             Contact Center
                         </span>{' '}
                         <span className="block truncate text-xs text-[var(--tcd-text-2,#5b6b7a)]">Kementerian Transmigrasi</span>
@@ -102,7 +102,7 @@ export default function TransiHeader({
                     </button>
                     <Link
                         href={account.href}
-                        className="transi-lift flex h-10 items-center rounded-full bg-[var(--tcd-primary,var(--t-navy))] px-[18px] text-[15px] font-semibold text-white hover:bg-[var(--tcd-primary-hover,#00508a)]"
+                        className="transi-lift flex h-10 items-center rounded-full bg-[var(--tcd-primary,var(--t-navy))] px-3.5 text-[15px] font-semibold whitespace-nowrap text-white hover:bg-[var(--tcd-primary-hover,#00508a)] sm:px-[18px]"
                     >
                         {account.label}
                     </Link>

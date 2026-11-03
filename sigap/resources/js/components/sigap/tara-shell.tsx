@@ -2,6 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { ChevronRight, MessageCircle } from 'lucide-react';
 import { type ReactNode } from 'react';
 
+import { FlashNotice } from '@/components/sigap/tara-form';
 import TransiHeader, { type TaraNav } from '@/components/sigap/transi-header';
 import { goToChat } from '@/lib/chat-transition';
 import { cn } from '@/lib/utils';
@@ -161,13 +162,7 @@ export function TaraFooter() {
                 </div>
                 <div className="flex flex-col gap-2 border-t border-white/10 pt-6 text-[13px] text-[var(--tcd-text-3,#738899)] sm:flex-row sm:items-center sm:justify-between">
                     <span>© 2026 Kementerian Transmigrasi Republik Indonesia. Seluruh hak cipta dilindungi.</span>
-                    <span className="flex items-center gap-4">
-                        <Link href="/beranda-lama" className="transition-colors hover:text-white">
-                            Kembali ke tampilan lama
-                        </Link>
-                        <span aria-hidden="true">·</span>
-                        <span>Maskot TARA</span>
-                    </span>
+                    <span>Maskot TARA</span>
                 </div>
             </div>
         </footer>
@@ -202,7 +197,7 @@ export function AskTaraCard({ title, desc, label = 'Tanya TARA', dark = false }:
 export default function TaraPage({
     title,
     description,
-    active,
+    active = null,
     eyebrow,
     heading,
     subtitle,
@@ -212,11 +207,13 @@ export default function TaraPage({
     heroAside,
     breadcrumb,
     compact = false,
+    flash = true,
     children,
 }: {
     title: string;
     description?: string;
-    active?: TaraNav;
+    /** Menu yang disorot; tanpa nilai = tidak ada menu yang disorot. */
+    active?: TaraNav | null;
     eyebrow: string;
     heading: ReactNode;
     subtitle?: ReactNode;
@@ -230,6 +227,8 @@ export default function TaraPage({
     breadcrumb?: { label: string; href?: string }[];
     /** Hero lebih rapat dengan judul 44 px (halaman direktori, mis. Katalog). */
     compact?: boolean;
+    /** Tampilkan pesan flash server di atas konten (matikan bila halaman menaruhnya sendiri). */
+    flash?: boolean;
     children: ReactNode;
 }) {
     const { auth } = usePage<SharedData>().props;
@@ -312,7 +311,10 @@ export default function TaraPage({
                     </div>
                 </section>
 
-                <main id="konten">{children}</main>
+                <main id="konten">
+                    {flash && <FlashNotice wrapperClassName="mx-auto max-w-[1312px] px-4 pt-8 sm:px-6 lg:px-16" />}
+                    {children}
+                </main>
                 <TaraFooter />
                 <TaraLauncher />
             </div>

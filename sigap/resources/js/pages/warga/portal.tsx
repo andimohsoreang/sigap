@@ -1,11 +1,10 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import PublicLayout from '@/layouts/public-layout';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { Clock, Download, FileText, LoaderCircle, LogOut, Phone, Save, Search, Trash2, UserRound } from 'lucide-react';
+import { Link, router, useForm } from '@inertiajs/react';
+import { Clock, Download, FilePlus2, FileText, LogOut, Phone, Save, Search, Trash2, UserRound } from 'lucide-react';
 import { type FormEvent, useMemo, useState } from 'react';
+
+import { cardClass, Field, fieldA11y, FlashNotice, inputClass, outlineButtonClass, SubmitButton } from '@/components/sigap/tara-form';
+import TaraPage from '@/components/sigap/tara-shell';
+import { cn } from '@/lib/utils';
 
 interface Profile {
     nama: string;
@@ -36,17 +35,19 @@ interface Props {
     tickets: TicketRow[];
 }
 
+/** Sama dengan halaman Lacak Tiket. */
 const STATUS_STYLE: Record<string, string> = {
-    baru: 'bg-amber-100 text-amber-700',
-    verifikasi: 'bg-sky-100 text-sky-700',
-    diproses: 'bg-indigo-100 text-indigo-700',
-    selesai: 'bg-emerald-100 text-emerald-700',
-    ditolak: 'bg-rose-100 text-rose-700',
+    baru: 'bg-[var(--tcd-info-soft,#e8f1fa)] text-[var(--tcd-info,#0b5fa5)]',
+    verifikasi: 'bg-[var(--tcd-info-soft,#e8f0f7)] text-[var(--tcd-link,#003d68)]',
+    diproses: 'bg-[var(--tcd-warning-soft,#fdf3e1)] text-[var(--tcd-warning,#9a5b00)]',
+    selesai: 'bg-[var(--tcd-success-soft,#e7f4ef)] text-[var(--tcd-success,#0d7a5f)]',
+    ditolak: 'bg-[var(--tcd-danger-soft,#fdecea)] text-[var(--tcd-danger,#b42318)]',
 };
 
-export default function WargaPortal({ profile, tickets }: Props) {
-    const { flash } = usePage<{ flash: { success?: string; error?: string } }>().props;
+const iconButton =
+    'flex h-10 w-10 items-center justify-center rounded-xl text-[var(--tcd-link,var(--t-navy))] transition-colors hover:bg-[var(--tcd-muted,#f1f4f7)]';
 
+export default function WargaPortal({ profile, tickets }: Props) {
     const [filter, setFilter] = useState('');
     const filteredTickets = useMemo(() => {
         const q = filter.trim().toLowerCase();
@@ -61,162 +62,187 @@ export default function WargaPortal({ profile, tickets }: Props) {
     }, [filter, tickets]);
 
     return (
-        <PublicLayout title="Portal Warga">
-            <Head title="Portal Warga — Contact Center" />
-
-            <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-                <p className="mb-6 text-sm text-gray-400">
-                    <Link href="/" className="hover:text-brand-light">
-                        Beranda
-                    </Link>{' '}
-                    &gt; <span className="text-gray-700">Portal Warga</span>
-                </p>
-
-                {(flash?.success || flash?.error) && (
-                    <div className="mb-6 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600">
-                        {flash.success ?? flash.error}
-                    </div>
-                )}
-
-                {/* BANNER IDENTITAS */}
-                <div className="bg-brand-light mb-6 flex flex-col items-center gap-6 rounded-2xl p-6 text-white shadow-sm transition-colors md:flex-row md:p-8">
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-2 border-white/50 bg-white/20 text-3xl font-bold shadow-inner backdrop-blur-sm">
-                        {profile.inisial}
-                    </div>
-                    <div className="flex-grow text-center md:text-left">
-                        <h2 className="mb-1 text-2xl font-bold">{profile.nama}</h2>
-                        <p className="text-brand-soft/90 flex flex-col items-center gap-1 text-sm md:flex-row md:gap-3">
-                            <span className="inline-flex items-center gap-1.5">
-                                <UserRound className="h-3.5 w-3.5" /> NIK: {profile.nik_masked ?? '-'}
-                            </span>
-                            <span className="hidden md:inline">|</span>
-                            <span className="inline-flex items-center gap-1.5">
-                                <Phone className="h-3.5 w-3.5" /> {profile.telp ?? 'Belum diisi'}
-                            </span>
-                        </p>
-                    </div>
-                    <Button
-                        variant="outline"
-                        className="shrink-0 border-white/50 bg-white/20 text-white hover:bg-white/30 hover:text-white"
-                        onClick={() => router.post('/keluar')}
+        <TaraPage
+            flash={false}
+            title="Portal Warga"
+            breadcrumb={[{ label: 'Beranda', href: '/' }, { label: 'Portal Warga' }]}
+            eyebrow="Portal Warga"
+            heading={profile.nama}
+            subtitle={
+                <span className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:gap-x-5">
+                    <span className="inline-flex items-center gap-2">
+                        <UserRound className="h-4 w-4 shrink-0" aria-hidden="true" /> NIK:{' '}
+                        <span className="font-mono">{profile.nik_masked ?? '-'}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-2">
+                        <Phone className="h-4 w-4 shrink-0" aria-hidden="true" /> {profile.telp ?? 'Belum diisi'}
+                    </span>
+                </span>
+            }
+            heroChildren={
+                <div className="flex flex-wrap gap-3">
+                    <Link
+                        href="/pengaduan/baru"
+                        className="transi-lift font-heading flex h-12 items-center gap-2 rounded-full bg-[var(--t-deep)] px-6 font-bold text-white hover:bg-[var(--tcd-primary,var(--t-navy))]"
                     >
-                        <LogOut className="h-4 w-4" /> Keluar
-                    </Button>
+                        <FilePlus2 className="h-5 w-5" aria-hidden="true" /> Buat pengaduan
+                    </Link>
+                    <button type="button" className={outlineButtonClass} onClick={() => router.post('/keluar')}>
+                        <LogOut className="h-4 w-4" aria-hidden="true" /> Keluar
+                    </button>
                 </div>
+            }
+            pose="menyapa"
+            poseAlt="TARA menyapa Anda"
+            compact
+        >
+            <div className="mx-auto flex max-w-[1312px] flex-col gap-6 px-4 py-10 sm:px-6 lg:px-16 lg:py-14">
+                <FlashNotice />
 
-                <div className="mb-8 flex flex-col gap-6 lg:flex-row">
+                <div className="flex flex-col-reverse gap-6 lg:flex-row lg:items-start">
                     {/* PENGATURAN AKUN */}
                     <AkunForm profile={profile} />
 
                     {/* RIWAYAT TIKET */}
-                    <Card className="w-full border-gray-100 transition-colors lg:w-2/3">
-                        <CardHeader className="border-b border-gray-100 pb-3">
-                            <CardTitle className="flex items-center gap-2 text-lg text-gray-800">
-                                <Clock className="text-brand-light h-5 w-5" /> Riwayat Tiket Pengaduan
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            <div className="border-b border-gray-100 p-4">
-                                <div className="relative">
-                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                                    <Input
-                                        value={filter}
-                                        onChange={(e) => setFilter(e.target.value)}
-                                        placeholder="Cari nomor tiket, judul, atau status..."
-                                        className="pl-9"
-                                    />
-                                </div>
+                    <section aria-labelledby="riwayat-tiket" className={cn(cardClass, 'w-full min-w-0 overflow-hidden lg:w-2/3')}>
+                        <div className="flex flex-col gap-4 border-b border-[var(--tcd-border,#e6ebf0)] p-6 sm:flex-row sm:items-center sm:justify-between">
+                            <h2
+                                id="riwayat-tiket"
+                                className="font-heading flex items-center gap-2.5 text-lg font-bold text-[var(--tcd-heading,var(--t-deep))]"
+                            >
+                                <Clock className="h-5 w-5 text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" /> Riwayat Tiket Pengaduan
+                            </h2>
+                            <div className="relative sm:w-[320px]">
+                                <label htmlFor="cari-tiket" className="sr-only">
+                                    Cari tiket
+                                </label>
+                                <Search
+                                    className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-[var(--tcd-text-3,#647280)]"
+                                    aria-hidden="true"
+                                />
+                                <input
+                                    id="cari-tiket"
+                                    type="search"
+                                    value={filter}
+                                    onChange={(e) => setFilter(e.target.value)}
+                                    placeholder="Cari nomor tiket, judul, atau status..."
+                                    className={cn(inputClass, 'h-11 pl-10')}
+                                />
                             </div>
+                        </div>
 
-                            <div className="overflow-x-auto">
-                                <table className="w-full min-w-[640px] text-left text-sm whitespace-nowrap">
-                                    <thead className="border-b border-gray-200 bg-gray-50 text-[11px] font-bold text-gray-600 uppercase">
+                        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Tabel riwayat tiket">
+                            <table className="w-full min-w-[560px] text-left text-sm">
+                                <thead className="bg-[var(--tcd-muted,#f6f8fa)] text-xs font-semibold tracking-wide text-[var(--tcd-text-2,#4a5868)] uppercase">
+                                    <tr>
+                                        <th scope="col" className="py-3 pr-3 pl-6">
+                                            Tiket
+                                        </th>
+                                        <th scope="col" className="px-3 py-3">
+                                            Judul Laporan
+                                        </th>
+                                        <th scope="col" className="px-3 py-3 text-center">
+                                            Status
+                                        </th>
+                                        <th scope="col" className="py-3 pr-6 pl-3 text-center">
+                                            Aksi
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-[var(--tcd-border,#e6ebf0)] text-[var(--tcd-text,#0f2233)]">
+                                    {filteredTickets.length === 0 ? (
                                         <tr>
-                                            <th scope="col" className="px-5 py-3">
-                                                ID Tiket
-                                            </th>
-                                            <th scope="col" className="px-5 py-3">
-                                                Tanggal
-                                            </th>
-                                            <th scope="col" className="px-5 py-3">
-                                                Judul Laporan
-                                            </th>
-                                            <th scope="col" className="px-5 py-3 text-center">
-                                                Status
-                                            </th>
-                                            <th scope="col" className="px-5 py-3 text-center">
-                                                Aksi
-                                            </th>
+                                            <td colSpan={4} className="px-6 py-12 text-center text-[15px] text-[var(--tcd-text-2,#4a5868)]">
+                                                {tickets.length === 0 ? (
+                                                    <>
+                                                        Belum ada riwayat tiket.{' '}
+                                                        <Link
+                                                            href="/pengaduan/baru"
+                                                            className="font-semibold text-[var(--tcd-link,var(--t-navy))] hover:underline"
+                                                        >
+                                                            Buat pengaduan pertama Anda.
+                                                        </Link>
+                                                    </>
+                                                ) : (
+                                                    'Tidak ada tiket yang cocok dengan pencarian.'
+                                                )}
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100 text-gray-700">
-                                        {filteredTickets.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={5} className="px-5 py-10 text-center text-sm text-gray-400">
-                                                    {tickets.length === 0
-                                                        ? 'Belum ada riwayat tiket. Buat pengaduan pertama Anda.'
-                                                        : 'Tidak ada tiket yang cocok dengan pencarian.'}
+                                    ) : (
+                                        filteredTickets.map((t) => (
+                                            <tr key={t.nomor} className="transition-colors hover:bg-[var(--tcd-muted,#f8fafb)]">
+                                                <td className="py-4 pr-3 pl-6 whitespace-nowrap">
+                                                    <Link
+                                                        href={`/lacak/${t.nomor}`}
+                                                        className="font-mono font-semibold text-[var(--tcd-link,var(--t-navy))] hover:underline"
+                                                    >
+                                                        #{t.nomor}
+                                                    </Link>
+                                                    <span className="block text-xs text-[var(--tcd-text-2,#4a5868)]">{formatDate(t.tanggal)}</span>
+                                                    {t.kode_akses && (
+                                                        <span className="block font-mono text-[11px] text-[var(--tcd-text-2,#4a5868)]">
+                                                            Kode akses: {t.kode_akses}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="max-w-[280px] px-3 py-4">
+                                                    <span className="block truncate font-semibold text-[var(--tcd-heading,var(--t-deep))]">
+                                                        {t.judul}
+                                                    </span>
+                                                    <span className="block truncate text-xs text-[var(--tcd-text-2,#4a5868)]">
+                                                        {t.kategori ?? 'Umum'}
+                                                        {t.kawasan ? ` • ${t.kawasan}` : ''} • {t.jenis}
+                                                    </span>
+                                                </td>
+                                                <td className="px-3 py-4 text-center whitespace-nowrap">
+                                                    <span
+                                                        className={cn(
+                                                            'inline-block rounded-full px-3 py-1 text-xs font-bold',
+                                                            STATUS_STYLE[t.status] ??
+                                                                'bg-[var(--tcd-muted,#f1f4f7)] text-[var(--tcd-text-2,#4a5868)]',
+                                                        )}
+                                                    >
+                                                        {t.status_label}
+                                                    </span>
+                                                </td>
+                                                <td className="py-4 pr-6 pl-3">
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <Link
+                                                            href={`/lacak/${t.nomor}`}
+                                                            className={iconButton}
+                                                            title="Lacak tiket"
+                                                            aria-label={`Lacak tiket ${t.nomor}`}
+                                                        >
+                                                            <FileText className="h-[18px] w-[18px]" aria-hidden="true" />
+                                                        </Link>
+                                                        <a
+                                                            href={`/portal-warga/tiket/${t.nomor}/lampiran`}
+                                                            className={iconButton}
+                                                            title="Unduh lampiran"
+                                                            aria-label={`Unduh lampiran tiket ${t.nomor}`}
+                                                        >
+                                                            <Download className="h-[18px] w-[18px]" aria-hidden="true" />
+                                                        </a>
+                                                        {t.status === 'baru' && <HapusTombol nomor={t.nomor} />}
+                                                    </div>
                                                 </td>
                                             </tr>
-                                        ) : (
-                                            filteredTickets.map((t) => (
-                                                <tr key={t.nomor} className="transition-colors hover:bg-gray-50">
-                                                    <td className="text-brand-light px-5 py-3 font-semibold">
-                                                        #{t.nomor}
-                                                        {t.kode_akses && (
-                                                            <span className="block font-mono text-[10px] font-normal text-gray-400">
-                                                                Kode akses: {t.kode_akses}
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-5 py-3">{formatDate(t.tanggal)}</td>
-                                                    <td className="max-w-[260px] truncate px-5 py-3">
-                                                        <span className="font-medium text-gray-800">{t.judul}</span>
-                                                        <span className="block text-xs text-gray-400">
-                                                            {t.kategori ?? 'Umum'}
-                                                            {t.kawasan ? ` • ${t.kawasan}` : ''} • {t.jenis}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-5 py-3 text-center">
-                                                        <span
-                                                            className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${STATUS_STYLE[t.status] ?? 'bg-gray-100 text-gray-600'}`}
-                                                        >
-                                                            {t.status_label}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-5 py-3">
-                                                        <div className="flex items-center justify-center gap-1">
-                                                            <Button asChild size="sm" variant="ghost" title="Lacak tiket">
-                                                                <Link href={`/lacak/${t.nomor}`}>
-                                                                    <FileText className="h-4 w-4" />
-                                                                </Link>
-                                                            </Button>
-                                                            <Button asChild size="sm" variant="ghost" title="Unduh lampiran">
-                                                                <a href={`/portal-warga/tiket/${t.nomor}/lampiran`}>
-                                                                    <Download className="h-4 w-4" />
-                                                                </a>
-                                                            </Button>
-                                                            {t.status === 'baru' && <HapusTombol nomor={t.nomor} />}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
 
-                            <div className="flex items-center justify-between border-t border-gray-200 p-4 text-xs text-gray-500">
-                                <span>
-                                    Menampilkan {filteredTickets.length} dari {tickets.length} tiket
-                                </span>
-                                <span className="italic">Halaman ini menampilkan seluruh riwayat Anda.</span>
-                            </div>
-                        </CardContent>
-                    </Card>
+                        <div className="flex flex-col gap-1 border-t border-[var(--tcd-border,#e6ebf0)] px-6 py-4 text-[13px] text-[var(--tcd-text-2,#4a5868)] sm:flex-row sm:items-center sm:justify-between">
+                            <span role="status">
+                                Menampilkan {filteredTickets.length} dari {tickets.length} tiket
+                            </span>
+                            <span>Halaman ini menampilkan seluruh riwayat Anda.</span>
+                        </div>
+                    </section>
                 </div>
             </div>
-        </PublicLayout>
+        </TaraPage>
     );
 }
 
@@ -239,84 +265,91 @@ function AkunForm({ profile }: { profile: Profile }) {
     };
 
     return (
-        <Card className="h-fit w-full border-gray-100 transition-colors lg:w-1/3">
-            <CardHeader className="border-b border-gray-100 pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg text-gray-800">
-                    <UserRound className="text-brand-light h-5 w-5" /> Pengaturan Akun
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-                <form onSubmit={submit} className="space-y-4">
-                    <div className="space-y-1.5">
-                        <Label htmlFor="nik" className="text-xs font-bold text-gray-600">
-                            NIK
-                        </Label>
-                        {/* NIK hanya ditampilkan tersamar dan tidak dapat diubah (A-21). */}
-                        <Input id="nik" value={profile.nik_masked ?? '-'} readOnly disabled aria-readonly className="font-mono" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="email" className="text-xs font-bold text-gray-600">
-                            Alamat Email
-                        </Label>
-                        <Input id="email" type="email" value={data.email} onChange={(e) => setData('email', e.target.value)} />
-                        {errors.email && <p className="text-xs font-semibold text-rose-500">{errors.email}</p>}
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="telp" className="text-xs font-bold text-gray-600">
-                            No. Telp / WhatsApp
-                        </Label>
-                        <Input id="telp" type="tel" value={data.telp} onChange={(e) => setData('telp', e.target.value)} />
-                        {errors.telp && <p className="text-xs font-semibold text-rose-500">{errors.telp}</p>}
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="current_password" className="text-xs font-bold text-gray-600">
-                            Kata Sandi Saat Ini
-                        </Label>
-                        <Input
+        <section aria-labelledby="pengaturan-akun" className={cn(cardClass, 'w-full p-6 sm:p-7 lg:w-1/3')}>
+            <h2 id="pengaturan-akun" className="font-heading flex items-center gap-2.5 text-lg font-bold text-[var(--tcd-heading,var(--t-deep))]">
+                <UserRound className="h-5 w-5 text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" /> Pengaturan Akun
+            </h2>
+            <form onSubmit={submit} className="mt-5 flex flex-col gap-5">
+                <Field label="NIK" htmlFor="nik" hint="NIK tidak dapat diubah.">
+                    {/* NIK hanya ditampilkan tersamar dan tidak dapat diubah (A-21). */}
+                    <input
+                        id="nik"
+                        value={profile.nik_masked ?? '-'}
+                        readOnly
+                        disabled
+                        aria-readonly
+                        aria-describedby="nik-hint"
+                        className={cn(inputClass, 'font-mono')}
+                    />
+                </Field>
+                <Field label="Alamat Email" htmlFor="email" error={errors.email}>
+                    <input
+                        id="email"
+                        type="email"
+                        autoComplete="email"
+                        value={data.email}
+                        onChange={(e) => setData('email', e.target.value)}
+                        className={inputClass}
+                        {...fieldA11y('email', errors.email)}
+                    />
+                </Field>
+                <Field label="No. Telp / WhatsApp" htmlFor="telp" error={errors.telp}>
+                    <input
+                        id="telp"
+                        type="tel"
+                        autoComplete="tel"
+                        value={data.telp}
+                        onChange={(e) => setData('telp', e.target.value)}
+                        className={inputClass}
+                        {...fieldA11y('telp', errors.telp)}
+                    />
+                </Field>
+
+                <div className="flex flex-col gap-5 border-t border-[var(--tcd-border,#e6ebf0)] pt-5">
+                    <p className="text-sm font-semibold text-[var(--tcd-heading,var(--t-deep))]">Ganti kata sandi</p>
+                    <Field label="Kata Sandi Saat Ini" htmlFor="current_password" error={errors.current_password}>
+                        <input
                             id="current_password"
                             type="password"
                             autoComplete="current-password"
                             placeholder="Wajib diisi jika mengganti kata sandi"
                             value={data.current_password}
                             onChange={(e) => setData('current_password', e.target.value)}
+                            className={inputClass}
+                            {...fieldA11y('current_password', errors.current_password)}
                         />
-                        {errors.current_password && <p className="text-xs font-semibold text-rose-500">{errors.current_password}</p>}
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="password" className="text-xs font-bold text-gray-600">
-                            Kata Sandi Baru
-                        </Label>
-                        <Input
+                    </Field>
+                    <Field label="Kata Sandi Baru" htmlFor="password" error={errors.password} hint="Minimal 8 karakter, berisi huruf dan angka.">
+                        <input
                             id="password"
                             type="password"
                             autoComplete="new-password"
                             placeholder="Kosongkan jika tidak diubah"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
+                            className={inputClass}
+                            {...fieldA11y('password', errors.password, true)}
                         />
-                        <p className="text-[11px] text-gray-400">Minimal 8 karakter, berisi huruf dan angka.</p>
-                        {errors.password && <p className="text-xs font-semibold text-rose-500">{errors.password}</p>}
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="password_confirmation" className="text-xs font-bold text-gray-600">
-                            Konfirmasi Kata Sandi
-                        </Label>
-                        <Input
+                    </Field>
+                    <Field label="Konfirmasi Kata Sandi" htmlFor="password_confirmation" error={errors.password_confirmation}>
+                        <input
                             id="password_confirmation"
                             type="password"
                             autoComplete="new-password"
                             placeholder="Ulangi kata sandi baru"
                             value={data.password_confirmation}
                             onChange={(e) => setData('password_confirmation', e.target.value)}
+                            className={inputClass}
+                            {...fieldA11y('password_confirmation', errors.password_confirmation)}
                         />
-                        {errors.password_confirmation && <p className="text-xs font-semibold text-rose-500">{errors.password_confirmation}</p>}
-                    </div>
-                    <Button type="submit" disabled={processing} className="mt-4 w-full">
-                        {processing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Simpan Perubahan
-                    </Button>
-                </form>
-            </CardContent>
-        </Card>
+                    </Field>
+                </div>
+
+                <SubmitButton busy={processing} icon={Save}>
+                    Simpan Perubahan
+                </SubmitButton>
+            </form>
+        </section>
     );
 }
 
@@ -325,21 +358,32 @@ function HapusTombol({ nomor }: { nomor: string }) {
 
     if (!confirming) {
         return (
-            <Button size="sm" variant="ghost" title="Hapus tiket" onClick={() => setConfirming(true)}>
-                <Trash2 className="h-4 w-4 text-rose-500" />
-            </Button>
+            <button
+                type="button"
+                title="Hapus tiket"
+                aria-label={`Hapus tiket ${nomor}`}
+                onClick={() => setConfirming(true)}
+                className={cn(iconButton, 'text-[var(--tcd-danger,#b42318)]')}
+            >
+                <Trash2 className="h-[18px] w-[18px]" aria-hidden="true" />
+            </button>
         );
     }
 
     return (
-        <span className="flex items-center gap-1 text-xs">
+        <span className="flex items-center gap-2 text-xs" role="group" aria-label={`Konfirmasi hapus tiket ${nomor}`}>
             <button
-                className="font-bold text-rose-600 hover:underline"
+                type="button"
+                className="rounded-lg px-2 py-1.5 font-bold text-[var(--tcd-danger,#b42318)] hover:bg-[var(--tcd-danger-soft,#fdecea)]"
                 onClick={() => router.delete(`/portal-warga/tiket/${nomor}`, { preserveScroll: true })}
             >
                 Hapus
             </button>
-            <button className="text-gray-400 hover:underline" onClick={() => setConfirming(false)}>
+            <button
+                type="button"
+                className="rounded-lg px-2 py-1.5 text-[var(--tcd-text-2,#4a5868)] hover:bg-[var(--tcd-muted,#f1f4f7)]"
+                onClick={() => setConfirming(false)}
+            >
                 Batal
             </button>
         </span>

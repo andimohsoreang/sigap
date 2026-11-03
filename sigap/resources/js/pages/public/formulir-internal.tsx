@@ -1,15 +1,28 @@
-import { RecaptchaNotice } from '@/components/sigap/recaptcha-notice';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { useRecaptcha } from '@/hooks/use-recaptcha';
-import PublicLayout from '@/layouts/public-layout';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { AlertTriangle, Info, LoaderCircle, Send, Upload } from 'lucide-react';
+import { Link, useForm } from '@inertiajs/react';
+import { Info, MessageCircle, Send, ShieldAlert, Users } from 'lucide-react';
 import { type FormEvent } from 'react';
+
+import { RecaptchaNotice } from '@/components/sigap/recaptcha-notice';
+import {
+    attachmentError,
+    AttachmentPicker,
+    cardClass,
+    ErrorSummary,
+    Field,
+    fieldA11y,
+    FormSection,
+    inputClass,
+    outlineButtonClass,
+    RequiredNote,
+    SubmitButton,
+    textareaClass,
+    triggerClass,
+} from '@/components/sigap/tara-form';
+import TaraPage, { TaraAvatar } from '@/components/sigap/tara-shell';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useRecaptcha } from '@/hooks/use-recaptcha';
+import { goToChat } from '@/lib/chat-transition';
+import { cn } from '@/lib/utils';
 
 interface Props {
     units: string[];
@@ -18,8 +31,22 @@ interface Props {
 
 const URGENSI = ['Rendah', 'Sedang', 'Tinggi', 'Kritis'];
 
+/** Urutan kolom untuk ringkasan galat (sama dengan urutan formulir). */
+const FIELD_ORDER: [string, string][] = [
+    ['nip', 'NIP / ID pegawai'],
+    ['nama', 'Nama lengkap'],
+    ['unit', 'Unit / bagian'],
+    ['kontak', 'No. telp / ekstensi'],
+    ['kategori', 'Kategori gangguan'],
+    ['urgensi', 'Tingkat urgensi'],
+    ['lokasi', 'Lokasi / ruangan'],
+    ['deskripsi', 'Deskripsi masalah'],
+    ['attachment', 'Lampiran'],
+];
+
+/** Formulir pengaduan internal pegawai (gangguan sarana & TIK kantor) bergaya TARA. */
 export default function FormulirInternal({ units, categories }: Props) {
-    const { data, setData, post, transform, processing, errors, progress } = useForm({
+    const { data, setData, post, transform, processing, errors, progress, setError, clearErrors } = useForm({
         nip: '',
         nama: '',
         unit: '',
@@ -38,167 +65,235 @@ export default function FormulirInternal({ units, categories }: Props) {
         e.preventDefault();
         void recaptcha.withToken((token) => {
             transform((form) => ({ ...form, recaptcha_token: token }));
-            post('/pengaduan/internal', { forceFormData: true });
+            post('/pengaduan/internal', {
+                forceFormData: true,
+                onError: () => document.getElementById('ringkasan-galat')?.focus(),
+            });
         });
     };
 
+    const pickFile = (file: File | null) => {
+        const tooBig = attachmentError(file);
+        if (tooBig) {
+            setError('attachment', tooBig);
+            return;
+        }
+        clearErrors('attachment');
+        setData('attachment', file);
+    };
+
     return (
-        <PublicLayout title="Pengaduan Internal">
-            <Head title="Pengaduan Internal Pegawai — Contact Center" />
+        <TaraPage
+            title="Pengaduan Internal Pegawai"
+            description="Laporkan gangguan sarana dan TIK kantor, khusus pegawai Kementerian Transmigrasi."
+            active="katalog"
+            breadcrumb={[{ label: 'Beranda', href: '/' }, { label: 'Katalog Pengaduan', href: '/katalog' }, { label: 'Pengaduan Internal Pegawai' }]}
+            eyebrow="Khusus Pegawai Kementerian"
+            heading="Pengaduan Internal Pegawai"
+            subtitle="Gangguan sarana & TIK kantor — khusus pegawai Kementerian Transmigrasi."
+            pose="tablet"
+            poseAlt="TARA memegang tablet untuk mencatat laporan gangguan"
+            compact
+        >
+            <div className="mx-auto grid max-w-[1312px] gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10 lg:px-16 lg:py-14">
+                <form onSubmit={submit} noValidate className="flex min-w-0 flex-col gap-6" aria-describedby="keterangan-wajib">
+                    <div className="flex items-start gap-3 rounded-[20px] border border-[var(--tcd-warning-border,#f1d9a6)] bg-[var(--tcd-warning-soft,#fdf6e7)] p-5 text-[15px] leading-relaxed text-[var(--tcd-text,#0f2233)]">
+                        <Info className="mt-0.5 h-5 w-5 shrink-0 text-[var(--tcd-warning,#9a6400)]" aria-hidden="true" />
+                        <p>
+                            Gunakan formulir ini hanya untuk kendala teknis internal kantor (mis. internet/jaringan mati, listrik padam, perangkat
+                            rusak). Untuk pengaduan masyarakat, gunakan{' '}
+                            <Link href="/pengaduan/baru" className="font-semibold text-[var(--tcd-link,var(--t-navy))] underline underline-offset-2">
+                                Formulir Contact Center
+                            </Link>
+                            .
+                        </p>
+                    </div>
 
-            <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
-                <p className="mb-6 text-sm text-gray-400">
-                    <Link href="/" className="hover:text-brand-light">
-                        Beranda
-                    </Link>{' '}
-                    &gt;{' '}
-                    <Link href="/katalog" className="hover:text-brand-light">
-                        Katalog Pengaduan
-                    </Link>{' '}
-                    &gt; <span className="text-gray-700">Pengaduan Internal Pegawai</span>
-                </p>
+                    <RequiredNote />
+                    <ErrorSummary errors={errors} order={FIELD_ORDER} />
 
-                <div className="mb-4 flex items-start gap-2 rounded-lg border border-orange-100 bg-orange-50 px-4 py-3 text-xs text-gray-600">
-                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
-                    <span>
-                        Gunakan formulir ini hanya untuk kendala teknis internal kantor (mis. internet/jaringan mati, listrik padam, perangkat rusak).
-                        Untuk pengaduan masyarakat, gunakan{' '}
-                        <Link href="/pengaduan/baru" className="text-brand-light font-bold hover:underline">
-                            Formulir Contact Center
-                        </Link>
-                        . Untuk indikasi pelanggaran/etik, laporkan ke Inspektorat Jenderal (itjen@transmigrasi.go.id) atau lewat PPID.
-                    </span>
-                </div>
+                    <FormSection step={1} title="Data pegawai" desc="Dipakai petugas untuk menghubungi Anda saat menangani gangguan.">
+                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                            <Field label="NIP / ID Pegawai" htmlFor="nip" required error={errors.nip}>
+                                <input
+                                    id="nip"
+                                    name="nip"
+                                    value={data.nip}
+                                    onChange={(e) => setData('nip', e.target.value)}
+                                    autoComplete="off"
+                                    className={cn(inputClass, 'font-mono tracking-wider')}
+                                    {...fieldA11y('nip', errors.nip)}
+                                />
+                            </Field>
+                            <Field label="Nama Lengkap" htmlFor="nama" required error={errors.nama}>
+                                <input
+                                    id="nama"
+                                    name="nama"
+                                    value={data.nama}
+                                    onChange={(e) => setData('nama', e.target.value)}
+                                    autoComplete="name"
+                                    className={inputClass}
+                                    {...fieldA11y('nama', errors.nama)}
+                                />
+                            </Field>
+                            <Field label="Unit / Bagian" htmlFor="unit" required error={errors.unit} hint="Unit tempat Anda bertugas.">
+                                <Select value={data.unit} onValueChange={(v) => setData('unit', v)}>
+                                    <SelectTrigger id="unit" className={triggerClass} {...fieldA11y('unit', errors.unit, true)}>
+                                        <SelectValue placeholder="Pilih unit / bagian" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {units.map((u) => (
+                                            <SelectItem key={u} value={u}>
+                                                {u}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </Field>
+                            <Field label="No. Telp / Ekstensi" htmlFor="kontak" required error={errors.kontak}>
+                                <input
+                                    id="kontak"
+                                    name="kontak"
+                                    type="tel"
+                                    value={data.kontak}
+                                    onChange={(e) => setData('kontak', e.target.value)}
+                                    autoComplete="tel"
+                                    inputMode="tel"
+                                    placeholder="Mis. 0812xxxxxxxx atau ext. 1234"
+                                    className={inputClass}
+                                    {...fieldA11y('kontak', errors.kontak)}
+                                />
+                            </Field>
+                        </div>
+                    </FormSection>
 
-                <Card className="border-gray-100">
-                    <CardContent className="p-6 md:p-8">
-                        <h1 className="mb-1 text-2xl font-bold text-gray-800">Pengaduan Internal Pegawai</h1>
-                        <p className="mb-8 text-sm text-gray-500">Gangguan sarana &amp; TIK kantor — khusus pegawai Kementerian Transmigrasi</p>
+                    <FormSection step={2} title="Detail gangguan" desc="Jelaskan apa yang terganggu, di mana, dan sejak kapan.">
+                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                            <Field label="Kategori Gangguan" htmlFor="kategori" required error={errors.kategori}>
+                                <Select value={data.kategori} onValueChange={(v) => setData('kategori', v)}>
+                                    <SelectTrigger id="kategori" className={triggerClass} {...fieldA11y('kategori', errors.kategori)}>
+                                        <SelectValue placeholder="Pilih kategori" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map((c) => (
+                                            <SelectItem key={c} value={c}>
+                                                {c}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </Field>
+                            <Field label="Tingkat Urgensi" htmlFor="urgensi" required error={errors.urgensi}>
+                                <Select value={data.urgensi} onValueChange={(v) => setData('urgensi', v)}>
+                                    <SelectTrigger id="urgensi" className={triggerClass} {...fieldA11y('urgensi', errors.urgensi)}>
+                                        <SelectValue placeholder="Pilih urgensi" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {URGENSI.map((u) => (
+                                            <SelectItem key={u} value={u}>
+                                                {u}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </Field>
+                        </div>
+                        <Field label="Lokasi / Ruangan" htmlFor="lokasi" required error={errors.lokasi}>
+                            <input
+                                id="lokasi"
+                                name="lokasi"
+                                value={data.lokasi}
+                                onChange={(e) => setData('lokasi', e.target.value)}
+                                placeholder="Contoh: Gedung A, Lantai 2, Ruang TIK"
+                                className={inputClass}
+                                {...fieldA11y('lokasi', errors.lokasi)}
+                            />
+                        </Field>
+                        <Field
+                            label="Deskripsi Masalah"
+                            htmlFor="deskripsi"
+                            required
+                            error={errors.deskripsi}
+                            hint={`Minimal 10 karakter · ${data.deskripsi.trim().length} karakter`}
+                        >
+                            <textarea
+                                id="deskripsi"
+                                name="deskripsi"
+                                value={data.deskripsi}
+                                onChange={(e) => setData('deskripsi', e.target.value)}
+                                rows={6}
+                                placeholder="Jelaskan gangguan selengkap mungkin…"
+                                className={textareaClass}
+                                {...fieldA11y('deskripsi', errors.deskripsi, true)}
+                            />
+                        </Field>
+                        <AttachmentPicker
+                            label={
+                                <>
+                                    Lampiran <span className="font-normal text-[var(--tcd-text-3,#6d7681)]">(opsional)</span>
+                                </>
+                            }
+                            file={data.attachment}
+                            error={errors.attachment}
+                            progress={progress?.percentage ?? null}
+                            onPick={pickFile}
+                        />
+                    </FormSection>
 
-                        <form onSubmit={submit} className="space-y-8">
-                            <fieldset className="space-y-4">
-                                <legend className="mb-2 text-sm font-bold tracking-wide text-gray-800 uppercase">Data Pegawai</legend>
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <Field label="NIP / ID Pegawai" required error={errors.nip}>
-                                        <Input value={data.nip} onChange={(e) => setData('nip', e.target.value)} />
-                                    </Field>
-                                    <Field label="Nama Lengkap" required error={errors.nama}>
-                                        <Input value={data.nama} onChange={(e) => setData('nama', e.target.value)} />
-                                    </Field>
-                                    <Field label="Unit / Bagian" required error={errors.unit}>
-                                        <Select value={data.unit} onValueChange={(v) => setData('unit', v)}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Pilih Unit / Bagian" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {units.map((u) => (
-                                                    <SelectItem key={u} value={u}>
-                                                        {u}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </Field>
-                                    <Field label="No. Telp / Ekstensi" required error={errors.kontak}>
-                                        <Input value={data.kontak} onChange={(e) => setData('kontak', e.target.value)} />
-                                    </Field>
-                                </div>
-                            </fieldset>
+                    <section className="flex flex-col gap-5 rounded-[24px] border border-[var(--tcd-border,#e6ebf0)] bg-[var(--tcd-cream,#f7f3ee)] p-6 sm:p-8">
+                        <RecaptchaNotice enabled={recaptcha.enabled} error={recaptcha.error ?? errors.recaptcha_token} />
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                            <SubmitButton busy={busy} icon={Send}>
+                                Kirim Laporan
+                            </SubmitButton>
+                            <Link href="/katalog" className={outlineButtonClass}>
+                                Batal
+                            </Link>
+                        </div>
+                    </section>
+                </form>
 
-                            <fieldset className="space-y-4">
-                                <legend className="mb-2 text-sm font-bold tracking-wide text-gray-800 uppercase">Detail Gangguan</legend>
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <Field label="Kategori Gangguan" required error={errors.kategori}>
-                                        <Select value={data.kategori} onValueChange={(v) => setData('kategori', v)}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Pilih Kategori" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {categories.map((c) => (
-                                                    <SelectItem key={c} value={c}>
-                                                        {c}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </Field>
-                                    <Field label="Tingkat Urgensi" required error={errors.urgensi}>
-                                        <Select value={data.urgensi} onValueChange={(v) => setData('urgensi', v)}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Pilih Urgensi" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {URGENSI.map((u) => (
-                                                    <SelectItem key={u} value={u}>
-                                                        {u}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </Field>
-                                </div>
-                                <Field label="Lokasi / Ruangan" required error={errors.lokasi}>
-                                    <Input
-                                        value={data.lokasi}
-                                        onChange={(e) => setData('lokasi', e.target.value)}
-                                        placeholder="Contoh: Gedung A, Lantai 2, Ruang TIK"
-                                    />
-                                </Field>
-                                <Field label="Deskripsi Masalah" required error={errors.deskripsi}>
-                                    <Textarea
-                                        value={data.deskripsi}
-                                        onChange={(e) => setData('deskripsi', e.target.value)}
-                                        rows={5}
-                                        placeholder="Jelaskan gangguan minimal 10 karakter..."
-                                    />
-                                </Field>
-                                <Field label="Lampiran (Opsional)" error={errors.attachment}>
-                                    <label className="hover:border-brand-light flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-8 text-center transition">
-                                        <Upload className="mb-2 h-6 w-6 text-gray-400" />
-                                        <span className="text-sm text-gray-500">
-                                            {data.attachment ? data.attachment.name : 'Klik untuk unggah (JPG/PNG/PDF, maks. 5 MB)'}
-                                        </span>
-                                        <input
-                                            type="file"
-                                            accept=".jpg,.jpeg,.png,.pdf"
-                                            className="hidden"
-                                            onChange={(e) => setData('attachment', e.target.files?.[0] ?? null)}
-                                        />
-                                    </label>
-                                    {progress && <p className="text-brand-light mt-2 text-xs">Mengunggah… {progress.percentage}%</p>}
-                                </Field>
-                            </fieldset>
+                <aside className="flex flex-col gap-5 lg:sticky lg:top-24 lg:self-start" aria-label="Informasi pengaduan internal">
+                    <section className={cn(cardClass, 'p-6')}>
+                        <h2 className="font-heading flex items-center gap-2.5 text-lg font-bold text-[var(--tcd-heading,var(--t-deep))]">
+                            <Users className="h-5 w-5 shrink-0 text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" />
+                            Siapa yang menangani?
+                        </h2>
+                        <p className="mt-3 text-sm leading-relaxed text-[var(--tcd-text-2,#4a5868)]">
+                            Laporan internal diterima dan hanya dapat dibuka Super Admin Contact Center. Nomor tiket terbit setelah laporan terkirim.
+                        </p>
+                    </section>
 
-                            <RecaptchaNotice enabled={recaptcha.enabled} error={recaptcha.error ?? errors.recaptcha_token} />
+                    <section className={cn(cardClass, 'p-6')}>
+                        <h2 className="font-heading flex items-center gap-2.5 text-lg font-bold text-[var(--tcd-heading,var(--t-deep))]">
+                            <ShieldAlert className="h-5 w-5 shrink-0 text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" />
+                            Pelanggaran atau etik?
+                        </h2>
+                        <p className="mt-3 text-sm leading-relaxed text-[var(--tcd-text-2,#4a5868)]">
+                            Untuk indikasi pelanggaran/etik, laporkan ke Inspektorat Jenderal (
+                            <a href="mailto:itjen@transmigrasi.go.id" className="font-semibold text-[var(--tcd-link,var(--t-navy))] hover:underline">
+                                itjen@transmigrasi.go.id
+                            </a>
+                            ) atau lewat PPID.
+                        </p>
+                    </section>
 
-                            <div className="flex flex-col gap-3 sm:flex-row">
-                                <Button type="submit" disabled={busy} className="w-full sm:w-auto">
-                                    {busy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Kirim Laporan
-                                </Button>
-                                <Button asChild variant="outline" className="w-full sm:w-auto">
-                                    <Link href="/katalog">Batal</Link>
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                    <section className="flex flex-col gap-4 rounded-[24px] bg-[var(--t-deep)] p-6 text-white">
+                        <div className="flex items-center gap-3">
+                            <TaraAvatar className="h-12 w-12" />
+                            <p className="font-heading text-lg leading-tight font-bold">Bukan gangguan kantor?</p>
+                        </div>
+                        <p className="text-[15px] leading-relaxed text-[#bcd0e0]">Tanyakan ke TARA untuk menemukan layanan yang tepat.</p>
+                        <button
+                            type="button"
+                            onClick={(e) => goToChat({ source: e.currentTarget })}
+                            className="transi-lift flex h-12 w-fit items-center gap-2 rounded-full bg-[var(--t-gold)] px-6 font-semibold text-[var(--t-deep)] hover:bg-[#d0a552]"
+                        >
+                            <MessageCircle className="h-5 w-5" aria-hidden="true" /> Tanya TARA
+                        </button>
+                    </section>
+                </aside>
             </div>
-        </PublicLayout>
-    );
-}
-
-function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
-    return (
-        <div className="space-y-2">
-            <Label className="text-gray-700">
-                {label} {required && <span className="text-rose-500">*</span>}
-            </Label>
-            {children}
-            {error && (
-                <p className="text-destructive flex items-center gap-1 text-sm">
-                    <AlertTriangle className="h-3.5 w-3.5" /> {error}
-                </p>
-            )}
-        </div>
+        </TaraPage>
     );
 }

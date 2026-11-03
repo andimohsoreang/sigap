@@ -91,6 +91,6 @@ class PengaduanFormController extends Controller
 
         return redirect()
             ->route('home')
-            ->with('success', "Laporan internal {$ticket->ticket_no} terkirim ke unit terkait.");
+            ->with('success', "Laporan internal {$ticket->ticket_no} terkirim. Petugas Contact Center akan menindaklanjutinya.");
     }
 }
