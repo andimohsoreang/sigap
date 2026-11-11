@@ -11,6 +11,7 @@ use App\Models\Referral;
 use App\Models\Survey;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Support\SurveyQuestionnaire;
 use App\Support\TicketFilters;
 use App\Support\TicketIntake;
 use Carbon\CarbonImmutable;
@@ -623,21 +624,30 @@ class MatrixService
         return ['satuan' => $unit, 'titik' => array_values($points)];
     }
 
-    /** @return array{rata: float|null, responden: int, selesai: int} */
+    /**
+     * Indeks SKM (25–100) dari survei kuesioner skala 1–4 pada periode ini, beserta
+     * rata-rata per aspek. Survei bintang 1–5 versi lama hanya dihitung jumlahnya.
+     *
+     * @return array<string, mixed>
+     */
     private function survey(Builder $period, int $finished): array
     {
-        $row = Survey::query()
+        $surveys = Survey::query()
             ->whereIn('ticket_id', (clone $period)->reorder()->select('tickets.id'))
-            ->toBase()
-            ->selectRaw('AVG(rating) as rata, COUNT(*) as jumlah')
-            ->first();
-
-        $count = (int) ($row->jumlah ?? 0);
+            ->get(['version', 'answers', 'skm_index']);
+        $current = $surveys->where('version', SurveyQuestionnaire::VERSION);
+        $index = $current->isEmpty() ? null : round((float) $current->avg(fn (Survey $s) => (float) $s->skm_index), 2);
 
         return [
-            'rata' => $count > 0 ? round((float) $row->rata, 1) : null,
-            'responden' => $count,
+            'indeks' => $index,
+            'mutu' => SurveyQuestionnaire::grade($index),
+            'responden' => $current->count(),
+            'lama' => $surveys->count() - $current->count(),
             'selesai' => $finished,
+            'aspek' => collect(SurveyQuestionnaire::ASPECTS)->map(fn (array $q, string $key) => [
+                'aspek' => $q['aspek'],
+                'rata' => $current->isEmpty() ? null : round((float) $current->avg(fn (Survey $s) => (int) ($s->answers[$key] ?? 0)), 2),
+            ])->values()->all(),
         ];
     }
 

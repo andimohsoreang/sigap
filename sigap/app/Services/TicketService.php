@@ -116,6 +116,12 @@ class TicketService
                 $locked->resolved_at = $now;
             } elseif ($from === TicketStatus::Selesai) {
                 $locked->resolved_at = null;
+
+                // Membuka kembali tiket yang diminta tinjau ulang = permintaannya sudah ditangani.
+                if ($locked->needsReview()) {
+                    $locked->reviewed_at = $now;
+                    $locked->reviewed_by = $actor?->id;
+                }
             }
 
             // Tiket dibuka kembali: pelanggaran SLA berikutnya diberi EWS lagi.

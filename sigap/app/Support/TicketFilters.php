@@ -18,7 +18,8 @@ use Illuminate\Http\Request;
  * category_id, impact, q, periode
  * (`YYYY-MM` atau `semua`), kanal (kunci {@see TicketIntake::KANAL}),
  * petugas (id petugas atau `none`), unit (id unit atau `none` = belum
- * didisposisi), ews (`1` = lewat tenggat SLA).
+ * didisposisi), ews (`1` = lewat tenggat SLA), tinjau (`1` = ditandai tinjau
+ * ulang dari survei kepuasan).
  */
 final class TicketFilters
 {
@@ -93,6 +94,9 @@ final class TicketFilters
                 ->whereNotNull('sla_due_at')
                 ->where('sla_due_at', '<', now());
         }
+        if ($request->boolean('tinjau')) {
+            $query->needsReview();
+        }
         if ($range = self::range($periode)) {
             $query->whereBetween('created_at', $range);
         }
@@ -115,6 +119,7 @@ final class TicketFilters
             'petugas' => $request->string('petugas')->toString(),
             'unit' => $request->string('unit')->toString(),
             'ews' => $request->boolean('ews') ? '1' : '',
+            'tinjau' => $request->boolean('tinjau') ? '1' : '',
             'periode' => $periode,
             'sort' => $request->string('sort')->toString(),
         ];
@@ -163,6 +168,9 @@ final class TicketFilters
         }
         if ($request->boolean('ews')) {
             $chips[] = ['key' => 'ews', 'label' => 'Lewat tenggat SLA'];
+        }
+        if ($request->boolean('tinjau')) {
+            $chips[] = ['key' => 'tinjau', 'label' => 'Perlu tinjau ulang'];
         }
 
         return $chips;

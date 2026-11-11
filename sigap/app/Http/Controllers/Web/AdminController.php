@@ -37,6 +37,7 @@ use App\Services\StaffRegistrationService;
 use App\Services\StatsService;
 use App\Services\TicketService;
 use App\Support\Search;
+use App\Support\SurveyQuestionnaire;
 use App\Support\TicketFilters;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -168,6 +169,7 @@ class AdminController extends Controller
             'belum' => $base()->whereIn('status', $open)->whereNull('assignee_id')->count(),
             'belum_disposisi' => $base()->whereIn('status', $open)->whereNull('unit_id')->count(),
             'selesai' => $base()->where('status', TicketStatus::Selesai->value)->count(),
+            'tinjau' => $base()->needsReview()->count(),
         ];
     }
 
@@ -175,7 +177,7 @@ class AdminController extends Controller
     {
         $this->authorize('view', $ticket);
 
-        $ticket->load(['category', 'region', 'channel', 'assignee', 'unit', 'histories.actor', 'replies.author', 'dispositions.unit', 'dispositions.assigner', 'dispositions.closer']);
+        $ticket->load(['category', 'region', 'channel', 'assignee', 'unit', 'histories.actor', 'replies.author', 'dispositions.unit', 'dispositions.assigner', 'dispositions.closer', 'survey', 'reviewer']);
         $canDispose = request()->user()->isSuperAdmin();
 
         return Inertia::render('admin/tiket-detail', [
@@ -200,7 +202,36 @@ class AdminController extends Controller
                     'alasan' => $d->return_reason,
                 ])->values(),
             ],
+            'survei' => $ticket->survey ? SurveyQuestionnaire::describe($ticket->survey) : null,
+            'tinjau' => $ticket->review_requested_at === null ? null : [
+                'perlu' => $ticket->needsReview(),
+                'alasan' => Ticket::REVIEW_REASONS[$ticket->review_reason] ?? null,
+                'diminta' => $ticket->review_requested_at->toIso8601String(),
+                'ditinjau' => $ticket->reviewed_at?->toIso8601String(),
+                'oleh' => $ticket->reviewer?->name,
+            ],
         ]);
+    }
+
+    /** Tutup permintaan tinjau ulang dari survei tanpa membuka kembali tiket. */
+    public function markReviewed(Request $request, Ticket $ticket): RedirectResponse
+    {
+        $this->authorize('update', $ticket);
+
+        if (! $ticket->needsReview()) {
+            return back()->with('error', 'Tiket ini tidak sedang menunggu tinjau ulang.');
+        }
+
+        $data = $request->validate(['note' => ['nullable', 'string', 'max:1000']]);
+        $ticket->forceFill(['reviewed_at' => now(), 'reviewed_by' => $request->user()->id])->save();
+
+        if (filled($data['note'] ?? null)) {
+            $this->tickets->reply($ticket, $data['note'], $request->user(), false);
+        }
+
+        $this->audit->safe('ticket.reviewed', $ticket, "Tinjau ulang tiket {$ticket->ticket_no} ditutup tanpa membuka kembali tiket.");
+
+        return back()->with('success', 'Tinjau ulang ditandai selesai.');
     }
 
     public function updateStatus(UpdateTicketStatusRequest $request, Ticket $ticket): RedirectResponse

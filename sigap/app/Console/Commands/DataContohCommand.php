@@ -20,6 +20,7 @@ use App\Models\TicketReply;
 use App\Models\User;
 use App\Services\SlaCalculator;
 use App\Services\StatsService;
+use App\Support\SurveyQuestionnaire;
 use Carbon\CarbonInterface;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
@@ -85,6 +86,42 @@ class DataContohCommand extends Command
         $this->info(sprintf('Selesai: %d tiket, %d percakapan, %d rujukan contoh.', Ticket::query()->count(), ChatConversation::query()->count(), Referral::query()->count()));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Jawaban kuesioner skala 1–4 dari kesan contoh (bintang 1–5). Tiket yang
+     * selesai terlambat dinilai lebih rendah pada aspek kecepatan; kepuasan
+     * keseluruhan 1–2 ditandai tinjau ulang seperti alur survei sungguhan.
+     *
+     * @return array<string, mixed>
+     */
+    private function surveyAnswers(Ticket $ticket, int $stars, ?string $comment, bool $late): array
+    {
+        $base = [1 => 1, 2 => 2, 3 => 3, 4 => 3, 5 => 4][$stars] ?? 3;
+        $answers = array_fill_keys(array_keys(SurveyQuestionnaire::ASPECTS), $base);
+        if ($stars === 4) {
+            $answers['sikap'] = $answers['kerahasiaan'] = 4;
+        }
+        if ($late) {
+            $answers['respons'] = max(1, $base - 1);
+            $answers['penyelesaian'] = max(1, $base - 1);
+        }
+
+        if ($base <= 2) {
+            $ticket->forceFill(['review_requested_at' => $ticket->resolved_at?->copy()->addDay(), 'review_reason' => Ticket::REVIEW_LOW_SCORE])->save();
+        }
+
+        return [
+            'ticket_id' => $ticket->id,
+            'version' => SurveyQuestionnaire::VERSION,
+            'answers' => $answers,
+            'overall' => $base,
+            'resolved' => $stars >= 4 ? 'penuh' : 'sebagian',
+            'reuse' => min(4, $base + ($stars >= 4 ? 1 : 0)),
+            'good_feedback' => $stars >= 4 ? $comment : null,
+            'improve_feedback' => $stars < 4 ? $comment : null,
+            'skm_index' => SurveyQuestionnaire::index($answers),
+        ];
     }
 
     private function staffUser(string $name, string $username): User
@@ -228,7 +265,7 @@ class DataContohCommand extends Command
             $this->reply($ticket, $handler, 'Catatan internal: koordinasi dengan UPT setempat sudah dimulai.', false, $time->copy()->addHours(2));
         }
         if (isset($opt['rating'])) {
-            $survey = new Survey(['ticket_id' => $ticket->id, 'rating' => $opt['rating'], 'comment' => $opt['komentar'] ?? null]);
+            $survey = new Survey($this->surveyAnswers($ticket, (int) $opt['rating'], $opt['komentar'] ?? null, (bool) ($opt['telat'] ?? false)));
             $survey->created_at = $time->copy()->addDay();
             $survey->updated_at = $survey->created_at;
             $survey->save();

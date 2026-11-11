@@ -50,6 +50,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/pengaduan/internal', [PengaduanController::class, 'storeInternal'])->middleware('throttle:pengaduan');
     // Pencarian tiket & survei publik dibatasi limiter 'lookup' (anti-enumerasi).
     Route::get('/tiket/{ticket_no}', [TiketController::class, 'show'])->middleware('throttle:lookup');
+    Route::get('/survei/kuesioner', [SurveiController::class, 'questionnaire']);
     Route::post('/survei/{ticket_no}', [SurveiController::class, 'store'])->middleware(['throttle:lookup', 'throttle:pengaduan']);
     Route::get('/katalog/kanal', [KatalogController::class, 'kanal']);
     Route::get('/regions', [KatalogController::class, 'regions']);

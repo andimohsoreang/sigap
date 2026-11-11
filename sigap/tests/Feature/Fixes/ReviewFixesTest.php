@@ -133,8 +133,8 @@ class ReviewFixesTest extends TestCase
     {
         $ticket = Ticket::factory()->create(['ticket_no' => 'TKT-78', 'status' => TicketStatus::Selesai]);
 
-        $this->postJson('/api/v1/survei/TKT-78', ['rating' => 4])->assertNotFound();
-        $this->postJson('/api/v1/survei/TKT-78', ['rating' => 4, 'kode' => strtolower($ticket->lookup_token)])->assertCreated();
+        $this->postJson('/api/v1/survei/TKT-78', $this->surveyPayload())->assertNotFound();
+        $this->postJson('/api/v1/survei/TKT-78', $this->surveyPayload(4, ['kode' => strtolower($ticket->lookup_token)]))->assertCreated();
     }
 
     public function test_new_format_number_needs_no_code(): void

@@ -35,9 +35,12 @@ foreach ((clone $publik)->whereIn('status', ['selesai', 'diproses', 'baru'])->ta
     $ticket->update(['reporter_id' => $warga->id, 'reporter_name' => $warga->name]);
 }
 
-// Satu tiket selesai milik warga belum disurvei, agar tombol survei tampil di halaman Lacak.
-$selesai = Ticket::query()->where('reporter_id', $warga->id)->where('status', 'selesai')->first();
-$selesai?->survey()->delete();
+// Satu tiket selesai tanpa akun yang belum disurvei: tamu dapat mengisinya dari halaman Lacak.
+$selesai = (clone $publik)->whereNull('reporter_id')->where('status', 'selesai')->where('title', 'like', 'Rumah transmigran%')->firstOrFail();
+$selesai->survey()->delete();
+$selesai->forceFill(['review_requested_at' => null, 'review_reason' => null])->save();
+$path = storage_path('app/e2e/credentials.json');
+file_put_contents($path, json_encode(['survei_tiket' => $selesai->ticket_no] + json_decode(file_get_contents($path), true), JSON_PRETTY_PRINT));
 
 $dispositions = app(DispositionService::class);
 // Disposisi ke unit petugas yang menangani, agar detail tiket konsisten. Tiket

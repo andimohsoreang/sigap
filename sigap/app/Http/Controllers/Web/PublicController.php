@@ -12,6 +12,7 @@ use App\Services\PublicChannels;
 use App\Services\StatsService;
 use App\Services\SurveyService;
 use App\Services\TicketService;
+use App\Support\SurveyQuestionnaire;
 use App\Support\TicketFilters;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
@@ -129,6 +130,7 @@ class PublicController extends Controller
 
             if ($model !== null && is_array($ticket)) {
                 $ticket['sudah_disurvei'] = $model->survey()->exists();
+                $ticket['boleh_survei'] = SurveyService::canFill($model, $request->user());
             }
         }
 
@@ -144,6 +146,42 @@ class PublicController extends Controller
         ]);
     }
 
+    /**
+     * Halaman Survei Kepuasan Pasca-Penanganan. Tiket milik akun warga hanya
+     * dapat dinilai pemiliknya: tamu diminta masuk dan kembali ke sini.
+     */
+    public function survey(Request $request, string $ticket): Response|RedirectResponse
+    {
+        $kode = mb_substr($request->string('kode')->trim()->upper()->toString(), 0, 16);
+        $model = $this->tickets->findForPublicLookup($ticket, $request->user(), ['category', 'channel', 'unit'], $kode);
+
+        if ($model === null) {
+            return redirect()->route('lacak')->with('error', 'Tiket tidak ditemukan atau bukan tiket publik.');
+        }
+
+        $bolehIsi = SurveyService::canFill($model, $request->user());
+        if (! $bolehIsi) {
+            $request->session()->put('url.intended', $request->fullUrl());
+        }
+
+        return Inertia::render('public/survei', [
+            'tiket' => [
+                'nomor' => $model->ticket_no,
+                'judul' => $model->title,
+                'kategori' => $model->category?->name,
+                'kanal' => $model->channel?->name,
+                'unit' => $model->unit?->name,
+                'masuk' => $model->created_at?->toIso8601String(),
+                'selesai' => $model->resolved_at?->toIso8601String(),
+                'status' => $model->status->value,
+            ],
+            'kode' => Ticket::isLegacyNo($model->ticket_no) ? $kode : null,
+            'sudah_disurvei' => $model->survey()->exists(),
+            'boleh_isi' => $bolehIsi,
+            'kuesioner' => SurveyQuestionnaire::forPage(),
+        ]);
+    }
+
     /** Simpan survei kepuasan dari halaman lacak (publik) — aturan A-07. */
     public function storeSurvey(StoreSurveyRequest $request): RedirectResponse
     {
@@ -155,6 +193,7 @@ class PublicController extends Controller
 
         try {
             $this->surveys->submit($ticket, $request->user(), $request->validated());
+            $ticket->refresh();
         } catch (AuthorizationException $e) {
             // Klien non-Inertia tetap menerima 403; form Inertia menampilkan
             // pesan pada field `ticket` alih-alih modal galat HTML.
@@ -170,7 +209,9 @@ class PublicController extends Controller
                 'ticket' => $ticket->ticket_no,
                 'kode' => Ticket::isLegacyNo($ticket->ticket_no) ? $request->accessCode() : null,
             ]))
-            ->with('success', 'Terima kasih! Penilaian Anda telah kami terima.');
+            ->with('success', $ticket->review_reason === Ticket::REVIEW_REQUESTED
+                ? 'Terima kasih! Penilaian Anda kami terima dan permintaan tinjau ulang sudah diteruskan ke petugas.'
+                : 'Terima kasih! Penilaian Anda telah kami terima.');
     }
 
     /** Literasi statis. */

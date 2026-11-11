@@ -1,10 +1,8 @@
-import { router, useForm } from '@inertiajs/react';
-import { ArrowRight, Check, CheckCircle2, MessageCircle, RotateCcw, Search, SearchX, Send, Star, Ticket, X } from 'lucide-react';
+import { Link, router } from '@inertiajs/react';
+import { ArrowRight, Check, CheckCircle2, MessageCircle, RotateCcw, Search, SearchX, Star, Ticket, X } from 'lucide-react';
 import { type FormEvent, useRef, useState } from 'react';
 
-import { RecaptchaNotice } from '@/components/sigap/recaptcha-notice';
 import TaraPage, { TaraAvatar, TaraPoseImage } from '@/components/sigap/tara-shell';
-import { useRecaptcha } from '@/hooks/use-recaptcha';
 import { goToChat } from '@/lib/chat-transition';
 import { formatDateTime, isLegacyTicketNo, isValidTicketNo, normalizeTicketNo, statusLabel, TICKET_NO_EXAMPLE } from '@/lib/sigap';
 import { cn } from '@/lib/utils';
@@ -31,6 +29,8 @@ interface TicketData {
     riwayat: { dari: string | null; ke: string; pada: string | null }[];
     tanggapan: { id: number; author: string | null; body: string; created_at: string | null }[];
     sudah_disurvei?: boolean;
+    /** Tamu tidak boleh menilai tiket milik akun warga; ia diminta masuk dulu. */
+    boleh_survei?: boolean;
 }
 
 interface Props {
@@ -53,14 +53,11 @@ const PILL: Record<string, string> = {
     ditolak: 'bg-[var(--tcd-danger-soft,#fdecea)] text-[var(--tcd-danger,#b42318)]',
 };
 
-const RATING_LABEL = ['', 'Sangat tidak puas', 'Kurang puas', 'Cukup', 'Puas', 'Sangat puas'];
-
 export default function Lacak({ query, kode = '', butuh_kode: butuhKode = false, ticket }: Props) {
     const [input, setInput] = useState(query);
     const [kodeInput, setKodeInput] = useState(kode);
     const legacy = isLegacyTicketNo(input);
     const [inputError, setInputError] = useState<string | null>(null);
-    const [surveyOpen, setSurveyOpen] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
     const submit = (e: FormEvent) => {
@@ -201,7 +198,7 @@ export default function Lacak({ query, kode = '', butuh_kode: butuhKode = false,
 
                 {data && (
                     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_440px]">
-                        <StatusCard data={data} onSurvey={() => setSurveyOpen(true)} />
+                        <StatusCard data={data} kode={kode} />
                         <div className="flex flex-col gap-5">
                             <History data={data} />
                             <button
@@ -221,13 +218,11 @@ export default function Lacak({ query, kode = '', butuh_kode: butuhKode = false,
                     </div>
                 )}
             </div>
-
-            {surveyOpen && data && <SurveyModal ticket={data.nomor} kode={kode} onClose={() => setSurveyOpen(false)} />}
         </TaraPage>
     );
 }
 
-function StatusCard({ data, onSurvey }: { data: TicketData; onSurvey: () => void }) {
+function StatusCard({ data, kode }: { data: TicketData; kode: string }) {
     const rejected = data.status === 'ditolak';
     const current = rejected ? 2 : Math.max(0, STEPS.indexOf(data.status as (typeof STEPS)[number]));
     const meta: [string, string][] = [
@@ -327,13 +322,12 @@ function StatusCard({ data, onSurvey }: { data: TicketData; onSurvey: () => void
                             <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> Survei sudah Anda kirim
                         </p>
                     ) : (
-                        <button
-                            type="button"
-                            onClick={onSurvey}
-                            className="transi-lift h-12 shrink-0 rounded-full bg-[var(--tcd-primary,var(--t-navy))] px-6 font-semibold text-white hover:bg-[var(--tcd-primary-hover,#00508a)]"
+                        <Link
+                            href={`/lacak/${data.nomor}/survei${kode ? `?kode=${encodeURIComponent(kode)}` : ''}`}
+                            className="transi-lift flex h-12 shrink-0 items-center rounded-full bg-[var(--tcd-primary,var(--t-navy))] px-6 font-semibold text-white hover:bg-[var(--tcd-primary-hover,#00508a)]"
                         >
-                            Isi Survei Kepuasan
-                        </button>
+                            {data.boleh_survei === false ? 'Masuk untuk mengisi survei' : 'Isi Survei Kepuasan'}
+                        </Link>
                     )}
                 </div>
             )}
@@ -388,117 +382,5 @@ function History({ data }: { data: TicketData }) {
                 ))}
             </ol>
         </section>
-    );
-}
-
-function SurveyModal({ ticket, kode, onClose }: { ticket: string; kode: string; onClose: () => void }) {
-    const form = useForm({ ticket, kode, rating: 0, comment: '', recaptcha_token: '' });
-    const recaptcha = useRecaptcha('survei');
-
-    const submit = (e: FormEvent) => {
-        e.preventDefault();
-        void recaptcha.withToken((token) => {
-            form.transform((d) => ({ ...d, recaptcha_token: token }));
-            form.post('/lacak/survei', {
-                preserveScroll: true,
-                onSuccess: () => onClose(),
-            });
-        });
-    };
-
-    return (
-        <div
-            className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0b1c2c]/55 p-4 backdrop-blur-[2px]"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="survey-title"
-        >
-            <form onSubmit={submit} className="w-full max-w-[500px] rounded-[24px] bg-[var(--tcd-surface,#fff)] p-6 shadow-2xl sm:p-8">
-                <div className="flex items-start gap-4">
-                    <TaraAvatar className="h-[52px] w-[52px]" />
-                    <div className="min-w-0 flex-1">
-                        <h2 id="survey-title" className="font-heading text-[22px] font-bold text-[var(--tcd-heading,var(--t-deep))]">
-                            Survei Kepuasan
-                        </h2>
-                        <p className="mt-1 text-[15px] text-[var(--tcd-text-2,#4a5868)]">Seberapa puas Anda dengan penanganan tiket {ticket}?</p>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--tcd-muted,#f2f5f8)] text-[var(--tcd-text-2,#4a5868)] hover:bg-[var(--tcd-muted-2,#e6ebf0)]"
-                        aria-label="Tutup survei"
-                    >
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
-
-                <div className="mt-6 rounded-2xl bg-[var(--tcd-muted,#f4f6f9)] px-4 py-5 text-center">
-                    <div className="flex justify-center gap-2" role="radiogroup" aria-label="Penilaian 1 sampai 5 bintang">
-                        {[1, 2, 3, 4, 5].map((n) => (
-                            <button
-                                key={n}
-                                type="button"
-                                role="radio"
-                                aria-checked={form.data.rating === n}
-                                aria-label={`${n} bintang`}
-                                onClick={() => form.setData('rating', n)}
-                                className={cn(
-                                    'transition-transform hover:scale-110',
-                                    n <= form.data.rating ? 'text-[var(--t-gold)]' : 'text-[var(--tcd-text-3,#cdd6df)]',
-                                )}
-                            >
-                                <Star className={cn('h-9 w-9', n <= form.data.rating && 'fill-current')} />
-                            </button>
-                        ))}
-                    </div>
-                    <p className="mt-2 text-sm font-semibold text-[var(--tcd-bronze,#8b682b)]">
-                        {form.data.rating > 0 ? `${form.data.rating} dari 5 · ${RATING_LABEL[form.data.rating]}` : 'Pilih jumlah bintang'}
-                    </p>
-                </div>
-                {form.errors.rating && <p className="mt-2 text-sm font-semibold text-[var(--tcd-danger,#b42318)]">{form.errors.rating}</p>}
-                {form.errors.ticket && (
-                    <p
-                        role="alert"
-                        className="mt-3 rounded-lg bg-[var(--tcd-danger-soft,#fdecea)] p-3 text-sm font-semibold text-[var(--tcd-danger,#b42318)]"
-                    >
-                        {form.errors.ticket}
-                    </p>
-                )}
-
-                <label htmlFor="komentar-survei" className="mt-5 block text-sm font-semibold text-[var(--tcd-heading,var(--t-deep))]">
-                    Komentar (opsional)
-                </label>
-                <textarea
-                    id="komentar-survei"
-                    value={form.data.comment}
-                    onChange={(e) => form.setData('comment', e.target.value)}
-                    rows={3}
-                    placeholder="Ceritakan pengalaman Anda"
-                    className="mt-1.5 w-full rounded-xl border border-[var(--tcd-border,#dfe5eb)] px-4 py-3 text-[15px] outline-none focus:border-[var(--tcd-link,var(--t-navy))]"
-                />
-                {form.errors.comment && <p className="mt-1 text-sm font-semibold text-[var(--tcd-danger,#b42318)]">{form.errors.comment}</p>}
-
-                <div className="mt-3">
-                    <RecaptchaNotice enabled={recaptcha.enabled} error={recaptcha.error ?? form.errors.recaptcha_token} />
-                </div>
-
-                <div className="mt-5 flex justify-end gap-3">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="h-12 rounded-full border-[1.5px] border-[var(--tcd-link,var(--t-navy))] px-5 font-semibold text-[var(--tcd-link,var(--t-navy))] hover:bg-[var(--tcd-muted,#f2f5f8)]"
-                    >
-                        Nanti saja
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={form.processing || recaptcha.verifying || form.data.rating === 0}
-                        className="flex h-12 items-center gap-2 rounded-full bg-[var(--t-gold)] px-6 font-semibold text-[var(--t-deep)] hover:bg-[#d0a552] disabled:opacity-50"
-                    >
-                        <Send className="h-[18px] w-[18px]" aria-hidden="true" /> Kirim Penilaian
-                    </button>
-                </div>
-            </form>
-        </div>
     );
 }

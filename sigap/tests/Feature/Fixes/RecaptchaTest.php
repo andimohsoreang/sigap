@@ -90,7 +90,7 @@ class RecaptchaTest extends TestCase
         config()->set('services.recaptcha.secret', 'test-secret');
         Http::fake(['*' => Http::response(['success' => true, 'score' => 0.1])]);
 
-        $this->postJson('/api/v1/survei/TKT-700', ['rating' => 5, 'recaptcha_token' => 'x'])
+        $this->postJson('/api/v1/survei/TKT-700', $this->surveyPayload(4, ['recaptcha_token' => 'x']))
             ->assertStatus(422)
             ->assertJsonValidationErrors('recaptcha_token');
 

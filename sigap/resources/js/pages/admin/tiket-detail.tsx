@@ -7,7 +7,7 @@ import AdminLayout, { ImpactBadge, StatusBadge } from '@/layouts/admin-layout';
 import { formatDateTime, OPEN_STATUSES, slaDeadline, SOURCE_LABEL } from '@/lib/admin-format';
 import { cn } from '@/lib/utils';
 import { Link, useForm } from '@inertiajs/react';
-import { AlertTriangle, ArrowLeft, Check, Copy, Download, ExternalLink, Lock, MessageSquareText, Network, Undo2 } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Check, Copy, Download, ExternalLink, Lock, MessageSquareText, Network, RotateCcw, Undo2 } from 'lucide-react';
 import { type FormEvent, type ReactNode, useState } from 'react';
 
 interface Detail {
@@ -69,10 +69,42 @@ interface Disposisi {
     riwayat: DisposisiItem[];
 }
 
+interface Jawaban {
+    nilai: number | null;
+    jawaban: string | null;
+}
+
+/** Hasil survei kepuasan: versi 1 = bintang 1–5 (lama), versi 2 = kuesioner skala 1–4. */
+type Survei =
+    | { versi: 1; rating: number | null; komentar: string | null; dikirim: string | null }
+    | {
+          versi: 2;
+          indeks: number | null;
+          mutu: { huruf: string; mutu: string } | null;
+          aspek: ({ aspek: string } & Jawaban)[];
+          keseluruhan: Jawaban;
+          teratasi: string | null;
+          kembali: Jawaban;
+          baik: string | null;
+          perbaikan: string | null;
+          profil: Record<string, string>;
+          dikirim: string | null;
+      };
+
+interface Tinjau {
+    perlu: boolean;
+    alasan: string | null;
+    diminta: string;
+    ditinjau: string | null;
+    oleh: string | null;
+}
+
 interface Props {
     ticket: Detail;
     statuses: Record<string, string>;
     disposisi: Disposisi;
+    survei: Survei | null;
+    tinjau: Tinjau | null;
 }
 
 const VISIBILITY_LABEL: Record<string, string> = {
@@ -91,7 +123,7 @@ function isHttpUrl(value: string): boolean {
  * laporan, tanggapan & riwayat di kiri; tindak lanjut dan pelapor di panel
  * kanan yang menempel saat digulir (layar lebar).
  */
-export default function TiketDetail({ ticket, statuses, disposisi }: Props) {
+export default function TiketDetail({ ticket, statuses, disposisi, survei, tinjau }: Props) {
     const transisi = ticket.transisi ?? [];
     const statusForm = useForm({ status: '', note: '' });
     const replyForm = useForm({ body: '', is_public: true as boolean });
@@ -156,6 +188,8 @@ export default function TiketDetail({ ticket, statuses, disposisi }: Props) {
                     {ticket.unit_penangan && <span className="mt-0.5 block text-xs text-[var(--adm-text-3)]">{ticket.unit_penangan}</span>}
                 </Summary>
             </dl>
+
+            {tinjau?.perlu && <TinjauBanner nomor={ticket.nomor} tinjau={tinjau} />}
 
             <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px]">
                 {/* Kiri: isi laporan + tanggapan */}
@@ -310,6 +344,7 @@ export default function TiketDetail({ ticket, statuses, disposisi }: Props) {
                             ))}
                         </ol>
                     </Panel>
+                    {survei && <SurveiPanel survei={survei} tinjau={tinjau} />}
                 </div>
 
                 {/* Kanan: tindak lanjut & pelapor (menempel di layar lebar) */}
@@ -599,6 +634,150 @@ function DisposisiPanel({
                     </ol>
                 </details>
             )}
+        </Panel>
+    );
+}
+
+/** Permintaan tinjau ulang dari survei: buka kembali lewat Tindak lanjut, atau tutup tanpa membuka. */
+function TinjauBanner({ nomor, tinjau }: { nomor: string; tinjau: Tinjau }) {
+    const [closing, setClosing] = useState(false);
+    const form = useForm({ note: '' });
+
+    const submit = (e: FormEvent) => {
+        e.preventDefault();
+        form.post(`/admin/tiket/${nomor}/tinjau-ulang`, { preserveScroll: true });
+    };
+
+    return (
+        <section
+            role="status"
+            className="mb-6 rounded-xl border border-[var(--adm-warning)]/40 bg-[var(--adm-warning-soft,#fdf3e1)] p-4 text-[var(--adm-text)] sm:p-5"
+        >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex gap-3">
+                    <RotateCcw className="mt-0.5 h-5 w-5 shrink-0 text-[var(--adm-warning)]" aria-hidden="true" />
+                    <div>
+                        <p className="font-semibold">Perlu tinjau ulang · {tinjau.alasan}</p>
+                        <p className="mt-0.5 text-sm text-[var(--adm-text-2)]">
+                            Ditandai {formatDateTime(tinjau.diminta)} dari survei kepuasan. Buka kembali tiket lewat Tindak lanjut → Diproses, atau
+                            tutup tinjauan bila penanganan sudah tepat.
+                        </p>
+                    </div>
+                </div>
+                {!closing && (
+                    <Button type="button" variant="outline" className="h-9 shrink-0 bg-[var(--acd-surface,#fff)]" onClick={() => setClosing(true)}>
+                        Tandai sudah ditinjau
+                    </Button>
+                )}
+            </div>
+            {closing && (
+                <form onSubmit={submit} className="mt-4 space-y-2 sm:pl-8">
+                    <Label htmlFor="catatan-tinjau" className="text-[13px] font-semibold">
+                        Catatan internal (opsional)
+                    </Label>
+                    <Textarea
+                        id="catatan-tinjau"
+                        value={form.data.note}
+                        onChange={(e) => form.setData('note', e.target.value)}
+                        placeholder="Mis. sudah dikonfirmasi ke pelapor lewat telepon, penanganan sesuai."
+                        className="bg-[var(--acd-surface,#fff)]"
+                    />
+                    <div className="flex gap-2">
+                        <Button type="button" variant="outline" className="h-9" onClick={() => setClosing(false)}>
+                            Batal
+                        </Button>
+                        <Button type="submit" className="h-9" disabled={form.processing}>
+                            Tutup tinjauan
+                        </Button>
+                    </div>
+                </form>
+            )}
+        </section>
+    );
+}
+
+function SurveiPanel({ survei, tinjau }: { survei: Survei; tinjau: Tinjau | null }) {
+    if (survei.versi === 1) {
+        return (
+            <Panel title="Survei kepuasan">
+                <p className="text-sm text-[var(--adm-text-2)]">Survei format lama (bintang 1–5), tidak dihitung dalam indeks SKM.</p>
+                <p className="mt-2 text-[15px] font-semibold text-[var(--adm-text)]">{survei.rating ?? '—'} dari 5 bintang</p>
+                {survei.komentar && <p className="mt-1 text-sm whitespace-pre-line text-[var(--adm-text)]">“{survei.komentar}”</p>}
+                <p className="mt-2 text-xs text-[var(--adm-text-3)]">Dikirim {formatDateTime(survei.dikirim)}</p>
+            </Panel>
+        );
+    }
+
+    return (
+        <Panel title="Survei kepuasan">
+            <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+                <div>
+                    <p className="text-xs font-medium text-[var(--adm-text-3)]">Indeks SKM (25–100)</p>
+                    <p className="text-2xl font-semibold text-[var(--adm-text)] tabular-nums">
+                        {survei.indeks?.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? '—'}
+                        {survei.mutu && (
+                            <span className="ml-2 text-sm font-semibold text-[var(--adm-text-2)]">
+                                {survei.mutu.huruf} · {survei.mutu.mutu}
+                            </span>
+                        )}
+                    </p>
+                </div>
+                <dl className="flex flex-wrap gap-x-6 gap-y-2">
+                    <Item label="Kepuasan keseluruhan">{survei.keseluruhan.jawaban ?? '—'}</Item>
+                    <Item label="Masalah teratasi">{survei.teratasi ?? '—'}</Item>
+                    <Item label="Menggunakan kembali">{survei.kembali.jawaban ?? '—'}</Item>
+                </dl>
+            </div>
+            <table className="mt-5 w-full text-sm">
+                <caption className="sr-only">Jawaban per aspek, skala 1 sampai 4</caption>
+                <thead>
+                    <tr className="border-b border-[var(--adm-border)] text-left text-xs text-[var(--adm-text-3)]">
+                        <th className="py-2 font-medium">Aspek</th>
+                        <th className="py-2 font-medium">Jawaban</th>
+                        <th className="py-2 text-right font-medium">Nilai</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {survei.aspek.map((a) => (
+                        <tr key={a.aspek} className="border-b border-[var(--adm-border)] last:border-0">
+                            <td className="py-2 pr-3 text-[var(--adm-text-2)]">{a.aspek}</td>
+                            <td className="py-2 pr-3 text-[var(--adm-text)]">{a.jawaban ?? '—'}</td>
+                            <td
+                                className={cn(
+                                    'py-2 text-right font-semibold tabular-nums',
+                                    a.nilai !== null && a.nilai <= 2 ? 'text-[var(--adm-danger)]' : 'text-[var(--adm-text)]',
+                                )}
+                            >
+                                {a.nilai ?? '—'}/4
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+            {(survei.baik || survei.perbaikan) && (
+                <dl className="mt-5 space-y-3 text-sm">
+                    {survei.baik && (
+                        <div>
+                            <dt className="text-xs font-medium text-[var(--adm-text-3)]">Yang sudah baik</dt>
+                            <dd className="mt-0.5 whitespace-pre-line text-[var(--adm-text)]">{survei.baik}</dd>
+                        </div>
+                    )}
+                    {survei.perbaikan && (
+                        <div>
+                            <dt className="text-xs font-medium text-[var(--adm-text-3)]">Yang perlu diperbaiki</dt>
+                            <dd className="mt-0.5 whitespace-pre-line text-[var(--adm-text)]">{survei.perbaikan}</dd>
+                        </div>
+                    )}
+                </dl>
+            )}
+            <p className="mt-4 text-xs text-[var(--adm-text-3)]">
+                Dikirim {formatDateTime(survei.dikirim)}
+                {Object.keys(survei.profil).length > 0 && ` · ${Object.values(survei.profil).join(' · ')}`}
+                {tinjau &&
+                    !tinjau.perlu &&
+                    tinjau.ditinjau &&
+                    ` · Tinjau ulang ditutup ${formatDateTime(tinjau.ditinjau)} oleh ${tinjau.oleh ?? 'petugas'}`}
+            </p>
         </Panel>
     );
 }

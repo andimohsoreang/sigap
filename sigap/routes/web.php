@@ -50,6 +50,10 @@ Route::get('/lacak/{ticket}', [PublicController::class, 'track'])
     ->where('ticket', '[A-Za-z0-9-]{1,32}')
     ->middleware('throttle:lookup')
     ->name('lacak.show');
+Route::get('/lacak/{ticket}/survei', [PublicController::class, 'survey'])
+    ->where('ticket', '[A-Za-z0-9-]{1,32}')
+    ->middleware('throttle:lookup')
+    ->name('lacak.survei.form');
 Route::post('/lacak/survei', [PublicController::class, 'storeSurvey'])->middleware(['throttle:lookup', 'throttle:pengaduan'])->name('lacak.survei');
 Route::get('/pedoman-layanan', [PublicController::class, 'guidelines'])->name('pedoman');
 Route::get('/syarat-ketentuan', [PublicController::class, 'terms'])->name('syarat');
@@ -132,6 +136,7 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
     Route::get('/tiket/{ticket:ticket_no}/lampiran', [AdminController::class, 'attachment'])->name('admin.tiket.lampiran');
     Route::post('/tiket/{ticket:ticket_no}/status', [AdminController::class, 'updateStatus'])->name('admin.tiket.status');
     Route::post('/tiket/{ticket:ticket_no}/tanggapan', [AdminController::class, 'reply'])->name('admin.tiket.reply');
+    Route::post('/tiket/{ticket:ticket_no}/tinjau-ulang', [AdminController::class, 'markReviewed'])->name('admin.tiket.tinjau');
 
     // TECH-SPEC §5: rute kanonik `/admin/tiket-internal`; `/admin/internal` = alias lama.
     Route::get('/tiket-internal', [AdminController::class, 'internal'])->name('admin.tiket-internal');

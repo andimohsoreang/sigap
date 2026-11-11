@@ -155,10 +155,11 @@ php artisan sigap:admin                 # interaktif (super_admin / admin_kawasa
 | `php artisan sigap:admin` | Membuat akun admin/petugas (interaktif) |
 | `php artisan sigap:sync-channels` | Sinkronisasi kanal nasional (STUB adapter D7) + tulis `channel_sync_logs` |
 | `php artisan sigap:ews-check` | Peringatan EWS untuk tiket melewati SLA (dihitung dari `ews_enabled`) |
+| `php artisan sigap:pengingat-survei` | Satu pengingat survei kepuasan ke pelapor tiket yang selesai 3 hari lalu (maks. 14 hari) dan belum disurvei |
 | `php artisan sigap:petakan-unit` | Petakan teks unit lama petugas & pelapor internal ke master Unit Kerja (pratinjau; `--terapkan` untuk menyimpan) |
 | `php artisan sigap:e2e-setup` | Siapkan DB + akun uji untuk Playwright — **menghapus DB**, sehingga hanya jalan bila `APP_ENV` local/testing **dan** DB SQLite/host lokal (tanpa opsi `--force`) |
 
-Jadwal (TECH-SPEC §11.2): `sigap:sync-channels` harian 06:00, `sigap:ews-check` harian 07:00.
+Jadwal (TECH-SPEC §11.2): `sigap:sync-channels` harian 06:00, `sigap:ews-check` harian 07:00, `sigap:pengingat-survei` harian 09:00.
 
 ## Pengujian
 

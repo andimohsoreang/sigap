@@ -39,7 +39,7 @@ class ReporterNotifier
         $intro = match ($status) {
             TicketStatus::Verifikasi => 'Laporan Anda sudah diperiksa petugas dan dinyatakan dapat ditindaklanjuti.',
             TicketStatus::Diproses => 'Laporan Anda sedang ditindaklanjuti petugas.',
-            TicketStatus::Selesai => 'Laporan Anda telah selesai ditangani. Mohon luangkan waktu satu menit untuk mengisi survei kepuasan di halaman lacak tiket.',
+            TicketStatus::Selesai => 'Laporan Anda telah selesai ditangani. Mohon luangkan waktu kurang dari 2 menit untuk mengisi survei kepuasan; jawaban Anda hanya dipakai untuk perbaikan layanan.',
             TicketStatus::Ditolak => 'Laporan Anda tidak dapat diproses. Lihat tanggapan petugas di halaman lacak tiket untuk keterangannya.',
             default => 'Status laporan Anda diperbarui.',
         };
@@ -49,8 +49,29 @@ class ReporterNotifier
             'heading' => 'Status laporan: '.($status?->label() ?? '-'),
             'intro' => $intro,
             'meta' => $this->meta($ticket),
-            'cta_label' => $status === TicketStatus::Selesai ? 'Lacak tiket & isi survei' : 'Lacak tiket',
+            ...($status === TicketStatus::Selesai ? ['cta_url' => $this->surveyUrl($ticket), 'cta_label' => 'Isi survei kepuasan'] : []),
         ]);
+    }
+
+    /** Satu kali pengingat survei kepuasan (sigap:pengingat-survei). */
+    public function surveyReminder(Ticket $ticket): bool
+    {
+        return $this->send($ticket, [
+            'subject' => "[Contact Center] Bagaimana penanganan tiket {$ticket->ticket_no}?",
+            'heading' => 'Mohon nilai penanganan pengaduan Anda',
+            'intro' => 'Beberapa hari lalu pengaduan Anda dinyatakan selesai. Bila belum sempat, mohon isi survei kepuasan singkat (kurang dari 2 menit). Pengingat ini hanya dikirim sekali.',
+            'meta' => $this->meta($ticket),
+            'cta_url' => $this->surveyUrl($ticket),
+            'cta_label' => 'Isi survei kepuasan',
+        ]);
+    }
+
+    /** Nomor format lama butuh kode akses agar halaman survei bisa dibuka tamu. */
+    private function surveyUrl(Ticket $ticket): string
+    {
+        $url = '/lacak/'.$ticket->ticket_no.'/survei';
+
+        return Ticket::isLegacyNo($ticket->ticket_no) && $ticket->lookup_token ? $url.'?kode='.$ticket->lookup_token : $url;
     }
 
     public function replied(Ticket $ticket, TicketReply $reply): void
@@ -89,26 +110,33 @@ class ReporterNotifier
         return null;
     }
 
-    /** @param array<string, mixed> $payload */
-    private function send(Ticket $ticket, array $payload): void
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return bool surel terkirim
+     */
+    private function send(Ticket $ticket, array $payload): bool
     {
         if (! config('notifications.reporter_email', true)) {
-            return;
+            return false;
         }
 
         try {
             $email = $this->emailFor($ticket);
 
             if ($email === null) {
-                return;
+                return false;
             }
 
             Mail::to($email)->send(new ReporterTicketMail($payload + [
                 'cta_url' => '/lacak/'.$ticket->ticket_no,
                 'cta_label' => 'Lacak tiket',
             ]));
+
+            return true;
         } catch (\Throwable $e) {
             Log::warning('Surel ke pelapor gagal', ['ticket' => $ticket->ticket_no, 'error' => $e->getMessage()]);
+
+            return false;
         }
     }
 

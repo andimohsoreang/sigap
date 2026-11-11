@@ -92,7 +92,8 @@ class ReporterNotificationTest extends TestCase
 
         $payload = $this->reporterMails('pelapor@example.com')->first()->payload;
         $this->assertStringContainsString('survei', $payload['intro']);
-        $this->assertSame('Lacak tiket & isi survei', $payload['cta_label']);
+        $this->assertSame('Isi survei kepuasan', $payload['cta_label']);
+        $this->assertSame("/lacak/{$ticket->ticket_no}/survei", $payload['cta_url']);
     }
 
     public function test_only_public_replies_are_emailed(): void

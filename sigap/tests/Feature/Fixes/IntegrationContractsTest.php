@@ -82,7 +82,7 @@ class IntegrationContractsTest extends TestCase
         $this->actingAs($other)
             ->from('/lacak/TKT-261012-NTGAAA')
             ->withHeader('X-Inertia', 'true')
-            ->post('/lacak/survei', ['ticket' => 'TKT-261012-NTGAAA', 'rating' => 3])
+            ->post('/lacak/survei', ['ticket' => 'TKT-261012-NTGAAA'] + $this->surveyPayload(3))
             ->assertRedirect('/lacak/TKT-261012-NTGAAA')
             ->assertSessionHasErrors('ticket');
 

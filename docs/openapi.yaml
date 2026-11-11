@@ -217,6 +217,19 @@ paths:
         '429':
           $ref: '#/components/responses/TooManyRequests'
 
+  /survei/kuesioner:
+    get:
+      tags: [Publik]
+      summary: Pertanyaan survei kepuasan pasca-penanganan
+      description: Teks pertanyaan dan pilihan jawaban (skala 1–4, Permenpan RB 14/2017) untuk menyusun formulir survei.
+      security: []
+      responses:
+        '200':
+          description: Kuesioner
+          content:
+            application/json:
+              schema: { type: object }
+
   /survei/{ticket_no}:
     post:
       tags: [Publik]
@@ -1092,10 +1105,26 @@ components:
 
     SurveyRequest:
       type: object
-      required: [rating]
+      description: |
+        Survei Kepuasan Pasca-Penanganan Pengaduan, skala 1–4. Pertanyaan dan pilihan
+        lengkap tersedia di `GET /survei/kuesioner`. Hanya untuk tiket Selesai, satu kali
+        per tiket; tiket milik akun warga hanya dapat dinilai pemiliknya yang login.
+      required: [jawaban, keseluruhan, teratasi, kembali]
       properties:
-        rating: { type: integer, minimum: 1, maximum: 5 }
-        comment: { type: string, maxLength: 1000 }
+        jawaban:
+          type: object
+          description: Pertanyaan 1–9, nilai 1–4 per aspek.
+          required: [kemudahan, konfirmasi, respons, penyelesaian, informasi, kesesuaian, sikap, kompetensi, kerahasiaan]
+          additionalProperties: { type: integer, minimum: 1, maximum: 4 }
+        keseluruhan: { type: integer, minimum: 1, maximum: 4, description: Pertanyaan 10 — kepuasan keseluruhan }
+        teratasi: { type: string, enum: [belum, sebagian, penuh], description: Pertanyaan 11 }
+        kembali: { type: integer, minimum: 1, maximum: 4, description: Pertanyaan 12 — kemungkinan memakai lagi }
+        tinjau_ulang: { type: boolean, description: Ajukan tinjau ulang (hanya berlaku bila teratasi = belum/sebagian) }
+        baik: { type: string, maxLength: 1000, description: Pertanyaan 13 (opsional) }
+        perbaikan: { type: string, maxLength: 1000, description: Pertanyaan 14 (opsional) }
+        usia: { type: string, enum: ['<20', '20-29', '30-39', '40-49', '50-59', '60+'] }
+        pendidikan: { type: string, enum: [sd, smp, sma, diploma, s1, pascasarjana] }
+        pekerjaan: { type: string, enum: [pns, swasta, wiraswasta, petani, nelayan, pelajar, rumah-tangga, lainnya] }
         kode: { type: string, maxLength: 16, description: Kode akses — wajib bagi tamu untuk nomor format lama `TKT-<angka>` }
         recaptcha_token: { type: string, description: Token reCAPTCHA v3 (aksi `survei`); opsional bila reCAPTCHA nonaktif }
 

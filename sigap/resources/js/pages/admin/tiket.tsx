@@ -26,7 +26,7 @@ interface TicketRow {
     overdue: boolean;
 }
 
-type TabKey = 'semua' | 'aktif' | 'ews' | 'belum' | 'belum_disposisi' | 'selesai';
+type TabKey = 'semua' | 'aktif' | 'ews' | 'belum' | 'belum_disposisi' | 'tinjau' | 'selesai';
 
 interface Props {
     tickets: {
@@ -47,10 +47,11 @@ const TABS: { key: TabKey; label: string; params: Record<string, string>; superA
     { key: 'ews', label: 'Lewat SLA', params: { ews: '1' } },
     { key: 'belum_disposisi', label: 'Belum didisposisi', params: { status: 'aktif', unit: 'none' }, superAdminOnly: true },
     { key: 'belum', label: 'Belum ditugaskan', params: { status: 'aktif', petugas: 'none' } },
+    { key: 'tinjau', label: 'Perlu tinjau ulang', params: { tinjau: '1' } },
     { key: 'selesai', label: 'Selesai', params: { status: 'selesai' } },
     { key: 'semua', label: 'Semua', params: {} },
 ];
-const TAB_KEYS = ['status', 'ews', 'petugas', 'unit'];
+const TAB_KEYS = ['status', 'ews', 'petugas', 'unit', 'tinjau'];
 
 export default function ManajemenTiket({ tickets, filters, chips, impacts, tab_counts: counts }: Props) {
     const { auth } = usePage<SharedData>().props;

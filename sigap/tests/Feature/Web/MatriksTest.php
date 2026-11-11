@@ -14,6 +14,7 @@ use App\Models\Region;
 use App\Models\Survey;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Support\SurveyQuestionnaire;
 use Database\Seeders\MasterSeeder;
 use Database\Seeders\PortalSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -94,7 +95,7 @@ class MatriksTest extends TestCase
         // Bulan lalu, masih berjalan & lewat tenggat.
         $this->ticket(['ticket_no' => 'TKT-260920-GGGGGG', 'status' => TicketStatus::Baru, 'impact' => TicketImpact::Sedang, 'created_at' => now()->subMonth(), 'sla_due_at' => now()->subDays(10)]);
 
-        Survey::create(['ticket_id' => $tepat->id, 'rating' => 4]);
+        Survey::create(['ticket_id' => $tepat->id, 'version' => 2, 'answers' => array_fill_keys(array_keys(SurveyQuestionnaire::ASPECTS), 3), 'overall' => 3, 'resolved' => 'penuh', 'reuse' => 3, 'skm_index' => 75]);
     }
 
     public function test_rekap_props_follow_status_category_impact_and_overdue(): void
@@ -167,7 +168,13 @@ class MatriksTest extends TestCase
                 ->where('rekap.kanal.0', ['key' => 'web', 'label' => 'Formulir web', 'total' => 2])
                 // Wilayah = provinsi pengaduan (31-10-2026).
                 ->where('rekap.kawasan', fn ($rows) => collect($rows)->firstWhere('label', 'Papua Selatan') === ['provinsi' => 'Papua Selatan', 'label' => 'Papua Selatan', 'total' => 3, 'ews' => 2])
-                ->where('rekap.survei', ['rata' => 4, 'responden' => 1, 'selesai' => 2])
+                // Indeks SKM 25–100: 75 → mutu C; survei bintang lama tidak ikut dihitung.
+                ->where('rekap.survei.indeks', 75)
+                ->where('rekap.survei.mutu', ['huruf' => 'C', 'mutu' => 'Kurang baik'])
+                ->where('rekap.survei.responden', 1)
+                ->where('rekap.survei.lama', 0)
+                ->where('rekap.survei.selesai', 2)
+                ->where('rekap.survei.aspek.0', ['aspek' => 'Kemudahan menyampaikan', 'rata' => 3])
                 // Perlu tindakan: terlama lewat tenggat lebih dulu.
                 ->where('rekap.perlu_tindakan.total', 2)
                 ->has('rekap.perlu_tindakan.items', 2)
@@ -268,7 +275,7 @@ class MatriksTest extends TestCase
                 ->has('rekap.matriks.rows', 4)
                 ->where('rekap.matriks.rows.0.total', 0)
                 ->where('rekap.matriks.rows.0.sla_pct', null)
-                ->where('rekap.survei.rata', null)
+                ->where('rekap.survei.indeks', null)
                 ->has('rekap.perlu_tindakan.items', 0));
     }
 

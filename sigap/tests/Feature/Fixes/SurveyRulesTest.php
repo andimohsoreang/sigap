@@ -19,22 +19,22 @@ class SurveyRulesTest extends TestCase
     {
         $ticket = Ticket::factory()->create(['ticket_no' => 'TKT-261012-SRVAAA', 'status' => TicketStatus::Selesai]);
 
-        $this->postJson('/api/v1/survei/TKT-261012-SRVAAA', ['rating' => 5, 'comment' => 'Pertama'])->assertCreated();
-        $this->postJson('/api/v1/survei/tkt-261012-srvaaa', ['rating' => 1, 'comment' => 'Kedua'])
+        $this->postJson('/api/v1/survei/TKT-261012-SRVAAA', $this->surveyPayload(4, ['baik' => 'Pertama']))->assertCreated();
+        $this->postJson('/api/v1/survei/tkt-261012-srvaaa', $this->surveyPayload(1, ['baik' => 'Kedua']))
             ->assertStatus(422)
             ->assertJsonValidationErrors('ticket');
 
-        $this->post('/lacak/survei', ['ticket' => 'TKT-261012-SRVAAA', 'rating' => 2])->assertSessionHasErrors('ticket');
+        $this->post('/lacak/survei', ['ticket' => 'TKT-261012-SRVAAA'] + $this->surveyPayload(2))->assertSessionHasErrors('ticket');
 
         $this->assertDatabaseCount('surveys', 1);
-        $this->assertSame(5, $ticket->survey()->first()->rating);
+        $this->assertSame('Pertama', $ticket->survey()->first()->good_feedback);
     }
 
     public function test_api_rejects_survey_for_unfinished_ticket(): void
     {
         Ticket::factory()->create(['ticket_no' => 'TKT-261012-SRVBBB', 'status' => TicketStatus::Diproses]);
 
-        $this->postJson('/api/v1/survei/TKT-261012-SRVBBB', ['rating' => 4])
+        $this->postJson('/api/v1/survei/TKT-261012-SRVBBB', $this->surveyPayload())
             ->assertStatus(422)
             ->assertJsonValidationErrors('ticket');
 
@@ -47,11 +47,11 @@ class SurveyRulesTest extends TestCase
         $other = User::factory()->warga()->create();
         Ticket::factory()->forReporter($owner)->create(['ticket_no' => 'TKT-261012-SRVCCC', 'status' => TicketStatus::Selesai]);
 
-        $this->postJson('/api/v1/survei/TKT-261012-SRVCCC', ['rating' => 3])->assertForbidden();
-        $this->actingAs($other, 'sanctum')->postJson('/api/v1/survei/TKT-261012-SRVCCC', ['rating' => 3])->assertForbidden();
-        $this->actingAs($other)->post('/lacak/survei', ['ticket' => 'TKT-261012-SRVCCC', 'rating' => 3])->assertForbidden();
+        $this->postJson('/api/v1/survei/TKT-261012-SRVCCC', $this->surveyPayload(3))->assertForbidden();
+        $this->actingAs($other, 'sanctum')->postJson('/api/v1/survei/TKT-261012-SRVCCC', $this->surveyPayload(3))->assertForbidden();
+        $this->actingAs($other)->post('/lacak/survei', ['ticket' => 'TKT-261012-SRVCCC'] + $this->surveyPayload(3))->assertForbidden();
 
-        $this->actingAs($owner)->post('/lacak/survei', ['ticket' => 'TKT-261012-SRVCCC', 'rating' => 4])->assertRedirect('/lacak/TKT-261012-SRVCCC');
+        $this->actingAs($owner)->post('/lacak/survei', ['ticket' => 'TKT-261012-SRVCCC'] + $this->surveyPayload())->assertRedirect('/lacak/TKT-261012-SRVCCC');
 
         $this->assertDatabaseCount('surveys', 1);
     }

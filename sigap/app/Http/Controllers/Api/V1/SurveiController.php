@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSurveyRequest;
 use App\Services\SurveyService;
 use App\Services\TicketService;
+use App\Support\SurveyQuestionnaire;
 use Illuminate\Http\JsonResponse;
 
 class SurveiController extends Controller
@@ -14,6 +15,12 @@ class SurveiController extends Controller
         private readonly TicketService $tickets,
         private readonly SurveyService $surveys,
     ) {}
+
+    /** GET /api/v1/survei/kuesioner — pertanyaan & pilihan jawaban survei kepuasan. */
+    public function questionnaire(): JsonResponse
+    {
+        return response()->json(['versi' => SurveyQuestionnaire::VERSION] + SurveyQuestionnaire::forPage());
+    }
 
     /** POST /api/v1/survei/{ticket_no} — survei kepuasan (A-07). */
     public function store(StoreSurveyRequest $request, string $ticketNo): JsonResponse

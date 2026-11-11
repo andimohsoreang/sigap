@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // TECH-SPEC §11.2: scheduler untuk sinkron kanal (stub) & EWS.
         $schedule->command('sigap:sync-channels')->dailyAt('06:00')->withoutOverlapping();
         $schedule->command('sigap:ews-check')->dailyAt('07:00')->withoutOverlapping();
+        $schedule->command('sigap:pengingat-survei')->dailyAt('09:00')->withoutOverlapping();
         $schedule->command('sigap:pantau-rujukan')->weekdays()->hourly()->between('8:00', '17:00')->withoutOverlapping();
         $schedule->command('sigap:cek-portal')->hourly()->withoutOverlapping();
         // Jawaban TARA macet di antrean `ai` → serah ke petugas (PRD-AI §13). Tiap 15 dtk

@@ -38,6 +38,16 @@ class Ticket extends Model
     /** Panjang kode akses pelacakan (alfabet sama dengan nomor tiket). */
     public const LOOKUP_TOKEN_LENGTH = 8;
 
+    /** Alasan tiket selesai ditandai tinjau ulang dari survei kepuasan. */
+    public const REVIEW_REQUESTED = 'diminta_pelapor';
+
+    public const REVIEW_LOW_SCORE = 'skor_rendah';
+
+    public const REVIEW_REASONS = [
+        self::REVIEW_REQUESTED => 'Pelapor mengajukan tinjau ulang',
+        self::REVIEW_LOW_SCORE => 'Skor survei rendah / belum teratasi',
+    ];
+
     protected $fillable = [
         'ticket_no',
         'title',
@@ -73,6 +83,11 @@ class Ticket extends Model
         'responded_at',
         'resolved_at',
         'ews_notified_at',
+        'review_requested_at',
+        'review_reason',
+        'reviewed_at',
+        'reviewed_by',
+        'survey_reminded_at',
     ];
 
     protected $hidden = [
@@ -96,6 +111,9 @@ class Ticket extends Model
             'resolved_at' => 'datetime',
             'ews_notified_at' => 'datetime',
             'disposed_at' => 'datetime',
+            'review_requested_at' => 'datetime',
+            'reviewed_at' => 'datetime',
+            'survey_reminded_at' => 'datetime',
             // D-01: NIK pelapor dienkripsi; pencarian memakai reporter_nik_hash.
             'reporter_nik' => 'encrypted',
         ];
@@ -259,9 +277,25 @@ class Ticket extends Model
         return $this->hasMany(TicketReply::class)->orderBy('created_at');
     }
 
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
     public function survey(): HasOne
     {
         return $this->hasOne(Survey::class);
+    }
+
+    /** Tiket yang ditandai tinjau ulang dari survei dan belum ditinjau petugas. */
+    public function scopeNeedsReview($query)
+    {
+        return $query->whereNotNull('review_requested_at')->whereNull('reviewed_at');
+    }
+
+    public function needsReview(): bool
+    {
+        return $this->review_requested_at !== null && $this->reviewed_at === null;
     }
 
     /** NIK pelapor yang disamarkan untuk tampilan publik. */

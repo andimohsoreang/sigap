@@ -157,11 +157,27 @@ const FITUR_WARGA: Feature[] = [
         title: 'Survei Kepuasan',
         desc: (
             <>
-                Bila tiket <strong>Selesai</strong>, halaman lacak menampilkan tombol <strong>Isi Survei Kepuasan</strong>. Beri nilai 1–5 bintang dan
-                komentar bila mau. Penilaian Anda dipakai untuk mengukur mutu layanan Contact Center.
+                Setelah tiket <strong>Selesai</strong>, Anda menerima surel berisi tautan survei, dan halaman lacak menampilkan tombol{' '}
+                <strong>Isi Survei Kepuasan</strong>. Survei berisi 14 pertanyaan singkat (kurang dari 2 menit) dengan skala 1–4: penilaian 9 aspek
+                penanganan, kepuasan keseluruhan, apakah masalah teratasi, kemungkinan memakai Contact Center lagi, masukan terbuka, serta profil
+                opsional. Jawaban tidak memengaruhi hasil penanganan pengaduan.
             </>
         ),
-        shots: [s('w13-survei', 'Dialog survei kepuasan', 'Survei kepuasan: pilih bintang, tulis komentar, lalu Kirim Penilaian.')],
+        tips: [
+            'Bila masalah Belum atau Sebagian teratasi, centang "Ajukan tinjau ulang pengaduan" agar petugas meninjau kembali tiket Anda.',
+            'Satu tiket hanya dapat dinilai satu kali.',
+            'Tiket yang terhubung ke akun warga hanya dapat dinilai pemiliknya; masuk dulu dengan NIK bila diminta.',
+            'Bila belum sempat mengisi, satu surel pengingat dikirim 3 hari setelah tiket selesai.',
+        ],
+        shots: [
+            s('w13-survei', 'Halaman survei kepuasan', 'Halaman survei kepuasan beserta ringkasan pengaduan yang dinilai.'),
+            s('w13b-survei-aspek', 'Penilaian sembilan aspek penanganan', 'Bagian 1 — Pilih satu jawaban untuk setiap aspek penanganan.'),
+            s(
+                'w13c-survei-keseluruhan',
+                'Penilaian keseluruhan dan tinjau ulang',
+                'Bagian 2 — Penilaian keseluruhan; masalah yang belum tuntas dapat diajukan tinjau ulang.',
+            ),
+        ],
     },
     {
         id: 'w-akun',
@@ -235,7 +251,8 @@ const FITUR_ADMIN: Feature[] = [
                 Dasbor utama petugas. Bagian atas menunjukkan <strong>alur penanganan</strong> dari pintu masuk (formulir web, input manual, Chat
                 TARA) sampai Selesai/Ditolak, disusul indikator tiket berjalan, <strong>peringatan EWS</strong>, SLA terpenuhi, dan rata-rata waktu
                 respons serta penyelesaian. Di bawahnya ada peta sebaran, tren harian, komposisi status/kategori/kanal/dampak, kepatuhan SLA dan
-                kepuasan, <strong>corong layanan TARA</strong>, <strong>kinerja petugas</strong>, dan matriks kategori × tahap penanganan.
+                <strong>indeks kepuasan (SKM)</strong> per aspek, <strong>corong layanan TARA</strong>, <strong>kinerja petugas</strong>, dan matriks
+                kategori × tahap penanganan.
             </>
         ),
         tips: [
@@ -257,8 +274,9 @@ const FITUR_ADMIN: Feature[] = [
         desc: (
             <>
                 Semua pengaduan dari seluruh kanal. Tab di atas membantu memilah: <strong>Aktif</strong>, <strong>Lewat SLA</strong>,{' '}
-                <strong>Belum didisposisi</strong> (khusus Super Admin), <strong>Belum ditugaskan</strong>, <strong>Selesai</strong>, dan{' '}
-                <strong>Semua</strong>. Cari nomor atau judul, saring dampak dan provinsi, atur kolom, lalu klik baris untuk membuka detail.
+                <strong>Belum didisposisi</strong> (khusus Super Admin), <strong>Belum ditugaskan</strong>, <strong>Perlu tinjau ulang</strong>,{' '}
+                <strong>Selesai</strong>, dan <strong>Semua</strong>. Cari nomor atau judul, saring dampak dan provinsi, atur kolom, lalu klik baris
+                untuk membuka detail.
             </>
         ),
         tips: ['Mulai dari tab Lewat SLA dan Belum ditugaskan.', 'Baris berlatar merah menandai tiket yang melewati tenggat SLA.'],
@@ -293,6 +311,33 @@ const FITUR_ADMIN: Feature[] = [
             s('a08-disposisi', 'Panel disposisi unit', 'Disposisi unit: unit penangan, catatan, serta tombol Alihkan dan Tarik.'),
             s('a09-tanggapan', 'Panel tanggapan', 'Tanggapan: balas ke pelapor atau simpan catatan internal.'),
             s('a10-tindak-lanjut', 'Panel tindak lanjut', 'Tindak lanjut: pilih status baru dan catatannya.'),
+        ],
+    },
+    {
+        id: 'a-survei',
+        icon: Star,
+        title: 'Survei Kepuasan & Tinjau Ulang',
+        desc: (
+            <>
+                Hasil survei tampil di panel <strong>Survei kepuasan</strong> pada detail tiket: <strong>indeks SKM</strong> (rata-rata 9 aspek dikali
+                25, skala 25–100) dengan kategori mutu <strong>A</strong> (88,31–100), <strong>B</strong> (76,61–88,30), <strong>C</strong>{' '}
+                (65,00–76,60), atau <strong>D</strong> (25,00–64,99), jawaban per aspek, dan masukan pelapor. Tiket ditandai{' '}
+                <strong>Perlu tinjau ulang</strong> bila pelapor mengajukannya, atau bila jawabannya &quot;Belum teratasi&quot; atau kepuasan
+                keseluruhan bernilai 1–2. Petugas lalu membuka kembali tiket lewat <strong>Tindak lanjut → Diproses</strong>, atau menekan{' '}
+                <strong>Tandai sudah ditinjau</strong> bila penanganan sudah tepat.
+            </>
+        ),
+        tips: [
+            'Tiket yang ditandai tetap berstatus Selesai sampai petugas memutuskan; Super Admin dan admin kawasan menerima notifikasi.',
+            'Survei format lama (bintang 1–5) tetap terlihat di detail tiket, tetapi tidak dihitung dalam indeks SKM.',
+        ],
+        shots: [
+            s(
+                'a27-tinjau-ulang',
+                'Tiket yang perlu tinjau ulang',
+                'Penanda Perlu tinjau ulang di detail tiket beserta tombol Tandai sudah ditinjau.',
+            ),
+            s('a28-hasil-survei', 'Hasil survei kepuasan', 'Panel Survei kepuasan: indeks SKM, kategori mutu, dan jawaban per aspek.'),
         ],
     },
     {
@@ -490,7 +535,7 @@ const ALUR_SINGKAT = [
     { icon: Zap, label: 'Tiket terbit', desc: 'Nomor TKT-YYMMDD-XXXXXX' },
     { icon: Network, label: 'Didisposisi', desc: 'Diteruskan ke unit kerja berwenang' },
     { icon: ShieldCheck, label: 'Ditindaklanjuti', desc: 'Status & tanggapan diperbarui' },
-    { icon: Search, label: 'Lacak & survei', desc: 'Pantau status, lalu beri penilaian' },
+    { icon: Star, label: 'Lacak & survei', desc: 'Pantau status, lalu isi survei kepuasan' },
 ];
 
 export default function Panduan() {

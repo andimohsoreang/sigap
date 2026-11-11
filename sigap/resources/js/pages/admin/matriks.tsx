@@ -151,7 +151,15 @@ interface Rekap {
     provinsi: ProvinceRow[];
     kategori: { key: string; label: string; total: number }[];
     tren: { satuan: 'hari' | 'bulan'; titik: TrendPoint[] };
-    survei: { rata: number | null; responden: number; selesai: number };
+    /** Indeks SKM 25–100 dari kuesioner skala 1–4; `lama` = survei bintang versi lama (tidak dihitung). */
+    survei: {
+        indeks: number | null;
+        mutu: { huruf: string; mutu: string } | null;
+        responden: number;
+        lama: number;
+        selesai: number;
+        aspek: { aspek: string; rata: number | null }[];
+    };
     perlu_tindakan: { total: number; items: OverdueItem[] };
     layanan: {
         percakapan: number;
@@ -1206,14 +1214,38 @@ function KinerjaCard({ kpi, survei }: { kpi: Rekap['kpi']; survei: Rekap['survei
                     warn={60}
                 />
                 <GaugeChart
-                    value={survei.rata === null ? null : (survei.rata / 5) * 100}
-                    display={survei.rata === null ? '—' : survei.rata.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
-                    label="Kepuasan warga"
-                    caption={survei.rata === null ? 'Belum ada survei' : `dari 5 · ${nf(survei.responden)} responden`}
-                    good={80}
-                    warn={60}
+                    value={survei.indeks}
+                    display={survei.indeks === null ? '—' : dec(survei.indeks)}
+                    label="Indeks kepuasan (SKM)"
+                    caption={
+                        survei.indeks === null || survei.mutu === null
+                            ? 'Belum ada survei'
+                            : `Mutu ${survei.mutu.huruf} · ${nf(survei.responden)} dari ${nf(survei.selesai)} tiket selesai`
+                    }
+                    good={88.31}
+                    warn={76.61}
                 />
             </div>
+            {survei.responden > 0 && (
+                <ul
+                    className="mt-5 space-y-1.5 border-t border-[var(--adm-border)] pt-4 text-[13px]"
+                    aria-label="Rata-rata jawaban per aspek, skala 1 sampai 4"
+                >
+                    {survei.aspek.map((a) => (
+                        <li key={a.aspek} className="flex items-center justify-between gap-3">
+                            <span className="text-[var(--adm-text-2)]">{a.aspek}</span>
+                            <span
+                                className={cn(
+                                    'font-semibold tabular-nums',
+                                    a.rata !== null && a.rata < 2.6 ? 'text-[var(--adm-danger)]' : 'text-[var(--adm-text)]',
+                                )}
+                            >
+                                {a.rata === null ? '—' : dec(a.rata)}
+                            </span>
+                        </li>
+                    ))}
+                </ul>
+            )}
         </Card>
     );
 }

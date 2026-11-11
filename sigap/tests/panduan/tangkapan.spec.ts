@@ -18,6 +18,7 @@ function credentials() {
         password: string;
         warga_nik: string;
         warga_password: string;
+        survei_tiket: string;
     };
 }
 
@@ -44,7 +45,19 @@ async function shotOf(page: Page, target: Locator, name: string, top = 96) {
     const view = page.viewportSize();
     if (!box || !view) throw new Error(`Elemen untuk ${name} tidak terlihat`);
     if (box.height + 32 > view.height - top) {
+        // Elemen lebih tinggi dari layar: header lengket dilepas sementara agar tidak menutupi bagian atasnya.
+        const unstick = (on: boolean) =>
+            page.evaluate((off) => {
+                document.querySelectorAll<HTMLElement>('body *').forEach((el) => {
+                    const pos = getComputedStyle(el).position;
+                    if (off && (pos === 'sticky' || pos === 'fixed')) el.dataset.panduanPos = pos;
+                    if (el.dataset.panduanPos) el.style.position = off ? 'static' : '';
+                    if (!off) delete el.dataset.panduanPos;
+                });
+            }, on);
+        await unstick(true);
         await target.screenshot({ path: `${OUT}/${name}.jpg`, type: 'jpeg', quality: 82 });
+        await unstick(false);
         return;
     }
     const pad = 16;
@@ -133,29 +146,32 @@ test('masyarakat', async ({ page }) => {
     await page.goto('/lacak');
     await shot(page, 'w10-lacak');
 
-    // Tiket selesai milik warga yang belum disurvei (tests/panduan/siapkan-data.php).
     const c = credentials();
     await login(page, c.warga_nik, c.warga_password, /portal-warga/);
     await shot(page, 'w15-portal-warga');
-    const selesai = page
-        .locator('tr')
-        .filter({ hasText: 'Selesai' })
-        .first()
-        .getByText(/^#?TKT-/)
-        .first();
-    const nomor = ((await selesai.textContent()) ?? '').replace('#', '').trim();
     await page.context().clearCookies();
-    await page.goto(`/lacak/${nomor}`);
+
+    // Tiket selesai tanpa akun yang belum disurvei (tests/panduan/siapkan-data.php).
+    await page.goto('/lacak');
+    await page.getByPlaceholder('TKT-YYMMDD-XXXXXX').fill(credentials().survei_tiket);
+    await page.getByRole('button', { name: 'Cari' }).click();
+    await page.waitForURL(/\/lacak\/TKT-/);
     await shot(page, 'w11-lacak-detail');
-    await shotAt(page, /Riwayat|Tahapan penanganan/, 'w12-lacak-riwayat');
-    await page
-        .getByRole('button', { name: /survei/i })
-        .first()
-        .click();
-    await page.getByRole('radio', { name: '5 bintang' }).click();
-    await page.getByPlaceholder('Ceritakan pengalaman Anda').fill('Petugas cepat merespons dan informasinya jelas.');
+    await shotAt(page, /Riwayat Penanganan/, 'w12-lacak-riwayat');
+
+    await page.getByRole('link', { name: 'Isi Survei Kepuasan' }).click();
+    await page.waitForURL(/\/survei$/);
     await shot(page, 'w13-survei');
-    await page.keyboard.press('Escape');
+    const aspek = page.locator('fieldset');
+    const n = await aspek.count();
+    for (let i = 0; i < n; i++) {
+        const opsi = aspek.nth(i).locator('label');
+        if ((await opsi.count()) === 4) await opsi.nth(i % 3 === 0 ? 3 : 2).click();
+    }
+    await shotOf(page, card(page, 'Penilaian penanganan pengaduan'), 'w13b-survei-aspek');
+    await page.locator('fieldset#teratasi label').filter({ hasText: 'Sebagian teratasi' }).click();
+    await page.getByText('Ajukan tinjau ulang pengaduan').click();
+    await shotOf(page, card(page, 'Penilaian keseluruhan'), 'w13c-survei-keseluruhan');
 
     await page.goto('/katalog');
     await shot(page, 'w16-katalog');
@@ -206,6 +222,14 @@ test('admin', async ({ page }) => {
     await page.getByPlaceholder('Catatan untuk sesama petugas…').fill('Unit sudah dihubungi; menunggu jadwal perbaikan dari kontraktor.');
     await page.getByRole('button', { name: 'Simpan catatan' }).click();
     await settle(page);
+
+    // Tiket contoh dengan skor survei rendah (sigap:data-contoh) di tab Perlu tinjau ulang.
+    await page.goto('/admin/tiket?tinjau=1');
+    await settle(page);
+    await page.locator('table').getByText('Jaminan hidup').first().click();
+    await page.waitForURL(/\/admin\/tiket\/TKT-/);
+    await shot(page, 'a27-tinjau-ulang');
+    await shotOf(page, panel('Survei kepuasan'), 'a28-hasil-survei');
 
     await page.goto('/admin/chat');
     await shot(page, 'a11-pesan-masuk');
