@@ -33,6 +33,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'role',
         'region_id',
         'unit',
+        'unit_id',
         'is_active',
         'password',
         'registered_by',
@@ -130,6 +131,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function region(): BelongsTo
     {
         return $this->belongsTo(Region::class);
+    }
+
+    /**
+     * Unit Kerja dari master (PRD-UNIT-KERJA). Bukan `unit()`, karena kolom
+     * teks lama `unit` masih ada dan akan menutupi relasi bernama sama.
+     */
+    public function workUnit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'unit_id');
     }
 
     /** Rujukan portal yang menjadi tanggung jawab admin ini. */

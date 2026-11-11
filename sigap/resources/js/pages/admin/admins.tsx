@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AdminLayout, { Pill } from '@/layouts/admin-layout';
-import { useForm } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import { Check, Mail, Pencil, UserPlus, X } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 
@@ -16,15 +16,26 @@ interface Admin {
     nip: string | null;
     email: string | null;
     wilayah: string;
+    unit_id: number | null;
+    unit: string | null;
     role: string | null;
     role_value: string | null;
     status: string;
 }
 
+interface UnitOption {
+    id: number;
+    name: string;
+    depth: number;
+}
+
 interface Props {
     admins: Admin[];
     roles: { value: string; label: string }[];
+    units: UnitOption[];
 }
+
+const NO_UNIT = 'none';
 
 /** Penjelasan singkat tiap peran di formulir (sejak 31-10-2026 akses tidak dibatasi kawasan). */
 const ROLE_HINT: Record<string, string> = {
@@ -32,13 +43,14 @@ const ROLE_HINT: Record<string, string> = {
     super_admin: 'Semua akses, termasuk tiket internal, daftar admin, dan log aktivitas.',
 };
 
-export default function Admins({ admins, roles }: Props) {
+export default function Admins({ admins, roles, units }: Props) {
     const [open, setOpen] = useState(false);
-    const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
+    const { data, setData, post, processing, errors, reset, clearErrors, transform } = useForm({
         name: '',
         nip: '',
         email: '',
         role: '',
+        unit_id: NO_UNIT,
         password: '',
     });
     const roleLabel = (value: string | null) => roles.find((r) => r.value === value)?.label ?? value ?? '—';
@@ -53,6 +65,7 @@ export default function Admins({ admins, roles }: Props) {
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
+        transform((d) => ({ ...d, unit_id: d.unit_id === NO_UNIT ? null : Number(d.unit_id) }));
         post('/admin/petugas', { preserveScroll: true, onSuccess: close });
     };
 
@@ -78,6 +91,12 @@ export default function Admins({ admins, roles }: Props) {
             header: 'Email Notifikasi',
             enableSorting: false,
             cell: ({ row }) => <EmailCell admin={row.original} />,
+        },
+        {
+            accessorKey: 'unit',
+            header: 'Unit Kerja',
+            enableSorting: false,
+            cell: ({ row }) => <UnitCell admin={row.original} units={units} />,
         },
         {
             accessorKey: 'role_value',
@@ -145,6 +164,11 @@ export default function Admins({ admins, roles }: Props) {
                                 </SelectContent>
                             </Select>
                         </Field>
+                        <div className="sm:col-span-2">
+                            <Field label="Unit kerja" error={errors.unit_id} hint="Unit tempat petugas bertugas. Bisa diubah nanti di tabel.">
+                                <UnitSelect value={data.unit_id} onChange={(v) => setData('unit_id', v)} units={units} />
+                            </Field>
+                        </div>
                         <Field label="Kata sandi awal" required error={errors.password} hint="Min. 12 karakter, huruf besar, huruf kecil, angka.">
                             <Input
                                 type="password"
@@ -188,6 +212,54 @@ export default function Admins({ admins, roles }: Props) {
                 ]}
             />
         </AdminLayout>
+    );
+}
+
+function UnitSelect({
+    value,
+    onChange,
+    units,
+    label = 'Unit kerja',
+}: {
+    value: string;
+    onChange: (v: string) => void;
+    units: UnitOption[];
+    label?: string;
+}) {
+    return (
+        <Select value={value} onValueChange={onChange}>
+            <SelectTrigger aria-label={label}>
+                <SelectValue placeholder="Pilih unit" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value={NO_UNIT}>Tanpa unit</SelectItem>
+                {units.map((u) => (
+                    <SelectItem key={u.id} value={String(u.id)}>
+                        {'\u00a0\u00a0'.repeat(u.depth)}
+                        {u.name}
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+    );
+}
+
+/** Kolom unit kerja: pilih langsung di tabel, tersimpan saat dipilih (super admin). */
+function UnitCell({ admin, units }: { admin: Admin; units: UnitOption[] }) {
+    const [saving, setSaving] = useState(false);
+    const save = (value: string) => {
+        setSaving(true);
+        router.put(
+            `/admin/petugas/${admin.id}/unit`,
+            { unit_id: value === NO_UNIT ? null : Number(value) },
+            { preserveScroll: true, onFinish: () => setSaving(false) },
+        );
+    };
+
+    return (
+        <div className={saving ? 'pointer-events-none min-w-48 opacity-60' : 'min-w-48'}>
+            <UnitSelect value={admin.unit_id ? String(admin.unit_id) : NO_UNIT} onChange={save} units={units} label={`Unit kerja ${admin.nama}`} />
+        </div>
     );
 }
 

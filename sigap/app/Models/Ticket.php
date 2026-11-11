@@ -62,6 +62,7 @@ class Ticket extends Model
         'reporter_phone',
         'reporter_nip',
         'reporter_unit',
+        'reporter_unit_id',
         'location',
         'source',
         'source_url',
@@ -225,6 +226,12 @@ class Ticket extends Model
     public function reporter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reporter_id');
+    }
+
+    /** Unit Kerja asal pelapor internal (bukan unit penangan tiket). */
+    public function reporterWorkUnit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'reporter_unit_id');
     }
 
     public function histories(): HasMany

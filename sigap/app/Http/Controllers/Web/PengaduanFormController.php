@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePengaduanInternalRequest;
 use App\Http\Requests\StorePengaduanRequest;
 use App\Models\Category;
+use App\Models\Unit;
 use App\Services\TicketService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -59,14 +60,8 @@ class PengaduanFormController extends Controller
     public function createInternal(): Response
     {
         return Inertia::render('public/formulir-internal', [
-            'units' => [
-                'Sekretariat Jenderal',
-                'Direktorat Jenderal PKP2Trans',
-                'Direktorat Jenderal PKTrans',
-                'Biro Umum & TIK',
-                'Unit Layanan Pengaduan (Contact Center)',
-                'Lainnya',
-            ],
+            // Daftar dari master Unit Kerja (aktif, urutan pohon) + "Lainnya".
+            'units' => [...array_column(Unit::activeTree(), 'name'), 'Lainnya'],
             'categories' => ['Internet / Jaringan', 'Listrik', 'Perangkat / Hardware', 'Aplikasi / Software', 'Fasilitas Kantor', 'Lainnya'],
         ]);
     }

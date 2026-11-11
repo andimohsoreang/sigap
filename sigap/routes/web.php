@@ -16,6 +16,7 @@ use App\Http\Controllers\Web\PortalController;
 use App\Http\Controllers\Web\PublicController;
 use App\Http\Controllers\Web\ReferralController;
 use App\Http\Controllers\Web\ReferralPublicController;
+use App\Http\Controllers\Web\UnitController;
 use App\Http\Controllers\Web\VerifikasiEmailController;
 use App\Http\Controllers\Web\WargaPortalController;
 use Illuminate\Support\Facades\Route;
@@ -210,6 +211,11 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
         Route::get('/petugas', [AdminController::class, 'admins'])->name('admin.petugas');
         Route::post('/petugas', [AdminController::class, 'storeAdmin'])->name('admin.petugas.store');
         Route::put('/petugas/{petugas}/email', [AdminController::class, 'updateAdminEmail'])->whereNumber('petugas')->name('admin.petugas.email');
+        Route::put('/petugas/{petugas}/unit', [AdminController::class, 'updateAdminUnit'])->whereNumber('petugas')->name('admin.petugas.unit');
+        // Master Unit Kerja (PRD-UNIT-KERJA F1).
+        Route::get('/unit-kerja', [UnitController::class, 'index'])->name('admin.unit');
+        Route::post('/unit-kerja', [UnitController::class, 'store'])->name('admin.unit.store');
+        Route::put('/unit-kerja/{unit}', [UnitController::class, 'update'])->whereNumber('unit')->name('admin.unit.update');
         Route::get('/log-aktivitas', [AdminController::class, 'activityLog'])->name('admin.log');
         Route::get('/kesehatan-ai', AiHealthController::class)->name('admin.kesehatan-ai');
     });

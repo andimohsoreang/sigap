@@ -20,6 +20,7 @@ use App\Models\Referral;
 use App\Models\Region;
 use App\Models\Setting;
 use App\Models\Ticket;
+use App\Models\Unit;
 use App\Models\User;
 use App\Modules\Assistant\Assistant;
 use App\Modules\Assistant\TicketSuggester;
@@ -555,7 +556,7 @@ class AdminController extends Controller
         return Inertia::render('admin/admins', [
             'admins' => User::query()
                 ->whereIn('role', UserRole::adminValues())
-                ->with('region')
+                ->with(['region', 'workUnit:id,name,short_name'])
                 ->orderBy('id')
                 ->get()
                 ->map(fn (User $u) => [
@@ -565,12 +566,15 @@ class AdminController extends Controller
                     'nip' => $u->username,
                     'email' => $u->email,
                     'wilayah' => $u->region?->name ?? 'Pusat',
+                    'unit_id' => $u->unit_id,
+                    'unit' => $u->workUnit?->displayName(),
                     'role' => $u->role?->label(),
                     'role_value' => $u->role?->value,
                     'status' => $u->is_active ? 'Aktif' : 'Nonaktif',
                 ]),
             'roles' => collect([UserRole::AdminKawasan, UserRole::SuperAdmin])
                 ->map(fn (UserRole $r) => ['value' => $r->value, 'label' => $r->label()]),
+            'units' => Unit::activeTree(),
         ]);
     }
 
@@ -586,6 +590,7 @@ class AdminController extends Controller
             'email' => self::normalizeEmail($data['email'] ?? null),
             'role' => UserRole::from($data['role']),
             'region_id' => $data['region_id'] ?? null,
+            'unit_id' => $data['unit_id'] ?? null,
             'password' => $data['password'],
             'is_active' => true,
         ]);
@@ -618,6 +623,34 @@ class AdminController extends Controller
         }
 
         return back()->with('success', $email ? "Email {$petugas->name} disimpan." : "Email {$petugas->name} dihapus.");
+    }
+
+    /** Super admin menetapkan Unit Kerja petugas (PRD-UNIT-KERJA F1). Kosong = tanpa unit. */
+    public function updateAdminUnit(Request $request, User $petugas): RedirectResponse
+    {
+        $this->authorize('manageAdmins', User::class);
+        abort_unless($petugas->isAdmin(), 404);
+
+        $data = $request->validate(['unit_id' => self::unitRule()]);
+        $unitId = $data['unit_id'] ?? null;
+
+        if ($unitId !== $petugas->unit_id) {
+            $petugas->forceFill(['unit_id' => $unitId])->save();
+            $unit = $petugas->workUnit()->first()?->name ?? 'tanpa unit';
+            $this->audit->safe('admin.unit_updated', $petugas, "Unit kerja admin {$petugas->name} ({$petugas->username}) diubah ke {$unit}.");
+        }
+
+        return back()->with('success', "Unit kerja {$petugas->name} disimpan.");
+    }
+
+    /**
+     * Unit Kerja yang boleh dipilih: hanya unit aktif.
+     *
+     * @return array<int, mixed>
+     */
+    public static function unitRule(): array
+    {
+        return ['nullable', 'integer', Rule::exists('units', 'id')->where('is_active', true)];
     }
 
     /** Surel disimpan huruf kecil; string kosong menjadi null. */
@@ -655,6 +688,7 @@ class AdminController extends Controller
             'role' => ['required', Rule::in(UserRole::adminValues())],
             // Sejak 31-10-2026 wilayah berasal dari pengaduan; kawasan tugas tidak membatasi akses.
             'region_id' => ['nullable', 'integer', 'exists:regions,id'],
+            'unit_id' => self::unitRule(),
             'password' => ['required', 'string', self::adminPasswordRule()],
         ];
     }
@@ -664,6 +698,7 @@ class AdminController extends Controller
     {
         return [
             ...self::emailMessages(),
+            'unit_id.exists' => 'Unit kerja tidak ditemukan atau sudah nonaktif.',
         ];
     }
 

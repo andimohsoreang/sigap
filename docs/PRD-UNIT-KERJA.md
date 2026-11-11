@@ -188,7 +188,7 @@ Indeks: `(unit_id, status)`, `(ticket_id, created_at)`. Hanya satu disposisi ber
 
 | Fase | Isi | Terlihat oleh | Perkiraan |
 |---|---|---|---|
-| **F1** Master Unit | Tabel `units`, seeder, halaman Unit Kerja, `users.unit_id` di Daftar Petugas, formulir internal dari master, `reporter_unit_id` | Super Admin, pegawai | 1–2 hari |
+| **F1** Master Unit ✅ | Tabel `units`, seeder, halaman Unit Kerja, `users.unit_id` di Daftar Petugas, formulir internal dari master, `reporter_unit_id` | Super Admin, pegawai | 1–2 hari |
 | **F2** Disposisi | `ticket_dispositions`, `tickets.unit_id`, panel Disposisi, saringan antrean, riwayat, audit, lacak menampilkan unit | Super Admin, warga | 2 hari |
 | **F3** Petugas Unit | Peran `admin_unit`, scope, menu *Tiket Unit*, Terima/Kembalikan, notifikasi | Petugas Unit | 2–3 hari |
 | **F4** Kendali | Tenggat & EWS per disposisi, unit default per kategori, Matriks per unit | Super Admin | 1–2 hari |

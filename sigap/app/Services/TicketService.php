@@ -11,6 +11,7 @@ use App\Models\Region;
 use App\Models\Ticket;
 use App\Models\TicketHistory;
 use App\Models\TicketReply;
+use App\Models\Unit;
 use App\Models\User;
 use App\Support\Provinces;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -270,6 +271,18 @@ class TicketService
         }
     }
 
+    /**
+     * Unit Kerja master yang namanya sama persis dengan isian pelapor internal.
+     * Nama yang tidak ada di master (mis. "Lainnya", nama lama) tetap disimpan
+     * sebagai teks saja; tidak ditebak.
+     */
+    private function unitIdByName(?string $name): ?int
+    {
+        $name = trim((string) $name);
+
+        return $name === '' ? null : Unit::query()->active()->where('name', $name)->value('id');
+    }
+
     /** @param array<string, mixed> $data */
     private function insert(array $data, string $number, ?string $attachmentPath): Ticket
     {
@@ -316,6 +329,7 @@ class TicketService
             'reporter_phone' => $data['reporter_phone'] ?? null,
             'reporter_nip' => $data['reporter_nip'] ?? null,
             'reporter_unit' => $data['reporter_unit'] ?? null,
+            'reporter_unit_id' => $data['reporter_unit_id'] ?? $this->unitIdByName($data['reporter_unit'] ?? null),
             'location' => $data['location'] ?? null,
             'source' => $data['source'] ?? null,
             'source_url' => $data['source_url'] ?? null,

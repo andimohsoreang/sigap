@@ -130,6 +130,16 @@ php artisan sigap:pantau-rujukan           # ingatkan warga & penanggung jawab (
 Aduan lahan dirujuk ke Trans Tuntas lewat halaman pengantar `/rujukan/{token}`; satu petugas menjadi
 penanggung jawab sampai warga memasukkan kode tracking. Lihat `../docs/DEPLOY.md` §13.
 
+### Unit Kerja
+
+```bash
+php artisan db:seed --class=UnitSeeder     # struktur resmi: Renstra Kementrans (Permentrans 11/2025) Tabel 16
+php artisan sigap:petakan-unit             # pratinjau pemetaan unit lama → master; tambah --terapkan
+```
+
+Super Admin mengelola unit di **Administrasi → Unit Kerja** dan menetapkan unit petugas di **Daftar Admin**.
+Unit tidak dihapus, hanya dinonaktifkan. Rencana lengkap (disposisi, Petugas Unit): `../docs/PRD-UNIT-KERJA.md`.
+
 ## Akun
 
 **Tidak ada kredensial default** (SEC-01). Akun dibuat eksplisit:
@@ -145,6 +155,7 @@ php artisan sigap:admin                 # interaktif (super_admin / admin_kawasa
 | `php artisan sigap:admin` | Membuat akun admin/petugas (interaktif) |
 | `php artisan sigap:sync-channels` | Sinkronisasi kanal nasional (STUB adapter D7) + tulis `channel_sync_logs` |
 | `php artisan sigap:ews-check` | Peringatan EWS untuk tiket melewati SLA (dihitung dari `ews_enabled`) |
+| `php artisan sigap:petakan-unit` | Petakan teks unit lama petugas & pelapor internal ke master Unit Kerja (pratinjau; `--terapkan` untuk menyimpan) |
 | `php artisan sigap:e2e-setup` | Siapkan DB + akun uji untuk Playwright — **menghapus DB**, sehingga hanya jalan bila `APP_ENV` local/testing **dan** DB SQLite/host lokal (tanpa opsi `--force`) |
 
 Jadwal (TECH-SPEC §11.2): `sigap:sync-channels` harian 06:00, `sigap:ews-check` harian 07:00.
