@@ -55,6 +55,8 @@ class Ticket extends Model
         'province',
         'channel_id',
         'assignee_id',
+        'unit_id',
+        'disposed_at',
         'reporter_id',
         'reporter_name',
         'reporter_nik',
@@ -93,6 +95,7 @@ class Ticket extends Model
             'responded_at' => 'datetime',
             'resolved_at' => 'datetime',
             'ews_notified_at' => 'datetime',
+            'disposed_at' => 'datetime',
             // D-01: NIK pelapor dienkripsi; pencarian memakai reporter_nik_hash.
             'reporter_nik' => 'encrypted',
         ];
@@ -226,6 +229,18 @@ class Ticket extends Model
     public function reporter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reporter_id');
+    }
+
+    /** Unit Kerja penangan saat ini (hasil disposisi Super Admin). */
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
+    /** Riwayat disposisi, terbaru di atas. */
+    public function dispositions(): HasMany
+    {
+        return $this->hasMany(TicketDisposition::class)->latest('id');
     }
 
     /** Unit Kerja asal pelapor internal (bukan unit penangan tiket). */

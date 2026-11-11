@@ -17,7 +17,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * - `pelapor` : "Anonim" untuk anonim/rahasia, selain itu nama tersamar
  *               ("Budi Santoso" -> "B*** S***").
  * - `nik`     : selalu null.
- * - `petugas` : selalu null (nama petugas tidak dipublikasikan).
+ * - `petugas` : selalu null (nama petugas tidak dipublikasikan); yang tampil
+ *               hanya `unit_penangan` (nama Unit Kerja hasil disposisi).
  * - tanggapan : penulis "Petugas Contact Center" untuk petugas, "Pelapor" untuk pelapor.
  *
  * Data lengkap untuk admin tersedia di {@see TicketAdminDetailResource}.
@@ -43,6 +44,8 @@ class TicketResource extends JsonResource
             'provinsi' => $this->province,
             'kanal' => $this->whenLoaded('channel', fn () => $this->channel?->name),
             'petugas' => null,
+            // Unit penangan hasil disposisi (K4: nama unit, bukan nama petugas).
+            'unit_penangan' => $this->unit_id ? $this->unit?->name : null,
             'pelapor' => $hideIdentity ? 'Anonim' : (Ticket::maskName($this->reporter_name) ?? 'Anonim'),
             'nik' => null,
             'created_at' => $this->created_at?->toIso8601String(),

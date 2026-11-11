@@ -123,11 +123,17 @@ class TicketService
                 $locked->ews_notified_at = null;
             }
 
-            if ($actor !== null && $locked->assignee_id === null) {
+            // Tiket yang sudah didisposisikan: penanggung jawabnya petugas unit
+            // yang menerima disposisi, bukan siapa pun yang pertama mengubah status.
+            if ($actor !== null && $locked->assignee_id === null && $locked->unit_id === null) {
                 $locked->assignee_id = $actor->id;
             }
 
             $locked->save();
+
+            if (! $status->isOpen()) {
+                DispositionService::closeActive($locked, $actor);
+            }
 
             TicketHistory::create([
                 'ticket_id' => $locked->id,

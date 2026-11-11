@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,7 +7,7 @@ import AdminLayout, { ImpactBadge, StatusBadge } from '@/layouts/admin-layout';
 import { formatDateTime, OPEN_STATUSES, slaDeadline, SOURCE_LABEL } from '@/lib/admin-format';
 import { cn } from '@/lib/utils';
 import { Link, useForm } from '@inertiajs/react';
-import { AlertTriangle, ArrowLeft, Check, Copy, Download, ExternalLink, Lock, MessageSquareText } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Check, Copy, Download, ExternalLink, Lock, MessageSquareText, Network, Undo2 } from 'lucide-react';
 import { type FormEvent, type ReactNode, useState } from 'react';
 
 interface Detail {
@@ -26,6 +27,8 @@ interface Detail {
     email: string | null;
     telepon: string | null;
     petugas: string | null;
+    /** Unit Kerja penangan hasil disposisi. */
+    unit_penangan?: string | null;
     created_at: string | null;
     tenggat_sla: string | null;
     overdue: boolean;
@@ -45,9 +48,31 @@ interface Detail {
     tanggapan: { id: number; penulis: string; body: string; is_public: boolean; pada: string | null }[];
 }
 
+interface DisposisiItem {
+    id: number;
+    unit: string | null;
+    status: string;
+    status_label: string;
+    aktif: boolean;
+    catatan: string | null;
+    tenggat: string | null;
+    oleh: string | null;
+    pada: string | null;
+    ditutup_oleh: string | null;
+    ditutup_pada: string | null;
+    alasan: string | null;
+}
+
+interface Disposisi {
+    boleh_ubah: boolean;
+    unit_options: { id: number; name: string; depth: number }[];
+    riwayat: DisposisiItem[];
+}
+
 interface Props {
     ticket: Detail;
     statuses: Record<string, string>;
+    disposisi: Disposisi;
 }
 
 const VISIBILITY_LABEL: Record<string, string> = {
@@ -66,7 +91,7 @@ function isHttpUrl(value: string): boolean {
  * laporan, tanggapan & riwayat di kiri; tindak lanjut dan pelapor di panel
  * kanan yang menempel saat digulir (layar lebar).
  */
-export default function TiketDetail({ ticket, statuses }: Props) {
+export default function TiketDetail({ ticket, statuses, disposisi }: Props) {
     const transisi = ticket.transisi ?? [];
     const statusForm = useForm({ status: '', note: '' });
     const replyForm = useForm({ body: '', is_public: true as boolean });
@@ -128,6 +153,7 @@ export default function TiketDetail({ ticket, statuses }: Props) {
                     ) : (
                         <span className="font-semibold text-[var(--adm-warning)]">Belum ditugaskan</span>
                     )}
+                    {ticket.unit_penangan && <span className="mt-0.5 block text-xs text-[var(--adm-text-3)]">{ticket.unit_penangan}</span>}
                 </Summary>
             </dl>
 
@@ -288,6 +314,13 @@ export default function TiketDetail({ ticket, statuses }: Props) {
 
                 {/* Kanan: tindak lanjut & pelapor (menempel di layar lebar) */}
                 <aside className="space-y-6 lg:sticky lg:top-[88px] lg:max-h-[calc(100dvh-112px)] lg:overflow-y-auto lg:pr-1">
+                    <DisposisiPanel
+                        nomor={ticket.nomor}
+                        terbuka={OPEN_STATUSES.includes(ticket.status)}
+                        tenggatSla={ticket.tenggat_sla}
+                        disposisi={disposisi}
+                    />
+
                     <Panel title="Tindak lanjut">
                         {transisi.length === 0 ? (
                             <p className="text-sm text-[var(--adm-text-2)]">Tidak ada perubahan status yang diizinkan dari status saat ini.</p>
@@ -352,6 +385,221 @@ export default function TiketDetail({ ticket, statuses }: Props) {
                 </aside>
             </div>
         </AdminLayout>
+    );
+}
+
+/** Nilai awal input datetime-local (waktu lokal) dari ISO; kosong bila sudah lewat. */
+function toLocalInput(iso: string | null): string {
+    if (!iso) return '';
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime()) || date.getTime() <= Date.now()) return '';
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+/**
+ * Disposisi ke Unit Kerja (PRD-UNIT-KERJA F2). Satu langkah berikutnya:
+ * belum didisposisi → formulir; sudah → unit aktif + Alihkan / Tarik.
+ * Hanya Super Admin yang mengubah; peran lain melihat unitnya saja.
+ */
+function DisposisiPanel({
+    nomor,
+    terbuka,
+    tenggatSla,
+    disposisi,
+}: {
+    nomor: string;
+    terbuka: boolean;
+    tenggatSla: string | null;
+    disposisi: Disposisi;
+}) {
+    const aktif = disposisi.riwayat.find((d) => d.aktif) ?? null;
+    const lampau = disposisi.riwayat.filter((d) => !d.aktif);
+    const [mode, setMode] = useState<'lihat' | 'alihkan' | 'tarik'>('lihat');
+    const form = useForm({ unit_id: '', catatan: '', tenggat: toLocalInput(tenggatSla) });
+    const tarik = useForm({ alasan: '' });
+
+    const submit = (e: FormEvent) => {
+        e.preventDefault();
+        form.transform((d) => ({ ...d, unit_id: Number(d.unit_id), tenggat: d.tenggat ? new Date(d.tenggat).toISOString() : null }));
+        form.post(`/admin/tiket/${nomor}/disposisi`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                form.reset('unit_id', 'catatan');
+                setMode('lihat');
+            },
+        });
+    };
+
+    const submitTarik = (e: FormEvent) => {
+        e.preventDefault();
+        tarik.delete(`/admin/tiket/${nomor}/disposisi`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                tarik.reset();
+                setMode('lihat');
+            },
+        });
+    };
+
+    const showForm = disposisi.boleh_ubah && terbuka && (aktif === null || mode === 'alihkan');
+
+    return (
+        <Panel title="Disposisi unit">
+            {aktif ? (
+                <div className="space-y-2">
+                    <div className="flex items-start gap-2.5">
+                        <Network className="mt-0.5 h-4 w-4 shrink-0 text-[var(--acd-link,var(--adm-primary))]" aria-hidden="true" />
+                        <div className="min-w-0">
+                            <p className="font-semibold text-[var(--adm-text)]">{aktif.unit}</p>
+                            <p className="text-xs text-[var(--adm-text-2)]">
+                                {aktif.status_label}
+                                {aktif.tenggat && <> · tenggat {formatDateTime(aktif.tenggat)}</>}
+                            </p>
+                        </div>
+                    </div>
+                    {aktif.catatan && (
+                        <p className="rounded-lg bg-[var(--adm-surface-2)] px-3 py-2 text-sm whitespace-pre-line text-[var(--adm-text)]">
+                            {aktif.catatan}
+                        </p>
+                    )}
+                    <p className="text-xs text-[var(--adm-text-3)]">
+                        Oleh {aktif.oleh ?? '—'} · {formatDateTime(aktif.pada)}
+                    </p>
+                    {disposisi.boleh_ubah && terbuka && mode === 'lihat' && (
+                        <div className="flex gap-2 pt-1">
+                            <Button type="button" variant="outline" size="sm" className="h-9 flex-1" onClick={() => setMode('alihkan')}>
+                                Alihkan
+                            </Button>
+                            <Button type="button" variant="outline" size="sm" className="h-9 flex-1" onClick={() => setMode('tarik')}>
+                                <Undo2 className="h-3.5 w-3.5" aria-hidden="true" /> Tarik
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                !showForm && (
+                    <p className="text-sm text-[var(--adm-text-2)]">
+                        {terbuka ? 'Belum didisposisikan ke unit kerja.' : 'Tiket tidak didisposisikan ke unit kerja.'}
+                    </p>
+                )
+            )}
+
+            {mode === 'tarik' && aktif && (
+                <form onSubmit={submitTarik} className="mt-4 space-y-3 border-t border-[var(--adm-border)] pt-4">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="alasan-tarik" className="text-[13px] font-semibold text-[var(--adm-text)]">
+                            Alasan menarik (opsional)
+                        </Label>
+                        <Textarea id="alasan-tarik" rows={2} value={tarik.data.alasan} onChange={(e) => tarik.setData('alasan', e.target.value)} />
+                    </div>
+                    <div className="flex gap-2">
+                        <Button type="button" variant="outline" className="flex-1" onClick={() => setMode('lihat')}>
+                            Batal
+                        </Button>
+                        <Button type="submit" className="flex-1" disabled={tarik.processing}>
+                            Tarik disposisi
+                        </Button>
+                    </div>
+                </form>
+            )}
+
+            {showForm && (
+                <form onSubmit={submit} className={cn('space-y-4', aktif && 'mt-4 border-t border-[var(--adm-border)] pt-4')}>
+                    {disposisi.unit_options.length === 0 ? (
+                        <p className="text-sm text-[var(--adm-text-2)]">
+                            Belum ada unit kerja aktif.{' '}
+                            <Link href="/admin/unit-kerja" className="font-semibold text-[var(--acd-link,var(--adm-primary))] hover:underline">
+                                Tambah unit
+                            </Link>
+                        </p>
+                    ) : (
+                        <>
+                            <div className="space-y-1.5">
+                                <Label className="text-[13px] font-semibold text-[var(--adm-text)]">{aktif ? 'Alihkan ke unit' : 'Unit kerja'}</Label>
+                                <Select value={form.data.unit_id} onValueChange={(v) => form.setData('unit_id', v)}>
+                                    <SelectTrigger aria-label="Unit kerja" aria-invalid={Boolean(form.errors.unit_id)}>
+                                        <SelectValue placeholder="Pilih unit" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {disposisi.unit_options.map((u) => (
+                                            <SelectItem key={u.id} value={String(u.id)}>
+                                                {'\u00a0\u00a0'.repeat(u.depth)}
+                                                {u.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {form.errors.unit_id && <p className="text-xs font-semibold text-[var(--adm-danger)]">{form.errors.unit_id}</p>}
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="tenggat-disposisi" className="text-[13px] font-semibold text-[var(--adm-text)]">
+                                    Tenggat
+                                </Label>
+                                <Input
+                                    id="tenggat-disposisi"
+                                    type="datetime-local"
+                                    value={form.data.tenggat}
+                                    onChange={(e) => form.setData('tenggat', e.target.value)}
+                                />
+                                {form.errors.tenggat ? (
+                                    <p className="text-xs font-semibold text-[var(--adm-danger)]">{form.errors.tenggat}</p>
+                                ) : (
+                                    <p className="text-xs text-[var(--adm-text-3)]">
+                                        {toLocalInput(tenggatSla)
+                                            ? 'Terisi tenggat SLA tiket. Boleh diubah atau dikosongkan.'
+                                            : tenggatSla
+                                              ? 'Tenggat SLA tiket sudah lewat. Isi tenggat baru untuk unit bila perlu.'
+                                              : 'Opsional.'}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="catatan-disposisi" className="text-[13px] font-semibold text-[var(--adm-text)]">
+                                    Instruksi untuk unit (opsional)
+                                </Label>
+                                <Textarea
+                                    id="catatan-disposisi"
+                                    rows={3}
+                                    value={form.data.catatan}
+                                    onChange={(e) => form.setData('catatan', e.target.value)}
+                                    placeholder="Mis. mohon dicek status sertifikat di lokasi SP 2"
+                                />
+                            </div>
+                            <div className="flex gap-2">
+                                {aktif && (
+                                    <Button type="button" variant="outline" className="flex-1" onClick={() => setMode('lihat')}>
+                                        Batal
+                                    </Button>
+                                )}
+                                <Button type="submit" className="flex-1" disabled={form.processing || !form.data.unit_id}>
+                                    {aktif ? 'Alihkan' : 'Disposisikan'}
+                                </Button>
+                            </div>
+                        </>
+                    )}
+                </form>
+            )}
+
+            {lampau.length > 0 && (
+                <details className="mt-4 border-t border-[var(--adm-border)] pt-3">
+                    <summary className="cursor-pointer text-xs font-semibold text-[var(--adm-text-2)]">Riwayat disposisi ({lampau.length})</summary>
+                    <ol className="mt-2 space-y-2">
+                        {lampau.map((d) => (
+                            <li key={d.id} className="text-xs text-[var(--adm-text-2)]">
+                                <span className="font-semibold text-[var(--adm-text)]">{d.unit}</span> · {d.status_label}
+                                <span className="block text-[var(--adm-text-3)]">
+                                    {formatDateTime(d.pada)}
+                                    {d.ditutup_pada && <> → {formatDateTime(d.ditutup_pada)}</>}
+                                    {d.ditutup_oleh && <> oleh {d.ditutup_oleh}</>}
+                                </span>
+                                {d.alasan && <span className="block italic">“{d.alasan}”</span>}
+                            </li>
+                        ))}
+                    </ol>
+                </details>
+            )}
+        </Panel>
     );
 }
 

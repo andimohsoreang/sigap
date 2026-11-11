@@ -6,6 +6,7 @@ use App\Enums\TicketImpact;
 use App\Enums\TicketStatus;
 use App\Models\Category;
 use App\Models\Region;
+use App\Models\Unit;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -16,7 +17,8 @@ use Illuminate\Http\Request;
  * Parameter query: status, region_id, provinsi (provinsi pengaduan),
  * category_id, impact, q, periode
  * (`YYYY-MM` atau `semua`), kanal (kunci {@see TicketIntake::KANAL}),
- * petugas (id petugas atau `none`), ews (`1` = lewat tenggat SLA).
+ * petugas (id petugas atau `none`), unit (id unit atau `none` = belum
+ * didisposisi), ews (`1` = lewat tenggat SLA).
  */
 final class TicketFilters
 {
@@ -81,6 +83,11 @@ final class TicketFilters
                 ? $query->whereNull('assignee_id')
                 : $query->where('assignee_id', $request->integer('petugas'));
         }
+        if ($request->filled('unit')) {
+            $request->string('unit')->toString() === 'none'
+                ? $query->whereNull('unit_id')
+                : $query->where('unit_id', $request->integer('unit'));
+        }
         if ($request->boolean('ews')) {
             $query->whereIn('status', self::openStatuses())
                 ->whereNotNull('sla_due_at')
@@ -106,6 +113,7 @@ final class TicketFilters
             'impact' => $request->string('impact')->toString(),
             'kanal' => $request->string('kanal')->toString(),
             'petugas' => $request->string('petugas')->toString(),
+            'unit' => $request->string('unit')->toString(),
             'ews' => $request->boolean('ews') ? '1' : '',
             'periode' => $periode,
             'sort' => $request->string('sort')->toString(),
@@ -147,6 +155,11 @@ final class TicketFilters
                 ? 'Belum ditugaskan'
                 : (User::query()->whereKey($request->integer('petugas'))->value('name') ?? '—');
             $chips[] = ['key' => 'petugas', 'label' => 'Petugas: '.$name];
+        }
+        if ($request->filled('unit')) {
+            $chips[] = ['key' => 'unit', 'label' => $request->string('unit')->toString() === 'none'
+                ? 'Belum didisposisi'
+                : 'Unit: '.(Unit::query()->whereKey($request->integer('unit'))->value('name') ?? '—')];
         }
         if ($request->boolean('ews')) {
             $chips[] = ['key' => 'ews', 'label' => 'Lewat tenggat SLA'];

@@ -20,6 +20,7 @@ use App\Models\Referral;
 use App\Models\Region;
 use App\Models\Setting;
 use App\Models\Ticket;
+use App\Models\TicketDisposition;
 use App\Models\Unit;
 use App\Models\User;
 use App\Modules\Assistant\Assistant;
@@ -80,7 +81,7 @@ class AdminController extends Controller
 
         // Daftar tiket: cakupan peran + periode + seluruh saringan tabel.
         $query = $this->scopedTickets(Ticket::query())
-            ->with(['category', 'region', 'channel', 'assignee']);
+            ->with(['category', 'region', 'channel', 'assignee', 'unit:id,name,short_name']);
 
         TicketFilters::apply($query, $request, $periode);
 
@@ -128,7 +129,7 @@ class AdminController extends Controller
 
         $query = $this->scopedTickets(Ticket::query())
             ->public()
-            ->with(['category', 'region', 'channel', 'assignee']);
+            ->with(['category', 'region', 'channel', 'assignee', 'unit:id,name,short_name']);
 
         // Periode opsional (mis. dari klik sel Matriks Rekapitulasi).
         $periode = TicketFilters::periode($request);
@@ -165,6 +166,7 @@ class AdminController extends Controller
             'aktif' => $base()->whereIn('status', $open)->count(),
             'ews' => $base()->whereIn('status', $open)->whereNotNull('sla_due_at')->where('sla_due_at', '<', now())->count(),
             'belum' => $base()->whereIn('status', $open)->whereNull('assignee_id')->count(),
+            'belum_disposisi' => $base()->whereIn('status', $open)->whereNull('unit_id')->count(),
             'selesai' => $base()->where('status', TicketStatus::Selesai->value)->count(),
         ];
     }
@@ -173,11 +175,31 @@ class AdminController extends Controller
     {
         $this->authorize('view', $ticket);
 
-        $ticket->load(['category', 'region', 'channel', 'assignee', 'histories.actor', 'replies.author']);
+        $ticket->load(['category', 'region', 'channel', 'assignee', 'unit', 'histories.actor', 'replies.author', 'dispositions.unit', 'dispositions.assigner', 'dispositions.closer']);
+        $canDispose = request()->user()->isSuperAdmin();
 
         return Inertia::render('admin/tiket-detail', [
             'ticket' => $this->ticketDetail($ticket),
             'statuses' => collect(TicketStatus::cases())->mapWithKeys(fn (TicketStatus $s) => [$s->value => $s->label()]),
+            // Disposisi ke Unit Kerja (PRD-UNIT-KERJA F2): hanya Super Admin yang mengubah.
+            'disposisi' => [
+                'boleh_ubah' => $canDispose,
+                'unit_options' => $canDispose ? Unit::activeTree() : [],
+                'riwayat' => $ticket->dispositions->map(fn (TicketDisposition $d) => [
+                    'id' => $d->id,
+                    'unit' => $d->unit?->name,
+                    'status' => $d->status,
+                    'status_label' => $d->label(),
+                    'aktif' => $d->isActive(),
+                    'catatan' => $d->note,
+                    'tenggat' => $d->due_at?->toIso8601String(),
+                    'oleh' => $d->assigner?->name,
+                    'pada' => $d->created_at?->toIso8601String(),
+                    'ditutup_oleh' => $d->closer?->name,
+                    'ditutup_pada' => $d->closed_at?->toIso8601String(),
+                    'alasan' => $d->return_reason,
+                ])->values(),
+            ],
         ]);
     }
 
@@ -235,7 +257,7 @@ class AdminController extends Controller
     {
         $this->authorize('viewInternal', Ticket::class);
 
-        $query = $this->scopedTickets(Ticket::query())->internal()->with(['category', 'assignee:id,name']);
+        $query = $this->scopedTickets(Ticket::query())->internal()->with(['category', 'assignee:id,name', 'unit:id,name,short_name']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
@@ -1139,6 +1161,7 @@ class AdminController extends Controller
             'kawasan' => $t->wilayahLabel(),
             'provinsi' => $t->province,
             'petugas' => $t->relationLoaded('assignee') ? $t->assignee?->name : null,
+            'unit_penangan' => $t->relationLoaded('unit') ? $t->unit?->displayName() : null,
             'is_internal' => (bool) $t->is_internal,
             'created_at' => $t->created_at?->toIso8601String(),
             'tenggat_sla' => $t->sla_due_at?->toIso8601String(),

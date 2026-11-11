@@ -24,6 +24,8 @@ interface TicketData {
     nik?: string | null;
     /** Selalu null di jalur publik — baris disembunyikan. */
     petugas?: string | null;
+    /** Unit Kerja penangan hasil disposisi (nama unit, bukan nama petugas). */
+    unit_penangan?: string | null;
     created_at: string | null;
     tenggat_sla: string | null;
     riwayat: { dari: string | null; ke: string; pada: string | null }[];
@@ -234,6 +236,7 @@ function StatusCard({ data, onSurvey }: { data: TicketData; onSurvey: () => void
         ['Diajukan', formatDateTime(data.created_at)],
         ['Tenggat SLA', formatDateTime(data.tenggat_sla)],
         ...(data.pelapor ? ([['Pelapor', data.pelapor]] as [string, string][]) : []),
+        ...(data.unit_penangan ? ([['Ditangani oleh', data.unit_penangan]] as [string, string][]) : []),
         ...(data.petugas ? ([['Petugas', data.petugas]] as [string, string][]) : []),
     ];
 

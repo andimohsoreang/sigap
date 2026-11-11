@@ -975,6 +975,7 @@ components:
         kawasan: { oneOf: [{ type: string }, { type: 'null' }] }
         kanal: { oneOf: [{ type: string }, { type: 'null' }] }
         petugas: { type: 'null', description: Selalu null di jalur publik }
+        unit_penangan: { oneOf: [{ type: string }, { type: 'null' }], example: "Biro Hukum", description: "Nama Unit Kerja hasil disposisi; null bila belum didisposisi" }
         pelapor: { type: string, example: "B*** S***", description: "Nama tersamar, atau \"Anonim\"" }
         nik: { type: 'null', description: Selalu null di jalur publik }
         created_at: { type: string, format: date-time }

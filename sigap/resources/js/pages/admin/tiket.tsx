@@ -1,4 +1,5 @@
-import { Link } from '@inertiajs/react';
+import { type SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
 import { AlertTriangle, ChevronRight, FilePenLine, X } from 'lucide-react';
 
 import { DataTable, type DataTableColumn } from '@/components/sigap/data-table';
@@ -19,12 +20,13 @@ interface TicketRow {
     kategori: string | null;
     kawasan: string | null;
     petugas: string | null;
+    unit_penangan: string | null;
     created_at: string | null;
     tenggat_sla: string | null;
     overdue: boolean;
 }
 
-type TabKey = 'semua' | 'aktif' | 'ews' | 'belum' | 'selesai';
+type TabKey = 'semua' | 'aktif' | 'ews' | 'belum' | 'belum_disposisi' | 'selesai';
 
 interface Props {
     tickets: {
@@ -40,16 +42,20 @@ interface Props {
 }
 
 /** Tab cepat: saringan yang paling sering dipakai petugas saat memilah antrean. */
-const TABS: { key: TabKey; label: string; params: Record<string, string> }[] = [
+const TABS: { key: TabKey; label: string; params: Record<string, string>; superAdminOnly?: boolean }[] = [
     { key: 'aktif', label: 'Aktif', params: { status: 'aktif' } },
     { key: 'ews', label: 'Lewat SLA', params: { ews: '1' } },
+    { key: 'belum_disposisi', label: 'Belum didisposisi', params: { status: 'aktif', unit: 'none' }, superAdminOnly: true },
     { key: 'belum', label: 'Belum ditugaskan', params: { status: 'aktif', petugas: 'none' } },
     { key: 'selesai', label: 'Selesai', params: { status: 'selesai' } },
     { key: 'semua', label: 'Semua', params: {} },
 ];
-const TAB_KEYS = ['status', 'ews', 'petugas'];
+const TAB_KEYS = ['status', 'ews', 'petugas', 'unit'];
 
 export default function ManajemenTiket({ tickets, filters, chips, impacts, tab_counts: counts }: Props) {
+    const { auth } = usePage<SharedData>().props;
+    const isSuper = auth?.user?.role === 'super_admin';
+    const tabs = TABS.filter((t) => !t.superAdminOnly || isSuper);
     const url = (params: Record<string, string>) => {
         const q = new URLSearchParams(Object.entries(params).filter(([, v]) => v));
         return `/admin/tiket${q.toString() ? `?${q}` : ''}`;
@@ -59,7 +65,7 @@ export default function ManajemenTiket({ tickets, filters, chips, impacts, tab_c
     const tabUrl = (params: Record<string, string>) =>
         url({ ...Object.fromEntries(Object.entries(filters).filter(([k]) => !TAB_KEYS.includes(k) && k !== 'page')), ...params });
     const activeTab =
-        TABS.find((t) => TAB_KEYS.every((k) => (filters[k] ?? '') === (t.params[k] ?? '')))?.key ??
+        tabs.find((t) => TAB_KEYS.every((k) => (filters[k] ?? '') === (t.params[k] ?? '')))?.key ??
         (TAB_KEYS.some((k) => filters[k]) ? null : 'semua');
 
     const columns: DataTableColumn<TicketRow>[] = [
@@ -130,8 +136,14 @@ export default function ManajemenTiket({ tickets, filters, chips, impacts, tab_c
             accessorKey: 'petugas',
             header: 'Petugas',
             meta: { disableSorting: true },
-            cell: ({ getValue }) =>
-                getValue<string | null>() ?? <span className="text-xs font-medium whitespace-nowrap text-[var(--adm-warning)]">Belum ada</span>,
+            cell: ({ row }) => (
+                <span className="block">
+                    {row.original.petugas ?? <span className="text-xs font-medium whitespace-nowrap text-[var(--adm-warning)]">Belum ada</span>}
+                    {row.original.unit_penangan && (
+                        <span className="block text-xs whitespace-nowrap text-[var(--adm-text-3)]">{row.original.unit_penangan}</span>
+                    )}
+                </span>
+            ),
         },
         {
             id: 'aksi',
@@ -162,7 +174,7 @@ export default function ManajemenTiket({ tickets, filters, chips, impacts, tab_c
             }
         >
             <nav aria-label="Tampilan tiket" className="-mx-1 mb-4 flex gap-1 overflow-x-auto px-1 pb-1">
-                {TABS.map((t) => {
+                {tabs.map((t) => {
                     const active = activeTab === t.key;
                     const n = counts[t.key] ?? 0;
                     return (

@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\AktivasiAkunController;
 use App\Http\Controllers\Web\ChatController;
 use App\Http\Controllers\Web\ContactCenterController;
 use App\Http\Controllers\Web\DaftarController;
+use App\Http\Controllers\Web\DispositionController;
 use App\Http\Controllers\Web\KnowledgeController;
 use App\Http\Controllers\Web\KnowledgeDocumentController;
 use App\Http\Controllers\Web\KnowledgeSourceController;
@@ -216,6 +217,9 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
         Route::get('/unit-kerja', [UnitController::class, 'index'])->name('admin.unit');
         Route::post('/unit-kerja', [UnitController::class, 'store'])->name('admin.unit.store');
         Route::put('/unit-kerja/{unit}', [UnitController::class, 'update'])->whereNumber('unit')->name('admin.unit.update');
+        // Disposisi tiket ke unit (PRD-UNIT-KERJA F2).
+        Route::post('/tiket/{ticket:ticket_no}/disposisi', [DispositionController::class, 'store'])->name('admin.tiket.disposisi');
+        Route::delete('/tiket/{ticket:ticket_no}/disposisi', [DispositionController::class, 'destroy'])->name('admin.tiket.disposisi.tarik');
         Route::get('/log-aktivitas', [AdminController::class, 'activityLog'])->name('admin.log');
         Route::get('/kesehatan-ai', AiHealthController::class)->name('admin.kesehatan-ai');
     });
