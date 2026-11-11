@@ -39,7 +39,8 @@ class UnitKerjaTest extends TestCase
         $biroHukum = Unit::query()->where('code', 'SETJEN-HUKUM')->firstOrFail();
         $this->assertSame('Biro Hukum', $biroHukum->name);
         $this->assertSame('SETJEN', $biroHukum->parent->code);
-        $this->assertSame('PUS-BANGSDM', Unit::query()->where('code', 'UPT-BPPMT-DENPASAR')->firstOrFail()->parent->code);
+        $this->assertSame(0, Unit::query()->where('code', 'PUS-BANGSDM')->firstOrFail()->children()->count());
+        $this->assertFalse(Unit::query()->where('code', 'like', 'UPT-%')->exists());
 
         Unit::query()->where('code', 'SETJEN-HUKUM')->update(['name' => 'Biro Hukum (disunting)']);
         $this->seed(UnitSeeder::class);
@@ -75,7 +76,7 @@ class UnitKerjaTest extends TestCase
                 ->where('units.1.depth', 1)
                 ->where('units.1.petugas', 1)
                 ->where('units.2.code', 'ITJEN')
-                ->has('levels', 4));
+                ->has('levels', 3));
     }
 
     public function test_super_admin_creates_updates_and_deactivates_unit_with_audit(): void
@@ -109,6 +110,58 @@ class UnitKerjaTest extends TestCase
         $this->assertTrue(ActivityLog::query()->where('action', 'unit.deactivated')->exists());
     }
 
+    public function test_upt_is_no_longer_a_valid_level(): void
+    {
+        $this->actingAs($this->superAdmin())
+            ->post('/admin/unit-kerja', ['code' => 'UPT-X', 'name' => 'Balai X', 'level' => 'upt'])
+            ->assertSessionHasErrors('level');
+        $this->assertArrayNotHasKey('upt', Unit::LEVELS);
+    }
+
+    public function test_super_admin_deletes_unused_unit_with_audit(): void
+    {
+        $unit = Unit::create(['code' => 'LAMA', 'name' => 'Unit Lama', 'level' => Unit::LEVEL_OTHER]);
+
+        $this->actingAs($this->superAdmin())->delete("/admin/unit-kerja/{$unit->id}")
+            ->assertRedirect()->assertSessionHas('success');
+
+        $this->assertNull($unit->fresh());
+        $this->assertTrue(ActivityLog::query()->where('action', 'unit.deleted')->exists());
+    }
+
+    public function test_unit_in_use_cannot_be_deleted(): void
+    {
+        $admin = $this->superAdmin();
+        $induk = Unit::create(['code' => 'INDUK', 'name' => 'Induk', 'level' => Unit::LEVEL_ESELON_1]);
+        Unit::create(['code' => 'INDUK-ANAK', 'name' => 'Anak', 'level' => Unit::LEVEL_ESELON_2, 'parent_id' => $induk->id]);
+        $berpetugas = Unit::create(['code' => 'BERPETUGAS', 'name' => 'Berpetugas', 'level' => Unit::LEVEL_OTHER]);
+        User::factory()->admin(UserRole::AdminKawasan)->create(['unit_id' => $berpetugas->id]);
+        $bertiket = Unit::create(['code' => 'BERTIKET', 'name' => 'Bertiket', 'level' => Unit::LEVEL_OTHER]);
+        Ticket::factory()->create(['unit_id' => $bertiket->id])->delete();
+
+        foreach ([$induk, $berpetugas, $bertiket] as $unit) {
+            $this->actingAs($admin)->delete("/admin/unit-kerja/{$unit->id}")->assertSessionHas('error');
+            $this->assertNotNull($unit->fresh(), "{$unit->code} tidak boleh terhapus.");
+        }
+
+        $this->actingAs($admin)->get('/admin/unit-kerja')->assertInertia(fn (Assert $page) => $page
+            ->where('units.0.code', 'BERPETUGAS')
+            ->where('units.0.blokir_hapus', 'masih ada petugas di unit ini')
+            ->where('units.2.code', 'INDUK')
+            ->where('units.2.blokir_hapus', 'masih punya sub-unit')
+            ->where('units.3.code', 'INDUK-ANAK')
+            ->where('units.3.blokir_hapus', null));
+    }
+
+    public function test_only_super_admin_can_delete_units(): void
+    {
+        $unit = Unit::create(['code' => 'LAMA', 'name' => 'Unit Lama', 'level' => Unit::LEVEL_OTHER]);
+
+        $this->actingAs(User::factory()->admin(UserRole::AdminKawasan)->create())
+            ->delete("/admin/unit-kerja/{$unit->id}")->assertForbidden();
+        $this->assertNotNull($unit->fresh());
+    }
+
     public function test_code_must_be_unique_and_well_formed(): void
     {
         $admin = $this->superAdmin();
@@ -126,7 +179,7 @@ class UnitKerjaTest extends TestCase
         $admin = $this->superAdmin();
         $setjen = Unit::create(['code' => 'SETJEN', 'name' => 'Sekretariat Jenderal', 'level' => Unit::LEVEL_ESELON_1]);
         $pusbang = Unit::create(['code' => 'SETJEN-PUSBANGSDM', 'name' => 'Pusat Pengembangan SDM', 'level' => Unit::LEVEL_ESELON_2, 'parent_id' => $setjen->id]);
-        $balai = Unit::create(['code' => 'UPT-YOGYA', 'name' => 'Balai Yogyakarta', 'level' => Unit::LEVEL_UPT, 'parent_id' => $pusbang->id]);
+        $balai = Unit::create(['code' => 'UPT-YOGYA', 'name' => 'Balai Yogyakarta', 'level' => Unit::LEVEL_OTHER, 'parent_id' => $pusbang->id]);
         $payload = ['code' => 'SETJEN', 'name' => 'Sekretariat Jenderal', 'level' => Unit::LEVEL_ESELON_1];
 
         $this->actingAs($admin)->put("/admin/unit-kerja/{$setjen->id}", $payload + ['parent_id' => $setjen->id])->assertSessionHasErrors('parent_id');

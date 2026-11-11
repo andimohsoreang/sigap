@@ -12,7 +12,7 @@ use Illuminate\Database\Seeder;
  * Transmigrasi 2025–2029, Tabel 16 "Detail Struktur Organisasi Kementerian
  * Transmigrasi" (hal. 79–81), yang merujuk Perpres 172/2024, dan bagan
  * struktur organisasi kementerian (tanpa nama pejabat). Staf Ahli Menteri
- * tidak dimasukkan karena tidak menangani pengaduan; unit di luar tabel itu
+ * dan Balai (UPT) tidak dimasukkan karena tidak menangani pengaduan; unit di luar tabel itu
  * ditambahkan Super Admin lewat halaman Unit Kerja.
  *
  * Aman dijalankan ulang: unit yang kodenya sudah ada tidak disentuh, sehingga
@@ -103,18 +103,7 @@ class UnitSeeder extends Seeder
             ],
             // Tiga Pusat bergaris komando langsung ke Menteri; ke Sekjen hanya pembinaan administratif.
             ['code' => 'PUS-STRAJAK', 'name' => 'Pusat Strategi Kebijakan Transmigrasi', 'short_name' => 'Pusstrajak', 'level' => $e2],
-            [
-                'code' => 'PUS-BANGSDM',
-                'name' => 'Pusat Pengembangan Sumber Daya Manusia Transmigrasi',
-                'short_name' => 'Pusbang SDM',
-                'level' => $e2,
-                'children' => [
-                    ['code' => 'UPT-BBPPMT-YOGYA', 'name' => 'Balai Besar Pelatihan dan Pemberdayaan Masyarakat Transmigrasi Yogyakarta', 'short_name' => 'BBPPMT Yogyakarta', 'level' => Unit::LEVEL_UPT],
-                    ['code' => 'UPT-BPPMT-PEKANBARU', 'name' => 'Balai Pelatihan dan Pemberdayaan Masyarakat Transmigrasi Pekanbaru', 'short_name' => 'BPPMT Pekanbaru', 'level' => Unit::LEVEL_UPT],
-                    ['code' => 'UPT-BPPMT-BANJARMASIN', 'name' => 'Balai Pelatihan dan Pemberdayaan Masyarakat Transmigrasi Banjarmasin', 'short_name' => 'BPPMT Banjarmasin', 'level' => Unit::LEVEL_UPT],
-                    ['code' => 'UPT-BPPMT-DENPASAR', 'name' => 'Balai Pelatihan dan Pemberdayaan Masyarakat Transmigrasi Denpasar', 'short_name' => 'BPPMT Denpasar', 'level' => Unit::LEVEL_UPT],
-                ],
-            ],
+            ['code' => 'PUS-BANGSDM', 'name' => 'Pusat Pengembangan Sumber Daya Manusia Transmigrasi', 'short_name' => 'Pusbang SDM', 'level' => $e2],
             ['code' => 'PUS-DATIN', 'name' => 'Pusat Data dan Informasi Transmigrasi', 'short_name' => 'Pusdatin', 'level' => $e2],
         ];
     }

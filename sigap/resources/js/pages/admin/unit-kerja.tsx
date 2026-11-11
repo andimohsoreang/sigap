@@ -1,5 +1,5 @@
-import { useForm } from '@inertiajs/react';
-import { Building2, CornerDownRight, Network, Pencil, Plus, Search, Users } from 'lucide-react';
+import { router, useForm } from '@inertiajs/react';
+import { Building2, CornerDownRight, Network, Pencil, Plus, Search, Trash2, Users } from 'lucide-react';
 import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,8 @@ interface Unit {
     depth: number;
     petugas: number;
     anak: number;
+    /** Alasan unit tidak boleh dihapus; null bila belum dirujuk apa pun. */
+    blokir_hapus: string | null;
 }
 
 interface Props {
@@ -45,7 +47,7 @@ const EMPTY = {
 };
 
 /** Level anak yang lazim untuk induk tertentu, agar isian awal tidak perlu diubah. */
-const CHILD_LEVEL: Record<string, string> = { eselon_1: 'eselon_2', eselon_2: 'upt' };
+const CHILD_LEVEL: Record<string, string> = { eselon_1: 'eselon_2' };
 
 export default function UnitKerja({ units, levels }: Props) {
     const [editing, setEditing] = useState<Unit | null>(null);
@@ -196,7 +198,8 @@ export default function UnitKerja({ units, levels }: Props) {
                             {editing ? `Ubah ${editing.short_name ?? editing.name}` : 'Unit baru'}
                         </DialogTitle>
                         <DialogDescription className="text-[13px] text-[var(--adm-text-2)]">
-                            Unit tidak dihapus. Bila sudah tidak dipakai, nonaktifkan agar riwayat tiket tetap merujuk unitnya.
+                            Unit yang sudah punya sub-unit, petugas, atau tiket tidak bisa dihapus. Nonaktifkan saja agar riwayat tiket tetap merujuk
+                            unitnya.
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
@@ -322,6 +325,8 @@ function UnitRow({
     onAddChild: (u: Unit) => void;
     isRoot?: boolean;
 }) {
+    const [confirming, setConfirming] = useState(false);
+
     return (
         <div
             className={cn(
@@ -359,7 +364,7 @@ function UnitRow({
                 ) : (
                     <Pill tone="neutral">Nonaktif</Pill>
                 )}
-                {unit.is_active && unit.level !== 'upt' && (
+                {unit.is_active && (
                     <Button
                         size="sm"
                         variant="outline"
@@ -380,6 +385,35 @@ function UnitRow({
                 >
                     <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                 </Button>
+                {confirming ? (
+                    <span className="flex items-center gap-2 text-xs" role={unit.blokir_hapus ? 'alert' : undefined}>
+                        {unit.blokir_hapus ? (
+                            <span className="text-[var(--adm-text-2)]">Tidak bisa dihapus: {unit.blokir_hapus}.</span>
+                        ) : (
+                            <button
+                                type="button"
+                                className="font-bold text-[var(--adm-danger)] hover:underline"
+                                onClick={() => router.delete(`/admin/unit-kerja/${unit.id}`, { preserveScroll: true })}
+                            >
+                                Yakin hapus
+                            </button>
+                        )}
+                        <button type="button" className="text-[var(--adm-text-2)] hover:underline" onClick={() => setConfirming(false)}>
+                            {unit.blokir_hapus ? 'Tutup' : 'Batal'}
+                        </button>
+                    </span>
+                ) : (
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 w-8 p-0 text-[var(--adm-danger)]"
+                        onClick={() => setConfirming(true)}
+                        aria-label={`Hapus ${unit.name}`}
+                        title="Hapus"
+                    >
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Button>
+                )}
             </div>
         </div>
     );

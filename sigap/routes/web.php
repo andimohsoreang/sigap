@@ -217,6 +217,7 @@ Route::middleware(['auth', 'role:admin_kawasan,super_admin'])->prefix('admin')->
         Route::get('/unit-kerja', [UnitController::class, 'index'])->name('admin.unit');
         Route::post('/unit-kerja', [UnitController::class, 'store'])->name('admin.unit.store');
         Route::put('/unit-kerja/{unit}', [UnitController::class, 'update'])->whereNumber('unit')->name('admin.unit.update');
+        Route::delete('/unit-kerja/{unit}', [UnitController::class, 'destroy'])->whereNumber('unit')->name('admin.unit.destroy');
         // Disposisi tiket ke unit (PRD-UNIT-KERJA F2).
         Route::post('/tiket/{ticket:ticket_no}/disposisi', [DispositionController::class, 'store'])->name('admin.tiket.disposisi');
         Route::delete('/tiket/{ticket:ticket_no}/disposisi', [DispositionController::class, 'destroy'])->name('admin.tiket.disposisi.tarik');

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Ticket;
+use App\Models\TicketDisposition;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\AuditService;
@@ -14,9 +16,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Master Unit Kerja (PRD-UNIT-KERJA F1) — Super Admin saja. Unit tidak
- * dihapus; unit yang tidak dipakai lagi dinonaktifkan agar riwayat tiket dan
- * akun petugas tetap merujuk unitnya.
+ * Master Unit Kerja (PRD-UNIT-KERJA F1) — Super Admin saja. Unit yang belum
+ * dipakai boleh dihapus; unit yang punya sub-unit, petugas, atau tiket hanya
+ * dinonaktifkan agar riwayat tiket dan akun petugas tetap merujuk unitnya.
  */
 class UnitController extends Controller
 {
@@ -33,8 +35,9 @@ class UnitController extends Controller
             ->get();
 
         $byParent = $units->groupBy(fn (Unit $u) => $u->parent_id ?? 0);
+        $blockers = $this->deleteBlockers();
         $rows = [];
-        $walk = function (int $parent, int $depth) use (&$walk, &$rows, $byParent): void {
+        $walk = function (int $parent, int $depth) use (&$walk, &$rows, $byParent, $blockers): void {
             foreach ($byParent[$parent] ?? [] as $unit) {
                 $rows[] = [
                     'id' => $unit->id,
@@ -49,6 +52,7 @@ class UnitController extends Controller
                     'depth' => $depth,
                     'petugas' => (int) $unit->petugas,
                     'anak' => count($byParent[$unit->id] ?? []),
+                    'blokir_hapus' => $blockers[$unit->id] ?? null,
                 ];
                 $walk($unit->id, $depth + 1);
             }
@@ -87,6 +91,44 @@ class UnitController extends Controller
         $this->audit->safe($action, null, "Unit kerja {$unit->name} diperbarui.", ['code' => $unit->code]);
 
         return back()->with('success', "Unit {$unit->displayName()} diperbarui.");
+    }
+
+    public function destroy(Unit $unit): RedirectResponse
+    {
+        $this->authorize('manageAdmins', User::class);
+
+        if ($reason = $this->deleteBlockers()[$unit->id] ?? null) {
+            return back()->with('error', "Unit {$unit->displayName()} tidak bisa dihapus: {$reason}. Nonaktifkan saja agar riwayatnya tetap utuh.");
+        }
+
+        $unit->delete();
+        $this->audit->safe('unit.deleted', null, "Unit kerja {$unit->name} dihapus.", ['code' => $unit->code]);
+
+        return back()->with('success', "Unit {$unit->displayName()} dihapus.");
+    }
+
+    /**
+     * Alasan unit tidak boleh dihapus, per id unit. Unit tanpa entri di sini
+     * belum dirujuk apa pun dan aman dihapus.
+     *
+     * @return array<int, string>
+     */
+    private function deleteBlockers(): array
+    {
+        $reasons = [];
+        $mark = function (iterable $ids, string $reason) use (&$reasons): void {
+            foreach ($ids as $id) {
+                $reasons[(int) $id] ??= $reason;
+            }
+        };
+
+        $mark(Unit::query()->whereNotNull('parent_id')->distinct()->pluck('parent_id'), 'masih punya sub-unit');
+        $mark(User::query()->whereNotNull('unit_id')->distinct()->pluck('unit_id'), 'masih ada petugas di unit ini');
+        $mark(Ticket::withTrashed()->whereNotNull('unit_id')->distinct()->pluck('unit_id'), 'sudah dipakai di tiket');
+        $mark(Ticket::withTrashed()->whereNotNull('reporter_unit_id')->distinct()->pluck('reporter_unit_id'), 'sudah dipakai di tiket');
+        $mark(TicketDisposition::query()->distinct()->pluck('unit_id'), 'sudah dipakai di tiket');
+
+        return $reasons;
     }
 
     /** @return array<string, mixed> */

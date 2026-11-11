@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Unit Kerja Kementerian Transmigrasi (PRD-UNIT-KERJA). Disusun induk–anak
- * (Eselon I → Eselon II → UPT). Tidak dihapus, hanya dinonaktifkan.
+ * (Eselon I → Eselon II). Unit yang belum dipakai boleh dihapus; yang sudah
+ * dipakai petugas atau tiket hanya dinonaktifkan.
  */
 class Unit extends Model
 {
@@ -17,14 +18,11 @@ class Unit extends Model
 
     public const LEVEL_ESELON_2 = 'eselon_2';
 
-    public const LEVEL_UPT = 'upt';
-
     public const LEVEL_OTHER = 'lainnya';
 
     public const LEVELS = [
         self::LEVEL_ESELON_1 => 'Eselon I',
         self::LEVEL_ESELON_2 => 'Eselon II',
-        self::LEVEL_UPT => 'UPT',
         self::LEVEL_OTHER => 'Lainnya',
     ];
 
