@@ -3,19 +3,26 @@ import {
     Activity,
     BarChart3,
     BookOpen,
+    Building2,
     CheckCircle2,
     ChevronLeft,
     ChevronRight,
     ClipboardList,
     FileImage,
     FilePen,
-    Gauge,
+    Globe,
     Inbox,
     LayoutDashboard,
+    Library,
     Lightbulb,
+    LogIn,
+    Map,
     MapPin,
     MessageSquare,
+    MessagesSquare,
+    Network,
     Radio,
+    ScrollText,
     Search,
     Settings,
     ShieldCheck,
@@ -23,6 +30,7 @@ import {
     Ticket,
     UserRound,
     Users,
+    Waypoints,
     X,
     Zap,
 } from 'lucide-react';
@@ -33,12 +41,10 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 /**
- * Halaman panduan lengkap Contact Center per-fitur: seluruh fitur untuk masyarakat
- * (beranda, katalog, peta, formulir + unggah bukti, lacak, survei, portal
- * warga, live chat) dan seluruh fitur admin (matriks, manajemen tiket,
- * tanggapan, status, tiket internal, input manual, chat, kawasan, kanal,
- * petugas, log, pengaturan). Setiap fitur dilengkapi tangkapan layar asli
- * aplikasi yang bisa diklik untuk diperbesar (lightbox + navigasi).
+ * Panduan lengkap Contact Center per fitur, untuk masyarakat dan petugas.
+ * Tangkapan layar di public/images/panduan dibuat ulang dari aplikasi oleh
+ * `npx playwright test -c playwright.panduan.config.ts` (tests/panduan) dengan
+ * data contoh; nama berkas di sini harus sama dengan di spesifikasi itu.
  */
 
 interface Shot {
@@ -57,80 +63,69 @@ interface Feature {
 }
 
 const IMG = '/images/panduan';
-const s = (file: string, alt: string, caption: string): Shot => ({ src: `${IMG}/${file}`, alt, caption });
+const s = (file: string, alt: string, caption: string): Shot => ({ src: `${IMG}/${file}.jpg`, alt, caption });
 
 const FITUR_WARGA: Feature[] = [
     {
         id: 'w-beranda',
         icon: LayoutDashboard,
-        title: 'Beranda & Informasi Publik',
+        title: 'Beranda',
         desc: (
             <>
-                Halaman awal Contact Center menampilkan statistik pengaduan, kanal layanan, dan pertanyaan umum. Dari beranda Anda bisa langsung
-                menuju <strong>Katalog Pengaduan</strong>, <strong>Peta Wilayah</strong>, <strong>Lacak Tiket</strong>, atau membuat laporan baru
-                lewat tombol aksi utama.
+                Halaman awal Contact Center. Dari sini Anda bisa <strong>mulai chat dengan TARA</strong>, melacak tiket, atau membuka menu{' '}
+                <strong>Katalog Pengaduan</strong>, <strong>Peta Wilayah</strong>, <strong>Data</strong>, dan <strong>Panduan</strong> di bagian atas.
+                Tombol TARA di pojok kanan bawah selalu tersedia di setiap halaman.
             </>
         ),
         tips: [
-            'Menu navigasi tersedia di bagian atas; versi mobile memakai menu hamburger.',
-            'Panduan ini juga terhubung dari menu navigasi & footer.',
+            'Tombol bulan di menu atas mengganti tampilan terang/gelap.',
+            'Tombol aksesibilitas di sisi kiri mengatur ukuran huruf, kontras, dan huruf ramah disleksia.',
         ],
-        shots: [
-            s('m01-beranda.jpeg', 'Beranda Contact Center', 'Beranda Contact Center: statistik, kanal layanan, dan akses cepat pembuatan laporan.'),
-        ],
+        shots: [s('w01-beranda', 'Beranda Contact Center', 'Beranda: mulai chat dengan TARA atau lacak tiket langsung dari halaman awal.')],
     },
     {
-        id: 'w-katalog',
-        icon: Inbox,
-        title: 'Katalog Pengaduan',
+        id: 'w-chat',
+        icon: MessageSquare,
+        title: 'Chat TARA',
         desc: (
             <>
-                Daftar seluruh kanal & kategori layanan pengaduan beserta kawasan cakupan. Gunakan katalog untuk mengetahui instansi mana yang
-                menangani jenis aduan Anda sebelum membuat tiket.
+                TARA adalah asisten Contact Center yang menjawab dari <strong>sumber resmi</strong> Kementerian Transmigrasi dan meneruskan Anda ke
+                petugas bila perlu. Isi <strong>nama</strong> dan <strong>provinsi asal</strong>, lalu tulis pertanyaan atau pilih topik seperti{' '}
+                <em>Lapor masalah</em> atau <em>Cek status tiket</em>. Bila urusan Anda perlu ditindaklanjuti, nomor tiketnya muncul di panel kanan.
             </>
         ),
-        shots: [s('m15-katalog.jpeg', 'Katalog pengaduan', 'Katalog pengaduan: daftar kanal, kategori, dan kawasan layanan.')],
-    },
-    {
-        id: 'w-peta',
-        icon: MapPin,
-        title: 'Peta Wilayah',
-        desc: (
-            <>
-                Peta interaktif sebaran kawasan transmigrasi dan titik pengaduan. Klik penanda pada peta untuk melihat ringkasan laporan per kawasan —
-                berguna memastikan wilayah Anda sudah tercakup layanan.
-            </>
-        ),
-        shots: [s('m16-peta.jpeg', 'Peta kawasan', 'Peta kawasan: sebaran wilayah dan titik pengaduan.')],
+        tips: [
+            'Jangan tulis NIK, nomor rekening, atau alamat lengkap di chat.',
+            'Petugas melayani Senin–Jumat 08.00–16.00 WIB; TARA aktif 24 jam.',
+            'Tombol Transkrip menyimpan salinan percakapan.',
+        ],
+        shots: [s('w02-chat-tara', 'Chat TARA', 'Chat TARA: kenalan singkat, lalu tanya atau lapor dalam satu percakapan.')],
     },
     {
         id: 'w-formulir',
         icon: FilePen,
-        title: 'Formulir Pengaduan & Unggah Bukti',
+        title: 'Formulir Pengaduan',
         desc: (
             <>
-                Inti layanan Contact Center: formulir pengaduan yang dapat diisi <strong>tanpa login</strong>. Alurnya terdiri dari empat bagian —
-                Data Pelapor, Detail Laporan, Privasi & Lampiran, lalu Pernyataan & Kirim. Ikuti urutan gambar berikut dari awal sampai selesai.
+                Formulir pengaduan bisa diisi <strong>tanpa masuk akun</strong>. Isiannya terbagi empat kartu: <strong>Data pelapor</strong>,{' '}
+                <strong>Isi laporan</strong>, <strong>Lokasi kejadian</strong>, serta <strong>Privasi & bukti</strong>, lalu centang pernyataan dan
+                kirim. Ikuti urutan gambar berikut.
             </>
         ),
         tips: [
-            'NIK wajib 16 digit; email & telepon opsional namun disarankan.',
-            'Uraian minimal 10 karakter — semakin rinci semakin cepat ditindaklanjuti.',
-            'Tombol GPS mengisi koordinat otomatis dari perangkat Anda.',
-            'Lampiran: JPG, PNG, atau PDF maksimal 5 MB.',
+            'NIK wajib 16 digit dan tidak pernah ditampilkan ke publik.',
+            'Uraian minimal 10 karakter. Tingkat dampak menentukan tenggat penanganan.',
+            'Provinsi wajib; tombol "Pakai lokasi saya" mengisi titik koordinat dari perangkat.',
+            'Privasi: Publik, Anonim (nama disembunyikan), atau Rahasia (identitas dan laporan tidak tampil ke publik).',
+            'Lampiran bukti: JPG, PNG, atau PDF maksimal 5 MB.',
         ],
         shots: [
-            s('m02-form-kosong.jpeg', 'Formulir pengaduan kosong', 'Langkah 1 — Formulir dalam keadaan kosong, siap diisi.'),
-            s('m03-data-pelapor.jpeg', 'Bagian data pelapor terisi', 'Langkah 2 — Isi NIK, nama lengkap, email, dan nomor telepon/WA.'),
-            s('m04-detail-laporan.jpeg', 'Bagian detail laporan', 'Langkah 3 — Judul, uraian, dan titik koordinat (manual atau tombol GPS).'),
-            s('m05-pilih-kawasan.jpeg', 'Dropdown pilihan kawasan', 'Langkah 4 — Pilih Lokasi Kawasan melalui dropdown bertingkat.'),
-            s('m04b-detail-terisi.jpeg', 'Detail laporan terisi lengkap', 'Langkah 5 — Kawasan, kategori, dan tingkat dampak sudah terpilih.'),
-            s(
-                'm06-privasi-lampiran.jpeg',
-                'Privasi dan lampiran terunggah',
-                'Langkah 6 — Pilih privasi (Publik/Anonim/Rahasia) lalu unggah berkas bukti.',
-            ),
-            s('m07-kirim.jpeg', 'Pernyataan dan tombol kirim', 'Langkah 7 — Centang pernyataan kebenaran data, tombol Kirim Pengaduan aktif.'),
+            s('w03-form', 'Halaman formulir pengaduan', 'Halaman formulir pengaduan masyarakat.'),
+            s('w04-form-pelapor', 'Kartu data pelapor terisi', 'Langkah 1 — Data pelapor: NIK, nama lengkap, email, dan nomor telepon/WA.'),
+            s('w05-form-laporan', 'Kartu isi laporan terisi', 'Langkah 2 — Isi laporan: judul, uraian, kategori, dan tingkat dampak.'),
+            s('w06-form-lokasi', 'Kartu lokasi kejadian terisi', 'Langkah 3 — Lokasi kejadian: provinsi, kabupaten/kawasan/desa, dan koordinat.'),
+            s('w07-form-privasi', 'Kartu privasi dan bukti terisi', 'Langkah 4 — Pilih privasi laporan dan lampirkan bukti.'),
+            s('w08-form-kirim', 'Pernyataan dan tombol kirim', 'Langkah 5 — Centang pernyataan, lalu tekan Kirim Pengaduan.'),
         ],
     },
     {
@@ -139,16 +134,21 @@ const FITUR_WARGA: Feature[] = [
         title: 'Nomor Tiket & Lacak Status',
         desc: (
             <>
-                Setelah terkirim Anda mendapat <strong>nomor tiket</strong> (format <code>TKT-YYMMDD-XXXXXX</code>, contoh: TKT-261012-7KQ4MZ; nomor
-                lama seperti TKT-15 tetap berlaku) dan diarahkan ke halaman lacak. Masukkan nomor itu kapan saja untuk melihat status terkini, detail
-                laporan, lampiran, serta <strong>riwayat penanganan</strong> dan tanggapan petugas.
+                Setelah terkirim, Anda langsung mendapat <strong>nomor tiket</strong> (format <code>TKT-YYMMDD-XXXXXX</code>) dan dibawa ke halaman{' '}
+                <strong>Lacak Tiket</strong>. Masukkan nomor itu kapan saja untuk melihat tahapan penanganan (Menunggu → Diverifikasi → Diproses →
+                Selesai), detail laporan, dan <strong>Riwayat Penanganan</strong> beserta tanggapan petugas.
             </>
         ),
-        tips: ['Simpan/screenshot nomor tiket segera setelah laporan terkirim.', 'Tanggapan berlabel publik juga muncul di riwayat ini.'],
+        tips: [
+            'Simpan nomor tiket segera setelah laporan terkirim.',
+            'Nomor format lama memerlukan kode akses 8 karakter yang dulu dikirimkan bersama nomornya.',
+            'Nama pelapor di halaman lacak selalu disamarkan.',
+        ],
         shots: [
-            s('m08-sukses.jpeg', 'Notifikasi tiket berhasil', 'Notifikasi sukses beserta nomor tiket baru.'),
-            s('m09-lacak.jpeg', 'Halaman lacak tiket', 'Halaman lacak: status, detail laporan, dan lampiran.'),
-            s('m09b-riwayat.jpeg', 'Riwayat penanganan tiket', 'Riwayat penanganan: setiap perubahan status & tanggapan tercatat.'),
+            s('w09-tiket-terbit', 'Tiket baru terbit', 'Tiket terbit: nomor tiket muncul dan status awal Menunggu.'),
+            s('w10-lacak', 'Halaman lacak tiket', 'Halaman Lacak Tiket: masukkan nomor tiket lalu tekan Cari.'),
+            s('w11-lacak-detail', 'Detail tiket di halaman lacak', 'Tahapan penanganan dan Riwayat Penanganan sebuah tiket.'),
+            s('w12-lacak-riwayat', 'Tanggapan dan riwayat tiket selesai', 'Detail laporan dan tanggapan petugas pada tiket yang sudah selesai.'),
         ],
     },
     {
@@ -157,41 +157,71 @@ const FITUR_WARGA: Feature[] = [
         title: 'Survei Kepuasan',
         desc: (
             <>
-                Bila status tiket menjadi <strong>Selesai</strong>, halaman lacak menampilkan tombol <strong>Isi Survei Kepuasan</strong>. Beri
-                penilaian bintang 1–5 beserta komentar; jawaban Anda dipakai untuk mengukur mutu layanan tiap kawasan.
+                Bila tiket <strong>Selesai</strong>, halaman lacak menampilkan tombol <strong>Isi Survei Kepuasan</strong>. Beri nilai 1–5 bintang dan
+                komentar bila mau. Penilaian Anda dipakai untuk mengukur mutu layanan Contact Center.
             </>
         ),
-        shots: [s('m13-survei.jpeg', 'Dialog survei kepuasan', 'Dialog survei kepuasan dengan penilaian bintang dan kolom komentar.')],
+        shots: [s('w13-survei', 'Dialog survei kepuasan', 'Survei kepuasan: pilih bintang, tulis komentar, lalu Kirim Penilaian.')],
+    },
+    {
+        id: 'w-akun',
+        icon: LogIn,
+        title: 'Masuk & Daftar Akun Warga',
+        desc: (
+            <>
+                Akun tidak wajib, tetapi memudahkan: semua pengaduan Anda tersimpan di satu tempat. Daftar di halaman{' '}
+                <strong>Daftar Akun Warga</strong> dengan NIK, nama, email, dan kata sandi, lalu buka tautan verifikasi di email. Setelah itu masuk
+                lewat halaman <strong>Masuk</strong> memakai NIK dan kata sandi. Petugas dan admin memakai halaman yang sama dengan username.
+            </>
+        ),
+        tips: ['Lupa kata sandi? Klik "Lupa kata sandi?" untuk menerima tautan atur ulang lewat email.'],
+        shots: [
+            s('w14-masuk', 'Halaman masuk', 'Masuk: NIK untuk warga, username untuk petugas dan admin.'),
+            s('w19-daftar', 'Halaman daftar akun warga', 'Daftar Akun Warga: isi data, setujui ketentuan, lalu verifikasi email.'),
+        ],
     },
     {
         id: 'w-portal',
         icon: UserRound,
-        title: 'Portal Warga (Login & Profil)',
+        title: 'Portal Warga',
         desc: (
             <>
-                Warga terdaftar dapat masuk memakai <strong>NIK + kata sandi</strong> melalui halaman /masuk. Portal Warga menampilkan profil, data
-                kontak, serta <strong>riwayat seluruh laporan</strong> yang terhubung ke akun Anda — tanpa perlu mengingat nomor tiket satu per satu.
+                Setelah masuk, <strong>Portal Warga</strong> menampilkan <strong>Riwayat Tiket Pengaduan</strong> Anda lengkap dengan status, kode
+                akses, dan unduhan lampiran, serta <strong>Pengaturan Akun</strong> untuk mengubah email, nomor telepon, dan kata sandi. Tombol{' '}
+                <strong>Buat pengaduan</strong> membuka formulir dengan data Anda.
             </>
         ),
-        tips: ['Laporan yang dibuat saat login otomatis terhubung ke akun.', 'Perbarui email/telepon di profil agar mudah dihubungi petugas.'],
-        shots: [
-            s('m14-login.jpeg', 'Halaman masuk', 'Halaman masuk: satu formulir untuk warga (NIK) maupun petugas (username).'),
-            s('m10-portal.jpeg', 'Portal warga', 'Portal Warga: kartu profil dan ringkasan laporan Anda.'),
-            s('m10b-portal-riwayat.jpeg', 'Riwayat laporan warga', 'Daftar riwayat laporan beserta status terakhirnya.'),
-        ],
+        tips: ['Tiket yang masih berstatus Menunggu dapat Anda hapus sendiri dari portal.', 'NIK tidak dapat diubah dari portal.'],
+        shots: [s('w15-portal-warga', 'Portal warga', 'Portal Warga: pengaturan akun dan riwayat tiket pengaduan.')],
     },
     {
-        id: 'w-chat',
-        icon: MessageSquare,
-        title: 'Chat TARA',
+        id: 'w-katalog',
+        icon: Inbox,
+        title: 'Katalog Pengaduan',
         desc: (
             <>
-                Tombol TARA di pojok kanan bawah membuka Chat TARA layar penuh. Isi nama dan provinsi, lalu tulis pertanyaan Anda; TARA menjawab dari
-                sumber resmi dan bisa menghubungkan Anda dengan petugas Contact Center bila perlu.
+                Kumpulan kanal resmi Kementerian Transmigrasi: media sosial, email, hotline WhatsApp, kanal nasional seperti SP4N-LAPOR!, kanal aduan
+                pegawai, serta daftar <strong>Kantor Pusat dan Balai</strong> beserta kontaknya. Gunakan bila Anda ingin melapor lewat kanal lain atau
+                datang langsung.
             </>
         ),
-        tips: ['Pilih "Bicara dengan petugas" untuk diteruskan ke petugas.', 'Untuk laporan resmi tetap gunakan formulir pengaduan.'],
-        shots: [s('m11-livechat.jpeg', 'Chat TARA', 'Chat TARA: tanya jawab dengan asisten dan petugas Contact Center.')],
+        shots: [s('w16-katalog', 'Katalog pengaduan', 'Katalog Pengaduan: kanal resmi serta kantor dan balai transmigrasi.')],
+    },
+    {
+        id: 'w-peta-data',
+        icon: MapPin,
+        title: 'Peta Wilayah & Data Terbuka',
+        desc: (
+            <>
+                <strong>Peta Wilayah</strong> menampilkan sebaran pengaduan per provinsi asal; klik provinsi untuk melihat rinciannya.{' '}
+                <strong>Data</strong> menyajikan angka layanan yang diperbarui otomatis (laporan masuk hari ini, sedang diproses, selesai, dan total)
+                tanpa data pribadi pelapor.
+            </>
+        ),
+        shots: [
+            s('w17-peta', 'Peta sebaran pengaduan', 'Peta Wilayah: sebaran pengaduan per provinsi asal.'),
+            s('w18-data', 'Data terbuka Contact Center', 'Data Terbuka: angka layanan pengaduan yang diperbarui otomatis.'),
+        ],
     },
 ];
 
@@ -202,128 +232,160 @@ const FITUR_ADMIN: Feature[] = [
         title: 'Matriks Rekapan',
         desc: (
             <>
-                Dasbor utama admin: total tiket rekapan, peringatan <strong>EWS (Early Warning System)</strong> untuk tiket mendekati/lewat tenggat
-                SLA, dan persentase SLA terpenuhi. Tabel rekapitulasi mendukung pencarian, filter wilayah/kategori/dampak/status, pengurutan kolom,
-                pilihan kolom, serta paginasi.
+                Dasbor utama petugas. Bagian atas menunjukkan <strong>alur penanganan</strong> dari pintu masuk (formulir web, input manual, Chat
+                TARA) sampai Selesai/Ditolak, disusul indikator tiket berjalan, <strong>peringatan EWS</strong>, SLA terpenuhi, dan rata-rata waktu
+                respons serta penyelesaian. Di bawahnya ada peta sebaran, tren harian, komposisi status/kategori/kanal/dampak, kepatuhan SLA dan
+                kepuasan, <strong>corong layanan TARA</strong>, <strong>kinerja petugas</strong>, dan matriks kategori × tahap penanganan.
             </>
         ),
-        tips: ['Klik judul kolom untuk mengurutkan; klik ikon mata untuk membuka detail tiket.'],
-        shots: [s('a01-matriks.jpeg', 'Matriks rekapan admin', 'Matriks rekapan: kartu indikator dan tabel rekapitulasi tiket.')],
+        tips: [
+            'Saring per bulan dan provinsi di kanan atas; tombol Print mencetak rekap.',
+            'Klik tahap pada alur penanganan atau provinsi pada peta untuk menyaring tabel di bawahnya.',
+            'Matriks kategori dapat ditampilkan sebagai tabel atau grafik, per kategori, provinsi, kanal, atau petugas.',
+        ],
+        shots: [
+            s('a01-matriks', 'Matriks rekapan', 'Alur penanganan bulan ini dan indikator utama.'),
+            s('a02-matriks-peta', 'Peta sebaran di matriks', 'Peta sebaran pengaduan per wilayah.'),
+            s('a03-matriks-layanan', 'Corong layanan TARA dan kinerja petugas', 'Corong layanan TARA dan tiket per petugas.'),
+            s('a04-matriks-grafik', 'Grafik kategori dan target SLA', 'Kategori × tahap penanganan, target SLA, dan ketepatan waktu per dampak.'),
+        ],
     },
     {
         id: 'a-tiket',
         icon: Ticket,
-        title: 'Manajemen Tiket: Daftar, Filter & Kolom',
+        title: 'Manajemen Tiket',
         desc: (
             <>
-                Halaman <strong>Manajemen Tiket</strong> memuat seluruh laporan masyarakat. Gunakan kotak pencarian, dropdown filter (wilayah,
-                kategori, dampak, status), menu <strong>Kolom</strong> untuk menyembunyikan/menampilkan kolom tabel, dan pengurutan per kolom sebelum
-                menindaklanjuti tiket.
+                Semua pengaduan dari seluruh kanal. Tab di atas membantu memilah: <strong>Aktif</strong>, <strong>Lewat SLA</strong>,{' '}
+                <strong>Belum didisposisi</strong> (khusus Super Admin), <strong>Belum ditugaskan</strong>, <strong>Selesai</strong>, dan{' '}
+                <strong>Semua</strong>. Cari nomor atau judul, saring dampak dan provinsi, atur kolom, lalu klik baris untuk membuka detail.
             </>
         ),
+        tips: ['Mulai dari tab Lewat SLA dan Belum ditugaskan.', 'Baris berlatar merah menandai tiket yang melewati tenggat SLA.'],
         shots: [
-            s('a02-tiket.jpeg', 'Daftar manajemen tiket', 'Daftar tiket lengkap dengan pencarian, filter, dan paginasi.'),
-            s('a03-filter.jpeg', 'Dropdown filter status', 'Dropdown filter status pada toolbar tabel.'),
-            s('a04-kolom.jpeg', 'Menu pilihan kolom', 'Menu Kolom: centang kolom yang ingin ditampilkan.'),
+            s('a05-tiket', 'Daftar manajemen tiket', 'Daftar tiket dengan tab, pencarian, saringan, dan tenggat SLA.'),
+            s('a06-tiket-belum-disposisi', 'Tab belum didisposisi', 'Tab Belum didisposisi: tiket aktif yang belum diteruskan ke unit kerja.'),
         ],
     },
     {
         id: 'a-detail',
         icon: ClipboardList,
-        title: 'Detail Tiket & Unduh Lampiran',
+        title: 'Detail Tiket: Disposisi, Tanggapan & Status',
         desc: (
             <>
-                Halaman detail menampilkan uraian laporan, kategori, kawasan, data pelapor dengan <strong>NIK tersamar</strong>, kontak, tenggat SLA,
-                serta tombol <strong>Unduh Lampiran</strong> untuk membuka berkas bukti yang diunggah pelapor.
+                Halaman detail merangkum status, dampak, tenggat SLA, dan petugas, lalu uraian laporan, data pelapor, dan riwayat status. Tiga panel
+                dipakai untuk menindaklanjuti:
+                <br />• <strong>Disposisi unit</strong>: Super Admin meneruskan tiket ke Unit Kerja yang berwenang, lalu dapat{' '}
+                <strong>Alihkan</strong> ke unit lain atau <strong>Tarik</strong> kembali.
+                <br />• <strong>Tanggapan</strong>: pilih <strong>Balas ke pelapor</strong> (tampil di halaman lacak dan dikirim lewat email bila ada)
+                atau <strong>Catatan internal</strong> untuk sesama petugas.
+                <br />• <strong>Tindak lanjut</strong>: pilih status baru (Diverifikasi, Diproses, Selesai, atau Ditolak), isi catatan, lalu{' '}
+                <strong>Simpan Status</strong>.
             </>
         ),
-        tips: ['NIK disamarkan otomatis demi privasi pelapor.', 'Perhatikan tenggat SLA di kartu detail sebelum menanggapi.'],
-        shots: [s('a05-detail.jpeg', 'Detail tiket admin', 'Detail tiket: uraian, data pelapor tersamar, SLA, dan unduh lampiran.')],
-    },
-    {
-        id: 'a-tanggapan',
-        icon: MessageSquare,
-        title: 'Memberi Tanggapan Tiket',
-        desc: (
-            <>
-                Tulis tanggapan pada kartu <strong>Tanggapan</strong>. Centang <strong>Tampilkan ke pelapor</strong> agar pesan terlihat di halaman
-                lacak pelapor; tanpa centang, tanggapan bersifat internal antar-admin. Setiap tanggapan tersimpan di riwayat tiket.
-            </>
-        ),
+        tips: [
+            'Petugas unit hanya melihat tiket yang didisposisikan ke unitnya.',
+            'Status Selesai membuka survei kepuasan bagi pelapor.',
+            'Setiap perubahan tercatat di riwayat status dan Log Aktivitas.',
+        ],
         shots: [
-            s('a06-tanggapan.jpeg', 'Kolom tanggapan terisi', 'Tanggapan ditulis pada kolom yang tersedia beserta opsi publik.'),
-            s('a07-tanggapan-kirim.jpeg', 'Tanggapan terkirim', 'Tanggapan tersimpan dan masuk riwayat penanganan tiket.'),
+            s('a07-tiket-detail', 'Detail tiket', 'Detail tiket: ringkasan, laporan, tanggapan, disposisi, dan tindak lanjut.'),
+            s('a08-disposisi', 'Panel disposisi unit', 'Disposisi unit: unit penangan, catatan, serta tombol Alihkan dan Tarik.'),
+            s('a09-tanggapan', 'Panel tanggapan', 'Tanggapan: balas ke pelapor atau simpan catatan internal.'),
+            s('a10-tindak-lanjut', 'Panel tindak lanjut', 'Tindak lanjut: pilih status baru dan catatannya.'),
         ],
     },
     {
-        id: 'a-status',
-        icon: Gauge,
-        title: 'Mengubah Status Tiket & SLA',
+        id: 'a-chat',
+        icon: MessagesSquare,
+        title: 'Pesan Masuk',
         desc: (
             <>
-                Panel <strong>Ubah Status</strong> menggerakkan tiket melalui alur Menunggu → Diverifikasi → Diproses → Selesai/Ditolak. Pilih status
-                baru, isi catatan (disarankan), lalu <strong>Simpan Status</strong>. Perubahan tercatat otomatis di riwayat dan memperbarui
-                perhitungan SLA/EWS.
+                Percakapan Chat TARA yang diteruskan ke petugas, dipilah menjadi <strong>Menunggu</strong>, <strong>Dijawab AI</strong>,{' '}
+                <strong>Selesai</strong>, dan <strong>Semua</strong>. Pilih percakapan, klik <strong>Ambil percakapan</strong>, baca ringkasan dari
+                asisten, lalu balas di kolom bawah. Dari sini petugas dapat <strong>Terbitkan tiket</strong>, menandai <strong>Sudah terjawab</strong>
+                , <strong>Rujuk ke portal</strong>, <strong>Rujuk ke Inspektorat</strong>, membantu <strong>daftarkan akun</strong> atau lupa kata
+                sandi warga, dan <strong>minta konfirmasi data</strong> sebelum tiket terbit.
             </>
         ),
-        tips: ['Status Selesai memicu permintaan survei kepuasan ke pelapor.', 'Catatan status menjadi jejak audit yang terlihat di riwayat.'],
-        shots: [
-            s('a08-status.jpeg', 'Dropdown pilihan status', 'Pilihan status baru pada panel Ubah Status.'),
-            s('a09-status-form.jpeg', 'Form status dengan catatan', 'Status terpilih beserta catatan penanganan.'),
-            s('a10-status-baru.jpeg', 'Status tersimpan', 'Status baru tersimpan; badge dan riwayat diperbarui.'),
-        ],
+        shots: [s('a11-pesan-masuk', 'Pesan masuk', 'Pesan Masuk: daftar percakapan, ringkasan asisten, tindakan, dan balasan.')],
     },
     {
-        id: 'a-internal',
-        icon: FilePen,
-        title: 'Tiket Internal',
+        id: 'a-rujukan',
+        icon: Waypoints,
+        title: 'Rujukan',
         desc: (
             <>
-                Daftar laporan yang dibuat sesama petugas (internal), terpisah dari aduan masyarakat. Penanganannya sama: buka detail, tanggapi, dan
-                perbarui status melalui halaman detail tiket.
+                Warga yang dirujuk ke portal lain (misalnya Trans Tuntas atau SP4N-LAPOR!). Petugas pendamping memantau sampai warga mengirim{' '}
+                <strong>kode bukti</strong> dari portal tujuan. Tab <strong>Perlu tindakan</strong> menampilkan warga yang meminta bantuan; balas
+                langsung ke warga atau masukkan kode tracking yang disampaikan lewat telepon.
             </>
         ),
-        shots: [s('a11-internal.jpeg', 'Daftar tiket internal', 'Daftar tiket internal antar-petugas.')],
+        shots: [s('a12-rujukan', 'Rujukan', 'Rujukan: warga yang minta bantuan, pesan ke warga, dan riwayat pendampingan.')],
     },
     {
         id: 'a-manual',
         icon: Zap,
-        title: 'Input Manual (Media Sosial & Offline)',
+        title: 'Input Manual',
         desc: (
             <>
-                Catat keluhan warga yang masuk lewat kanal non-formulir (DM Instagram, telepon, surat, tatap muka) agar tetap masuk rekapitulasi. Isi
-                sumber, identitas pelapor/username, judul, uraian, tautan bukti, kawasan, kategori, dan dampak — tiket terbentuk otomatis.
+                Catat pengaduan yang masuk lewat <strong>tatap muka, telepon, surat/pos, live chat</strong>, atau media sosial (Instagram, X,
+                Facebook, TikTok) agar ikut tercatat sebagai tiket. Isi sumber laporan, pelapor, dan isi laporan; daftar <strong>Kelengkapan</strong>{' '}
+                di kanan menunjukkan isian wajib yang belum lengkap sebelum <strong>Terbitkan tiket</strong>.
             </>
         ),
-        tips: ['Cantumkan tautan bukti (URL postingan) bila ada agar mudah diverifikasi.'],
-        shots: [s('a12-input-manual.jpeg', 'Form input manual terisi', 'Form input manual terisi untuk aduan via media sosial.')],
+        shots: [s('a13-input-manual', 'Input manual', 'Input Manual: pilih sumber laporan, isi pelapor dan laporan, lalu terbitkan tiket.')],
     },
     {
-        id: 'a-chat',
-        icon: Inbox,
-        title: 'Kotak Masuk (Live Chat)',
+        id: 'a-internal',
+        icon: Building2,
+        title: 'Tiket Internal',
         desc: (
             <>
-                Seluruh percakapan live chat warga terkumpul di sini. Pilih percakapan pada daftar kiri, baca riwayatnya, lalu balas melalui kolom di
-                bawah. Balasan langsung tampil di Chat TARA pelapor.
+                Laporan gangguan sarana dan TIK kantor dari pegawai, dikirim lewat <strong>formulir internal</strong>. Hanya terlihat oleh Super Admin
+                dan tidak pernah tampil di halaman publik. Penanganannya sama dengan tiket biasa lewat halaman detail.
             </>
         ),
+        shots: [s('a14-tiket-internal', 'Tiket internal', 'Tiket Internal: laporan pegawai beserta NIP, unit, dan tenggat SLA.')],
+    },
+    {
+        id: 'a-pengetahuan',
+        icon: Library,
+        title: 'Basis Pengetahuan',
+        desc: (
+            <>
+                Sumber jawaban asisten TARA. Artikel berstatus <strong>Terbit</strong> dipakai menjawab warga; artikel baru menunggu tinjauan lewat{' '}
+                <strong>Tinjau berurutan</strong>. Artikel dapat dibuat manual atau dari <strong>dokumen resmi</strong> (PDF/DOCX maks. 20 MB) yang
+                diubah AI menjadi usulan tanya-jawab untuk ditinjau. <strong>Sumber Resmi</strong> mendaftarkan situs pemerintah yang dikutip langsung
+                oleh asisten dan diambil ulang setiap pekan.
+            </>
+        ),
+        tips: [
+            'Kotak Uji pencarian menunjukkan artikel yang akan dipakai untuk sebuah pertanyaan.',
+            'Panel "Belum bisa dijawab AI" mendaftar pertanyaan warga yang belum menemukan sumber; jadikan bahan artikel berikutnya.',
+            'Situs sumber resmi dibatasi pada domain pemerintah yang diizinkan.',
+        ],
         shots: [
-            s('a13-chat.jpeg', 'Halaman pesan masuk', 'Pesan masuk: daftar percakapan dan balasan yang sedang ditulis.'),
-            s('a14-chat-balasan.jpeg', 'Balasan terkirim', 'Balasan admin terkirim dan tampil di riwayat percakapan.'),
+            s('a15-pengetahuan', 'Basis pengetahuan', 'Basis Pengetahuan: daftar artikel, status tinjauan, dan uji pencarian.'),
+            s(
+                'a16-pengetahuan-dokumen',
+                'Buat artikel dari dokumen resmi',
+                'Buat artikel dari dokumen resmi: unggah, tinjau usulan AI, simpan sebagai draf.',
+            ),
+            s('a17-pengetahuan-sumber', 'Sumber resmi', 'Sumber Resmi: situs dan berkas resmi yang dikutip asisten.'),
         ],
     },
     {
-        id: 'a-kawasan',
-        icon: MapPin,
-        title: 'Data Kawasan',
+        id: 'a-wilayah',
+        icon: Map,
+        title: 'Sebaran Wilayah',
         desc: (
             <>
-                Kelola master kawasan transmigrasi: kode, nama, provinsi, status aktif, serta titik koordinat pusat kawasan yang dipakai peta publik
-                dan dropdown formulir. Tambah/ubah kawasan lewat formulir pada halaman yang sama.
+                Rekap pengaduan per <strong>provinsi asal</strong>: total, berjalan, selesai, lewat SLA, lokasi yang paling sering disebut, dan
+                tanggal laporan terakhir. Provinsi berasal dari isian warga di Chat TARA, formulir, atau Input Manual.
             </>
         ),
-        shots: [s('a15-kawasan.jpeg', 'Manajemen data kawasan', 'Manajemen data kawasan beserta formulir tambah/ubah.')],
+        shots: [s('a18-sebaran-wilayah', 'Sebaran wilayah', 'Sebaran Wilayah: rekap pengaduan per provinsi asal.')],
     },
     {
         id: 'a-kanal',
@@ -331,57 +393,104 @@ const FITUR_ADMIN: Feature[] = [
         title: 'Manajemen Kanal',
         desc: (
             <>
-                Daftarkan kanal pengaduan resmi (instansi, platform media sosial, penanggung jawab, tautan) berikut tombol sinkronisasi integrasi.
-                Kanal inilah yang tampil pada Katalog Pengaduan di sisi publik.
+                Daftar kanal pengaduan resmi (media sosial, kanal nasional, kantor pemerintahan, kanal internal) yang tampil di Katalog Pengaduan,
+                serta <strong>integrasi kanal nasional</strong> SP4N-LAPOR! dan Whistleblowing System dengan tombol <strong>Sinkron sekarang</strong>.
             </>
         ),
-        shots: [s('a16-kanal.jpeg', 'Manajemen kanal', 'Manajemen kanal: daftar kanal resmi dan formulir pendaftaran.')],
+        tips: ['Integrasi kanal nasional masih berupa uji coba; data yang ditarik belum berasal dari sistem sungguhan.'],
+        shots: [s('a19-kanal', 'Manajemen kanal', 'Manajemen Kanal: kanal terdaftar dan integrasi kanal nasional.')],
     },
     {
-        id: 'a-petugas',
-        icon: Users,
-        title: 'Daftar Admin / Petugas',
+        id: 'a-portal',
+        icon: Globe,
+        title: 'Katalog Portal',
         desc: (
             <>
-                Khusus super admin: kelola akun petugas (nama, NIP, username, peran, kawasan tugas). Tambahkan petugas baru atau ubah peran agar hak
-                akses panel sesuai struktur organisasi.
+                Portal Kementerian Transmigrasi yang boleh dirujuk oleh asisten dan petugas, misalnya Trans Tuntas, SP4N-LAPOR!, SIBARDUKTRANS, dan
+                PPID. Atur siapa penggunanya (publik atau internal), periksa tautan dengan tombol <strong>Cek</strong>, dan pantau jumlah rujukan 30
+                hari terakhir.
             </>
         ),
-        tips: ['Peran admin_kawasan hanya melihat tiket kawasan tugasnya.'],
-        shots: [s('a17-petugas.jpeg', 'Daftar admin', 'Daftar admin/petugas beserta peran dan kawasan tugas.')],
-    },
-    {
-        id: 'a-log',
-        icon: Activity,
-        title: 'Log Aktivitas',
-        desc: (
-            <>
-                Rekaman jejak audit seluruh aksi penting di panel (login, perubahan status, tanggapan, perubahan master data) lengkap dengan pelaku
-                dan waktunya — dasar penelusuran bila terjadi sengketa penanganan.
-            </>
-        ),
-        shots: [s('a18-log.jpeg', 'Log aktivitas', 'Log aktivitas: jejak audit aksi petugas beserta waktunya.')],
+        tips: ['Portal internal tidak pernah ditawarkan ke warga.'],
+        shots: [s('a20-katalog-portal', 'Katalog portal', 'Katalog Portal: daftar portal rujukan beserta status tautan dan jumlah rujukan.')],
     },
     {
         id: 'a-pengaturan',
         icon: Settings,
-        title: 'Pengaturan Sistem',
+        title: 'Pengaturan',
         desc: (
             <>
-                Atur identitas layanan (kontak resmi, email dukungan), kategori pengaduan, serta parameter sistem lain yang dipakai formulir publik
-                dan notifikasi. Perubahan langsung berlaku bagi seluruh pengguna.
+                Tab <strong>Profil saya</strong> untuk nama, email notifikasi, dan kata sandi; <strong>SLA & EWS</strong> untuk tenggat per tingkat
+                dampak; <strong>Kategori laporan</strong>; <strong>Notifikasi internal</strong>; dan <strong>Kanal resmi publik</strong> yang tampil
+                di halaman publik.
             </>
         ),
-        shots: [s('a19-pengaturan.jpeg', 'Halaman pengaturan', 'Pengaturan sistem: kontak layanan dan master kategori.')],
+        shots: [s('a21-pengaturan', 'Pengaturan', 'Pengaturan: profil admin dan tab pengaturan sistem.')],
+    },
+    {
+        id: 'a-petugas',
+        icon: Users,
+        title: 'Daftar Admin',
+        desc: (
+            <>
+                Khusus Super Admin: kelola akun petugas (nama, username, email notifikasi, <strong>Unit Kerja</strong>, peran, dan status). Unit Kerja
+                petugas dapat diganti langsung dari tabel; petugas unit hanya melihat tiket yang didisposisikan ke unitnya.
+            </>
+        ),
+        shots: [s('a22-petugas', 'Daftar admin', 'Daftar Admin: petugas beserta unit kerja, peran, dan status.')],
+    },
+    {
+        id: 'a-unit',
+        icon: Network,
+        title: 'Unit Kerja',
+        desc: (
+            <>
+                Khusus Super Admin: struktur unit Kementerian Transmigrasi (Eselon I dan Eselon II) yang menjadi tujuan disposisi tiket. Tambah unit
+                dengan <strong>Unit baru</strong> atau <strong>Sub-unit</strong>, ubah dengan ikon pensil, dan hapus dengan ikon tempat sampah.
+            </>
+        ),
+        tips: [
+            'Unit yang masih punya sub-unit, petugas, atau tiket tidak bisa dihapus; nonaktifkan saja agar riwayat tiket tetap utuh.',
+            'Unit nonaktif tidak bisa dipilih untuk petugas atau disposisi baru.',
+        ],
+        shots: [
+            s('a23-unit-kerja', 'Unit kerja', 'Unit Kerja: pohon unit beserta jumlah petugasnya.'),
+            s('a24-unit-baru', 'Form unit baru', 'Form Unit baru: nama resmi, singkatan, kode, induk, tingkat, urutan, dan email unit.'),
+        ],
+    },
+    {
+        id: 'a-kesehatan-ai',
+        icon: Activity,
+        title: 'Kesehatan AI',
+        desc: (
+            <>
+                Khusus Super Admin: pantau status penyedia model asisten TARA, jumlah panggilan, tingkat galat, waktu respons, pemakaian token dan
+                anggaran harian, serta antrean dan pemutus sirkuit. Hanya angka, tanpa isi percakapan.
+            </>
+        ),
+        tips: ['Saat penyedia bermasalah berulang kali, sirkuit terbuka dan warga langsung diteruskan ke petugas.'],
+        shots: [s('a25-kesehatan-ai', 'Kesehatan AI', 'Kesehatan AI: status penyedia, galat, waktu respons, dan pemakaian token.')],
+    },
+    {
+        id: 'a-log',
+        icon: ScrollText,
+        title: 'Log Aktivitas',
+        desc: (
+            <>
+                Khusus Super Admin: jejak audit yang tidak dapat diubah, berisi siapa melakukan apa dan kapan (masuk, tanggapan, perubahan status,
+                disposisi, perubahan data master), lengkap dengan alamat IP.
+            </>
+        ),
+        shots: [s('a26-log-aktivitas', 'Log aktivitas', 'Log Aktivitas: jejak audit aksi pengguna beserta waktunya.')],
     },
 ];
 
 const ALUR_SINGKAT = [
-    { icon: FilePen, label: 'Isi formulir', desc: 'Data pelapor + detail laporan' },
-    { icon: FileImage, label: 'Unggah bukti', desc: 'JPG/PNG/PDF maks. 5 MB' },
-    { icon: Zap, label: 'Tiket terbit', desc: 'Nomor TKT-YYMMDD-XXXXXX tersimpan' },
-    { icon: ShieldCheck, label: 'Verifikasi admin', desc: 'Status & tanggapan diperbarui' },
-    { icon: Search, label: 'Lacak & survei', desc: 'Pelapor memantau + menilai' },
+    { icon: MessageSquare, label: 'Chat atau isi formulir', desc: 'Lewat TARA atau formulir pengaduan' },
+    { icon: Zap, label: 'Tiket terbit', desc: 'Nomor TKT-YYMMDD-XXXXXX' },
+    { icon: Network, label: 'Didisposisi', desc: 'Diteruskan ke unit kerja berwenang' },
+    { icon: ShieldCheck, label: 'Ditindaklanjuti', desc: 'Status & tanggapan diperbarui' },
+    { icon: Search, label: 'Lacak & survei', desc: 'Pantau status, lalu beri penilaian' },
 ];
 
 export default function Panduan() {
@@ -406,11 +515,11 @@ export default function Panduan() {
     return (
         <TaraPage
             title="Panduan Lengkap"
-            description="Panduan visual seluruh fitur Contact Center untuk masyarakat dan admin."
+            description="Panduan visual seluruh fitur Contact Center untuk masyarakat dan petugas."
             active="panduan"
             eyebrow="Pusat Bantuan"
             heading="Panduan Lengkap Contact Center"
-            subtitle="Dokumentasi visual seluruh fitur — untuk masyarakat maupun admin — langkah demi langkah dengan tangkapan layar asli aplikasi. Klik gambar untuk memperbesar, gunakan tombol panah untuk berpindah."
+            subtitle="Cara memakai setiap fitur, untuk masyarakat maupun petugas, dengan tangkapan layar aplikasi saat ini. Klik gambar untuk memperbesar dan gunakan tombol panah untuk berpindah."
             pose="menjelaskan"
             poseAlt="TARA menjelaskan cara memakai Contact Center"
         >
@@ -545,9 +654,9 @@ export default function Panduan() {
                                 </h3>
                                 <p className="text-sm leading-relaxed text-[var(--tcd-text-2,oklch(0.446_0.03_256.802))]">
                                     Lampiran bukti menerima berkas <strong>JPG, PNG, atau PDF</strong> dengan ukuran maksimal <strong>5 MB</strong>.
-                                    Uraian laporan minimal 10 karakter dan NIK pelapor wajib 16 digit. Dokumen yang sudah diunggah{' '}
-                                    <strong>tidak dapat dihapus mandiri</strong> demi akuntabilitas — hubungi admin melalui Live Chat bila perlu
-                                    perbaikan.
+                                    Uraian laporan minimal 10 karakter dan NIK pelapor wajib 16 digit. NIK disimpan terenkripsi dan tidak pernah
+                                    ditampilkan ke publik. Perlu memperbaiki laporan yang sudah terkirim? Sampaikan lewat <strong>Chat TARA</strong>{' '}
+                                    dengan menyebut nomor tiketnya.
                                 </p>
                             </div>
                             <Button asChild className="font-heading shrink-0 rounded-full font-bold tracking-wide uppercase md:ml-auto">

@@ -25,6 +25,7 @@ npm-debug.log
 yarn-error.log
 # E2E (Playwright) — database & kredensial uji, artefak lokal
 /database/e2e.sqlite
+/database/panduan.sqlite
 /storage/app/e2e
 /tests/e2e/.auth
 /test-results
