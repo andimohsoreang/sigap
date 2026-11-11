@@ -4,10 +4,10 @@ import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import AdminLayout, { AdminStat, Pill } from '@/layouts/admin-layout';
 import { cn } from '@/lib/utils';
 
@@ -189,19 +189,16 @@ export default function UnitKerja({ units, levels }: Props) {
                 </div>
             )}
 
-            <Sheet open={open} onOpenChange={(v) => !v && close()}>
-                <SheetContent
-                    side="right"
-                    className="flex w-full flex-col gap-0 border-[var(--adm-border)] bg-[var(--acd-surface,#fff)] p-0 sm:max-w-xl"
-                >
-                    <SheetHeader className="border-b border-[var(--adm-border)] px-6 py-4 pr-12 text-left">
-                        <SheetTitle className="text-[17px] text-[var(--adm-text)]">
+            <Dialog open={open} onOpenChange={(v) => !v && close()}>
+                <DialogContent className="flex max-h-[calc(100dvh-32px)] w-[calc(100%-32px)] flex-col gap-0 overflow-hidden rounded-lg border-[var(--adm-border)] bg-[var(--acd-surface,#fff)] p-0 sm:max-w-xl">
+                    <DialogHeader className="border-b border-[var(--adm-border)] px-6 py-4 pr-12 text-left">
+                        <DialogTitle className="text-[17px] text-[var(--adm-text)]">
                             {editing ? `Ubah ${editing.short_name ?? editing.name}` : 'Unit baru'}
-                        </SheetTitle>
-                        <SheetDescription className="text-[13px] text-[var(--adm-text-2)]">
+                        </DialogTitle>
+                        <DialogDescription className="text-[13px] text-[var(--adm-text-2)]">
                             Unit tidak dihapus. Bila sudah tidak dipakai, nonaktifkan agar riwayat tiket tetap merujuk unitnya.
-                        </SheetDescription>
-                    </SheetHeader>
+                        </DialogDescription>
+                    </DialogHeader>
                     <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
                         <div className="grid flex-1 grid-cols-1 content-start gap-4 overflow-y-auto px-6 py-5 sm:grid-cols-2">
                             <Field id="unit-name" label="Nama resmi" required error={form.errors.name} className="sm:col-span-2">
@@ -306,8 +303,8 @@ export default function UnitKerja({ units, levels }: Props) {
                             </Button>
                         </div>
                     </form>
-                </SheetContent>
-            </Sheet>
+                </DialogContent>
+            </Dialog>
         </AdminLayout>
     );
 }
