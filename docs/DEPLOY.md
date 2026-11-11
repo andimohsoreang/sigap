@@ -18,10 +18,12 @@ Semua dijalankan dengan **Docker Compose** dari folder `deploy/docker/` repo ini
 Urutan: **prasyarat (§1) → ambil kode (§2) → `.env` (§3) → instalasi pertama (§4) → Cloudflare Tunnel (§5)
 → verifikasi (§9)**. Operasional, backup, rilis & rollback: §6–8.
 
-> **Pihak ketiga yang dipakai halaman** (diizinkan CSP): `fonts.bunny.net` (font Inter),
-> `*.tile.openstreetmap.org` (peta Leaflet), dan Google reCAPTCHA v3
+> **Pihak ketiga yang dipakai halaman** (diizinkan CSP): `*.tile.openstreetmap.org` (peta Leaflet),
+> `www.transmigrasi.go.id` (gambar berita beranda), dan Google reCAPTCHA v3
 > (`www.google.com/recaptcha`, `www.gstatic.com/recaptcha`) bila `RECAPTCHA_SITE_KEY` diisi.
 > Bila salah satunya diganti, sesuaikan `App\Http\Middleware\SecurityHeaders`.
+> Huruf (Inter, Space Grotesk, Jost, JetBrains Mono, Atkinson Hyperlegible) di-host sendiri lewat
+> `@fontsource` (`resources/css/app.css`), sehingga `font-src` cukup `'self' data:`.
 
 ---
 
