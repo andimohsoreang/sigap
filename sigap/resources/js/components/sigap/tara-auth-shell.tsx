@@ -2,7 +2,7 @@ import { Head, usePage } from '@inertiajs/react';
 import { type LucideIcon } from 'lucide-react';
 import { type ReactNode } from 'react';
 
-import { TARA_FONTS_HREF, TaraFooter, TaraLauncher, TaraPoseImage, type TaraPose } from '@/components/sigap/tara-shell';
+import { TaraFooter, TaraLauncher, TaraPoseImage, type TaraPose } from '@/components/sigap/tara-shell';
 import TransiHeader from '@/components/sigap/transi-header';
 import { goToChat } from '@/lib/chat-transition';
 import { cn } from '@/lib/utils';
@@ -30,10 +30,7 @@ export default function TaraAuthShell({ title, panel, children }: { title: strin
 
     return (
         <>
-            <Head title={`${title} — Contact Center`}>
-                <link rel="preconnect" href="https://fonts.bunny.net" />
-                <link rel="stylesheet" href={TARA_FONTS_HREF} head-key="transi-fonts" />
-            </Head>
+            <Head title={`${title} — Contact Center`} />
 
             <div className="transi-page min-h-screen bg-[var(--tcd-surface,#fff)] text-[var(--tcd-text,#0f2233)] antialiased">
                 <a

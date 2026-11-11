@@ -34,7 +34,6 @@ describe('preferensi tema & aksesibilitas', () => {
     beforeEach(() => {
         vi.stubGlobal('localStorage', memoryStorage());
         document.documentElement.className = '';
-        document.head.querySelectorAll('link[data-cc-font]').forEach((l) => l.remove());
         mockSystemDark(false);
     });
 
@@ -69,7 +68,7 @@ describe('preferensi tema & aksesibilitas', () => {
         expect(document.documentElement.classList.contains('dark')).toBe(true);
     });
 
-    it('pengaturan aksesibilitas menjadi kelas di <html> dan memuat huruf disleksia sekali', async () => {
+    it('pengaturan aksesibilitas menjadi kelas di <html>', async () => {
         const p = await load();
 
         p.setA11y({ text: 2, contrast: true, dyslexia: true });
@@ -78,7 +77,6 @@ describe('preferensi tema & aksesibilitas', () => {
         const cls = document.documentElement.classList;
         expect(['a11y-text-2', 'a11y-contrast', 'a11y-dyslexia', 'a11y-gray'].every((c) => cls.contains(c))).toBe(true);
         expect(cls.contains('a11y-text-1')).toBe(false);
-        expect(document.head.querySelectorAll('link[data-cc-font]')).toHaveLength(1);
         expect(JSON.parse(localStorage.getItem(p.A11Y_KEY)!)).toMatchObject({ text: 2, contrast: true, dyslexia: true, gray: true });
     });
 

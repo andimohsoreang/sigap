@@ -2,7 +2,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Eye, EyeOff, LoaderCircle, Lock, LogIn, MessageCircle, ShieldCheck, Ticket, User, UserRoundCog } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 
-import { TARA_FONTS_HREF, TaraFooter, TaraLauncher, TaraPoseImage } from '@/components/sigap/tara-shell';
+import { TaraFooter, TaraLauncher, TaraPoseImage } from '@/components/sigap/tara-shell';
 import TransiHeader from '@/components/sigap/transi-header';
 import { goToChat } from '@/lib/chat-transition';
 import { type SharedData } from '@/types';
@@ -33,10 +33,7 @@ export default function Masuk({ status, canResetPassword }: { status?: string | 
 
     return (
         <>
-            <Head title="Masuk — Contact Center">
-                <link rel="preconnect" href="https://fonts.bunny.net" />
-                <link rel="stylesheet" href={TARA_FONTS_HREF} head-key="transi-fonts" />
-            </Head>
+            <Head title="Masuk — Contact Center" />
 
             <div className="transi-page min-h-screen bg-[var(--tcd-surface,#fff)] text-[var(--tcd-text,#0f2233)] antialiased">
                 <TransiHeader loggedIn={Boolean(auth?.user)} isAdmin={Boolean(auth?.user?.is_admin)} onChat={() => goToChat()} active={null} />

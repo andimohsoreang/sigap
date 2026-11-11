@@ -548,14 +548,7 @@ export default function ChatPage({ layanan, kanal }: { layanan: Layanan; kanal: 
 
     return (
         <>
-            <Head title="Chat TARA — Contact Center">
-                <link rel="preconnect" href="https://fonts.bunny.net" />
-                <link
-                    rel="stylesheet"
-                    href="https://fonts.bunny.net/css?family=space-grotesk:500,600,700|jost:400,500,600|jetbrains-mono:500,600"
-                    head-key="transi-fonts"
-                />
-            </Head>
+            <Head title="Chat TARA — Contact Center" />
 
             <div className="transi-page flex h-[100dvh] flex-col bg-[var(--tcd-surface,#fff)] text-[var(--tcd-text,#0f2233)] antialiased">
                 <TransiHeader

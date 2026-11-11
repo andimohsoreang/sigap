@@ -14,19 +14,11 @@
                     var a = JSON.parse(localStorage.getItem('cc-a11y') || '{}');
                     if (a.text === 1 || a.text === 2) d.classList.add('a11y-text-' + a.text);
                     ['contrast', 'links', 'dyslexia', 'motion', 'focus', 'gray'].forEach(function (k) { if (a[k] === true) d.classList.add('a11y-' + k); });
-                    if (a.dyslexia === true) {
-                        var l = document.createElement('link');
-                        l.rel = 'stylesheet'; l.href = 'https://fonts.bunny.net/css?family=atkinson-hyperlegible:400,400i,700'; l.setAttribute('data-cc-font', '');
-                        document.head.appendChild(l);
-                    }
                 } catch (e) {}
             })();
         </script>
 
         <title inertia>{{ config('app.name', 'Contact Center') }}</title>
-
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800" rel="stylesheet" />
 
         @php
             // A-14: rute Ziggy dibatasi per peran (lihat config/ziggy.php).

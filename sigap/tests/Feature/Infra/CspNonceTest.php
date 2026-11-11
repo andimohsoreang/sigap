@@ -79,6 +79,19 @@ class CspNonceTest extends TestCase
         $this->assertNotSame($first, $second);
     }
 
+    public function test_fonts_are_self_hosted_without_third_party_origins(): void
+    {
+        $this->asProduction();
+
+        $response = $this->get('/')->assertOk();
+        $csp = (string) $response->headers->get('Content-Security-Policy');
+
+        $this->assertStringContainsString("font-src 'self' data:;", $csp);
+        $this->assertStringContainsString("style-src 'self' 'unsafe-inline';", $csp);
+        $this->assertStringNotContainsString('fonts.bunny.net', $csp);
+        $this->assertStringNotContainsString('fonts.bunny.net', (string) $response->getContent());
+    }
+
     public function test_connect_src_lists_exact_reverb_origin_without_bare_schemes(): void
     {
         $this->asProduction();

@@ -28,11 +28,14 @@ class ThemeScriptTest extends TestCase
         $this->assertMatchesRegularExpression('/<script nonce="'.preg_quote($m[1], '/').'">\s*\(function \(\) \{/', $head);
 
         $preferences = file_get_contents(resource_path('js/lib/preferences.ts'));
-        foreach (["'cc-theme'", "'cc-a11y'", "'a11y-'", "'dark'", "'contrast', 'links', 'dyslexia', 'motion', 'focus', 'gray'", 'atkinson-hyperlegible'] as $needle) {
+        foreach (["'cc-theme'", "'cc-a11y'", "'a11y-'", "'dark'", "'contrast', 'links', 'dyslexia', 'motion', 'focus', 'gray'"] as $needle) {
             $this->assertStringContainsString($needle, $head, "Skrip awal tidak memuat {$needle}.");
         }
-        foreach (["THEME_KEY = 'cc-theme'", "A11Y_KEY = 'cc-a11y'", "'a11y-gray'", 'atkinson-hyperlegible'] as $needle) {
+        foreach (["THEME_KEY = 'cc-theme'", "A11Y_KEY = 'cc-a11y'", "'a11y-gray'"] as $needle) {
             $this->assertStringContainsString($needle, $preferences);
         }
+        // Huruf disleksia di-host sendiri (@font-face di app.css), tidak dimuat dari CDN.
+        $this->assertStringNotContainsString('fonts.bunny.net', $head);
+        $this->assertStringNotContainsString('fonts.bunny.net', $preferences);
     }
 }

@@ -16,10 +16,6 @@ import { type SharedData } from '@/types';
 
 export const TARA_IMG = '/images/tara';
 
-/** Huruf halaman bergaya TARA. Dipakai langsung sebagai elemen di dalam <Head>:
- *  Head Inertia hanya merender elemen HTML, bukan komponen. */
-export const TARA_FONTS_HREF = 'https://fonts.bunny.net/css?family=space-grotesk:500,600,700|jost:400,500,600|jetbrains-mono:500,600';
-
 export type TaraPose = 'menyapa' | 'mendengarkan' | 'menunjuk' | 'menjelaskan' | 'tablet' | 'jempol' | 'terima-kasih' | 'menyambut';
 
 /** Rasio lebar:tinggi tiap pose (tinggi berkas 900 px). */
@@ -235,11 +231,7 @@ export default function TaraPage({
 
     return (
         <>
-            <Head title={`${title} — Contact Center`}>
-                <link rel="preconnect" href="https://fonts.bunny.net" />
-                <link rel="stylesheet" href={TARA_FONTS_HREF} head-key="transi-fonts" />
-                {description && <meta name="description" content={description} />}
-            </Head>
+            <Head title={`${title} — Contact Center`}>{description && <meta name="description" content={description} />}</Head>
 
             <div className="transi-page min-h-screen bg-[var(--tcd-surface,#fff)] text-[var(--tcd-text,#0f2233)] antialiased">
                 <a

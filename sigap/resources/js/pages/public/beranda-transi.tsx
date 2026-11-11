@@ -219,12 +219,6 @@ export default function BerandaTransi({ kanal, kantor, beritaSemua }: { kanal: K
     return (
         <>
             <Head title="Contact Center Kementerian Transmigrasi">
-                <link rel="preconnect" href="https://fonts.bunny.net" />
-                <link
-                    rel="stylesheet"
-                    href="https://fonts.bunny.net/css?family=space-grotesk:500,600,700|jost:400,500,600|jetbrains-mono:500,600"
-                    head-key="transi-fonts"
-                />
                 <meta
                     name="description"
                     content="Contact Center Kementerian Transmigrasi. Tanya, lapor, cek status tiket, sampai dibuatkan akun, cukup mulai dari chat dengan TARA."

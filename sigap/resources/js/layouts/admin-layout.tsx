@@ -243,14 +243,7 @@ export default function AdminLayout({ children, title, subtitle, actions, badge 
 
     return (
         <div className="absol-admin min-h-screen bg-[var(--adm-bg)]">
-            <Head title={`${title} — Admin Contact Center`}>
-                <link rel="preconnect" href="https://fonts.bunny.net" />
-                <link
-                    rel="stylesheet"
-                    href="https://fonts.bunny.net/css?family=inter:400,500,600,700|space-grotesk:500,600,700|jetbrains-mono:400,500,600"
-                    head-key="admin-fonts"
-                />
-            </Head>
+            <Head title={`${title} — Admin Contact Center`} />
 
             <div className="flex">
                 {/* Sidebar tetap (fixed) + ruang pengganti selebar sidebar, agar sidebar

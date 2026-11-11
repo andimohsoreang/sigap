@@ -64,7 +64,7 @@ class SecurityHeaders
             ? ["'self'", "'nonce-{$nonce}'"]
             : ["'self'", "'unsafe-inline'", "'unsafe-eval'"];
         // Tailwind/Leaflet/Inertia progress memakai atribut style inline.
-        $style = ["'self'", "'unsafe-inline'", 'https://fonts.bunny.net'];
+        $style = ["'self'", "'unsafe-inline'"];
         $connect = ["'self'", ...$this->reverbOrigins($isStrict)];
         $frame = [];
 
@@ -90,7 +90,8 @@ class SecurityHeaders
             'style-src '.implode(' ', $style),
             // Gambar berita resmi di beranda dimuat langsung dari situs Kementerian.
             "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://www.transmigrasi.go.id",
-            "font-src 'self' data: https://fonts.bunny.net",
+            // Huruf di-host sendiri lewat @fontsource (resources/css/app.css).
+            "font-src 'self' data:",
             'connect-src '.implode(' ', array_unique($connect)),
             'frame-src '.($frame === [] ? "'none'" : implode(' ', $frame)),
             "worker-src 'self' blob:",

@@ -24,7 +24,6 @@ export const THEME_KEY = 'cc-theme';
 export const A11Y_KEY = 'cc-a11y';
 export const DEFAULT_A11Y: A11yPrefs = { text: 0, contrast: false, links: false, dyslexia: false, motion: false, focus: false, gray: false };
 
-const DYSLEXIA_FONT = 'https://fonts.bunny.net/css?family=atkinson-hyperlegible:400,400i,700';
 const EVENT = 'cc-preferences';
 
 function read(key: string): string | null {
@@ -92,13 +91,6 @@ export function applyPreferences(): void {
     html.classList.toggle('a11y-motion', a.motion);
     html.classList.toggle('a11y-focus', a.focus);
     html.classList.toggle('a11y-gray', a.gray);
-    if (a.dyslexia && !document.querySelector('link[data-cc-font]')) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = DYSLEXIA_FONT;
-        link.dataset.ccFont = '';
-        document.head.appendChild(link);
-    }
 }
 
 function changed(): void {
