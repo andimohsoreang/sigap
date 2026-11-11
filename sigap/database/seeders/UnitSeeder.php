@@ -10,7 +10,8 @@ use Illuminate\Database\Seeder;
  *
  * Sumber satu-satunya: Permentrans 11/2025 tentang Renstra Kementerian
  * Transmigrasi 2025–2029, Tabel 16 "Detail Struktur Organisasi Kementerian
- * Transmigrasi" (hal. 79–81), yang merujuk Perpres 172/2024. Staf Ahli Menteri
+ * Transmigrasi" (hal. 79–81), yang merujuk Perpres 172/2024, dan bagan
+ * struktur organisasi kementerian (tanpa nama pejabat). Staf Ahli Menteri
  * tidak dimasukkan karena tidak menangani pengaduan; unit di luar tabel itu
  * ditambahkan Super Admin lewat halaman Unit Kerja.
  *
@@ -59,20 +60,6 @@ class UnitSeeder extends Seeder
                     ['code' => 'SETJEN-OSDMRB', 'name' => 'Biro Organisasi, Sumber Daya Manusia, dan Reformasi Birokrasi', 'short_name' => 'Biro OSDM & RB', 'level' => $e2],
                     ['code' => 'SETJEN-HUKUM', 'name' => 'Biro Hukum', 'level' => $e2],
                     ['code' => 'SETJEN-UMUM', 'name' => 'Biro Umum dan Layanan Pengadaan', 'short_name' => 'Biro Umum & Pengadaan', 'level' => $e2],
-                    ['code' => 'SETJEN-PUSSTRAJAK', 'name' => 'Pusat Strategi Kebijakan Transmigrasi', 'level' => $e2],
-                    ['code' => 'SETJEN-PUSDATIN', 'name' => 'Pusat Data dan Informasi Transmigrasi', 'short_name' => 'Pusdatin', 'level' => $e2],
-                    [
-                        'code' => 'SETJEN-PUSBANGSDM',
-                        'name' => 'Pusat Pengembangan Sumber Daya Manusia Transmigrasi',
-                        'short_name' => 'Pusbang SDM',
-                        'level' => $e2,
-                        'children' => [
-                            ['code' => 'UPT-BBPPMT-YOGYA', 'name' => 'Balai Besar Pelatihan dan Pemberdayaan Masyarakat Transmigrasi Yogyakarta', 'short_name' => 'BBPPMT Yogyakarta', 'level' => Unit::LEVEL_UPT],
-                            ['code' => 'UPT-BPPMT-PEKANBARU', 'name' => 'Balai Pelatihan dan Pemberdayaan Masyarakat Transmigrasi Pekanbaru', 'short_name' => 'BPPMT Pekanbaru', 'level' => Unit::LEVEL_UPT],
-                            ['code' => 'UPT-BPPMT-BANJARMASIN', 'name' => 'Balai Pelatihan dan Pemberdayaan Masyarakat Transmigrasi Banjarmasin', 'short_name' => 'BPPMT Banjarmasin', 'level' => Unit::LEVEL_UPT],
-                            ['code' => 'UPT-BPPMT-DENPASAR', 'name' => 'Balai Pelatihan dan Pemberdayaan Masyarakat Transmigrasi Denpasar', 'short_name' => 'BPPMT Denpasar', 'level' => Unit::LEVEL_UPT],
-                        ],
-                    ],
                 ],
             ],
             [
@@ -114,6 +101,21 @@ class UnitSeeder extends Seeder
                     ['code' => 'ITJEN-IR2', 'name' => 'Inspektorat II', 'level' => $e2],
                 ],
             ],
+            // Tiga Pusat bergaris komando langsung ke Menteri; ke Sekjen hanya pembinaan administratif.
+            ['code' => 'PUS-STRAJAK', 'name' => 'Pusat Strategi Kebijakan Transmigrasi', 'short_name' => 'Pusstrajak', 'level' => $e2],
+            [
+                'code' => 'PUS-BANGSDM',
+                'name' => 'Pusat Pengembangan Sumber Daya Manusia Transmigrasi',
+                'short_name' => 'Pusbang SDM',
+                'level' => $e2,
+                'children' => [
+                    ['code' => 'UPT-BBPPMT-YOGYA', 'name' => 'Balai Besar Pelatihan dan Pemberdayaan Masyarakat Transmigrasi Yogyakarta', 'short_name' => 'BBPPMT Yogyakarta', 'level' => Unit::LEVEL_UPT],
+                    ['code' => 'UPT-BPPMT-PEKANBARU', 'name' => 'Balai Pelatihan dan Pemberdayaan Masyarakat Transmigrasi Pekanbaru', 'short_name' => 'BPPMT Pekanbaru', 'level' => Unit::LEVEL_UPT],
+                    ['code' => 'UPT-BPPMT-BANJARMASIN', 'name' => 'Balai Pelatihan dan Pemberdayaan Masyarakat Transmigrasi Banjarmasin', 'short_name' => 'BPPMT Banjarmasin', 'level' => Unit::LEVEL_UPT],
+                    ['code' => 'UPT-BPPMT-DENPASAR', 'name' => 'Balai Pelatihan dan Pemberdayaan Masyarakat Transmigrasi Denpasar', 'short_name' => 'BPPMT Denpasar', 'level' => Unit::LEVEL_UPT],
+                ],
+            ],
+            ['code' => 'PUS-DATIN', 'name' => 'Pusat Data dan Informasi Transmigrasi', 'short_name' => 'Pusdatin', 'level' => $e2],
         ];
     }
 }

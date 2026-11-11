@@ -34,12 +34,12 @@ class UnitKerjaTest extends TestCase
         $this->seed(UnitSeeder::class);
         $count = Unit::count();
 
-        $this->assertSame(['DITJEN-PEPMT', 'DITJEN-PPKT', 'ITJEN', 'SETJEN'], Unit::query()->whereNull('parent_id')->orderBy('code')->pluck('code')->all());
+        $this->assertSame(['DITJEN-PEPMT', 'DITJEN-PPKT', 'ITJEN', 'PUS-BANGSDM', 'PUS-DATIN', 'PUS-STRAJAK', 'SETJEN'], Unit::query()->whereNull('parent_id')->orderBy('code')->pluck('code')->all());
         $this->assertSame(Unit::LEVEL_ESELON_1, Unit::query()->where('code', 'SETJEN')->value('level'));
         $biroHukum = Unit::query()->where('code', 'SETJEN-HUKUM')->firstOrFail();
         $this->assertSame('Biro Hukum', $biroHukum->name);
         $this->assertSame('SETJEN', $biroHukum->parent->code);
-        $this->assertSame('SETJEN-PUSBANGSDM', Unit::query()->where('code', 'UPT-BPPMT-DENPASAR')->firstOrFail()->parent->code);
+        $this->assertSame('PUS-BANGSDM', Unit::query()->where('code', 'UPT-BPPMT-DENPASAR')->firstOrFail()->parent->code);
 
         Unit::query()->where('code', 'SETJEN-HUKUM')->update(['name' => 'Biro Hukum (disunting)']);
         $this->seed(UnitSeeder::class);

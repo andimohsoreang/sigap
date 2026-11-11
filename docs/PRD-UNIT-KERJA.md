@@ -178,8 +178,10 @@ Indeks: `(unit_id, status)`, `(ticket_id, created_at)`. Hanya satu disposisi ber
 ## 9. Data awal & migrasi data
 
 1. **Seeder Unit Kerja** dari dokumen resmi: Eselon I (Setjen, Ditjen PPKTrans, Ditjen
-   Pengembangan Ekonomi dan Pemberdayaan Masyarakat Transmigrasi, Itjen, Pusat Pengembangan
-   SDM) dan Eselon II Ditjen PPKTrans dari Renstra. Unit lain dilengkapi Super Admin.
+   Pengembangan Ekonomi dan Pemberdayaan Masyarakat Transmigrasi, Itjen) beserta Eselon II-nya,
+   tiga Pusat (Strategi Kebijakan, Pengembangan SDM + 4 Balai/UPT, Data dan Informasi) sebagai
+   unit teratas karena bergaris komando ke Menteri (ke Sekjen hanya pembinaan administratif),
+   mengikuti bagan struktur organisasi tanpa nama pejabat. Unit lain dilengkapi Super Admin.
    Setiap entri mencantumkan sumbernya di komentar seeder. `firstOrCreate` per `code`.
 2. `users.unit` teks → `unit_id` hanya bila nama **sama persis**; sisanya dilaporkan, tidak ditebak.
 3. Nama lama di formulir internal ("Ditjen PKP2Trans", "Ditjen PKTrans", "Biro Umum & TIK")
