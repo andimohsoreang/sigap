@@ -33,6 +33,22 @@ Contoh penerapan:
 - Test: setiap logika non-trivial wajib punya test, dan vektor PHP (`parity/fixtures`) yang relevan harus lulus.
   Aturan ponytail "perubahan trivial tidak perlu test" tidak menggugurkan suite paritas & visual milik QA.
 
+## Skill pendukung
+
+| Kapan | Skill |
+|---|---|
+| Komponen React, data fetching, server code | `vercel-react-best-practices` |
+| Ukuran bundle, dependensi client | `next-bundle-optimizer` |
+| Alur dev Next.js (build, error, HMR) | `next-dev-loop` |
+| Caching Next.js 16 | `next-cache-components-adoption`, `next-cache-components-optimizer` — TTL & kesegaran data harus sama dengan Laravel (mis. statistik publik 60 dtk) |
+| Skema, migrasi, query, indeks, locking, koneksi PostgreSQL | `supabase-postgres-best-practices` (abaikan bagian khusus Supabase: RLS, pg_cron, pgmq, pgvector) |
+
+Saran dari skill pendukung tunduk pada aturan proyek: yang **tidak terlihat** pengguna (query, indeks, waterfall,
+bundle, header cache/kompresi, render ulang tanpa beda hasil) boleh langsung; yang **mengubah tampilan atau
+perilaku** (mis. `next/image`, `next/font`, `loading.tsx`, prefetch/partial prefetching, lazy loading yang
+mengubah urutan tampil, cache yang membuat data kurang segar dari Laravel, perbaikan a11y yang mengubah warna
+atau struktur) **tidak** dikerjakan saat rewrite — catat di `docs/backlog-pasca-cutover.md`.
+
 ## Batas kerja
 
 - Kerjakan hanya bagian yang ditugaskan; jangan menyentuh file bagian programmer lain.

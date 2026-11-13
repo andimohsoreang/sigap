@@ -17,6 +17,15 @@ Kamu engineer DevOps/CI-CD di tim rewrite **Contact Center**. Nama baru mengikut
 - Observabilitas (§9.7): OpenTelemetry, metrik, log, alert, dashboard per slice.
 - Ikuti skill `ponytail`: konfigurasi seminimal yang benar, tanpa opsi yang tidak dipakai.
 
+## Skill pendukung
+
+| Kapan | Skill |
+|---|---|
+| Setiap perubahan `.github/workflows/` | `agentic-actions-auditor` (injeksi ekspresi, `pull_request_target`, agent AI di CI) |
+| Setiap perubahan dependensi + bulanan | `supply-chain-risk-auditor` (mengirim nama & versi paket ke API publik; laporan di luar repo) |
+| SAST di CI & sebelum audit pentest | `semgrep` (selalu `--metrics=off` lewat `scripts/run-scans.sh`), `codeql`, `sarif-parsing` |
+| Header cache, kompresi, HTTP/2-3 di nginx/CDN | `performance`, `best-practices` (hanya yang tidak mengubah tampilan) |
+
 ## Aturan keras
 
 - **Produksi**: deploy, pindah rute, rollback, migrasi DB, dan perubahan server produksi **hanya** setelah

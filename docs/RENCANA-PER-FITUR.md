@@ -394,14 +394,31 @@ selalu menang bila bertentangan.
   dicatat dengan keputusan; setiap `needs_validation` punya pemilik dan rencana validasi sebelum pindah rute.
 - Audit tidak pernah menyentuh produksi atau layanan nyata (aturan skill), sejalan dengan aturan QA.
 
-### 6.4 Sumber skill
+### 6.4 Skill & sumbernya
 
-| Skill | Sumber | Catatan |
-|---|---|---|
-| `ponytail`, `ponytail-review` | github.com/DietrichGebert/ponytail (MIT) | hanya prompt; hook, band, board, webhook plugin **tidak** dipasang |
-| `security-audit` | github.com/cloudflare/security-audit-skill (MIT) | lengkap dengan referensi & validator Node (hanya baca file) |
+Semua skill disalin ke `.claude/skills/` setelah isinya dibaca (tanpa hook atau plugin), dengan commit sumber di
+`SUMBER.md` tiap folder. Bintang GitHub per 13 Nov 2026.
 
-Commit sumber dicatat di `SUMBER.md` tiap folder skill. Pembaruan: baca versi baru dulu, lalu salin ulang.
+| Skill | Sumber | ★ | Lisensi | Dipakai |
+|---|---|---|---|---|
+| `ponytail`, `ponytail-review` | DietrichGebert/ponytail | 190.182 | MIT | semua penulis kode; reviewer |
+| `security-audit` | cloudflare/security-audit-skill | 71.664 | MIT | orkestrator, audit per slice |
+| `vercel-react-best-practices` | vercel-labs/agent-skills | 34.001 | MIT (frontmatter) | programmer, reviewer |
+| `next-bundle-optimizer`, `next-dev-loop`, `next-cache-components-adoption`, `next-cache-components-optimizer` | vercel/next.js `skills/` (dulu vercel-labs/next-skills, 991★) | 143.502 | MIT | programmer |
+| `supabase-postgres-best-practices` | supabase/agent-skills | 3.050 | MIT | programmer, reviewer |
+| `web-quality-audit`, `core-web-vitals`, `performance`, `accessibility`, `best-practices` | addyosmani/web-quality-skills | 3.080 | MIT | QA, devops |
+| `differential-review` (+ agent `adversarial-modeler`), `semgrep`, `codeql`, `sarif-parsing`, `agentic-actions-auditor`, `supply-chain-risk-auditor` | trailofbits/skills | 8.170 | CC-BY-SA-4.0 | reviewer, devops |
+
+Tidak dipasang: plugin hook/band/webhook ponytail; `vercel-optimize` & `deploy-to-vercel` (khusus hosting Vercel);
+`next-partial-prefetching-*` (mengubah perilaku navigasi, bertentangan dengan §8); `seo` (mengubah `<head>`,
+masuk backlog); `insecure-defaults` Trail of Bits (berbentuk command + workflow, bukan skill; cakupannya sudah
+ditangani `security-audit`); `webapp-testing` Anthropic (Playwright Python, duplikat suite TS).
+
+### 6.5 Saran skill vs paritas
+
+Saran yang **tidak terlihat** pengguna boleh langsung dikerjakan. Saran yang **mengubah tampilan atau perilaku**
+dicatat di `docs/backlog-pasca-cutover.md` dan dikerjakan setelah S17, supaya gerbang 0 piksel dan paritas
+perilaku tetap berlaku.
 
 ## 7. Keputusan yang dibutuhkan
 

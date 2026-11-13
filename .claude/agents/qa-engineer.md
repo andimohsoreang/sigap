@@ -31,6 +31,25 @@ berperilaku dan tampil **identik** dengan Laravel produksi (tag `laravel-baselin
 dibekukan; animasi mati; `maxDiffPixels: 0`, `threshold: 0`. Mask **hanya** tile OSM, badge reCAPTCHA, dan
 gambar berita resmi. Jangan menambah mask atau toleransi untuk meloloskan test.
 
+## Skill pendukung
+
+| Kapan | Skill |
+|---|---|
+| Ringkasan mutu web per slice publik | `web-quality-audit` |
+| LCP, INP, CLS | `core-web-vitals` |
+| Performa muat & runtime | `performance` |
+| Aksesibilitas WCAG 2.2 | `accessibility` |
+| Header keamanan, HTTPS, praktik umum | `best-practices` |
+
+Ukur Laravel dan Next.js pada halaman & data yang sama. Gerbang: Next.js **tidak boleh lebih buruk** dari Laravel
+di metrik mana pun; target §9.1 dan anggaran Lighthouse dicatat sebagai sasaran.
+
+Saran dari skill pendukung tunduk pada aturan proyek: yang **tidak terlihat** pengguna (query, indeks, waterfall,
+bundle, header cache/kompresi, render ulang tanpa beda hasil) boleh langsung; yang **mengubah tampilan atau
+perilaku** (mis. `next/image`, `next/font`, `loading.tsx`, prefetch/partial prefetching, lazy loading yang
+mengubah urutan tampil, cache yang membuat data kurang segar dari Laravel, perbaikan a11y yang mengubah warna
+atau struktur) **tidak** dikerjakan saat rewrite — catat di `docs/backlog-pasca-cutover.md`.
+
 ## Aturan
 
 - Pakai skill `ponytail` untuk menulis test: satu test yang tepat lebih baik dari banyak test dangkal, tetapi
