@@ -38,8 +38,15 @@ class EksporFixture extends Command
 
     private const COMMIT = 'laravel-baseline';
 
+    /** APP_TIMEZONE produksi app2 (dicek di server 13 Nov 2026, parity/PRODUKSI.md). */
+    private const PRODUCTION_TIMEZONE = 'Asia/Jakarta';
+
     public function handle(SlaCalculator $sla): int
     {
+        // Keluaran tidak bergantung pada .env lokal: zona waktu aplikasi = produksi.
+        config(['app.timezone' => self::PRODUCTION_TIMEZONE]);
+        date_default_timezone_set(self::PRODUCTION_TIMEZONE);
+
         $dir = $this->option('dir') ?: base_path('../parity/fixtures');
         File::ensureDirectoryExists($dir);
 
@@ -85,11 +92,8 @@ class EksporFixture extends Command
             '2027-12-31 17:00:00', // Jumat, akhir tahun
             '2028-12-30 09:00:00', // Sabtu, akhir tahun
         ];
-        // Zona produksi belum dipastikan (docs/REWRITE-NEXTJS.md §1): ekspor keduanya.
-        $zones = ['UTC', 'Asia/Jakarta'];
-
-        $cases = [];
-        foreach ($zones as $tz) {
+        $vectors = function (string $tz) use ($sla, $starts, $categoryDays): array {
+            $cases = [];
             foreach ($starts as $start) {
                 $from = CarbonImmutable::parse($start, $tz);
                 foreach (TicketImpact::cases() as $impact) {
@@ -108,9 +112,11 @@ class EksporFixture extends Command
                     }
                 }
             }
-        }
 
-        $due = CarbonImmutable::parse('2026-11-18 15:00:00', 'UTC');
+            return $cases;
+        };
+
+        $due = CarbonImmutable::parse('2026-11-18 15:00:00', self::PRODUCTION_TIMEZONE);
         $before = $due->subSecond();
         $after = $due->addSecond();
         $status = [];
@@ -138,9 +144,11 @@ class EksporFixture extends Command
         return [
             ...$this->header([SlaCalculator::class, TicketImpact::class, TicketPriority::class], [
                 'zona_waktu_aplikasi' => config('app.timezone'),
-                'catatan' => 'TicketService::create memanggil dueAt(dampak, Carbon::now(), kategori.sla_days) di zona_waktu_aplikasi; hari kerja = Senin–Jumat di zona waktu nilai mulai. Kasus diekspor untuk UTC dan Asia/Jakarta.',
+                'zona_waktu_produksi' => self::PRODUCTION_TIMEZONE,
+                'catatan' => 'TicketService::create memanggil dueAt(dampak, Carbon::now(), kategori.sla_days) di zona waktu aplikasi; hari kerja = Senin–Jumat di zona waktu nilai mulai. `kasus` = Asia/Jakarta (PRODUKSI, acuan utama); `tambahan_utc` = UTC (tambahan saja, bukan produksi).',
             ]),
-            'kasus' => $cases,
+            'kasus' => $vectors(self::PRODUCTION_TIMEZONE),
+            'tambahan_utc' => $vectors('UTC'),
             'status' => $status,
         ];
     }
