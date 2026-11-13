@@ -1,4 +1,4 @@
-# Rencana Rewrite SIGAP ke Next.js
+# Rencana Rewrite Contact Center ke Next.js
 
 | Field | Nilai |
 |---|---|
@@ -16,7 +16,8 @@
 | 13 Nov 2026 | **Valkey** dipakai untuk rate limit, cache, kunci terdistribusi, state AI, dan pub/sub realtime. PostgreSQL tetap untuk data, antrean (pg-boss), dan sesi (§9.4) |
 | 13 Nov 2026 | Backend mengikuti **praktik terbaik skala nasional** (diakses masyarakat seluruh Indonesia): standar di §9. Praktik terbaik tidak boleh mengubah perilaku atau tampilan (A6, §8) |
 | 13 Nov 2026 | Strategi **per fitur** (slice), tiap fitur dibangun → dites → dideploy → dipantau sebelum lanjut. Fase F1–F7 di §2 digantikan oleh `docs/RENCANA-PER-FITUR.md`; F0 menjadi bagian S0. Disetujui 13 Nov 2026 |
-| 13 Nov 2026 | Framework: **Next.js + TypeScript** (Astro dipertimbangkan, tidak dipilih: SIGAP aplikasi interaktif, bukan situs konten) |
+| 13 Nov 2026 | Framework: **Next.js + TypeScript** (Astro dipertimbangkan, tidak dipilih: Contact Center aplikasi interaktif, bukan situs konten) |
+| 13 Nov 2026 | Nama aplikasi **Contact Center**. Nama `SIGAP`/`sigap` tidak dipakai untuk apa pun yang baru; nama lama hanya dipertahankan bila wajib untuk kompatibilitas, dan dihapus di S17. Aturan di §10 |
 | 13 Nov 2026 | Desain **identik 100%** dengan versi Laravel: 0 piksel beda pada screenshot pembanding. Aturan & gerbangnya di §8 |
 
 ## 0. Asumsi (perlu dikonfirmasi)
@@ -42,8 +43,8 @@ Kode baru di repo yang sama, berdampingan dengan `sigap/`, supaya suite paritas 
 riwayat tetap satu.
 
 ```
-sigap-repo/
-├── sigap/                  # Laravel (dibekukan, dihapus di F7)
+<repo>/                     # usul: repo & folder lokal di-rename menjadi contact-center (§10)
+├── sigap/                  # Laravel lama (nama lama, dibekukan, dihapus di S17)
 ├── web/                    # Next.js baru
 │   ├── src/app/
 │   │   ├── (publik)/       # beranda, panduan, katalog, peta, lacak, survei, pengaduan, statis, rujukan
@@ -53,7 +54,7 @@ sigap-repo/
 │   │   ├── portal-warga/
 │   │   ├── api/v1/         # route handler API
 │   │   └── broadcasting/auth/route.ts
-│   ├── src/components/     # dipindah dari sigap/resources/js/components
+│   ├── src/components/     # dipindah dari sigap/resources/js/components (components/sigap → components/contact-center)
 │   ├── src/server/
 │   │   ├── db/             # schema.ts (hasil pull), client, tx helper
 │   │   ├── legacy/         # laravel-crypt.ts, nik.ts, bcrypt — kompatibilitas data lama
@@ -90,7 +91,7 @@ ditulis "boleh paralel".
 | 0.2 | Merge `feat/contact-center-ai` → `main`; `main` jadi basis rewrite; deploy produksi dari `main` | satu branch sumber kebenaran |
 | 0.3 | Catat nilai produksi: `APP_TIMEZONE`, `SESSION_COOKIE`, `SANCTUM_STATEFUL_DOMAINS`, kunci (disimpan di vault/`.env` server, bukan di repo) | tabel §1 di dokumen inventaris terisi |
 | 0.4 | Snapshot DB produksi + volume `storage` → staging rewrite | skrip `scripts/snapshot-staging.sh` |
-| 0.5 | Artisan `sigap:ekspor-fixture` di Laravel: tulis vektor uji JSON (lihat daftar di bawah) | `parity/fixtures/*.json` |
+| 0.5 | Artisan `cc:ekspor-fixture` di Laravel: tulis vektor uji JSON (lihat daftar di bawah) | `parity/fixtures/*.json` |
 | 0.6 | Suite paritas HTTP di `parity/`: port test black-box dari `tests/Feature/{Web,Api,Fixes,Infra}` + 2 spec e2e; jalankan **hijau terhadap Laravel** | suite + perintah `BASE_URL=… npx playwright test` |
 | 0.7 | Checklist paritas: `route:list --json`, daftar halaman + bentuk props (dari ~150 `assertInertia`) | `parity/routes.json`, `parity/pages.md` |
 | 0.8 | Baseline visual dari Laravel sesuai §8: semua halaman × state × viewport × tema, data & jam dibekukan | `parity/visual/` + baseline PNG + `parity/dom/*.html` |
@@ -133,7 +134,7 @@ Vektor uji yang diekspor di 0.5:
 | 1.11b | Kerangka visual sesuai aturan §8: `app.css` disalin, versi Tailwind/font/ikon dikunci, skrip tema sebelum paint, progress bar navigasi, format judul. Bukti: CSS hasil build Next.js identik dengan `public/build` Laravel | `resources/css/app.css`, `app.blade.php`, `app.tsx` |
 | 1.12 | Layout publik (`tara-shell`, `transi-header`), layout akun, layout admin (tanpa data dulu) | `admin-layout.tsx`, `tara-*` |
 | 1.13 | Audit log (`activity_logs`), helper `Setting` dengan cache | `AuditService`, `Setting` |
-| 1.14 | Worker pg-boss kosong + cron runner; CLI `admin` (buat akun admin) | `sigap:admin` |
+| 1.14 | Worker pg-boss kosong + cron runner; CLI `cc admin` (buat akun admin) | `sigap:admin` |
 | 1.15 | Compose staging: `web`, `worker`, `db` (snapshot), CI (lint, typecheck, unit, build) | `deploy/docker` |
 
 **Gerbang F1:** login dengan akun produksi asli (NIK & username) berhasil di staging; NIK lama terbaca;
@@ -333,6 +334,7 @@ Satu developer penuh waktu dengan bantuan AI. Angka ini perkiraan awal, ditinjau
 5. **Lokasi hosting produksi** di Indonesia (pusat data pemerintah / cloud lokal) dan domain resmi (`.go.id`).
 6. Penyedia AI: lokasi data penyedia sekarang, atau model di-host sendiri (§9.6).
 7. Data trafik nyata untuk mengganti asumsi §9.1.
+8. Rename repo GitHub `sigap` → `contact-center` (§10.2).
 
 ---
 
@@ -400,7 +402,7 @@ Di luar daftar itu, tidak ada mask dan tidak ada toleransi.
 
 ## 9. Standar backend (skala nasional)
 
-SIGAP akan diakses masyarakat dari seluruh Indonesia. Praktik terbaik di bagian ini adalah yang **tidak terlihat
+Contact Center akan diakses masyarakat dari seluruh Indonesia. Praktik terbaik di bagian ini adalah yang **tidak terlihat
 oleh pengguna**: struktur kode, kapasitas, keandalan, keamanan, dan observabilitas. Perilaku, URL, tampilan, dan
 format respons `/api/v1` tetap identik (A6, §8). Perbaikan yang terlihat dicatat sebagai backlog pasca cutover
 (§9.9).
@@ -438,7 +440,7 @@ log nginx produksi, lalu sesuaikan.
 
 - PostgreSQL tetap satu-satunya sumber kebenaran data.
 - **PgBouncer** (transaction pooling) di depan PostgreSQL, supaya banyak replica web/worker tidak menghabiskan koneksi.
-- **Role DB terpisah**: `sigap_app` (DML saja), `sigap_migrate` (DDL), `sigap_readonly` (laporan & replica).
+- **Role DB terpisah**: `cc_app` (DML saja), `cc_migrate` (DDL), `cc_readonly` (laporan & replica).
   `statement_timeout` dan `idle_in_transaction_session_timeout` per role.
 - **Indeks pencarian**: `LOWER(col) LIKE '%…%'` tidak bisa memakai indeks biasa. Tambah ekstensi `pg_trgm` +
   indeks GIN di kolom yang dicari. Aditif, hasil pencarian tetap sama, Laravel tetap jalan.
@@ -528,3 +530,45 @@ Tidak dikerjakan di rewrite karena melanggar paritas, tapi disarankan segera ses
 - Libur nasional di perhitungan SLA.
 - `json` → `jsonb`, kolom waktu → `timestamptz`.
 - Pindah dari format enkripsi Laravel ke format baru + rotasi kunci.
+
+---
+
+## 10. Penamaan: Contact Center, bukan SIGAP
+
+Nama aplikasi adalah **Contact Center**. Semua yang dibuat baru memakai nama ini; singkatan teknis `cc` dipakai
+di tempat yang butuh nama pendek.
+
+### 10.1 Nama baru
+
+| Hal | Nama |
+|---|---|
+| Aplikasi Next.js | folder `web/`, `package.json` name `contact-center-web` |
+| Worker | `contact-center-worker` |
+| Komponen khusus | `src/components/contact-center/` (dulu `components/sigap/`) — hanya path impor, tidak mengubah tampilan |
+| CLI (padanan artisan) | `cc <perintah>`: `cc admin`, `cc rehash-nik`, `cc reset-transaksi`, `cc uji-asisten`, … |
+| Perintah artisan baru di Laravel selama transisi | prefix `cc:` (mis. `cc:ekspor-fixture`) |
+| Image Docker | `contact-center-web`, `contact-center-worker`, `contact-center-realtime` |
+| Project Compose | `contact-center` |
+| Role PostgreSQL | `cc_app`, `cc_migrate`, `cc_readonly` |
+| Prefix kunci Valkey | `cc:` |
+| Nama layanan di log, trace, metrik | `contact-center-web`, `contact-center-worker` |
+| Cookie baru | `cc_session`, `cc_chat_tamu` (dipakai penuh mulai S17) |
+| Antrean pg-boss | `ai`, `default`, `ingest` (tanpa prefix) |
+| Dokumen | judul & isi memakai "Contact Center" |
+
+### 10.2 Nama lama yang **sementara** dipertahankan
+
+Nama-nama ini sudah tertanam di sistem yang sedang berjalan. Mengubahnya sekarang memutus rollback atau sesi
+pengguna, jadi dibiarkan sampai S17 lalu dihapus.
+
+| Nama lama | Kenapa belum diganti | Diganti / dihapus |
+|---|---|---|
+| Folder Laravel `sigap/`, artisan `sigap:*`, image `sigap-app`/`sigap-web` | sistem lama yang dibekukan; dipakai `deploy.sh` & rollback | dihapus di S17 bersama Laravel |
+| Cookie `sigap_chat_tamu` | percakapan tamu yang sedang berjalan & rollback ke Laravel | S17: Next.js membaca nama lama + menulis `cc_chat_tamu`; nama lama dibaca 30 hari lalu dihapus |
+| Nama database & user PostgreSQL `sigap` | dipakai Laravel; rename butuh koordinasi dua aplikasi | S17: `ALTER DATABASE … RENAME` + user `cc_*` dalam jendela pemeliharaan |
+| Folder server `/opt/app2-sigap`, project Compose `app2-sigap` | lokasi deploy Laravel yang berjalan | deploy Next.js memakai folder & project baru; yang lama dihapus di S17 |
+| Repo GitHub `andimohsoreang/sigap`, folder lokal `sigap-repo` | perlu keputusan pemilik repo | usul: rename repo ke `contact-center` (GitHub otomatis mengalihkan URL lama) |
+| Nama branch `feat/contact-center-ai` dll. | sudah benar, tidak memakai `sigap` | — |
+
+Teks yang tampil ke pengguna sudah "Contact Center" sejak migrasi `2026_10_30_000004_rename_sigap_to_contact_center`;
+karena desain harus identik (§8), tidak ada teks tampilan yang berubah.

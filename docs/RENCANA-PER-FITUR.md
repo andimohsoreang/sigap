@@ -286,7 +286,8 @@ percakapan.
   ServiceHours, `ContactCenterStats`, `live-chat-widget`.
 - **Job & cron ikut pindah:** `RespondToMessage` (antrean `ai`), `sigap:ai-macet` (15 dtk), `sigap:uji-asisten`,
   prune percakapan tamu; halaman `/admin/kesehatan-ai`.
-- **Catatan jembatan:** identitas tamu dibaca dari sesi Laravel & cookie `sigap_chat_tamu`, sehingga percakapan
+- **Catatan jembatan:** identitas tamu dibaca dari sesi Laravel & cookie lama `sigap_chat_tamu` (nama baru
+  `cc_chat_tamu` baru dipakai di S17, lihat §10 rencana utama), sehingga percakapan
   yang sedang berlangsung tidak terputus saat rute dipindah.
 - **Test kunci:** spec `live-chat`; unread atomik; tamu → login (adopsi percakapan); handoff di dalam & di luar jam
   layanan; AI mati → langsung petugas; uji 1.000 koneksi WebSocket; uji kegagalan worker `ai`.
@@ -324,6 +325,7 @@ percakapan.
 
 - Sisa `/api/v1` yang belum pindah; `/up`, `/sanctum/csrf-cookie` (bila masih perlu).
 - Pindah ke format sesi Next.js sendiri (semua pengguna login ulang sekali, diumumkan).
+- Hapus semua nama lama `sigap` yang tersisa (cookie, database, image, folder) sesuai §10 rencana utama.
 - Jendela rollback terakhir 2 minggu → matikan container Laravel (`app`, `queue`, `queue-ai`, `scheduler`,
   `reverb`), hapus jembatan Inertia & cron, hapus folder `sigap/`.
 - Drop tabel framework Laravel; tulis ulang `TECH-SPEC`, `DEPLOY`, `openapi.yaml`.

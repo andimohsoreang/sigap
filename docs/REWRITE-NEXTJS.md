@@ -1,4 +1,4 @@
-# Persiapan Rewrite SIGAP ke Next.js
+# Persiapan Rewrite Contact Center ke Next.js
 
 | Field | Nilai |
 |---|---|
@@ -8,7 +8,9 @@
 | Mengacu | `docs/PRD.md`, `docs/PRD-AI.md`, `docs/TECH-SPEC.md`, `docs/PRD-UNIT-KERJA.md` |
 | Status | Draf. Pilihan stack di §2 adalah **usulan**, belum keputusan |
 
-Path di bawah relatif terhadap `sigap/` kecuali disebut lain.
+Path di bawah relatif terhadap folder Laravel `sigap/` kecuali disebut lain. Nama `sigap` di dokumen ini hanya
+merujuk ke nama lama yang masih ada di sistem Laravel; aturan penamaan baru ada di
+`docs/RENCANA-REWRITE-NEXTJS.md` §10.
 
 ---
 
@@ -252,7 +254,7 @@ passage dibuat ulang sekali setelah cutover dan skor retrieval bisa bergeser —
 | `sigap:uji-asisten` | Senin 03:00 WIB, hanya bila model asli aktif |
 | prune (`chat` tamu > 180 hari + filenya, `activity_logs` > 1 tahun, `ai_calls` > 90 hari) | harian 02:00 |
 
-Perintah manual yang perlu padanan CLI: `sigap:admin`, `sigap:rehash-nik`, `sigap:reset-transaksi`,
+Perintah manual yang perlu padanan CLI (`cc <perintah>`, lihat §10 rencana): `sigap:admin`, `sigap:rehash-nik`, `sigap:reset-transaksi`,
 `sigap:petakan-unit`, `sigap:koreksi-*`, `sigap:terbitkan-artikel-resmi`, `sigap:data-contoh`,
 `sigap:e2e-setup`. Yang sekali-pakai (koreksi, petakan-unit) cukup dijalankan di Laravel sebelum cutover.
 
