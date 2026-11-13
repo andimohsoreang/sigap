@@ -1,0 +1,208 @@
+{
+    "sumber": [
+        "App\\Enums\\TicketStatus",
+        "App\\Services\\TicketService::changeStatus"
+    ],
+    "commit": "laravel-baseline",
+    "perintah": "php artisan cc:ekspor-fixture",
+    "status": [
+        {
+            "nilai": "baru",
+            "label": "Menunggu",
+            "terbuka": true,
+            "transisi": [
+                "verifikasi",
+                "diproses",
+                "ditolak"
+            ]
+        },
+        {
+            "nilai": "verifikasi",
+            "label": "Diverifikasi",
+            "terbuka": true,
+            "transisi": [
+                "diproses",
+                "selesai",
+                "ditolak"
+            ]
+        },
+        {
+            "nilai": "diproses",
+            "label": "Diproses",
+            "terbuka": true,
+            "transisi": [
+                "verifikasi",
+                "selesai",
+                "ditolak"
+            ]
+        },
+        {
+            "nilai": "selesai",
+            "label": "Selesai",
+            "terbuka": false,
+            "transisi": [
+                "diproses"
+            ]
+        },
+        {
+            "nilai": "ditolak",
+            "label": "Ditolak",
+            "terbuka": false,
+            "transisi": [
+                "verifikasi"
+            ]
+        }
+    ],
+    "kasus": [
+        {
+            "dari": "baru",
+            "ke": "baru",
+            "boleh": false,
+            "sama": true
+        },
+        {
+            "dari": "baru",
+            "ke": "verifikasi",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "baru",
+            "ke": "diproses",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "baru",
+            "ke": "selesai",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "baru",
+            "ke": "ditolak",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "baru",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "verifikasi",
+            "boleh": false,
+            "sama": true
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "diproses",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "selesai",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "ditolak",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "diproses",
+            "ke": "baru",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "diproses",
+            "ke": "verifikasi",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "diproses",
+            "ke": "diproses",
+            "boleh": false,
+            "sama": true
+        },
+        {
+            "dari": "diproses",
+            "ke": "selesai",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "diproses",
+            "ke": "ditolak",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "selesai",
+            "ke": "baru",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "selesai",
+            "ke": "verifikasi",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "selesai",
+            "ke": "diproses",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "selesai",
+            "ke": "selesai",
+            "boleh": false,
+            "sama": true
+        },
+        {
+            "dari": "selesai",
+            "ke": "ditolak",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "ditolak",
+            "ke": "baru",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "ditolak",
+            "ke": "verifikasi",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "ditolak",
+            "ke": "diproses",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "ditolak",
+            "ke": "selesai",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "ditolak",
+            "ke": "ditolak",
+            "boleh": false,
+            "sama": true
+        }
+    ]
+}
