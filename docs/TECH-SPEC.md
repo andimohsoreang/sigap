@@ -1,4 +1,4 @@
-# Tech Spec — SIGAP (Laravel + React + Tailwind + shadcn/ui)
+# Tech Spec — Contact Center (Laravel + React + Tailwind + shadcn/ui)
 ## Pendamping PRD v1.0 — Arsitektur, Skema DB, Kontrak API, Konvensi
 
 | Field | Nilai |
@@ -96,7 +96,7 @@ sigap/
 │  │  ├─ hooks/                   # useTheme, useLang, useAuth
 │  │  └─ types/                   # tipe TS bersama
 │  └─ css/
-│     └─ app.css                  # @tailwind + CSS variables SIGAP
+│     └─ app.css                  # @tailwind + CSS variables Contact Center
 ├─ routes/
 │  ├─ web.php                     # route Inertia
 │  ├─ api.php                     # /api/v1/* (JSON)
@@ -478,7 +478,7 @@ pages/
 ### 6.3 Komponen shadcn/ui yang di-generate
 `button input textarea select checkbox radio-group switch label form card badge table tabs dialog alert-dialog sheet dropdown-menu popover tooltip avatar skeleton sonner pagination accordion separator scroll-area`.
 
-### 6.4 Komponen khusus SIGAP (`components/sigap/`)
+### 6.4 Komponen khusus Contact Center (`components/sigap/`)
 `Navbar`, `MobileMenu`, `Footer`, `Logo`, `NotificationBell`, `LiveChatWidget`, `TicketStatusBadge`, `ImpactBadge`, `SlaCell`, `RegionMap` (Leaflet), `FileUpload`, `Recaptcha`, `LanguageToggle`, `ThemeToggle`, `FontSizeControl`, `StatCard`, `DataTable` (wrapper shadcn).
 
 ### 6.5 State

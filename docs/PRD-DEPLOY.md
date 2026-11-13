@@ -1,4 +1,4 @@
-# PRD — Deployment SIGAP dengan Docker
+# PRD — Deployment Contact Center dengan Docker
 
 > **Untuk siapa dokumen ini:** pengembang dan **AI coding agent** (Cursor, Windsurf, Copilot, dll.)
 > yang mengeksekusi deployment. Langkah teknis rinci ada di [`docs/DEPLOY.md`](DEPLOY.md); dokumen ini
@@ -34,19 +34,19 @@
 
 ## 1. Latar belakang
 
-SIGAP adalah Dashboard Contact Center / sistem pengaduan Kementerian Transmigrasi: warga membuat aduan
+Contact Center adalah dashboard dan sistem pengaduan Kementerian Transmigrasi: warga membuat aduan
 dan melacak tiket, pegawai melapor lewat jalur internal, petugas mengelola tiket, chat langsung, SLA/EWS,
 kawasan, kanal, hak akses per wilayah, dan log audit.
 
 Kode sudah lolos audit keamanan dan pengujian lokal (Pest 209 tes, Vitest, Playwright, tsc, eslint, pint,
-`npm audit` 0). Server target sudah menjalankan beberapa stack Docker dan `cloudflared`, sehingga SIGAP
+`npm audit` 0). Server target sudah menjalankan beberapa stack Docker dan `cloudflared`, sehingga Contact Center
 dipasang sebagai **stack Docker baru** agar seragam dan terisolasi.
 
 ## 2. Tujuan & di luar cakupan
 
 **Tujuan**
 
-- G1. SIGAP berjalan sebagai stack Compose **`app2-sigap`** di **`https://app2.andimohamad.my.id`**.
+- G1. Contact Center berjalan sebagai stack Compose **`app2-sigap`** di **`https://app2.andimohamad.my.id`**.
 - G2. Semua proses jalan dan pulih otomatis (`restart: unless-stopped`): web, app, queue, scheduler, reverb, db.
 - G3. Aman: hanya `127.0.0.1:${WEB_PORT}` yang terbuka, akses publik lewat Cloudflare Tunnel, HTTPS + header keamanan + CSP.
 - G4. Backup harian (DB + lampiran + `.env`) tersalin off-site dan **sudah diuji restore**.
@@ -230,7 +230,7 @@ di server (runner GitHub biasa tidak bisa menjangkau server di jaringan privat).
 
 | Risiko | Dampak | Mitigasi |
 |---|---|---|
-| Port/nama bentrok dengan stack lain | Stack lain rusak / SIGAP gagal start | Tahap 1 survei; `COMPOSE_PROJECT_NAME` unik; `WEB_PORT` dipilih bebas |
+| Port/nama bentrok dengan stack lain | Stack lain rusak / Contact Center gagal start | Tahap 1 survei; `COMPOSE_PROJECT_NAME` unik; `WEB_PORT` dipilih bebas |
 | Port terbuka ke publik (Docker melewati ufw) | DB/app bisa diakses langsung | Publikasi hanya `127.0.0.1`; cek `docker compose ps` |
 | `NIK_HASH_KEY`/`APP_KEY` hilang atau berubah | Login warga gagal / NIK tak terbaca | Brankas + ikut backup |
 | `VITE_*` salah saat build | Realtime mati | `deploy.sh` cek `VITE_REVERB_APP_KEY = REVERB_APP_KEY`; build ulang setelah ubah |

@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
-  title: SIGAP API
+  title: Contact Center API
   version: 1.0.0
   description: |
-    REST API **SIGAP** — *Suara Masyarakat, Inisiatif Gerak Aksi, Penyelesaian Tuntas* —
+    REST API **Contact Center** —
     sistem pengelolaan pengaduan pelayanan publik Kementerian Transmigrasi RI.
 
     Lapisan API ini dihasilkan dari aplikasi Laravel (Inertia + React) dan **dapat
@@ -126,7 +126,7 @@ paths:
   /pengaduan:
     post:
       tags: [Publik]
-      summary: Buat pengaduan publik (formulir SIGAP)
+      summary: Buat pengaduan publik (formulir Contact Center)
       description: |
         Membuat tiket baru. Server menghitung `priority` & `sla_due_at` dari `impact`
         (PRD §6.1, memperbaiki bug B1/B2). Mendukung lampiran multipart (D4) dan
@@ -187,7 +187,7 @@ paths:
         Mengembalikan detail tiket untuk pelacakan publik. Kunci payload tetap, tetapi
         identitas disamarkan: `pelapor` berupa inisial tersamar (mis. `B*** S***`) atau
         `Anonim`, `nik` dan `petugas` selalu `null`, dan penulis tanggapan petugas selalu
-        `Petugas SIGAP`. Tiket internal (`is_internal = true`) dan tiket **rahasia**
+        `Petugas Contact Center`. Tiket internal (`is_internal = true`) dan tiket **rahasia**
         dijawab 404 (SEC-11, memperbaiki B4). Dibatasi limiter `lookup` (30/menit per IP).
         Nomor **format lama** `TKT-<angka>` mudah ditebak: tamu wajib menyertakan
         `?kode=<kode akses>`; tanpa/salah kode dijawab 404. Pelapor (login) & admin
@@ -1169,9 +1169,9 @@ components:
       properties:
         id: { type: integer }
         type: { $ref: '#/components/schemas/ChannelType' }
-        name: { type: string, example: "@SIGAP_RI" }
+        name: { type: string, example: "@kementrans.ri" }
         account_name: { type: string }
-        url: { type: string, example: "https://instagram.com/sigap" }
+        url: { type: string, example: "https://www.instagram.com/kementrans.ri/" }
         status: { type: string, example: "aktif" }
         last_synced_at: { oneOf: [{ type: string, format: date-time }, { type: 'null' }] }
     ChannelInput:

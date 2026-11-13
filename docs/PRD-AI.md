@@ -1,13 +1,13 @@
-# PRD — Lapisan AI SIGAP sebagai Monolith Modular
+# PRD — Lapisan AI Contact Center sebagai Monolith Modular
 
-> **Untuk siapa dokumen ini:** pengembang dan **AI coding agent** yang merapikan lapisan AI SIGAP
+> **Untuk siapa dokumen ini:** pengembang dan **AI coding agent** yang merapikan lapisan AI Contact Center
 > (TARA, Basis Pengetahuan, rujukan portal, saran tiket). Dokumen ini menetapkan **apa** yang dicapai,
 > **batas modul**, **urutan tahap**, dan **kriteria selesai**. Rincian deploy tetap di
 > [`DEPLOY.md`](DEPLOY.md) §13; PRD produk utama di [`PRD.md`](PRD.md).
 >
 > Versi 1.4 · 30 Oktober 2026 (1.1: FR-AI-10 — Sumber Resmi tidak disamarkan; 1.2: FR-AI-11 — Sumber berbeda & aturan lama; 1.3: FR-AI-12 pengaman angka, aturan 8 gerbang prompt sebelum deploy; 1.4: aturan 9 contoh prompt tanpa fakta domain) · Pemilik: Andi · Basis kode: branch `feat/contact-center-ai` (`b7f9525`)
 >
-> **Keputusan: SIGAP tetap satu aplikasi Laravel (monolith modular).** Yang dipisah hanya **mesin model
+> **Keputusan: Contact Center tetap satu aplikasi Laravel (monolith modular).** Yang dipisah hanya **mesin model
 > AI** (penyedia API atau server GPU) di balik satu pintu, yaitu API kompatibel OpenAI. Tidak ada
 > microservice baru.
 
@@ -43,7 +43,7 @@
 
 ## 1. Latar belakang
 
-TARA, asisten contact center SIGAP, sudah berjalan di branch `feat/contact-center-ai`:
+TARA, asisten Contact Center, sudah berjalan di branch `feat/contact-center-ai`:
 
 - menjawab dari **Basis Pengetahuan** (artikel terbit) dan **Sumber Resmi** (kutipan situs/berkas
   resmi) dengan sumber yang dapat diklik; tanpa sumber, tidak menebak;
@@ -83,11 +83,11 @@ Temuan pada kode saat ini:
 
 **Di luar cakupan**
 
-- Memecah SIGAP menjadi microservices, Kubernetes, *message broker* (Kafka/RabbitMQ), atau Redis.
+- Memecah Contact Center menjadi microservices, Kubernetes, *message broker* (Kafka/RabbitMQ), atau Redis.
 - Basis data vektor / *embedding* (pencarian BM25 tepat 43/43 pada uji terakhir; ditinjau ulang bila artikel
   dan kutipan > ±5.000).
 - *Fine-tuning* model, kanal WhatsApp, perubahan alur tampilan warga/petugas.
-- Membuka AI SIGAP sebagai API untuk aplikasi lain (dicatat di §14 sebagai keputusan lanjutan).
+- Membuka AI Contact Center sebagai API untuk aplikasi lain (dicatat di §14 sebagai keputusan lanjutan).
 
 ## 3. Prinsip arsitektur
 
@@ -473,7 +473,7 @@ refaktor selesai, karena T1 paling berdampak ke warga.
 | K2 | Persetujuan pengiriman data (sudah disamarkan) ke penyedia di luar negeri | Minta konfirmasi Pusdatin/biro hukum sebelum `AI_ENABLED=true` di produksi |
 | K3 | Anggaran token harian | Tetapkan setelah 1 minggu staging dengan data pemakaian dari `ai_calls` |
 | K4 | Retensi `ai_calls` | 90 hari |
-| K5 | Apakah aplikasi lain (PPID/TARA situs PPID, SIBARDUKTRANS) akan memakai AI & pengetahuan SIGAP? | Belum; bila ya, buka API baca-saja untuk modul Knowledge dan Gateway, tetap di aplikasi yang sama |
+| K5 | Apakah aplikasi lain (PPID/TARA situs PPID, SIBARDUKTRANS) akan memakai AI & pengetahuan Contact Center? | Belum; bila ya, buka API baca-saja untuk modul Knowledge dan Gateway, tetap di aplikasi yang sama |
 
 ## Lampiran A — Peta berkas sekarang → modul
 
