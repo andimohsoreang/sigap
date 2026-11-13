@@ -1,0 +1,95 @@
+name: paritas
+
+# Suite paritas (parity/) terhadap Laravel lokal di runner: SQLite terpisah,
+# `sigap:e2e-setup` lalu `artisan serve`, sama seperti sigap/playwright.config.ts.
+# Kontrak: `BASE_URL=<url> npx playwright test` dari parity/ (docs/slices/S0.md).
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: ['rewrite/**']
+
+# Hanya-baca. Unggah artefak memakai token runtime Actions, bukan GITHUB_TOKEN.
+permissions:
+  contents: read
+
+concurrency:
+  group: paritas-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PORT: '8124'
+
+jobs:
+  paritas:
+    name: Paritas vs Laravel
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          extensions: pdo_sqlite
+          coverage: none
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: |
+            sigap/package-lock.json
+            parity/package-lock.json
+
+      # Dev dependencies ikut: sigap:e2e-setup memakai factory (Faker).
+      - name: Siapkan Laravel
+        working-directory: sigap
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          npm ci --no-audit --no-fund
+          npm run build
+          cp .env.example .env
+          php artisan key:generate
+
+      # Variabel lingkungan menang atas .env: data, AI, dan integrasi luar dikunci agar deterministik.
+      - name: Jalankan Laravel
+        working-directory: sigap
+        run: |
+          DB="$PWD/database/paritas.sqlite"
+          touch "$DB"
+          export APP_ENV=local APP_URL="http://127.0.0.1:${PORT}" DB_CONNECTION=sqlite DB_DATABASE="$DB" \
+            AI_ENABLED=false CACHE_STORE=database SESSION_DRIVER=database QUEUE_CONNECTION=database \
+            MAIL_MAILER=log BROADCAST_CONNECTION=log RECAPTCHA_SITE_KEY= RECAPTCHA_SECRET_KEY= REVERB_APP_KEY=
+          php artisan sigap:e2e-setup
+          nohup php artisan serve --host=127.0.0.1 --port="$PORT" --no-reload > "$RUNNER_TEMP/laravel.log" 2>&1 &
+          for _ in $(seq 1 60); do
+            curl -fsS -o /dev/null "http://127.0.0.1:${PORT}/api/v1/health" && exit 0
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/laravel.log"
+          exit 1
+
+      - name: Suite paritas
+        working-directory: parity
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          BASE_URL="http://127.0.0.1:${PORT}" npx playwright test
+
+      - name: Log Laravel
+        if: failure()
+        run: tail -n 200 "$RUNNER_TEMP/laravel.log" || true
+
+      - name: Unggah laporan Playwright
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: laporan-paritas
+          path: |
+            parity/playwright-report/
+            parity/test-results/
+          retention-days: 14
+          if-no-files-found: ignore

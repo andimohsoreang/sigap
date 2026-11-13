@@ -1,0 +1,49 @@
+name: web
+
+# CI aplikasi Next.js (web/) selama rewrite: lint, typecheck, test, build.
+# Skrip mengikuti kontrak bersama S0 (docs/slices/S0.md).
+on:
+  push:
+    branches: ['rewrite/**', 's0/**']
+    paths: ['web/**', '.github/workflows/web.yml']
+  pull_request:
+    branches: ['rewrite/**', 's0/**']
+    paths: ['web/**', '.github/workflows/web.yml']
+
+# Hanya-baca: tidak ada langkah yang menulis ke repo, rilis, atau PR.
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: web
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  web:
+    name: Web (lint, typecheck, test, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Aksi dipin ke SHA commit penuh (tag di komentar), sama seperti lint.yml/tests.yml.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
