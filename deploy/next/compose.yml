@@ -1,0 +1,133 @@
+# Contact Center (Next.js) — stack Docker, BELUM dijalankan di server (S0 gelombang 1).
+# Jalankan dari folder ini (deploy/next), di samping stack Laravel (deploy/docker) yang tetap jalan:
+#   cp .env.example .env && chmod 600 .env                       # isi nilainya
+#   cp pgbouncer/userlist.txt.example pgbouncer/userlist.txt     # isi (cara: pgbouncer/pgbouncer.ini)
+#   sudo chown 70:70 pgbouncer/userlist.txt && sudo chmod 600 pgbouncer/userlist.txt
+#     (70 = user postgres di image pgbouncer; cek: docker run --rm --entrypoint id <image pgbouncer>)
+#   docker compose build && docker compose up -d
+#
+# Jaringan:
+#   backend  internal (tanpa egress): web, worker, valkey, pgbouncer. Valkey HANYA di sini.
+#   default  bridge biasa: web & worker (port loopback + panggilan keluar: AI, reCAPTCHA, SMTP).
+#   laravel  jaringan `internal` milik stack Laravel (external, compose Laravel tidak diubah). Hanya
+#            pgbouncer yang ikut, supaya bisa menjangkau service `db` (PostgreSQL bersama).
+#            Nama = <project Laravel>_internal; produksi `app2-sigap_internal` (rencana §10.2).
+#            Cek: docker network ls | grep _internal
+
+name: contact-center
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "5" }
+
+x-hardening: &hardening
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+  logging: *logging
+
+x-app: &app
+  <<: *hardening
+  image: ${CC_IMAGE:-contact-center-web}:${CC_TAG:-latest}
+  pull_policy: never
+  env_file: .env
+  init: true
+  networks: [default, backend]
+  depends_on:
+    valkey:
+      condition: service_healthy
+    pgbouncer:
+      condition: service_healthy
+
+services:
+  web:
+    <<: *app
+    build:
+      context: ../..
+      dockerfile: deploy/next/Dockerfile
+    environment:
+      OTEL_SERVICE_NAME: contact-center-web
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/0
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+      - /app/.next/cache:size=256m,mode=1777
+    # Loopback saja (Docker melewati ufw untuk port yang dipublikasikan). Rentang port supaya
+    # replica tidak bentrok; jumlah port di rentang harus >= replicas.
+    ports:
+      - "127.0.0.1:${CC_WEB_PORTS:-8093-8094}:3000"
+    deploy:
+      replicas: 2
+      resources:
+        limits: { cpus: "1.5", memory: 768M }
+    stop_grace_period: 30s
+
+  worker:
+    <<: *app
+    # PLACEHOLDER: entry worker (pg-boss: antrean ai, default, ingest) belum ada di web/ dan belum
+    # ikut output standalone. Ganti perintah ini saat worker dibuat di slice berikutnya.
+    command: ["node", "dist/worker.js"]
+    environment:
+      OTEL_SERVICE_NAME: contact-center-worker
+      VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/0
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    healthcheck:
+      disable: true # HEALTHCHECK image memeriksa HTTP /up milik web
+    deploy:
+      resources:
+        limits: { cpus: "1", memory: 512M }
+    stop_grace_period: 60s
+
+  # Cache, rate limit, kunci, pub/sub (rencana §9.4). Prefix kunci `cc:` diatur di aplikasi.
+  valkey:
+    <<: *hardening
+    image: valkey/valkey:9.0.7-alpine3.24@sha256:2d04268dfa26ab31cfa3fdc538866e76438b2d00e41db41b8cb86d780ac5a416
+    user: valkey # data volume baru mewarisi pemilik /data dari image; entrypoint tak perlu chown
+    # Sandi diinterpolasi compose dari .env (pakai hex, tanpa `$`).
+    command: ["valkey-server", "/usr/local/etc/valkey/valkey.conf", "--requirepass", "${VALKEY_PASSWORD:?VALKEY_PASSWORD wajib diisi di .env}"]
+    environment:
+      VALKEYCLI_AUTH: ${VALKEY_PASSWORD}
+    volumes:
+      - ./valkey/valkey.conf:/usr/local/etc/valkey/valkey.conf:ro
+      - valkey-data:/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 640M } # maxmemory 512mb + overhead
+
+  # Transaction pooling di depan PostgreSQL Laravel (rencana §9.3). Konfigurasi & daftar user
+  # di-mount read-only; entrypoint image tidak membuat ulang berkas yang sudah ada.
+  pgbouncer:
+    <<: *hardening
+    image: edoburu/pgbouncer:v1.26.1-p0@sha256:488422e38cff912895d0d65d8963fcd306e6ac589a724398b6eb8e294e94d624
+    volumes:
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    tmpfs:
+      - /tmp:size=8m
+    networks: [backend, laravel]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "6432"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 128M }
+
+volumes:
+  valkey-data:
+
+networks:
+  default:
+  backend:
+    internal: true
+  laravel:
+    external: true
+    name: ${LARAVEL_NETWORK:-app2-sigap_internal}

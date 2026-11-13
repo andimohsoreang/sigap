@@ -1,0 +1,11 @@
+# Konteks build = root repo; hanya web/ yang boleh masuk (BuildKit memakai berkas ini
+# alih-alih /.dockerignore milik image Laravel karena namanya <Dockerfile>.dockerignore).
+*
+!web
+web/node_modules
+web/.next
+web/.env*
+web/coverage
+web/test-results
+web/playwright-report
+**/.DS_Store
