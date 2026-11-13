@@ -1,0 +1,1206 @@
+{
+    "sumber": [
+        "App\\Services\\TicketService::findForPublicLookup",
+        "App\\Http\\Controllers\\Web\\PublicController::track"
+    ],
+    "commit": "f8713a05929dca41c78de8b1df39ec37128148e3",
+    "tag": "laravel-baseline",
+    "perintah": "php artisan cc:ekspor-fixture",
+    "catatan": "hasil = nama tiket yang dikembalikan atau null. http: hasil false = nomor sah tetapi tidak ditemukan/tidak boleh dilihat, null = nomor kosong/tidak sah (tidak dicari).",
+    "kasus": [
+        {
+            "tiket": "publik",
+            "masukan": "TKT-261113-ABCDEF",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": "publik"
+        },
+        {
+            "tiket": "publik",
+            "masukan": "TKT-261113-ABCDEF",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": "publik"
+        },
+        {
+            "tiket": "publik",
+            "masukan": "TKT-261113-ABCDEF",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": "publik"
+        },
+        {
+            "tiket": "publik",
+            "masukan": "TKT-261113-ABCDEF",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": "publik"
+        },
+        {
+            "tiket": "publik",
+            "masukan": "TKT-261113-ABCDEF",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": "publik"
+        },
+        {
+            "tiket": "publik",
+            "masukan": "  tkt-261113-abcdef ",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": "publik"
+        },
+        {
+            "tiket": "publik",
+            "masukan": "  tkt-261113-abcdef ",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": "publik"
+        },
+        {
+            "tiket": "publik",
+            "masukan": "  tkt-261113-abcdef ",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": "publik"
+        },
+        {
+            "tiket": "publik",
+            "masukan": "  tkt-261113-abcdef ",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": "publik"
+        },
+        {
+            "tiket": "publik",
+            "masukan": "  tkt-261113-abcdef ",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": "publik"
+        },
+        {
+            "tiket": "publik_milik_warga",
+            "masukan": "TKT-261113-BCDEFG",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": "publik_milik_warga"
+        },
+        {
+            "tiket": "publik_milik_warga",
+            "masukan": "TKT-261113-BCDEFG",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": "publik_milik_warga"
+        },
+        {
+            "tiket": "publik_milik_warga",
+            "masukan": "TKT-261113-BCDEFG",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": "publik_milik_warga"
+        },
+        {
+            "tiket": "publik_milik_warga",
+            "masukan": "TKT-261113-BCDEFG",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": "publik_milik_warga"
+        },
+        {
+            "tiket": "publik_milik_warga",
+            "masukan": "TKT-261113-BCDEFG",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": "publik_milik_warga"
+        },
+        {
+            "tiket": "publik_milik_warga",
+            "masukan": "  tkt-261113-bcdefg ",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": "publik_milik_warga"
+        },
+        {
+            "tiket": "publik_milik_warga",
+            "masukan": "  tkt-261113-bcdefg ",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": "publik_milik_warga"
+        },
+        {
+            "tiket": "publik_milik_warga",
+            "masukan": "  tkt-261113-bcdefg ",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": "publik_milik_warga"
+        },
+        {
+            "tiket": "publik_milik_warga",
+            "masukan": "  tkt-261113-bcdefg ",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": "publik_milik_warga"
+        },
+        {
+            "tiket": "publik_milik_warga",
+            "masukan": "  tkt-261113-bcdefg ",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": "publik_milik_warga"
+        },
+        {
+            "tiket": "anonim",
+            "masukan": "TKT-261113-CDEFGH",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": "anonim"
+        },
+        {
+            "tiket": "anonim",
+            "masukan": "TKT-261113-CDEFGH",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": "anonim"
+        },
+        {
+            "tiket": "anonim",
+            "masukan": "TKT-261113-CDEFGH",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": "anonim"
+        },
+        {
+            "tiket": "anonim",
+            "masukan": "TKT-261113-CDEFGH",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": "anonim"
+        },
+        {
+            "tiket": "anonim",
+            "masukan": "TKT-261113-CDEFGH",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": "anonim"
+        },
+        {
+            "tiket": "anonim",
+            "masukan": "  tkt-261113-cdefgh ",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": "anonim"
+        },
+        {
+            "tiket": "anonim",
+            "masukan": "  tkt-261113-cdefgh ",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": "anonim"
+        },
+        {
+            "tiket": "anonim",
+            "masukan": "  tkt-261113-cdefgh ",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": "anonim"
+        },
+        {
+            "tiket": "anonim",
+            "masukan": "  tkt-261113-cdefgh ",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": "anonim"
+        },
+        {
+            "tiket": "anonim",
+            "masukan": "  tkt-261113-cdefgh ",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": "anonim"
+        },
+        {
+            "tiket": "rahasia_milik_warga",
+            "masukan": "TKT-261113-DEFGHJ",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": null
+        },
+        {
+            "tiket": "rahasia_milik_warga",
+            "masukan": "TKT-261113-DEFGHJ",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": "rahasia_milik_warga"
+        },
+        {
+            "tiket": "rahasia_milik_warga",
+            "masukan": "TKT-261113-DEFGHJ",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": null
+        },
+        {
+            "tiket": "rahasia_milik_warga",
+            "masukan": "TKT-261113-DEFGHJ",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": "rahasia_milik_warga"
+        },
+        {
+            "tiket": "rahasia_milik_warga",
+            "masukan": "TKT-261113-DEFGHJ",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": "rahasia_milik_warga"
+        },
+        {
+            "tiket": "rahasia_milik_warga",
+            "masukan": "  tkt-261113-defghj ",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": null
+        },
+        {
+            "tiket": "rahasia_milik_warga",
+            "masukan": "  tkt-261113-defghj ",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": "rahasia_milik_warga"
+        },
+        {
+            "tiket": "rahasia_milik_warga",
+            "masukan": "  tkt-261113-defghj ",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": null
+        },
+        {
+            "tiket": "rahasia_milik_warga",
+            "masukan": "  tkt-261113-defghj ",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": "rahasia_milik_warga"
+        },
+        {
+            "tiket": "rahasia_milik_warga",
+            "masukan": "  tkt-261113-defghj ",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": "rahasia_milik_warga"
+        },
+        {
+            "tiket": "internal",
+            "masukan": "TKT-261113-EFGHJK",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": null
+        },
+        {
+            "tiket": "internal",
+            "masukan": "TKT-261113-EFGHJK",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": null
+        },
+        {
+            "tiket": "internal",
+            "masukan": "TKT-261113-EFGHJK",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": null
+        },
+        {
+            "tiket": "internal",
+            "masukan": "TKT-261113-EFGHJK",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": null
+        },
+        {
+            "tiket": "internal",
+            "masukan": "TKT-261113-EFGHJK",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": null
+        },
+        {
+            "tiket": "internal",
+            "masukan": "  tkt-261113-efghjk ",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": null
+        },
+        {
+            "tiket": "internal",
+            "masukan": "  tkt-261113-efghjk ",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": null
+        },
+        {
+            "tiket": "internal",
+            "masukan": "  tkt-261113-efghjk ",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": null
+        },
+        {
+            "tiket": "internal",
+            "masukan": "  tkt-261113-efghjk ",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": null
+        },
+        {
+            "tiket": "internal",
+            "masukan": "  tkt-261113-efghjk ",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": "ABCD2345",
+            "penampil": "tamu",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": "ABCD2345",
+            "penampil": "pelapor",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": "ABCD2345",
+            "penampil": "warga_lain",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": "ABCD2345",
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": "ABCD2345",
+            "penampil": "super_admin",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": " abcd2345 ",
+            "penampil": "tamu",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": " abcd2345 ",
+            "penampil": "pelapor",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": " abcd2345 ",
+            "penampil": "warga_lain",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": " abcd2345 ",
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": " abcd2345 ",
+            "penampil": "super_admin",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": "SALAH234",
+            "penampil": "tamu",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": "SALAH234",
+            "penampil": "pelapor",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": "SALAH234",
+            "penampil": "warga_lain",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": "SALAH234",
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "TKT-42",
+            "kode": "SALAH234",
+            "penampil": "super_admin",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": "ABCD2345",
+            "penampil": "tamu",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": "ABCD2345",
+            "penampil": "pelapor",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": "ABCD2345",
+            "penampil": "warga_lain",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": "ABCD2345",
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": "ABCD2345",
+            "penampil": "super_admin",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": " abcd2345 ",
+            "penampil": "tamu",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": " abcd2345 ",
+            "penampil": "pelapor",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": " abcd2345 ",
+            "penampil": "warga_lain",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": " abcd2345 ",
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": " abcd2345 ",
+            "penampil": "super_admin",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": "SALAH234",
+            "penampil": "tamu",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": "SALAH234",
+            "penampil": "pelapor",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": "SALAH234",
+            "penampil": "warga_lain",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": "SALAH234",
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama",
+            "masukan": "  tkt-42 ",
+            "kode": "SALAH234",
+            "penampil": "super_admin",
+            "hasil": "format_lama"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": "EFGH6789",
+            "penampil": "tamu",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": "EFGH6789",
+            "penampil": "pelapor",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": "EFGH6789",
+            "penampil": "warga_lain",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": "EFGH6789",
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": "EFGH6789",
+            "penampil": "super_admin",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": " efgh6789 ",
+            "penampil": "tamu",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": " efgh6789 ",
+            "penampil": "pelapor",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": " efgh6789 ",
+            "penampil": "warga_lain",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": " efgh6789 ",
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": " efgh6789 ",
+            "penampil": "super_admin",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": "SALAH234",
+            "penampil": "tamu",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": "SALAH234",
+            "penampil": "pelapor",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": "SALAH234",
+            "penampil": "warga_lain",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": "SALAH234",
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "TKT-43",
+            "kode": "SALAH234",
+            "penampil": "super_admin",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": "EFGH6789",
+            "penampil": "tamu",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": "EFGH6789",
+            "penampil": "pelapor",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": "EFGH6789",
+            "penampil": "warga_lain",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": "EFGH6789",
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": "EFGH6789",
+            "penampil": "super_admin",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": " efgh6789 ",
+            "penampil": "tamu",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": " efgh6789 ",
+            "penampil": "pelapor",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": " efgh6789 ",
+            "penampil": "warga_lain",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": " efgh6789 ",
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": " efgh6789 ",
+            "penampil": "super_admin",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": "SALAH234",
+            "penampil": "tamu",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": "SALAH234",
+            "penampil": "pelapor",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": "SALAH234",
+            "penampil": "warga_lain",
+            "hasil": null
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": "SALAH234",
+            "penampil": "admin_kawasan",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "format_lama_milik_warga",
+            "masukan": "  tkt-43 ",
+            "kode": "SALAH234",
+            "penampil": "super_admin",
+            "hasil": "format_lama_milik_warga"
+        },
+        {
+            "tiket": "dihapus",
+            "masukan": "TKT-261113-FGHJKM",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": null
+        },
+        {
+            "tiket": "dihapus",
+            "masukan": "TKT-261113-FGHJKM",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": null
+        },
+        {
+            "tiket": "dihapus",
+            "masukan": "TKT-261113-FGHJKM",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": null
+        },
+        {
+            "tiket": "dihapus",
+            "masukan": "TKT-261113-FGHJKM",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": null
+        },
+        {
+            "tiket": "dihapus",
+            "masukan": "TKT-261113-FGHJKM",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": null
+        },
+        {
+            "tiket": "dihapus",
+            "masukan": "  tkt-261113-fghjkm ",
+            "kode": null,
+            "penampil": "tamu",
+            "hasil": null
+        },
+        {
+            "tiket": "dihapus",
+            "masukan": "  tkt-261113-fghjkm ",
+            "kode": null,
+            "penampil": "pelapor",
+            "hasil": null
+        },
+        {
+            "tiket": "dihapus",
+            "masukan": "  tkt-261113-fghjkm ",
+            "kode": null,
+            "penampil": "warga_lain",
+            "hasil": null
+        },
+        {
+            "tiket": "dihapus",
+            "masukan": "  tkt-261113-fghjkm ",
+            "kode": null,
+            "penampil": "admin_kawasan",
+            "hasil": null
+        },
+        {
+            "tiket": "dihapus",
+            "masukan": "  tkt-261113-fghjkm ",
+            "kode": null,
+            "penampil": "super_admin",
+            "hasil": null
+        }
+    ],
+    "http": [
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": "TKT-261113-ABCDEF"
+            },
+            "status_http": 200,
+            "query_normal": "TKT-261113-ABCDEF",
+            "kode_normal": "",
+            "butuh_kode": false,
+            "hasil": "publik"
+        },
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": "  tkt-261113-abcdef  "
+            },
+            "status_http": 200,
+            "query_normal": "TKT-261113-ABCDEF",
+            "kode_normal": "",
+            "butuh_kode": false,
+            "hasil": "publik"
+        },
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": " TKT-261113-ABCDEF "
+            },
+            "status_http": 200,
+            "query_normal": "TKT-261113-ABCDEF",
+            "kode_normal": "",
+            "butuh_kode": false,
+            "hasil": "publik"
+        },
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": "\u0000TKT-261113-ABCDEF"
+            },
+            "status_http": 200,
+            "query_normal": "TKT-261113-ABCDEF",
+            "kode_normal": "",
+            "butuh_kode": false,
+            "hasil": "publik"
+        },
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": "tkt-261113-abcdeſ"
+            },
+            "status_http": 200,
+            "query_normal": "TKT-261113-ABCDEſ",
+            "kode_normal": "",
+            "butuh_kode": false,
+            "hasil": null
+        },
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": "TKT-261113-EFGHJK"
+            },
+            "status_http": 200,
+            "query_normal": "TKT-261113-EFGHJK",
+            "kode_normal": "",
+            "butuh_kode": false,
+            "hasil": false
+        },
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": "TKT-42"
+            },
+            "status_http": 200,
+            "query_normal": "TKT-42",
+            "kode_normal": "",
+            "butuh_kode": true,
+            "hasil": false
+        },
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": "TKT-42",
+                "kode": "ABCD2345"
+            },
+            "status_http": 200,
+            "query_normal": "TKT-42",
+            "kode_normal": "ABCD2345",
+            "butuh_kode": true,
+            "hasil": "format_lama"
+        },
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": "tkt-42",
+                "kode": " abcd2345 "
+            },
+            "status_http": 200,
+            "query_normal": "TKT-42",
+            "kode_normal": "ABCD2345",
+            "butuh_kode": true,
+            "hasil": "format_lama"
+        },
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": "TKT-42",
+                "kode": " ABCD2345 "
+            },
+            "status_http": 200,
+            "query_normal": "TKT-42",
+            "kode_normal": "ABCD2345",
+            "butuh_kode": true,
+            "hasil": "format_lama"
+        },
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": "TKT-42",
+                "kode": "ſBCD2345"
+            },
+            "status_http": 200,
+            "query_normal": "TKT-42",
+            "kode_normal": "SBCD2345",
+            "butuh_kode": true,
+            "hasil": false
+        },
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": "TKT-42",
+                "kode": "ABCD2345XXXXXXXXXXXXXXXX"
+            },
+            "status_http": 200,
+            "query_normal": "TKT-42",
+            "kode_normal": "ABCD2345XXXXXXXX",
+            "butuh_kode": true,
+            "hasil": false
+        },
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": "TKT-42",
+                "kode": ""
+            },
+            "status_http": 200,
+            "query_normal": "TKT-42",
+            "kode_normal": "",
+            "butuh_kode": true,
+            "hasil": false
+        },
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": "TKT-42",
+                "kode": "SALAH234"
+            },
+            "status_http": 200,
+            "query_normal": "TKT-42",
+            "kode_normal": "SALAH234",
+            "butuh_kode": true,
+            "hasil": false
+        },
+        {
+            "jalur": "/lacak",
+            "query": {
+                "ticket": ""
+            },
+            "status_http": 200,
+            "query_normal": "",
+            "kode_normal": "",
+            "butuh_kode": false,
+            "hasil": null
+        },
+        {
+            "jalur": "/lacak",
+            "query": [],
+            "status_http": 200,
+            "query_normal": "",
+            "kode_normal": "",
+            "butuh_kode": false,
+            "hasil": null
+        },
+        {
+            "jalur": "/lacak/tkt-261113-abcdef",
+            "query": [],
+            "status_http": 200,
+            "query_normal": "TKT-261113-ABCDEF",
+            "kode_normal": "",
+            "butuh_kode": false,
+            "hasil": "publik"
+        },
+        {
+            "jalur": "/lacak/TKT-42",
+            "query": {
+                "kode": "abcd2345"
+            },
+            "status_http": 200,
+            "query_normal": "TKT-42",
+            "kode_normal": "ABCD2345",
+            "butuh_kode": true,
+            "hasil": "format_lama"
+        },
+        {
+            "jalur": "/lacak/TKT-43",
+            "query": {
+                "kode": "EFGH6789"
+            },
+            "status_http": 200,
+            "query_normal": "TKT-43",
+            "kode_normal": "EFGH6789",
+            "butuh_kode": true,
+            "hasil": "format_lama_milik_warga"
+        }
+    ]
+}

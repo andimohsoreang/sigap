@@ -3,7 +3,8 @@
         "App\\Support\\SurveyQuestionnaire",
         "App\\Services\\SurveyService::submit"
     ],
-    "commit": "laravel-baseline",
+    "commit": "f8713a05929dca41c78de8b1df39ec37128148e3",
+    "tag": "laravel-baseline",
     "perintah": "php artisan cc:ekspor-fixture",
     "versi_kuesioner": 2,
     "aspek": [
@@ -21,7 +22,7 @@
         "diminta_pelapor": "Pelapor mengajukan tinjau ulang",
         "skor_rendah": "Skor survei rendah / belum teratasi"
     },
-    "catatan": "indeks = round(rata-rata aspek × 25, 2) (round PHP, half away from zero); mutu A ≥ 88.31, B ≥ 76.61, C ≥ 65, selain itu D. skm_index disimpan decimal(5,2).",
+    "catatan": "indeks = round(rata-rata aspek × 25, 2) (round PHP, half away from zero); mutu A ≥ 88.31, B ≥ 76.61, C ≥ 65, selain itu D. skm_index disimpan numeric(5,2) PostgreSQL. tinjau_ulang dibaca (bool): \"0\" = false, \"1\"/\"true\" = true.",
     "indeks": [
         {
             "jawaban": {
@@ -1641,6 +1642,159 @@
                 "teratasi": "belum",
                 "kembali": 3,
                 "tinjau_ulang": true
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "diminta_pelapor",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": "4",
+                    "konfirmasi": "3",
+                    "respons": "2",
+                    "penyelesaian": "1",
+                    "informasi": "4",
+                    "kesesuaian": "3",
+                    "sikap": "2",
+                    "kompetensi": "1",
+                    "kerahasiaan": "4"
+                },
+                "keseluruhan": "3",
+                "teratasi": "sebagian",
+                "kembali": 3,
+                "tinjau_ulang": "1"
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "diminta_pelapor",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": "4",
+                    "konfirmasi": "3",
+                    "respons": "2",
+                    "penyelesaian": "1",
+                    "informasi": "4",
+                    "kesesuaian": "3",
+                    "sikap": "2",
+                    "kompetensi": "1",
+                    "kerahasiaan": "4"
+                },
+                "keseluruhan": "3",
+                "teratasi": "sebagian",
+                "kembali": 3,
+                "tinjau_ulang": "0"
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": "4",
+                    "konfirmasi": "3",
+                    "respons": "2",
+                    "penyelesaian": "1",
+                    "informasi": "4",
+                    "kesesuaian": "3",
+                    "sikap": "2",
+                    "kompetensi": "1",
+                    "kerahasiaan": "4"
+                },
+                "keseluruhan": "4",
+                "teratasi": "belum",
+                "kembali": 3,
+                "tinjau_ulang": "0"
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": "4",
+                    "konfirmasi": "3",
+                    "respons": "2",
+                    "penyelesaian": "1",
+                    "informasi": "4",
+                    "kesesuaian": "3",
+                    "sikap": "2",
+                    "kompetensi": "1",
+                    "kerahasiaan": "4"
+                },
+                "keseluruhan": "4",
+                "teratasi": "belum",
+                "kembali": 3,
+                "tinjau_ulang": "1"
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "diminta_pelapor",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": "4",
+                    "konfirmasi": "3",
+                    "respons": "2",
+                    "penyelesaian": "1",
+                    "informasi": "4",
+                    "kesesuaian": "3",
+                    "sikap": "2",
+                    "kompetensi": "1",
+                    "kerahasiaan": "4"
+                },
+                "keseluruhan": "2",
+                "teratasi": "penuh",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": "4",
+                    "konfirmasi": "3",
+                    "respons": "2",
+                    "penyelesaian": "1",
+                    "informasi": "4",
+                    "kesesuaian": "3",
+                    "sikap": "2",
+                    "kompetensi": "1",
+                    "kerahasiaan": "4"
+                },
+                "keseluruhan": "3",
+                "teratasi": "penuh",
+                "kembali": 3,
+                "tinjau_ulang": "0"
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": "4",
+                    "konfirmasi": "3",
+                    "respons": "2",
+                    "penyelesaian": "1",
+                    "informasi": "4",
+                    "kesesuaian": "3",
+                    "sikap": "2",
+                    "kompetensi": "1",
+                    "kerahasiaan": "4"
+                },
+                "keseluruhan": "3",
+                "teratasi": "sebagian",
+                "kembali": 3,
+                "tinjau_ulang": "true"
             },
             "skm_index_tersimpan": "66.67",
             "alasan_tinjau_ulang": "diminta_pelapor",

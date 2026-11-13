@@ -3,8 +3,11 @@
         "App\\Enums\\TicketStatus",
         "App\\Services\\TicketService::changeStatus"
     ],
-    "commit": "laravel-baseline",
+    "commit": "f8713a05929dca41c78de8b1df39ec37128148e3",
+    "tag": "laravel-baseline",
     "perintah": "php artisan cc:ekspor-fixture",
+    "jam": "2026-11-13 10:00:00 Asia/Jakarta",
+    "catatan": "kasus = changeStatus sungguhan (PostgreSQL, Carbon::now() dibekukan pada `jam`); nilai waktu = string kolom DB. Varian: dasar (aktor super admin, belum ditugaskan, tinjau ulang diminta bila dari selesai), tanpa_aktor, sudah_ditugaskan (assignee lain), didisposisikan (unit_id terisi), tanpa_tinjau_ulang.",
     "status": [
         {
             "nilai": "baru",
@@ -53,156 +56,2161 @@
             ]
         }
     ],
+    "matriks": [
+        {
+            "dari": "baru",
+            "ke": "baru",
+            "boleh": false,
+            "sama": true
+        },
+        {
+            "dari": "baru",
+            "ke": "verifikasi",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "baru",
+            "ke": "diproses",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "baru",
+            "ke": "selesai",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "baru",
+            "ke": "ditolak",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "baru",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "verifikasi",
+            "boleh": false,
+            "sama": true
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "diproses",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "selesai",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "ditolak",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "diproses",
+            "ke": "baru",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "diproses",
+            "ke": "verifikasi",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "diproses",
+            "ke": "diproses",
+            "boleh": false,
+            "sama": true
+        },
+        {
+            "dari": "diproses",
+            "ke": "selesai",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "diproses",
+            "ke": "ditolak",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "selesai",
+            "ke": "baru",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "selesai",
+            "ke": "verifikasi",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "selesai",
+            "ke": "diproses",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "selesai",
+            "ke": "selesai",
+            "boleh": false,
+            "sama": true
+        },
+        {
+            "dari": "selesai",
+            "ke": "ditolak",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "ditolak",
+            "ke": "baru",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "ditolak",
+            "ke": "verifikasi",
+            "boleh": true,
+            "sama": false
+        },
+        {
+            "dari": "ditolak",
+            "ke": "diproses",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "ditolak",
+            "ke": "selesai",
+            "boleh": false,
+            "sama": false
+        },
+        {
+            "dari": "ditolak",
+            "ke": "ditolak",
+            "boleh": false,
+            "sama": true
+        }
+    ],
     "kasus": [
         {
             "dari": "baru",
             "ke": "baru",
-            "boleh": false,
-            "sama": true
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [],
+            "galat": null
         },
         {
             "dari": "baru",
             "ke": "verifikasi",
-            "boleh": true,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-13 10:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "aktor",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "baru",
+                    "ke": "verifikasi",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "baru",
+            "ke": "verifikasi",
+            "varian": "tanpa_aktor",
+            "aktor": null,
+            "awal": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-13 10:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "baru",
+                    "ke": "verifikasi",
+                    "aktor": null,
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "baru",
+            "ke": "verifikasi",
+            "varian": "sudah_ditugaskan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-13 10:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "baru",
+                    "ke": "verifikasi",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "baru",
+            "ke": "verifikasi",
+            "varian": "didisposisikan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "hasil": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-13 10:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "baru",
+                    "ke": "verifikasi",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
         },
         {
             "dari": "baru",
             "ke": "diproses",
-            "boleh": true,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-13 10:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "aktor",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "baru",
+                    "ke": "diproses",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "baru",
+            "ke": "diproses",
+            "varian": "tanpa_aktor",
+            "aktor": null,
+            "awal": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-13 10:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "baru",
+                    "ke": "diproses",
+                    "aktor": null,
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "baru",
+            "ke": "diproses",
+            "varian": "sudah_ditugaskan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-13 10:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "baru",
+                    "ke": "diproses",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "baru",
+            "ke": "diproses",
+            "varian": "didisposisikan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-13 10:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "baru",
+                    "ke": "diproses",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
         },
         {
             "dari": "baru",
             "ke": "selesai",
-            "boleh": false,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [],
+            "galat": {
+                "status": [
+                    "Perubahan status dari \"Menunggu\" ke \"Selesai\" tidak diizinkan."
+                ]
+            }
         },
         {
             "dari": "baru",
             "ke": "ditolak",
-            "boleh": true,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-13 10:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "aktor",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "baru",
+                    "ke": "ditolak",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "baru",
+            "ke": "ditolak",
+            "varian": "tanpa_aktor",
+            "aktor": null,
+            "awal": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-13 10:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "baru",
+                    "ke": "ditolak",
+                    "aktor": null,
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "baru",
+            "ke": "ditolak",
+            "varian": "sudah_ditugaskan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-13 10:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "baru",
+                    "ke": "ditolak",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "baru",
+            "ke": "ditolak",
+            "varian": "didisposisikan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "baru",
+                "responded_at": null,
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-13 10:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "baru",
+                    "ke": "ditolak",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
         },
         {
             "dari": "verifikasi",
             "ke": "baru",
-            "boleh": false,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [],
+            "galat": {
+                "status": [
+                    "Perubahan status dari \"Diverifikasi\" ke \"Menunggu\" tidak diizinkan."
+                ]
+            }
         },
         {
             "dari": "verifikasi",
             "ke": "verifikasi",
-            "boleh": false,
-            "sama": true
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [],
+            "galat": null
         },
         {
             "dari": "verifikasi",
             "ke": "diproses",
-            "boleh": true,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "aktor",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "verifikasi",
+                    "ke": "diproses",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "diproses",
+            "varian": "tanpa_aktor",
+            "aktor": null,
+            "awal": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "verifikasi",
+                    "ke": "diproses",
+                    "aktor": null,
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "diproses",
+            "varian": "sudah_ditugaskan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "verifikasi",
+                    "ke": "diproses",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "diproses",
+            "varian": "didisposisikan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "verifikasi",
+                    "ke": "diproses",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
         },
         {
             "dari": "verifikasi",
             "ke": "selesai",
-            "boleh": true,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-13 10:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "aktor",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "verifikasi",
+                    "ke": "selesai",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "selesai",
+            "varian": "tanpa_aktor",
+            "aktor": null,
+            "awal": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-13 10:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "verifikasi",
+                    "ke": "selesai",
+                    "aktor": null,
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "selesai",
+            "varian": "sudah_ditugaskan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-13 10:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "verifikasi",
+                    "ke": "selesai",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "selesai",
+            "varian": "didisposisikan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "hasil": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-13 10:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "verifikasi",
+                    "ke": "selesai",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
         },
         {
             "dari": "verifikasi",
             "ke": "ditolak",
-            "boleh": true,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "aktor",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "verifikasi",
+                    "ke": "ditolak",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "ditolak",
+            "varian": "tanpa_aktor",
+            "aktor": null,
+            "awal": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "verifikasi",
+                    "ke": "ditolak",
+                    "aktor": null,
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "ditolak",
+            "varian": "sudah_ditugaskan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "verifikasi",
+                    "ke": "ditolak",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "verifikasi",
+            "ke": "ditolak",
+            "varian": "didisposisikan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "verifikasi",
+                    "ke": "ditolak",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
         },
         {
             "dari": "diproses",
             "ke": "baru",
-            "boleh": false,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [],
+            "galat": {
+                "status": [
+                    "Perubahan status dari \"Diproses\" ke \"Menunggu\" tidak diizinkan."
+                ]
+            }
         },
         {
             "dari": "diproses",
             "ke": "verifikasi",
-            "boleh": true,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "aktor",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "diproses",
+                    "ke": "verifikasi",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "diproses",
+            "ke": "verifikasi",
+            "varian": "tanpa_aktor",
+            "aktor": null,
+            "awal": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "diproses",
+                    "ke": "verifikasi",
+                    "aktor": null,
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "diproses",
+            "ke": "verifikasi",
+            "varian": "sudah_ditugaskan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "diproses",
+                    "ke": "verifikasi",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "diproses",
+            "ke": "verifikasi",
+            "varian": "didisposisikan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "hasil": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "diproses",
+                    "ke": "verifikasi",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
         },
         {
             "dari": "diproses",
             "ke": "diproses",
-            "boleh": false,
-            "sama": true
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [],
+            "galat": null
         },
         {
             "dari": "diproses",
             "ke": "selesai",
-            "boleh": true,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-13 10:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "aktor",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "diproses",
+                    "ke": "selesai",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "diproses",
+            "ke": "selesai",
+            "varian": "tanpa_aktor",
+            "aktor": null,
+            "awal": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-13 10:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "diproses",
+                    "ke": "selesai",
+                    "aktor": null,
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "diproses",
+            "ke": "selesai",
+            "varian": "sudah_ditugaskan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-13 10:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "diproses",
+                    "ke": "selesai",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "diproses",
+            "ke": "selesai",
+            "varian": "didisposisikan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "hasil": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-13 10:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "diproses",
+                    "ke": "selesai",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
         },
         {
             "dari": "diproses",
             "ke": "ditolak",
-            "boleh": true,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "aktor",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "diproses",
+                    "ke": "ditolak",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "diproses",
+            "ke": "ditolak",
+            "varian": "tanpa_aktor",
+            "aktor": null,
+            "awal": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "diproses",
+                    "ke": "ditolak",
+                    "aktor": null,
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "diproses",
+            "ke": "ditolak",
+            "varian": "sudah_ditugaskan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "diproses",
+                    "ke": "ditolak",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "diproses",
+            "ke": "ditolak",
+            "varian": "didisposisikan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "diproses",
+                    "ke": "ditolak",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
         },
         {
             "dari": "selesai",
             "ke": "baru",
-            "boleh": false,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-10 09:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-10 09:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [],
+            "galat": {
+                "status": [
+                    "Perubahan status dari \"Selesai\" ke \"Menunggu\" tidak diizinkan."
+                ]
+            }
         },
         {
             "dari": "selesai",
             "ke": "verifikasi",
-            "boleh": false,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-10 09:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-10 09:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [],
+            "galat": {
+                "status": [
+                    "Perubahan status dari \"Selesai\" ke \"Diverifikasi\" tidak diizinkan."
+                ]
+            }
         },
         {
             "dari": "selesai",
             "ke": "diproses",
-            "boleh": true,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-10 09:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": "2026-11-13 10:00:00",
+                "reviewed_by": "aktor",
+                "ews_notified_at": null,
+                "assignee_id": "aktor",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "selesai",
+                    "ke": "diproses",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "selesai",
+            "ke": "diproses",
+            "varian": "tanpa_aktor",
+            "aktor": null,
+            "awal": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-10 09:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": "2026-11-13 10:00:00",
+                "reviewed_by": null,
+                "ews_notified_at": null,
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "selesai",
+                    "ke": "diproses",
+                    "aktor": null,
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "selesai",
+            "ke": "diproses",
+            "varian": "sudah_ditugaskan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-10 09:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": "2026-11-13 10:00:00",
+                "reviewed_by": "aktor",
+                "ews_notified_at": null,
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "selesai",
+                    "ke": "diproses",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "selesai",
+            "ke": "diproses",
+            "varian": "didisposisikan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-10 09:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": "2026-11-13 10:00:00",
+                "reviewed_by": "aktor",
+                "ews_notified_at": null,
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "selesai",
+                    "ke": "diproses",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "selesai",
+            "ke": "diproses",
+            "varian": "tanpa_tinjau_ulang",
+            "aktor": "aktor",
+            "awal": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-10 09:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "diproses",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": null,
+                "assignee_id": "aktor",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "selesai",
+                    "ke": "diproses",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
         },
         {
             "dari": "selesai",
             "ke": "selesai",
-            "boleh": false,
-            "sama": true
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-10 09:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-10 09:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [],
+            "galat": null
         },
         {
             "dari": "selesai",
             "ke": "ditolak",
-            "boleh": false,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-10 09:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "selesai",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": "2026-11-10 09:00:00",
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [],
+            "galat": {
+                "status": [
+                    "Perubahan status dari \"Selesai\" ke \"Ditolak\" tidak diizinkan."
+                ]
+            }
         },
         {
             "dari": "ditolak",
             "ke": "baru",
-            "boleh": false,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [],
+            "galat": {
+                "status": [
+                    "Perubahan status dari \"Ditolak\" ke \"Menunggu\" tidak diizinkan."
+                ]
+            }
         },
         {
             "dari": "ditolak",
             "ke": "verifikasi",
-            "boleh": true,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": null,
+                "assignee_id": "aktor",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "ditolak",
+                    "ke": "verifikasi",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "ditolak",
+            "ke": "verifikasi",
+            "varian": "tanpa_aktor",
+            "aktor": null,
+            "awal": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": null,
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "ditolak",
+                    "ke": "verifikasi",
+                    "aktor": null,
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "ditolak",
+            "ke": "verifikasi",
+            "varian": "sudah_ditugaskan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": null,
+                "assignee_id": "petugas_lain",
+                "unit_id": null
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "ditolak",
+                    "ke": "verifikasi",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
+        },
+        {
+            "dari": "ditolak",
+            "ke": "verifikasi",
+            "varian": "didisposisikan",
+            "aktor": "aktor",
+            "awal": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "hasil": {
+                "status": "verifikasi",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": null,
+                "assignee_id": null,
+                "unit_id": "unit"
+            },
+            "riwayat_baru": [
+                {
+                    "dari": "ditolak",
+                    "ke": "verifikasi",
+                    "aktor": "aktor",
+                    "catatan": "catatan uji"
+                }
+            ],
+            "galat": null
         },
         {
             "dari": "ditolak",
             "ke": "diproses",
-            "boleh": false,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [],
+            "galat": {
+                "status": [
+                    "Perubahan status dari \"Ditolak\" ke \"Diproses\" tidak diizinkan."
+                ]
+            }
         },
         {
             "dari": "ditolak",
             "ke": "selesai",
-            "boleh": false,
-            "sama": false
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [],
+            "galat": {
+                "status": [
+                    "Perubahan status dari \"Ditolak\" ke \"Selesai\" tidak diizinkan."
+                ]
+            }
         },
         {
             "dari": "ditolak",
             "ke": "ditolak",
-            "boleh": false,
-            "sama": true
+            "varian": "dasar",
+            "aktor": "aktor",
+            "awal": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "hasil": {
+                "status": "ditolak",
+                "responded_at": "2026-11-10 09:00:00",
+                "resolved_at": null,
+                "reviewed_at": null,
+                "reviewed_by": null,
+                "ews_notified_at": "2026-11-10 09:00:00",
+                "assignee_id": null,
+                "unit_id": null
+            },
+            "riwayat_baru": [],
+            "galat": null
         }
     ]
 }

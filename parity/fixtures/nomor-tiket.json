@@ -1,17 +1,17 @@
 {
     "sumber": [
         "App\\Models\\Ticket",
-        "App\\Services\\TicketService::nextTicketNo",
-        "App\\Services\\TicketService::findForPublicLookup"
+        "App\\Services\\TicketService::nextTicketNo"
     ],
-    "commit": "laravel-baseline",
+    "commit": "f8713a05929dca41c78de8b1df39ec37128148e3",
+    "tag": "laravel-baseline",
     "perintah": "php artisan cc:ekspor-fixture",
     "pola": "/^TKT-(\\d{1,10}|\\d{6}-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6})$/",
     "pola_format_lama": "/^TKT-\\d{1,10}$/",
     "alfabet": "23456789ABCDEFGHJKMNPQRSTUVWXYZ",
     "panjang_kode_akses": 8,
     "pola_rute_lacak": "[A-Za-z0-9-]{1,32}",
-    "catatan": "Pencarian publik: normal = strtoupper(trim(masukan)); nomor tidak sah → tidak dicari; format lama butuh kode akses bagi tamu (perbandingan constant-time, kode di-trim & huruf besar). PublicController memotong ?kode= ke 16 karakter setelah trim+upper.",
+    "catatan": "normal = strtoupper(trim(masukan)) PHP (trim hanya \" \\t\\n\\r\\0\\x0B\", strtoupper hanya ASCII). Jalur HTTP (middleware TrimStrings + controller) ada di lacak-tiket.json.",
     "nomor_baru": [
         {
             "waktu": "2026-11-13T16:59:59Z",
@@ -52,6 +52,21 @@
         },
         {
             "kode_tersimpan": "ABCD2345",
+            "masukan": "\u0000ABCD2345",
+            "cocok": true
+        },
+        {
+            "kode_tersimpan": "ABCD2345",
+            "masukan": " ABCD2345",
+            "cocok": false
+        },
+        {
+            "kode_tersimpan": "ABCD2345",
+            "masukan": "ſBCD2345",
+            "cocok": false
+        },
+        {
+            "kode_tersimpan": "ABCD2345",
             "masukan": "ABCD234",
             "cocok": false
         },
@@ -81,193 +96,281 @@
             "masukan": "TKT-261113-ABCDEF",
             "normal": "TKT-261113-ABCDEF",
             "sah": true,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "tkt-261113-abcdef",
             "normal": "TKT-261113-ABCDEF",
             "sah": true,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "  TKT-261113-23456Z  ",
             "normal": "TKT-261113-23456Z",
             "sah": true,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": false
         },
         {
             "masukan": "\tTKT-261113-HJKMNP\n",
             "normal": "TKT-261113-HJKMNP",
             "sah": true,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": false
+        },
+        {
+            "masukan": " TKT-261113-ABCDEF ",
+            "normal": " TKT-261113-ABCDEF ",
+            "sah": false,
+            "format_lama": false,
+            "cocok_rute_lacak": false
+        },
+        {
+            "masukan": "\u0000TKT-261113-ABCDEF\u0000",
+            "normal": "TKT-261113-ABCDEF",
+            "sah": true,
+            "format_lama": false,
+            "cocok_rute_lacak": false
+        },
+        {
+            "masukan": "\u000bTKT-261113-ABCDEF\u000b",
+            "normal": "TKT-261113-ABCDEF",
+            "sah": true,
+            "format_lama": false,
+            "cocok_rute_lacak": false
+        },
+        {
+            "masukan": "\rTKT-261113-ABCDEF\r",
+            "normal": "TKT-261113-ABCDEF",
+            "sah": true,
+            "format_lama": false,
+            "cocok_rute_lacak": false
+        },
+        {
+            "masukan": "tkt-261113-abcdeſ",
+            "normal": "TKT-261113-ABCDEſ",
+            "sah": false,
+            "format_lama": false,
+            "cocok_rute_lacak": false
+        },
+        {
+            "masukan": "TKT-261113-ABCDEſ",
+            "normal": "TKT-261113-ABCDEſ",
+            "sah": false,
+            "format_lama": false,
+            "cocok_rute_lacak": false
+        },
+        {
+            "masukan": "TKT-261113-ABCDEF​",
+            "normal": "TKT-261113-ABCDEF​",
+            "sah": false,
+            "format_lama": false,
+            "cocok_rute_lacak": false
         },
         {
             "masukan": "TKT-261113-ABCDE0",
             "normal": "TKT-261113-ABCDE0",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-261113-ABCDEO",
             "normal": "TKT-261113-ABCDEO",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-261113-ABCDE1",
             "normal": "TKT-261113-ABCDE1",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-261113-ABCDEI",
             "normal": "TKT-261113-ABCDEI",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-261113-ABCDEL",
             "normal": "TKT-261113-ABCDEL",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-261113-ABCDE",
             "normal": "TKT-261113-ABCDE",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-261113-ABCDEFG",
             "normal": "TKT-261113-ABCDEFG",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-26111-ABCDEF",
             "normal": "TKT-26111-ABCDEF",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-2611133-ABCDEF",
             "normal": "TKT-2611133-ABCDEF",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT261113-ABCDEF",
             "normal": "TKT261113-ABCDEF",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT_261113_ABCDEF",
             "normal": "TKT_261113_ABCDEF",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": false
         },
         {
             "masukan": "TKT-261113ABCDEF",
             "normal": "TKT-261113ABCDEF",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-261113-ABC DEF",
             "normal": "TKT-261113-ABC DEF",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": false
         },
         {
             "masukan": "XYZ-261113-ABCDEF",
             "normal": "XYZ-261113-ABCDEF",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT--ABCDEF",
             "normal": "TKT--ABCDEF",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-1",
             "normal": "TKT-1",
             "sah": true,
-            "format_lama": true
+            "format_lama": true,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "tkt-42",
             "normal": "TKT-42",
             "sah": true,
-            "format_lama": true
+            "format_lama": true,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": " TKT-0000000001 ",
             "normal": "TKT-0000000001",
             "sah": true,
-            "format_lama": true
+            "format_lama": true,
+            "cocok_rute_lacak": false
         },
         {
             "masukan": "TKT-1234567890",
             "normal": "TKT-1234567890",
             "sah": true,
-            "format_lama": true
+            "format_lama": true,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-12345678901",
             "normal": "TKT-12345678901",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-",
             "normal": "TKT-",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-12a",
             "normal": "TKT-12A",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-00",
             "normal": "TKT-00",
             "sah": true,
-            "format_lama": true
+            "format_lama": true,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "",
             "normal": "",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": false
         },
         {
             "masukan": "   ",
             "normal": "",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": false
         },
         {
             "masukan": "ABCDEF",
             "normal": "ABCDEF",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "261113-ABCDEF",
             "normal": "261113-ABCDEF",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": true
         },
         {
             "masukan": "TKT-261113-ÀBCDEF",
             "normal": "TKT-261113-ÀBCDEF",
             "sah": false,
-            "format_lama": false
+            "format_lama": false,
+            "cocok_rute_lacak": false
+        },
+        {
+            "masukan": "TKT-١٢٣",
+            "normal": "TKT-١٢٣",
+            "sah": false,
+            "format_lama": false,
+            "cocok_rute_lacak": false
         }
     ]
 }
