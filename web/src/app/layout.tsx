@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 import { APP_NAME } from '@/lib/judul';
-import './globals.css';
+
+// CSS dibangun scripts/css-statis.mjs dari globals.css (bukan lewat Turbopack) agar identik dengan build Vite Laravel.
+import asetCss from './aset-css.json';
 
 export const metadata: Metadata = {
     title: { default: APP_NAME, template: `%s - ${APP_NAME}` },
@@ -28,6 +30,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <html lang="id" suppressHydrationWarning>
             <head>
                 <script dangerouslySetInnerHTML={{ __html: skripPreferensi }} />
+                {/* Tanpa `precedence`: React tidak memindahkan link ini, jadi urutannya sama dengan Blade (skrip lalu CSS). */}
+                <link rel="stylesheet" href={asetCss.href} />
             </head>
             <body className="font-sans antialiased">{children}</body>
         </html>
