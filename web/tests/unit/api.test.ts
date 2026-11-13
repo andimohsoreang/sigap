@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
-// Halaman jsdom berada di origin server uji (port tetap), sehingga permintaan api same-origin.
-// @vitest-environment-options {"url": "http://127.0.0.1:47613/"}
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { api, galatApi } from '@/lib/api';
+import type * as ModulApi from '@/lib/api';
 
 import { serverUji } from './server-uji';
+
+declare const jsdom: { reconfigure(opsi: { url: string }): void; window: { _origin: string } };
 
 const BALASAN: Record<string, [number, object]> = {
     '/validasi': [422, { message: 'Kontak wajib diisi.', errors: { kontak: ['Kontak wajib diisi.'] } }],
@@ -14,25 +14,43 @@ const BALASAN: Record<string, [number, object]> = {
 };
 
 let srv: Awaited<ReturnType<typeof serverUji>>;
+let api: typeof ModulApi.api;
+let galatApi: typeof ModulApi.galatApi;
 
 beforeAll(async () => {
     srv = await serverUji((req, res) => {
         const [status, body] = BALASAN[req.url ?? ''] ?? [200, { path: req.url }];
         res.writeHead(status, { 'Content-Type': 'application/json' }).end(JSON.stringify(body));
-    }, 47613);
+    });
+    // Halaman jsdom dipindah ke origin server uji, sehingga permintaan api same-origin. reconfigure() tidak memperbarui
+    // origin yang dipakai XHR jsdom (window._origin, diisi sekali saat window dibuat), jadi disetel manual.
+    jsdom.reconfigure({ url: `${srv.url}/` });
+    jsdom.window._origin = srv.url;
+    // axios membaca origin halaman saat modulnya dimuat (cek same-origin XSRF), jadi api diimpor setelah origin dipindah.
+    ({ api, galatApi } = await import('@/lib/api'));
 });
 afterAll(() => srv.tutup());
 
 describe('api (browser)', () => {
-    it('URL absolut tetap ke origin sendiri', async () => {
-        const res = await api.get('https://contoh.invalid/x');
-        expect(res.data).toEqual({ path: '/https://contoh.invalid/x' });
+    it.each([
+        'https://contoh.invalid/x',
+        '//contoh.invalid/x',
+        '/\\contoh.invalid/x',
+        '\\\\contoh.invalid/x',
+        '\t//contoh.invalid',
+        '/\t/contoh.invalid',
+        'relatif',
+    ])('menolak %j tanpa mengirim permintaan', async (url) => {
+        const sebelum = srv.permintaan.length;
+        await expect(api.get(url)).rejects.toThrow(/same-origin/);
+        expect(srv.permintaan.length).toBe(sebelum);
     });
 
     it('menyertakan X-XSRF-TOKEN dari cookie pada POST same-origin', async () => {
         document.cookie = 'XSRF-TOKEN=abc%3D';
         await api.post('/kirim', { isi: 'halo' });
         const req = srv.permintaan.at(-1)!;
+        expect(req.url).toBe('/kirim');
         expect(req.headers['x-xsrf-token']).toBe('abc=');
         expect(req.headers.accept).toBe('application/json');
     });

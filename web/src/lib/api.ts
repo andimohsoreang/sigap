@@ -1,18 +1,24 @@
 import axios, { isAxiosError } from 'axios';
 
-// Klien browser untuk endpoint JSON milik sendiri. Bukan untuk URL luar: allowAbsoluteUrls false membuat URL
-// absolut digabung ke '/', sehingga permintaan tetap ke origin sendiri.
+// Klien browser khusus endpoint JSON milik sendiri; URL luar ditolak oleh penjaga di bawah.
 export const api = axios.create({
     baseURL: '/',
     allowAbsoluteUrls: false,
     adapter: 'xhr',
-    withCredentials: false,
     // Nama cookie & header sama dengan Laravel selama kedua aplikasi berjalan berdampingan.
     xsrfCookieName: 'XSRF-TOKEN',
     xsrfHeaderName: 'X-XSRF-TOKEN',
     // Sama dengan batas server (fastcgi_read_timeout 60s di deploy/docker/nginx.conf).
     timeout: 60_000,
     headers: { Accept: 'application/json' },
+});
+
+// Hanya path yang diawali tepat satu '/'. Menolak URL absolut, `//host`, dan varian yang dinormalkan browser menjadi
+// `//host`: backslash (`/\\host`) serta tab/baris baru yang dibuang parser URL (`\t//host`, `/\t/host`).
+api.interceptors.request.use((config) => {
+    const url = config.url ?? '';
+    if (!/^\/(?![/\\])/.test(url) || /[\t\n\r]/.test(url)) throw new Error(`api: hanya path same-origin yang diizinkan (${JSON.stringify(url)})`);
+    return config;
 });
 
 export interface GalatApi {
