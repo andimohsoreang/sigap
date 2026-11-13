@@ -6,6 +6,7 @@
 | Menggantikan | Fase F1–F7 di `docs/RENCANA-REWRITE-NEXTJS.md` §2 (keputusan, §8 paritas visual, §9 standar backend tetap berlaku) |
 | Inventaris | `docs/REWRITE-NEXTJS.md` |
 | Status | **Disetujui 13 Nov 2026** — strategi per fitur menggantikan cutover sekaligus |
+| Basis fitur | **Semua fitur yang berjalan di produksi** (`app2`), saat ini commit `f8713a0` di `feat/contact-center-ai` |
 
 ---
 
@@ -40,6 +41,23 @@ navigasi Inertia, berbagi server WebSocket, dan membagi jadwal cron. Tambahan ke
 cutover sekaligus.
 
 ---
+
+## 1a. Basis fitur = produksi
+
+Yang ditulis ulang adalah **persis apa yang berjalan di produksi**, bukan isi branch lain atau pekerjaan yang
+belum dirilis.
+
+- Per 13 Nov 2026 produksi menjalankan `feat/contact-center-ai` @ `f8713a0` (fitur terakhir: survei SKM v2 —
+  terkonfirmasi lewat `/api/v1/survei/kuesioner` yang mengembalikan `versi: 2`). `main` dan
+  `feat/beranda-makarti` tidak punya commit di luar commit ini.
+- Pekerjaan yang **belum dirilis** ke produksi (mis. perubahan beranda yang belum di-commit di worktree
+  `sigap-beranda-makarti`) **tidak** termasuk basis. Bila dirilis sebelum freeze, ikut masuk basis.
+- Saat freeze (S0, langkah 0.1): catat commit yang benar-benar ter-checkout di server
+  (`ssh srvr-dev-andy 'cd /opt/app2-sigap && git log -1 && git status --porcelain'`), pastikan tidak ada perubahan
+  lokal di server, lalu tag commit itu `laravel-baseline`. Baseline screenshot, vektor uji, dan suite paritas
+  diambil dari tag ini.
+- Setelah freeze, setiap rilis Laravel ke produksi (perbaikan bug) menggeser tag dan wajib ikut di-port ke slice
+  terkait.
 
 ## 2. Siklus setiap fitur (Definition of Done)
 
