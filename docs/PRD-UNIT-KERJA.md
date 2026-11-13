@@ -7,7 +7,7 @@
 | Lingkup | Master data Unit Kerja; disposisi tiket oleh Super Admin ke unit; peran Petugas Unit |
 | Dokumen terkait | `PRD.md`, `TECH-SPEC.md` (SEC-07), `PRD-AI.md` (batas modul, aturan §0) |
 
-> Asumsi: yang dimaksud adalah **pengaduan** (tiket SIGAP) yang didisposisikan ke unit kerja,
+> Asumsi: yang dimaksud adalah **pengaduan** (tiket Contact Center) yang didisposisikan ke unit kerja,
 > bukan pengadaan barang/jasa.
 
 ---

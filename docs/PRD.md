@@ -1,9 +1,9 @@
-# PRD — SIGAP (Sistem Pengelolaan Pengaduan Masyarakat)
+# PRD — Contact Center (Sistem Pengelolaan Pengaduan Masyarakat)
 ## Migrasi ke Stack: Laravel · React · Tailwind CSS · shadcn/ui
 
 | Field | Nilai |
 |---|---|
-| Nama Produk | SIGAP — *Suara Masyarakat, Inisiatif Gerak Aksi, Penyelesaian Tuntas* |
+| Nama Produk | Contact Center |
 | Pemilik Produk | Kementerian Transmigrasi Republik Indonesia |
 | Domain saat ini | `app1.andimohamad.my.id` |
 | Versi Dokumen | 1.0 (draft) |
@@ -16,7 +16,7 @@
 
 ## 1. Latar Belakang
 
-Saat ini SIGAP adalah **SPA statis satu file** (`index.html` ~323 KB) yang di-serve nginx, dengan backend terpisah berupa service Node.js bernama `sigap-api`. Hasil audit (05 Okt 2026) menemukan:
+Saat ini Contact Center adalah **SPA statis satu file** (`index.html` ~323 KB) yang di-serve nginx, dengan backend terpisah berupa service Node.js bernama `sigap-api`. Hasil audit (05 Okt 2026) menemukan:
 
 - Frontend memuat **blok "MODE DEMO"** dengan kredensial plaintext (`admin/admin123`, `warga123`) yang **valid di produksi**.
 - **~70% panel admin kosong** — puluhan endpoint yang dipanggil UI mengembalikan 404 dan ditutupi **data dummy hardcoded** di HTML.
@@ -131,7 +131,7 @@ routes/
 **Konsekuensi:** frontend memakai Inertia `<Link>`/`router` untuk navigasi antar halaman, tetapi data tabel/form tetap boleh mengambil `fetch` ke `/api/v1/*` (mis. live update chat, polling statistik) sehingga kedua jalur hidup berdampingan.
 
 ### 4.4 Batasan Arsitektur
-- **Keputusan UI-preservation**: komponen shadcn/ui akan **di-theme** memakai token warna SIGAP di `components.json` + CSS variables, sehingga hasil render mendekati Tailwind config lama:
+- **Keputusan UI-preservation**: komponen shadcn/ui akan **di-theme** memakai token warna Contact Center di `components.json` + CSS variables, sehingga hasil render mendekati Tailwind config lama:
   - `primary #0E5B72`, `primaryLight #0093B6`, `primarySoft #E5F4F7`, `secondary #C3A167`, `darkBg #0f172a`, `darkCard #1e293b`, `light #F3F4F6`
   - Font: **Inter** (300–800)
   - `darkMode: 'class'`
@@ -145,7 +145,7 @@ routes/
 |---|---|---|
 | `beranda` | `/` | Beranda, hero, kanal resmi, FAQ, maklumat |
 | `katalog` | `/katalog` | Katalog kanal pengaduan |
-| `formulir-pengaduan` | `/pengaduan/baru` | Formulir SIGAP (publik) |
+| `formulir-pengaduan` | `/pengaduan/baru` | Formulir Contact Center (publik) |
 | `formulir-internal` | `/pengaduan/internal` | Pengaduan internal pegawai |
 | `lacak-tiket` | `/lacak` + `/lacak/:nomor` | Pelacakan tiket |
 | `peta` | `/peta` | Peta kawasan |
@@ -315,7 +315,7 @@ Semua endpoint di bawah **wajib ada** (menghilangkan 404 yang ditutupi dummy). F
 ## 9. Design System & Komponen (shadcn/ui)
 
 ### 9.1 Theming
-- `components.json` + CSS variables memetakan token SIGAP:
+- `components.json` + CSS variables memetakan token Contact Center:
   - `--primary: 0E5B72`, `--primary-light: 0093B6`, `--primary-soft: E5F4F7`, `--secondary: C3A167`, dst.
 - shadcn/ui dipakai untuk: `Button`, `Input`, `Select`, `Textarea`, `Checkbox`, `RadioGroup`, `Switch`, `Dialog`, `AlertDialog`, `Sheet`, `Tabs`, `Table`, `Badge`, `Card`, `DropdownMenu`, `Toast` (Sonner), `Calendar`, `Popover`, `Tooltip`, `Avatar`, `Skeleton`, `Pagination`.
 
@@ -398,7 +398,7 @@ Semua pertanyaan terbuka sebelumnya **sudah diputuskan** (lihat §4.2):
 2. **Kebijakan retensi & anonimisasi** data pribadi (UU PDP).
 3. **SMTP/email** kementerian untuk notifikasi (penyedia & kredensial).
 
-> ✅ **Diperbarui 12 Okt 2026:** deploy memakai Docker; SIGAP baru di `app2.andimohamad.my.id` (lihat `docs/PRD-DEPLOY.md`).
+> ✅ **Diperbarui 12 Okt 2026:** deploy memakai Docker; Contact Center baru di `app2.andimohamad.my.id` (lihat `docs/PRD-DEPLOY.md`).
 
 ---
 

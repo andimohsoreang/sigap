@@ -1,4 +1,4 @@
-# Panduan Deploy SIGAP (Docker)
+# Panduan Deploy Contact Center (Docker)
 
 Target: **Cloudflare → Cloudflare Tunnel (`cloudflared`) → container nginx → container PHP-FPM 8.4
 + Reverb**, database **PostgreSQL 16 di container**, queue worker & scheduler sebagai container.
@@ -6,7 +6,7 @@ Semua dijalankan dengan **Docker Compose** dari folder `deploy/docker/` repo ini
 
 > Keputusan pemilik (12 Okt 2026): deploy memakai **Docker**, bukan instalasi native di OS.
 > Server sudah menjalankan stack Docker lain (mis. `app1-sigap`, `codeserver-nginx`, `kasm-proxy`)
-> dan `cloudflared`. SIGAP baru dipasang sebagai stack terpisah **`app2-sigap`** di
+> dan `cloudflared`. Contact Center baru dipasang sebagai stack terpisah **`app2-sigap`** di
 > **`app2.andimohamad.my.id`**, tanpa mengganggu stack yang sudah ada.
 
 | Lingkungan | Domain | Stack Compose | Database |
@@ -73,7 +73,7 @@ Cache, sesi, dan queue memakai driver **`database`** (PostgreSQL) — tidak perl
 - Login SSH memakai **key**, login password dimatikan.
 - User yang menjalankan deploy ada di grup `docker`. Anggota grup `docker` setara root —
   batasi siapa saja yang masuk grup ini.
-- Pastikan port lokal untuk SIGAP belum dipakai stack lain:
+- Pastikan port lokal untuk Contact Center belum dipakai stack lain:
 
 ```bash
 docker ps --format 'table {{.Names}}\t{{.Ports}}'
@@ -180,7 +180,7 @@ sudo systemctl restart cloudflared
 ```
 
 **b) `cloudflared` berjalan sebagai container**: `127.0.0.1` di dalam container cloudflared
-bukan host. Sambungkan cloudflared ke jaringan stack SIGAP lalu tunjuk ke container `web`:
+bukan host. Sambungkan cloudflared ke jaringan stack Contact Center lalu tunjuk ke container `web`:
 
 ```bash
 docker network connect app2-sigap_internal <nama-container-cloudflared>
@@ -364,11 +364,11 @@ Checklist:
 
 ## 11. Cutover dari sistem lama (`app1`)
 
-1. Jalankan SIGAP baru di `app2` dan uji paritas (14 halaman publik + 9 sub-halaman admin, light/dark).
+1. Jalankan Contact Center baru di `app2` dan uji paritas (14 halaman publik + 9 sub-halaman admin, light/dark).
 2. Backup penuh DB & berkas sistem lama; migrasi data sesuai TECH-SPEC §6.
 3. Turunkan TTL DNS `app1` ke 300 detik 24 jam sebelumnya.
 4. Hari H: mode perawatan, hentikan `app1-sigap`, arahkan hostname `app1` di ingress cloudflared ke
-   SIGAP baru, sesuaikan `APP_URL`, `REVERB_ALLOWED_ORIGINS`, `SANCTUM_STATEFUL_DOMAINS`,
+   Contact Center baru, sesuaikan `APP_URL`, `REVERB_ALLOWED_ORIGINS`, `SANCTUM_STATEFUL_DOMAINS`,
    `VITE_REVERB_HOST` → `bash scripts/deploy.sh`.
 5. Pantau log + `queue:failed` selama 1–2 minggu. Simpan stack & backup lama minimal 30 hari.
 
@@ -405,7 +405,7 @@ warga. NIK, nomor HP, surel, dan deret angka panjang disamarkan sebelum teks dik
 
 1. Isi Basis Pengetahuan dulu (panel admin → Basis Pengetahuan). Tanpa artikel terbit, AI hanya bisa
    menjawab "belum menemukan informasi resmi" dan meneruskan ke petugas.
-   `php artisan db:seed --class=KnowledgeSeeder --force` menambahkan 8 artikel cara memakai SIGAP
+   `php artisan db:seed --class=KnowledgeSeeder --force` menambahkan 8 artikel cara memakai Contact Center
    (hanya bila tabel masih kosong).
    `php artisan db:seed --class=OfficialKnowledgeSeeder --force` menambahkan ±29 artikel dari portal PPID,
    JDIH, dan UU 15/1997 jo. UU 29/2009 (layanan informasi publik, jenis transmigrasi, syarat, hak &
@@ -432,7 +432,7 @@ warga. NIK, nomor HP, surel, dan deret angka panjang disamarkan sebelum teks dik
 ### Yang perlu berjalan
 
 - `queue` — memproses PDF di menu **Basis Pengetahuan → Buat dari dokumen resmi**.
-- Server SIGAP saat ini (tanpa GPU, CPU tanpa AVX) **tidak** dapat menjalankan model lokal; pakai
+- Server Contact Center saat ini (tanpa GPU, CPU tanpa AVX) **tidak** dapat menjalankan model lokal; pakai
   penyedia API atau server GPU terpisah.
 
 ### Rujukan ke portal Kementerian

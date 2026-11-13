@@ -1,4 +1,4 @@
-# SIGAP — Sistem Pengelolaan Pengaduan Masyarakat
+# Contact Center — Sistem Pengelolaan Pengaduan Masyarakat
 
 *Suara Masyarakat, Inisiatif Gerak Aksi, Penyelesaian Tuntas* — Kementerian Transmigrasi Republik Indonesia.
 
@@ -148,7 +148,7 @@ Unit tidak dihapus, hanya dinonaktifkan. Rencana lengkap (disposisi, Petugas Uni
 php artisan sigap:admin                 # interaktif (super_admin / admin_kawasan)
 ```
 
-## Perintah khusus SIGAP
+## Perintah khusus Contact Center
 
 | Perintah | Fungsi |
 |---|---|
