@@ -19,6 +19,10 @@
 | 13 Nov 2026 | Framework: **Next.js + TypeScript** (Astro dipertimbangkan, tidak dipilih: Contact Center aplikasi interaktif, bukan situs konten) |
 | 13 Nov 2026 | Nama aplikasi **Contact Center**. Nama `SIGAP`/`sigap` tidak dipakai untuk apa pun yang baru; nama lama hanya dipertahankan bila wajib untuk kompatibilitas, dan dihapus di S17. Aturan di §10 |
 | 13 Nov 2026 | **Hosting tetap di server produksi sekarang** (`app2.andimohamad.my.id`, server `srvr-dev-andy`) selama rewrite: Next.js dipasang berdampingan dengan Laravel di server yang sama. Pindah ke hosting nasional & domain `.go.id` diputuskan terpisah, tidak memblokir S0. Detail §9.10 |
+| 13 Nov 2026 | **Penyedia AI tetap Sumopod** (`AI_BASE_URL=https://ai.sumopod.com/v1`, model `deepseek-v4-flash`, terverifikasi di server). Klien OpenAI-compatible yang sama dipakai di Next.js. Lokasi data model untuk PP 71/2019 dicek terpisah, tidak memblokir rewrite |
+| 13 Nov 2026 | **UAT dilakukan sendiri oleh pemilik proyek**; tim menyiapkan skenario UAT lengkap per slice (`docs/slices/TEMPLATE-UAT.md`). **Pindah rute disetujui oleh pemilik proyek** lewat konfirmasi berbahasa sederhana (`docs/slices/TEMPLATE-PINDAH-RUTE.md`) |
+| 13 Nov 2026 | **Freeze fitur Laravel mulai hari S0 dimulai**; basis = commit produksi hari itu (saat ini `f8713a0`), diberi tag `laravel-baseline` |
+| 13 Nov 2026 | Data trafik Cloudflare **ditunda**; target §9.1 tetap memakai asumsi kerja. Rename repo GitHub dilakukan sendiri oleh pemilik proyek nanti |
 | 13 Nov 2026 | Desain **identik 100%** dengan versi Laravel: 0 piksel beda pada screenshot pembanding. Aturan & gerbangnya di §8 |
 
 ## 0. Asumsi (perlu dikonfirmasi)
@@ -34,7 +38,7 @@ Rencana ini disusun dengan asumsi berikut. Kalau salah satu berubah, fase yang t
 | A5 | `/api/v1` dipertahankan untuk paritas (tidak ada klien eksternal yang diketahui, tapi murah dipertahankan) | F2, F3 |
 | A6 | Paritas perilaku dulu, fitur baru belakangan. SLA tetap tanpa libur nasional; kanal SP4N/WBS tetap stub | semua |
 | A7 | Satu developer utama dibantu AI, ditambah dukungan infrastruktur/ops paruh waktu untuk §9.3–9.7 dan pentest oleh pihak ketiga; estimasi di §6 memakai asumsi ini | §6 |
-| A8 | Laravel dibekukan untuk fitur baru sejak F1 dimulai; hanya perbaikan bug yang masuk (dan ikut di-port) | semua |
+| A8 | **Sudah diputuskan.** Laravel dibekukan untuk fitur baru sejak hari S0 dimulai; hanya perbaikan bug yang masuk (dan ikut di-port) | semua |
 
 ---
 
@@ -330,12 +334,12 @@ Satu developer penuh waktu dengan bantuan AI. Angka ini perkiraan awal, ditinjau
 
 1. Konfirmasi A1–A8.
 2. Nama folder (`web/`) dan apakah tetap satu repo.
-3. Tanggal freeze fitur Laravel.
-4. Siapa melakukan UAT di F6.
+3. ~~Tanggal freeze~~ — hari S0 dimulai (13 Nov 2026).
+4. ~~Siapa UAT~~ — pemilik proyek sendiri, dengan skenario dari tim; pemilik proyek juga menyetujui pindah rute (13 Nov 2026).
 5. ~~Lokasi hosting selama rewrite~~ — tetap `app2.andimohamad.my.id` (13 Nov 2026). Hosting nasional & domain `.go.id` untuk jangka panjang masih terbuka (§9.10).
-6. Penyedia AI: lokasi data penyedia sekarang, atau model di-host sendiri (§9.6).
-7. Data trafik nyata untuk mengganti asumsi §9.1.
-8. Rename repo GitHub `sigap` → `contact-center` (§10.2).
+6. ~~Penyedia AI~~ — tetap Sumopod (13 Nov 2026); cek lokasi data model untuk PP 71/2019 dilakukan terpisah.
+7. Data trafik nyata — **ditunda**; §9.1 memakai asumsi kerja.
+8. Rename repo GitHub `sigap` → `contact-center` — dilakukan sendiri oleh pemilik proyek nanti (§10.2).
 
 ---
 

@@ -53,7 +53,7 @@ belum dirilis.
   `feat/beranda-makarti` tidak punya commit di luar commit ini.
 - Pekerjaan yang **belum dirilis** ke produksi (mis. perubahan beranda yang belum di-commit di worktree
   `sigap-beranda-makarti`) **tidak** termasuk basis. Bila dirilis sebelum freeze, ikut masuk basis.
-- Saat freeze (S0, langkah 0.1): catat commit yang benar-benar ter-checkout di server
+- **Freeze dimulai hari S0 dimulai** (diputuskan 13 Nov 2026). Saat freeze (S0, langkah 0.1): catat commit yang benar-benar ter-checkout di server
   (`ssh srvr-dev-andy 'cd /opt/app2-sigap && git log -1 && git status --porcelain'`), pastikan tidak ada perubahan
   lokal di server, lalu tag commit itu `laravel-baseline`. Baseline screenshot, vektor uji, dan suite paritas
   diambil dari tag ini.
@@ -72,9 +72,9 @@ langkah 7, tapi **tidak boleh dipindah ke produksi** sebelum slice sebelumnya lu
 | 3 | **Bangun** di Next.js mengikuti §8 (desain) & §9 (backend) | PR fitur |
 | 4 | **Test hijau terhadap Next.js**: unit, vektor, paritas, visual 0 piksel, typecheck, lint, SAST | CI hijau |
 | 5 | **Review & audit keamanan**: code review (`code-reviewer`, skill `ponytail-review`) + audit keamanan slice dengan skill `security-audit` Cloudflare (§6.3); semua temuan *Must fix* dan temuan keamanan `confirmed` diperbaiki lalu diverifikasi ulang | laporan review + `docs/slices/Sxx-keamanan.md` |
-| 6 | **Staging**: deploy ke staging (snapshot produksi), smoke test, uji beban slice bila menyangkut publik, UAT oleh petugas | catatan UAT ditandatangani |
+| 6 | **Staging & UAT**: deploy ke staging (snapshot produksi), smoke test, uji beban slice bila menyangkut publik. Tim menyiapkan skenario UAT lengkap (`docs/slices/Sxx-uat.md` dari `TEMPLATE-UAT.md`); **pemilik proyek** menjalankan UAT sendiri | skenario UAT berisi hasil & keputusan pemilik proyek |
 | 7 | **Deploy produksi (gelap)**: image Next.js baru naik, rute **masih** ke Laravel; cek kesehatan & log | deploy sukses |
-| 8 | **Pindah rute** di peta nginx → Next.js; pantau 3 hari kerja (error rate, p95, alert, laporan petugas) | 0 insiden P1/P2 |
+| 8 | **Pindah rute** di peta nginx → Next.js, **setelah pemilik proyek menyetujui** konfirmasi berbahasa sederhana (`TEMPLATE-PINDAH-RUTE.md`); pantau 3 hari kerja (error rate, p95, alert, laporan petugas) | persetujuan tertulis + 0 insiden P1/P2 |
 | 9 | **Tutup slice**: tandai rute "milik Next.js" di checklist paritas, perbarui dokumentasi, catat backlog | slice selesai |
 
 Rollback kapan pun di langkah 8: kembalikan baris peta rute, reload nginx, buka insiden, perbaiki, ulang dari
@@ -220,7 +220,7 @@ peta rute diuji.
   Laravel memakai `<a>` biasa.
 - **Test kunci:** matriks transisi status; policy admin_kawasan vs super_admin; filter & pencarian (URL lama tetap
   berfungsi); indeks `pg_trgm` aktif; surel status ke pelapor.
-- **Gerbang:** UAT petugas 3 hari di staging dengan alur kerja harian nyata.
+- **Gerbang:** UAT oleh pemilik proyek dengan skenario alur kerja harian petugas (tiket masuk sampai selesai).
 
 ### S7 — Unit kerja, petugas, disposisi
 
@@ -372,9 +372,9 @@ selalu menang bila bertentangan.
 | 3 Bangun | Programmer 1 (+ Programmer 2) | dua programmer paralel di worktree terpisah |
 | 4 Test hijau di Next.js | QA menjalankan, programmer memperbaiki | berulang sampai hijau |
 | 5 Review & audit | Code reviewer **dan** audit `security-audit` | paralel; perbaikan oleh programmer, lalu review ulang bagian yang berubah |
-| 6 Staging | DevOps deploy, QA smoke + beban, pengguna/petugas UAT | — |
+| 6 Staging & UAT | DevOps deploy, QA smoke + beban; orkestrator & QA menyiapkan skenario UAT; **pemilik proyek** menjalankan UAT | — |
 | 7 Deploy produksi gelap | DevOps, **setelah persetujuan pengguna** | — |
-| 8 Pindah rute + pantau | DevOps (**persetujuan pengguna**), QA smoke produksi | — |
+| 8 Pindah rute + pantau | Orkestrator mengirim konfirmasi berbahasa sederhana; setelah **pemilik proyek** setuju, DevOps memindah rute; QA smoke produksi | — |
 | 9 Tutup | Orkestrator | — |
 
 ### 6.3 Audit keamanan per slice (skill `security-audit` Cloudflare)
@@ -421,9 +421,20 @@ Saran yang **tidak terlihat** pengguna boleh langsung dikerjakan. Saran yang **m
 dicatat di `docs/backlog-pasca-cutover.md` dan dikerjakan setelah S17, supaya gerbang 0 piksel dan paritas
 perilaku tetap berlaku.
 
+### 6.6 UAT & persetujuan pindah rute
+
+- **UAT** dijalankan sendiri oleh pemilik proyek di staging. Untuk tiap slice, orkestrator dan QA menyiapkan
+  `docs/slices/Sxx-uat.md` dari `docs/slices/TEMPLATE-UAT.md`: akun uji per peran, data yang diisi, langkah demi
+  langkah, hasil yang harus terlihat, dan pembanding di versi lama.
+- Saat UAT, pemilik proyek bisa mencatat **beda dengan versi lama** (harus diperbaiki sebelum pindah rute) atau
+  **permintaan tambahan**. Tambahan masuk `docs/backlog-pasca-cutover.md` kecuali pemilik proyek memutuskan
+  sebaliknya — dengan konsekuensi gerbang paritas slice itu disesuaikan dan dicatat.
+- **Pindah rute** hanya setelah pemilik proyek menjawab konfirmasi berbahasa sederhana
+  (`docs/slices/TEMPLATE-PINDAH-RUTE.md`). Diam atau jawaban ragu = belum setuju.
+
 ## 7. Keputusan yang dibutuhkan
 
 1. ~~Setuju strategi per fitur~~ — disetujui 13 Nov 2026.
 2. ~~Lokasi hosting~~ — tetap di server produksi sekarang selama rewrite (13 Nov 2026); lihat rencana utama §9.10.
-3. Siapa yang UAT tiap slice, dan siapa yang berwenang menyetujui pindah rute.
+3. ~~UAT & persetujuan pindah rute~~ — keduanya oleh pemilik proyek (13 Nov 2026). Freeze mulai hari S0.
 4. Hal terbuka lain di `docs/RENCANA-REWRITE-NEXTJS.md` §7.
