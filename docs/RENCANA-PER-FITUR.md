@@ -70,7 +70,7 @@ langkah 7, tapi **tidak boleh dipindah ke produksi** sebelum slice sebelumnya lu
 | 2 | **Test dulu**: test paritas HTTP, vektor logika, suite visual, dan template surel untuk slice ini — dijalankan **hijau terhadap Laravel** | PR test |
 | 3 | **Bangun** di Next.js mengikuti §8 (desain) & §9 (backend) | PR fitur |
 | 4 | **Test hijau terhadap Next.js**: unit, vektor, paritas, visual 0 piksel, typecheck, lint, SAST | CI hijau |
-| 5 | **Review**: code review + security review untuk rute yang dipindah | PR disetujui |
+| 5 | **Review & audit keamanan**: code review (`code-reviewer`, skill `ponytail-review`) + audit keamanan slice dengan skill `security-audit` Cloudflare (§6.3); semua temuan *Must fix* dan temuan keamanan `confirmed` diperbaiki lalu diverifikasi ulang | laporan review + `docs/slices/Sxx-keamanan.md` |
 | 6 | **Staging**: deploy ke staging (snapshot produksi), smoke test, uji beban slice bila menyangkut publik, UAT oleh petugas | catatan UAT ditandatangani |
 | 7 | **Deploy produksi (gelap)**: image Next.js baru naik, rute **masih** ke Laravel; cek kesehatan & log | deploy sukses |
 | 8 | **Pindah rute** di peta nginx → Next.js; pantau 3 hari kerja (error rate, p95, alert, laporan petugas) | 0 insiden P1/P2 |
@@ -143,6 +143,7 @@ rute.
 | 0.11 | Rate limiter Valkey (9 limiter), reCAPTCHA, CSP ber-nonce, flash, peta error, outbox, idempotency key |
 | 0.12 | CI/CD: lint, typecheck, unit, vektor, paritas, visual, SAST, build image bertag SHA, deploy staging otomatis, deploy produksi manual dengan backup & rollback |
 | 0.13 | Observabilitas & alert §9.7 aktif untuk Next.js; dashboard per slice |
+| 0.14 | Tim agent siap (`.claude/agents`, skill `ponytail` & `security-audit`); sandbox Docker untuk audit keamanan (§6.3); uji coba audit `quick` pada kode S0 |
 
 **Gerbang S0:** halaman uji tersembunyi di Next.js (mis. `/_platform`) di produksi: membaca sesi admin & warga
 yang login di Laravel, mengirim event ke Reverb yang diterima halaman Laravel, layout identik 0 piksel; rollback
@@ -345,7 +346,64 @@ percakapan.
 
 ---
 
-## 6. Keputusan yang dibutuhkan
+## 6. Tim & alur kerja per slice
+
+Setiap slice dikerjakan oleh tim subagent yang definisinya ada di `.claude/agents/`, dikoordinasi oleh sesi utama
+(orkestrator). Semua yang menulis kode memakai skill **ponytail** (`.claude/skills/ponytail`); aturan proyek
+selalu menang bila bertentangan.
+
+### 6.1 Peran
+
+| Peran | Agent | Tugas | Tidak boleh |
+|---|---|---|---|
+| Orkestrator | sesi utama | menulis `docs/slices/Sxx.md`, membagi kerja, menjalankan audit keamanan, meminta persetujuan pengguna, menutup slice | menyetujui langkah produksi atas nama pengguna |
+| Senior programmer (1–2) | `senior-programmer` | membangun slice; dua orang bila slice bisa dibagi tanpa berbagi file (mis. domain/backend vs port halaman), masing-masing di worktree sendiri | mengubah test QA, menyentuh deploy |
+| Code reviewer | `code-reviewer` | review independen dengan `ponytail-review` + checklist paritas/§8/§9/§10 | mengubah kode |
+| DevOps / CI-CD | `devops-deployer` | CI, image, Compose, nginx & peta rute, deploy staging/produksi, rollback, observabilitas | langkah produksi tanpa persetujuan pengguna |
+| QA | `qa-engineer` | test dulu (hijau di Laravel), verifikasi Next.js, visual 0 piksel, uji beban, smoke test | melemahkan test, uji beban/keamanan ke produksi |
+
+### 6.2 Alur
+
+| Langkah siklus (§2) | Siapa | Paralel? |
+|---|---|---|
+| 1 Spesifikasi | Orkestrator | — |
+| 2 Test dulu | QA | bersamaan dengan persiapan CI oleh DevOps |
+| 3 Bangun | Programmer 1 (+ Programmer 2) | dua programmer paralel di worktree terpisah |
+| 4 Test hijau di Next.js | QA menjalankan, programmer memperbaiki | berulang sampai hijau |
+| 5 Review & audit | Code reviewer **dan** audit `security-audit` | paralel; perbaikan oleh programmer, lalu review ulang bagian yang berubah |
+| 6 Staging | DevOps deploy, QA smoke + beban, pengguna/petugas UAT | — |
+| 7 Deploy produksi gelap | DevOps, **setelah persetujuan pengguna** | — |
+| 8 Pindah rute + pantau | DevOps (**persetujuan pengguna**), QA smoke produksi | — |
+| 9 Tutup | Orkestrator | — |
+
+### 6.3 Audit keamanan per slice (skill `security-audit` Cloudflare)
+
+- **Kapan**: setiap slice di langkah 5, sebelum staging. Ditambah satu audit penuh seluruh `web/` sebelum
+  pentest pihak ketiga #1 (setelah S4) dan #2 (S15).
+- **Mode**: *full audit mode*, **scoped run** — `scope_paths` = file slice (`web/src/app/<rute slice>`,
+  `web/src/server/<domain slice>`, jembatan yang disentuh), atau diff `laravel-baseline..HEAD` untuk slice itu.
+  Profil `standard`; `deep` untuk S4 (formulir publik), S13 (chat + AI), dan S15 (auth).
+- **Dijalankan oleh** orkestrator, karena skill ini membagi kerja ke banyak subagent (recon, hunter, critic,
+  verifier).
+- **Keluaran** di luar repo: `~/security-audit-skill/contact-center/run-<N>/` (default skill). Ringkasan tanpa
+  detail eksploit masuk ke `docs/slices/Sxx-keamanan.md`.
+- **Sandbox**: skill hanya mengeksekusi kode target di sandbox OS (tanpa jaringan, env bersih, tulis terbatas).
+  DevOps menyiapkan sandbox Docker (`--network none`, read-only, batas CPU/memori) di S0; tanpa itu temuan yang
+  butuh eksekusi tercatat `needs_validation`.
+- **Gerbang**: tidak ada temuan `confirmed` severity medium ke atas yang terbuka; temuan `low/informational`
+  dicatat dengan keputusan; setiap `needs_validation` punya pemilik dan rencana validasi sebelum pindah rute.
+- Audit tidak pernah menyentuh produksi atau layanan nyata (aturan skill), sejalan dengan aturan QA.
+
+### 6.4 Sumber skill
+
+| Skill | Sumber | Catatan |
+|---|---|---|
+| `ponytail`, `ponytail-review` | github.com/DietrichGebert/ponytail (MIT) | hanya prompt; hook, band, board, webhook plugin **tidak** dipasang |
+| `security-audit` | github.com/cloudflare/security-audit-skill (MIT) | lengkap dengan referensi & validator Node (hanya baca file) |
+
+Commit sumber dicatat di `SUMBER.md` tiap folder skill. Pembaruan: baca versi baru dulu, lalu salin ulang.
+
+## 7. Keputusan yang dibutuhkan
 
 1. ~~Setuju strategi per fitur~~ — disetujui 13 Nov 2026.
 2. Lokasi hosting final: pindah dulu sebelum S0 (disarankan, agar tidak memindahkan dua aplikasi sekaligus nanti),
