@@ -18,6 +18,7 @@
 | 13 Nov 2026 | Strategi **per fitur** (slice), tiap fitur dibangun → dites → dideploy → dipantau sebelum lanjut. Fase F1–F7 di §2 digantikan oleh `docs/RENCANA-PER-FITUR.md`; F0 menjadi bagian S0. Disetujui 13 Nov 2026 |
 | 13 Nov 2026 | Framework: **Next.js + TypeScript** (Astro dipertimbangkan, tidak dipilih: Contact Center aplikasi interaktif, bukan situs konten) |
 | 13 Nov 2026 | Nama aplikasi **Contact Center**. Nama `SIGAP`/`sigap` tidak dipakai untuk apa pun yang baru; nama lama hanya dipertahankan bila wajib untuk kompatibilitas, dan dihapus di S17. Aturan di §10 |
+| 13 Nov 2026 | **Hosting tetap di server produksi sekarang** (`app2.andimohamad.my.id`, server `srvr-dev-andy`) selama rewrite: Next.js dipasang berdampingan dengan Laravel di server yang sama. Pindah ke hosting nasional & domain `.go.id` diputuskan terpisah, tidak memblokir S0. Detail §9.10 |
 | 13 Nov 2026 | Desain **identik 100%** dengan versi Laravel: 0 piksel beda pada screenshot pembanding. Aturan & gerbangnya di §8 |
 
 ## 0. Asumsi (perlu dikonfirmasi)
@@ -27,7 +28,7 @@ Rencana ini disusun dengan asumsi berikut. Kalau salah satu berubah, fase yang t
 | # | Asumsi | Terdampak bila berubah |
 |---|---|---|
 | A1 | Stack sesuai usulan: Next.js 16 (App Router) + Drizzle + pg-boss + sesi sendiri + server berprotokol Pusher (Soketi) | F1, F4, F5 |
-| A2 | Container Docker, **bisa diskalakan horizontal** (beberapa replica web/worker), di infrastruktur yang **berlokasi di Indonesia** (§9.6). Lokasi final belum ditentukan — server dev pribadi sekarang tidak layak untuk layanan publik nasional | F1, F6 |
+| A2 | **Diputuskan untuk masa rewrite:** server produksi sekarang (`srvr-dev-andy`, 8 vCPU, 31 GiB RAM, satu VM). Arsitektur tetap stateless & siap multi-replica (§9.5) sehingga pindah ke infrastruktur nasional nanti tidak butuh ubah kode | S0, S17 |
 | A3 | **Sudah diputuskan.** Valkey untuk cache, rate limit, kunci, dan pub/sub realtime; antrean tetap pg-boss di PostgreSQL (§9.4) | F1, F4, F5 |
 | A4 | Database produksi dipakai ulang apa adanya, tanpa migrasi data | F1, F6 |
 | A5 | `/api/v1` dipertahankan untuk paritas (tidak ada klien eksternal yang diketahui, tapi murah dipertahankan) | F2, F3 |
@@ -331,7 +332,7 @@ Satu developer penuh waktu dengan bantuan AI. Angka ini perkiraan awal, ditinjau
 2. Nama folder (`web/`) dan apakah tetap satu repo.
 3. Tanggal freeze fitur Laravel.
 4. Siapa melakukan UAT di F6.
-5. **Lokasi hosting produksi** di Indonesia (pusat data pemerintah / cloud lokal) dan domain resmi (`.go.id`).
+5. ~~Lokasi hosting selama rewrite~~ — tetap `app2.andimohamad.my.id` (13 Nov 2026). Hosting nasional & domain `.go.id` untuk jangka panjang masih terbuka (§9.10).
 6. Penyedia AI: lokasi data penyedia sekarang, atau model di-host sendiri (§9.6).
 7. Data trafik nyata untuk mengganti asumsi §9.1.
 8. Rename repo GitHub `sigap` → `contact-center` (§10.2).
@@ -520,6 +521,30 @@ mati, aplikasi tetap jalan: rate limit jatuh ke batas konservatif per-instance, 
 | DR | restore PITR ke server kosong dalam batas RTO |
 
 Dijalankan di staging dengan ukuran setara produksi, bukan di laptop.
+
+### 9.10 Hosting selama rewrite
+
+Diputuskan 13 Nov 2026: rewrite berjalan di server produksi yang sama dengan Laravel.
+
+| Fakta server (dicek 13 Nov 2026) | Nilai |
+|---|---|
+| Domain | `app2.andimohamad.my.id` lewat Cloudflare Tunnel |
+| VM | QEMU, 8 vCPU, **tanpa AVX/AVX2** (ada SSE4.2), 31 GiB RAM (±26 GiB tersedia) |
+| Disk | 185 GB, terpakai 54% (±86 GB kosong) |
+| Beban | ±27 container dari beberapa stack, load average ±0,2 |
+| Laravel produksi | `/opt/app2-sigap` @ `f8713a0`, tanpa perubahan lokal |
+
+Konsekuensi yang harus ditangani:
+
+- **CPU tanpa AVX**: binary native harus diuji di S0 (SWC/Next.js build, `sharp`, Valkey, Soketi). Bila ada yang
+  gagal di server, image dibangun di CI lalu ditarik ke server, atau dipakai varian baseline x86-64.
+- **Satu VM** berarti replica web/worker hanya melindungi dari crash proses, bukan dari matinya server. Target
+  ketersediaan 99,9% (§9.1) **belum** bisa dijanjikan di hosting ini; dicatat sebagai risiko yang diterima.
+- **Berbagi sumber daya** dengan stack lain: tiap container diberi batas CPU & memori; uji beban (§9.8) di staging
+  menentukan kapasitas sebenarnya. Staging dijalankan sebagai stack terpisah di server yang sama dengan port &
+  volume sendiri, di luar jam layanan untuk uji beban.
+- **Kepatuhan (§9.6)**: lokasi fisik server dan status domain pribadi perlu dikonfirmasi sebelum layanan dipakai
+  secara nasional. Rewrite tidak bergantung pada ini — arsitekturnya siap dipindah.
 
 ### 9.9 Backlog setelah cutover (praktik baik yang mengubah perilaku)
 
