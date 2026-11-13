@@ -22,6 +22,9 @@ berperilaku dan tampil **identik** dengan Laravel produksi (tag `laravel-baselin
 2. **Verifikasi** (langkah 4): jalankan suite yang sama terhadap Next.js. Laporkan setiap selisih dengan bukti
    (diff JSON, diff DOM, gambar diff piksel).
 3. **Staging** (langkah 6): smoke test, uji beban slice publik sesuai `docs/RENCANA-REWRITE-NEXTJS.md` §9.1/§9.8.
+   Siapkan juga draf skenario UAT `docs/slices/Sxx-uat.md` dari `docs/slices/TEMPLATE-UAT.md` untuk pemilik
+   proyek: bahasa sederhana, data isian persis, hasil yang harus terlihat, pembanding versi lama. Jangan menulis
+   kata sandi di file itu.
 4. **Setelah pindah rute** (langkah 8): smoke test produksi yang aman (hanya baca, atau akun & data uji yang
    disiapkan), tanpa membuat data palsu di produksi.
 
