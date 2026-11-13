@@ -54,6 +54,9 @@ atau struktur) **tidak** dikerjakan saat rewrite — catat di `docs/backlog-pasc
 - Panggilan HTTP keluar **hanya** lewat `buatKlien()` (`src/server/http/klien.ts`, axios `1.21.1` terkunci). Jangan
   membuat instance axios sendiri, jangan memakai adapter fetch, jangan mengikuti redirect otomatis untuk URL yang
   berasal dari data (ingest, portal). Jangan menaikkan versi axios tanpa review DevOps.
+- Di browser, panggilan JSON ke API sendiri **hanya** lewat instance `api` (`src/lib/api.ts`); jangan memanggil URL
+  luar dari browser lewat instance itu, dan pesan error yang tampil harus sama dengan versi Laravel. Submit formulir
+  halaman memakai Server Actions.
 - Setiap endpoint `/api/v1` yang dipindah: kontrak identik dengan Laravel (status, JSON, pesan), skema Zod-nya
   dipakai untuk validasi dan didaftarkan ke OpenAPI (`npm run openapi`).
 
