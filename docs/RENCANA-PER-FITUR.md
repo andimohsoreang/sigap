@@ -421,7 +421,23 @@ Saran yang **tidak terlihat** pengguna boleh langsung dikerjakan. Saran yang **m
 dicatat di `docs/backlog-pasca-cutover.md` dan dikerjakan setelah S17, supaya gerbang 0 piksel dan paritas
 perilaku tetap berlaku.
 
-### 6.6 UAT & persetujuan pindah rute
+### 6.6 Siklus iterasi: QA → review → optimasi (permintaan pemilik proyek, 13 Nov 2026)
+
+Berlaku untuk **setiap iterasi**, bukan hanya di akhir slice. Satu iterasi = satu paket kerja atau satu putaran
+perbaikan yang selesai dibangun.
+
+| # | Langkah | Siapa | Hasil |
+|---|---|---|---|
+| 1 | **QA** menjalankan semua test yang relevan (unit, vektor, paritas, visual 0 piksel) dan mengukur angka performa (ukuran bundle, waktu build, p95 endpoint, LCP/INP/CLS bila ada halaman) dibandingkan iterasi sebelumnya dan versi Laravel | qa-engineer | laporan QA |
+| 2 | **Review** kode iterasi: bug, keamanan, skala, test — ditambah bagian **Optimasi**: apa yang bisa lebih cepat, lebih kecil, lebih hemat, atau lebih sederhana, masing-masing dengan perkiraan dampak dan bukti | code-reviewer | laporan review |
+| 3 | **Laporan ke pemilik proyek** dalam bahasa sederhana: apa yang dibangun, hasil QA, temuan review, dan daftar optimasi yang dipisah: **(a) aman dikerjakan sekarang** (tidak terlihat pengguna) dan **(b) backlog** (mengubah tampilan/perilaku, §6.5) | orkestrator | pertanyaan: optimasi mana yang dikerjakan |
+| 4 | Optimasi yang dipilih dikerjakan, lalu kembali ke langkah 1 untuk bagian yang berubah | programmer | iterasi berikutnya |
+| 5 | Berhenti bila pemilik proyek menyatakan cukup, atau review tidak menemukan optimasi yang berarti lagi | — | iterasi ditutup |
+
+Temuan *Must fix* (bug, keamanan, data) tidak ditanyakan — selalu diperbaiki dulu. Yang ditanyakan hanya optimasi.
+Perbaikan dan optimasi tidak boleh melanggar paritas (§8) maupun gerbang slice.
+
+### 6.7 UAT & persetujuan pindah rute
 
 - **UAT** dijalankan sendiri oleh pemilik proyek di staging. Untuk tiap slice, orkestrator dan QA menyiapkan
   `docs/slices/Sxx-uat.md` dari `docs/slices/TEMPLATE-UAT.md`: akun uji per peran, data yang diisi, langkah demi

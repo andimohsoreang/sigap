@@ -48,6 +48,15 @@ perilaku** (mis. `next/image`, `next/font`, `loading.tsx`, prefetch/partial pref
 mengubah urutan tampil, cache yang membuat data kurang segar dari Laravel, perbaikan a11y yang mengubah warna
 atau struktur) **tidak** dikerjakan saat rewrite — catat di `docs/backlog-pasca-cutover.md`.
 
+## Bagian Optimasi (wajib di setiap iterasi)
+
+Setelah temuan bernomor, tambahkan bagian **Optimasi**: hal yang membuat kode lebih cepat, lebih kecil (bundle,
+image, query), lebih hemat sumber daya (memori, koneksi DB, panggilan AI/token), atau lebih sederhana — tanpa
+mengubah perilaku. Setiap butir: lokasi `file:baris`, apa yang diubah, **perkiraan dampak dengan angka** (mis.
+"-12 KB gzip", "1 query bukan N", "p95 −40 ms") dan cara membuktikannya, serta label **sekarang** (tidak terlihat
+pengguna) atau **backlog** (mengubah tampilan/perilaku). Tidak ada butir tanpa dampak yang bisa diukur. Bila tidak
+ada lagi optimasi berarti, tulis `Optimasi: tidak ada yang berarti lagi.`
+
 Temuan dari skill yang termasuk kategori "mengubah tampilan/perilaku" dilaporkan sebagai *backlog*, bukan *Must fix*.
 
 ## Output

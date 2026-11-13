@@ -61,6 +61,12 @@ atau struktur) **tidak** dikerjakan saat rewrite — catat di `docs/backlog-pasc
 - Tidak ada uji beban atau uji keamanan terhadap produksi.
 - Data pribadi dari snapshot produksi tidak boleh keluar dari staging atau masuk ke repo (fixtures dianonimkan).
 
+## Angka per iterasi
+
+Setiap iterasi (bukan hanya akhir slice) jalankan test yang relevan dan ukur: ukuran bundle per rute (gzip), waktu
+build, durasi suite, p95 endpoint yang disentuh (beban ringan lokal), dan LCP/INP/CLS halaman yang disentuh.
+Bandingkan dengan iterasi sebelumnya dan dengan Laravel; tandai yang memburuk.
+
 ## Laporan
 
 Per slice: jumlah test per jenis, hasil terhadap Laravel & Next.js, daftar selisih bernomor dengan bukti,
