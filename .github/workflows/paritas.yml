@@ -56,10 +56,29 @@ jobs:
           npm ci --no-audit --no-fund
 
       - name: Dependensi Playwright
+        id: pw
         working-directory: parity
         run: |
           npm ci --no-audit --no-fund
-          npx playwright install --with-deps chromium
+          echo "versi=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_OUTPUT"
+
+      # Browser di-cache per OS + versi @playwright/test; paket sistem (apt) tetap dipasang tiap run.
+      - name: Cache browser Playwright
+        id: cache-pw
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.pw.outputs.versi }}
+
+      - name: Pasang Chromium
+        if: steps.cache-pw.outputs.cache-hit != 'true'
+        working-directory: parity
+        run: npx playwright install --with-deps chromium
+
+      - name: Pasang dependensi sistem Chromium
+        if: steps.cache-pw.outputs.cache-hit == 'true'
+        working-directory: parity
+        run: npx playwright install-deps chromium
 
       - name: Suite paritas (http)
         working-directory: parity
