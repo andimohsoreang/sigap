@@ -12,8 +12,11 @@ on:
   push:
     branches: ['rewrite/**']
     paths: ['parity/**', 'web/**', 'sigap/**', '.github/workflows/paritas.yml']
+  # Tinjau ulang filter paths ini bila `paritas` dijadikan required status check: check wajib yang
+  # tidak terpicu karena paths tetap "pending" dan memblokir merge.
   pull_request:
     branches: ['rewrite/**', 'feat/contact-center-ai']
+    paths: ['parity/**', 'web/**', 'sigap/**', '.github/workflows/paritas.yml']
 
 # Hanya-baca. Unggah artefak memakai token runtime Actions, bukan GITHUB_TOKEN.
 permissions:
