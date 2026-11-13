@@ -5,9 +5,10 @@ Aturan visual: `docs/RENCANA-REWRITE-NEXTJS.md` §8.3 (`maxDiffPixels: 0`, `thre
 
 | Folder | Isi |
 |---|---|
-| `tests/http.spec.ts` | halaman S1 → 200, judul, meta, h1/h2, header tamu; redirect lama → 301 + `Location` persis |
+| `tests/http.spec.ts` | halaman S1 → 200, judul, meta, `lang="id"`, h1/h2, header tamu; header keamanan, CSP & cookie `sigap_session`; redirect lama → 301 + `Location` persis (relatif, query dibuang) |
 | `tests/visual.spec.ts` | screenshot full page S1 × desktop 1440 / tablet 768 / ponsel 375 × terang/gelap + header tamu |
 | `visual/<platform>/` | baseline = tampilan Laravel |
+| `env/laravel.env` | konfigurasi target Laravel = cermin produksi (lihat `PRODUKSI.md`), tanpa rahasia |
 | `fixtures/` | vektor JSON dari kelas PHP asli (`cc:ekspor-fixture`); `fixtures/kripto/` milik paket B |
 
 ## Menjalankan terhadap Laravel (acuan)
@@ -16,9 +17,10 @@ Sekali saja, di `sigap/`:
 
 ```bash
 composer install && npm ci
-cp .env.example .env && php artisan key:generate   # AI_ENABLED=false, tanpa rahasia asli
-npx vite build
 ```
+
+`sigap/.env` tidak diperlukan: `scripts/laravel.sh` memuat `env/laravel.env` (nilai lingkungan menang atas
+`.env`), membuat `APP_KEY`/`NIK_HASH_KEY` acak, dan menjalankan `vite build` dengan nilai `VITE_*` produksi.
 
 Lalu di `parity/`:
 
@@ -30,7 +32,8 @@ npx playwright test
 
 Tanpa `BASE_URL`, `scripts/laravel.sh` menyalakan Laravel di `127.0.0.1:8124` dengan SQLite terpisah
 (`sigap/database/paritas.sqlite`), `php artisan sigap:e2e-setup` (data dihapus & di-seed ulang tiap run),
-lalu `php artisan serve`.
+lalu `php artisan serve`. Request ke origin selain `BASE_URL` (mis. Google reCAPTCHA) diblokir; satu-satunya
+mask adalah badge reCAPTCHA (§8.3).
 
 ## Menjalankan terhadap Next.js
 
@@ -53,6 +56,6 @@ mengubah apa pun. Jangan menambah toleransi atau mask untuk meloloskan test.
 cd sigap && php artisan cc:ekspor-fixture        # menulis ../parity/fixtures/*.json
 ```
 
-Keluaran deterministik (jam dibekukan, tanpa acak); dijalankan dua kali harus tanpa diff. Header berkas
-mencatat kelas sumber, commit, dan `zona_waktu_aplikasi` (dari `APP_TIMEZONE`, bawaan `UTC`). Vektor SLA
-diekspor untuk UTC dan Asia/Jakarta sekaligus karena nilai produksi belum dipastikan.
+Keluaran deterministik (jam dibekukan, tanpa acak, zona waktu aplikasi dipaksa `Asia/Jakarta` seperti
+produksi — tidak bergantung `.env` lokal); dijalankan dua kali harus tanpa diff. Header berkas mencatat kelas
+sumber dan commit. Di `sla.json`, `kasus` = Asia/Jakarta (produksi, acuan utama); `tambahan_utc` hanya tambahan.

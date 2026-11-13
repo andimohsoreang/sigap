@@ -1,9 +1,13 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 import { S1_PAGES } from './s1';
+import { expect, test } from './test';
 
 /** Jam beku (WIB Jumat siang) — sama untuk semua target. */
 const FROZEN = new Date('2026-11-13T10:00:00+07:00');
+
+/** Mask yang diizinkan §8.3 dan relevan di S1: hanya badge reCAPTCHA (site key terisi seperti produksi). */
+const masks = (page: Page) => [page.locator('.grecaptcha-badge')];
 
 const THEMES = { terang: null, gelap: 'dark' } as const;
 
@@ -40,13 +44,13 @@ for (const [themeName, theme] of Object.entries(THEMES)) {
         for (const p of S1_PAGES) {
             test(`${p.path}`, async ({ page }) => {
                 await open(page, p.path, theme);
-                await expect(page).toHaveScreenshot(`${p.path.slice(1)}-${themeName}.png`, { fullPage: true });
+                await expect(page).toHaveScreenshot(`${p.path.slice(1)}-${themeName}.png`, { fullPage: true, mask: masks(page) });
             });
         }
 
         test('header tamu', async ({ page }) => {
             await open(page, '/panduan', theme);
-            await expect(page.locator('header').first()).toHaveScreenshot(`header-tamu-${themeName}.png`);
+            await expect(page.locator('header').first()).toHaveScreenshot(`header-tamu-${themeName}.png`, { mask: masks(page) });
         });
     });
 }
