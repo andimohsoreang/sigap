@@ -39,8 +39,10 @@ Tanpa nilai-nilai ini data lama tidak terbaca atau perilaku berubah diam-diam.
 |---|---|---|
 | `APP_KEY` + `APP_PREVIOUS_KEYS` | Kunci AES-256-CBC untuk kolom terenkripsi (§4.1) | Salin ke env Next.js sebagai `LEGACY_APP_KEY(S)` |
 | `NIK_HASH_KEY` | Blind index HMAC-SHA256 untuk login NIK dan pencarian NIK | Salin apa adanya (termasuk awalan `base64:` bila ada) |
-| `APP_TIMEZONE` produksi | `.env.example` = `UTC`, padahal SLA menghitung hari kerja di zona waktu aplikasi | **Cek nilai di server.** Kolom `timestamp` tanpa zona waktu — tafsirannya harus sama |
-| `SESSION_COOKIE`, `SANCTUM_STATEFUL_DOMAINS` | Nama cookie sesi tidak sama dengan yang ditulis di `openapi.yaml` | Cek di server; sesi lama boleh hangus saat cutover (semua pengguna login ulang) |
+| `APP_TIMEZONE` produksi | SLA menghitung hari kerja di zona waktu aplikasi | **Dicek 13 Nov 2026: `Asia/Jakarta`** (`.env.example` masih `UTC`) |
+| `APP_LOCALE` produksi | menentukan `<html lang>` | **Dicek 13 Nov 2026: `id`** → `<html lang="id">` |
+| `SESSION_COOKIE`, `SESSION_ENCRYPT` | jembatan sesi harus membaca sesi Laravel | **Dicek 13 Nov 2026: `sigap_session`, `SESSION_ENCRYPT=true`** (payload sesi di DB ikut terenkripsi `APP_KEY`), driver `database`, lifetime 120 |
+| Konfigurasi lain produksi | ikut memengaruhi tampilan/perilaku | `APP_NAME="Contact Center"`, reCAPTCHA **aktif**, `AI_ENABLED=true` (Sumopod), `APP_PREVIOUS_KEYS` kosong, `BROADCAST_CONNECTION=reverb`, `QUEUE`/`CACHE`/`SESSION` = `database` |
 | `AI_*`, `RECAPTCHA_*`, `KNOWLEDGE_*`, `MAIL_*` | Konfigurasi integrasi | Salin; daftar lengkap kunci ada di `.env.example` |
 | Volume `storage` | Lampiran tiket, lampiran chat, dokumen pengetahuan (disk privat) | Mount volume yang sama; path disimpan relatif (`lampiran/…`, `chat/{id}/…`, `knowledge/…`) |
 

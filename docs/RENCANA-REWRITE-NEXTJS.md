@@ -360,7 +360,7 @@ tema, dan browser yang sama. Ini dibuktikan oleh mesin, bukan dinilai dengan mat
 | Font tetap lewat `@fontsource` di CSS. **Jangan pakai `next/font`** | `next/font` mengganti nama family dan menambah fallback metrics |
 | **Jangan pakai `next/image`**; tetap `<img>` biasa dengan atribut yang sama | `next/image` mengubah markup, ukuran, dan lazy loading |
 | `next/link` boleh (merender `<a>` biasa), tanpa prefetch yang mengubah perilaku | |
-| Kerangka `<html>` sama: `lang` sama dengan Laravel (sekarang `en` karena `APP_LOCALE`), `<body class="font-sans antialiased">`, skrip tema & aksesibilitas inline sebelum paint (kunci `cc-theme`, `cc-a11y`) | Mencegah kedip tema & beda kelas root |
+| Kerangka `<html>` sama: `lang` sama dengan Laravel (produksi: `id`, karena `APP_LOCALE=id` — dicek 13 Nov 2026), `<body class="font-sans antialiased">`, skrip tema & aksesibilitas inline sebelum paint (kunci `cc-theme`, `cc-a11y`) | Mencegah kedip tema & beda kelas root |
 | Format judul tab: `"{judul} - Contact Center"`, kecuali judul sudah memuat nama aplikasi | `app.tsx` |
 | Progress bar navigasi meniru Inertia (NProgress, warna `#4B5563`, muncul setelah 250 ms) | Inertia menampilkannya; App Router tidak |
 | **Tidak ada `loading.tsx`/skeleton baru.** Saat pindah halaman, halaman lama tetap tampil sampai yang baru siap, seperti Inertia | Perilaku transisi harus sama |
