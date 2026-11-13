@@ -42,6 +42,7 @@ Tanpa nilai-nilai ini data lama tidak terbaca atau perilaku berubah diam-diam.
 | `APP_TIMEZONE` produksi | SLA menghitung hari kerja di zona waktu aplikasi | **Dicek 13 Nov 2026: `Asia/Jakarta`** (`.env.example` masih `UTC`) |
 | `APP_LOCALE` produksi | menentukan `<html lang>` | **Dicek 13 Nov 2026: `id`** → `<html lang="id">` |
 | `SESSION_COOKIE`, `SESSION_ENCRYPT` | jembatan sesi harus membaca sesi Laravel | **Dicek 13 Nov 2026: `sigap_session`, `SESSION_ENCRYPT=true`** (payload sesi di DB ikut terenkripsi `APP_KEY`), driver `database`, lifetime 120 |
+| PostgreSQL produksi | urutan teks (`ORDER BY`) & `LOWER()` harus sama | **Dicek 13 Nov 2026:** `postgres:16-alpine` 16.15, DB `sigap` collation `en_US.utf8` di musl = **urutan byte** (`Cipta,Zona,apel,bantuan`), `TimeZone` server **UTC**, `max_connections=100`. DB lokal `contact_center_dev`/`cc_paritas` dibuat `LC_COLLATE 'C'` + timezone UTC agar urutannya sama |
 | Konfigurasi lain produksi | ikut memengaruhi tampilan/perilaku | `APP_NAME="Contact Center"`, reCAPTCHA **aktif**, `AI_ENABLED=true` (Sumopod), `APP_PREVIOUS_KEYS` kosong, `BROADCAST_CONNECTION=reverb`, `QUEUE`/`CACHE`/`SESSION` = `database` |
 | `AI_*`, `RECAPTCHA_*`, `KNOWLEDGE_*`, `MAIL_*` | Konfigurasi integrasi | Salin; daftar lengkap kunci ada di `.env.example` |
 | Volume `storage` | Lampiran tiket, lampiran chat, dokumen pengetahuan (disk privat) | Mount volume yang sama; path disimpan relatif (`lampiran/…`, `chat/{id}/…`, `knowledge/…`) |
