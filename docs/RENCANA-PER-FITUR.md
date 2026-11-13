@@ -47,7 +47,8 @@ cutover sekaligus.
 Yang ditulis ulang adalah **persis apa yang berjalan di produksi**, bukan isi branch lain atau pekerjaan yang
 belum dirilis.
 
-- Per 13 Nov 2026 produksi menjalankan `feat/contact-center-ai` @ `f8713a0` (fitur terakhir: survei SKM v2 —
+- Per 13 Nov 2026 produksi menjalankan `feat/contact-center-ai` @ `f8713a0` (dicek langsung di server: tanpa
+  perubahan lokal) (fitur terakhir: survei SKM v2 —
   terkonfirmasi lewat `/api/v1/survei/kuesioner` yang mengembalikan `versi: 2`). `main` dan
   `feat/beranda-makarti` tidak punya commit di luar commit ini.
 - Pekerjaan yang **belum dirilis** ke produksi (mis. perubahan beranda yang belum di-commit di worktree
@@ -423,7 +424,6 @@ perilaku tetap berlaku.
 ## 7. Keputusan yang dibutuhkan
 
 1. ~~Setuju strategi per fitur~~ — disetujui 13 Nov 2026.
-2. Lokasi hosting final: pindah dulu sebelum S0 (disarankan, agar tidak memindahkan dua aplikasi sekaligus nanti),
-   atau setelah S17.
+2. ~~Lokasi hosting~~ — tetap di server produksi sekarang selama rewrite (13 Nov 2026); lihat rencana utama §9.10.
 3. Siapa yang UAT tiap slice, dan siapa yang berwenang menyetujui pindah rute.
 4. Hal terbuka lain di `docs/RENCANA-REWRITE-NEXTJS.md` §7.
