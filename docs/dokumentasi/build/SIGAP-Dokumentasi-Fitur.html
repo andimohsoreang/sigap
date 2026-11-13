@@ -1,0 +1,804 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><title>SIGAP — Dokumentasi Fitur</title>
+<link rel="preconnect" href="https://fonts.bunny.net"><link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700|space-grotesk:500,600,700|jetbrains-mono:400,500">
+<style>@page { size: A4; margin: 20mm 18mm 22mm 18mm; }
+@page :first { margin: 0; }
+
+:root {
+  --navy: #003d68; --navy-deep: #022b4a; --gold: #c29642; --gold-soft: #fbf3e3;
+  --text: #17232f; --text-2: #4a5868; --text-3: #667382; --border: #e3e8ee; --surface: #f8fafc;
+  --red: #e11d48; --warn: #9a5b00; --warn-soft: #fdf3e1; --info: #0b5fa5; --info-soft: #e8f1fa;
+}
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; font-family: 'Inter', Arial, sans-serif; font-size: 10pt; line-height: 1.55; color: var(--text); }
+h1, h2, h3 { font-family: 'Space Grotesk', 'Inter', sans-serif; color: var(--text); letter-spacing: -0.01em; }
+h1 { font-size: 24pt; line-height: 1.15; margin: 0 0 6pt; }
+h2 { font-size: 14pt; margin: 18pt 0 6pt; padding-bottom: 4pt; border-bottom: 1px solid var(--border); break-after: avoid; }
+h3 { font-size: 12pt; margin: 0 0 4pt; color: var(--navy); break-after: avoid; }
+p { margin: 0 0 7pt; }
+ul, ol { margin: 0 0 8pt; padding-left: 16pt; }
+li { margin-bottom: 3pt; }
+code { font-family: 'JetBrains Mono', monospace; font-size: 8.5pt; background: var(--surface); border: 1px solid var(--border); border-radius: 3px; padding: 0 3px; white-space: nowrap; }
+a { color: var(--navy); text-decoration: none; }
+.red { color: var(--red); font-weight: 600; }
+
+/* Sampul */
+.cover { width: 210mm; height: 297mm; background: var(--navy-deep); color: #fff; padding: 26mm 22mm; display: flex; flex-direction: column; justify-content: space-between; break-after: page; position: relative; overflow: hidden; }
+.cover::after { content: ''; position: absolute; right: -60mm; top: 70mm; width: 170mm; height: 170mm; border-radius: 50%; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 0 0 22mm rgba(255,255,255,.025), 0 0 0 44mm rgba(255,255,255,.02); }
+.cover-top { display: flex; align-items: center; gap: 12pt; }
+.logo { width: 40pt; height: 40pt; border-radius: 10pt; background: var(--gold); display: flex; align-items: center; justify-content: center; }
+.logo span { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20pt; color: var(--navy-deep); }
+.brand { font-family: 'Space Grotesk', sans-serif; font-size: 20pt; font-weight: 700; margin: 0; }
+.brand-sub { margin: 0; color: #9fb2c3; font-size: 10pt; }
+.kicker { color: var(--gold); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 9.5pt; margin-bottom: 10pt; }
+.cover h1 { color: #fff; font-size: 38pt; line-height: 1.08; margin-bottom: 14pt; max-width: 150mm; }
+.cover-lead { color: #c9d6e2; font-size: 12pt; max-width: 140mm; line-height: 1.55; }
+.cover-meta { display: grid; gap: 8pt; border-top: 1px solid rgba(255,255,255,.15); padding-top: 14pt; position: relative; z-index: 1; }
+.cover-meta div { display: grid; grid-template-columns: 30mm 1fr; font-size: 9.5pt; }
+.cover-meta span { color: #7f97ab; text-transform: uppercase; letter-spacing: .1em; font-size: 8pt; padding-top: 1pt; }
+.cover-meta b { color: #fff; font-weight: 500; }
+
+/* Daftar isi */
+.toc { break-after: page; }
+.toc ol { list-style: none; padding: 0; margin: 14pt 0 18pt; }
+.toc li { border-bottom: 1px solid var(--border); margin: 0; }
+.toc a { display: flex; align-items: baseline; gap: 12pt; padding: 8pt 0; color: var(--text); font-size: 11.5pt; }
+.toc-no { font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--gold); width: 18pt; }
+
+/* Bab */
+.chapter { break-before: page; }
+.eyebrow { color: var(--gold); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: 8.5pt; margin-bottom: 4pt; }
+.lead { font-size: 11.5pt; color: var(--text-2); margin-bottom: 14pt; max-width: 165mm; }
+
+/* Kartu angka */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8pt; margin: 4pt 0 12pt; }
+.kpis div { border: 1px solid var(--border); border-radius: 8pt; padding: 10pt; background: #fff; break-inside: avoid; }
+.kpis b { display: block; font-family: 'Space Grotesk', sans-serif; font-size: 20pt; color: var(--navy); line-height: 1.1; margin-bottom: 4pt; }
+.kpis span { font-size: 8.5pt; color: var(--text-2); line-height: 1.4; display: block; }
+
+/* Tabel */
+table { width: 100%; border-collapse: collapse; margin: 6pt 0 14pt; font-size: 9pt; table-layout: fixed; }
+caption { caption-side: top; text-align: left; font-size: 8.5pt; color: var(--text-3); padding-bottom: 5pt; }
+thead { display: table-header-group; }
+th { background: var(--surface); color: var(--text-2); font-weight: 600; text-align: left; padding: 7pt 9pt; border-top: 1px solid var(--border); border-bottom: 1.5px solid var(--border-strong, #cdd6df); font-size: 8.5pt; }
+td { padding: 7pt 9pt; border-bottom: 1px solid var(--border); vertical-align: top; overflow-wrap: anywhere; }
+tr { break-inside: avoid; }
+td code { white-space: normal; }
+
+/* Gambar */
+figure { margin: 10pt 0 14pt; break-inside: avoid; }
+figure img { display: block; width: auto; max-width: 100%; max-height: 222mm; margin: 0 auto; border: 1px solid var(--border); border-radius: 6pt; }
+figure:not(.phone) img { min-width: 60%; }
+figure.half { display: inline-block; width: calc(50% - 6pt); vertical-align: top; margin-right: 8pt; }
+figure.half + figure.half { margin-right: 0; }
+figure.phone { width: 62mm; margin-left: auto; margin-right: auto; }
+figure.tall img { min-width: 0; max-height: 228mm; }
+.two { display: flex; gap: 10pt; justify-content: center; }
+.two figure.phone { margin: 10pt 0; }
+figcaption { font-size: 8.5pt; color: var(--text-3); margin-top: 5pt; }
+figcaption b { color: var(--text-2); }
+.legend, .legend-list { font-size: 8.5pt; color: var(--text-2); margin: 5pt 0 0; }
+.legend { display: flex; gap: 6pt; align-items: baseline; }
+.legend .box { display: inline-block; width: 10pt; height: 7pt; border: 2px solid var(--red); border-radius: 2pt; flex-shrink: 0; }
+.legend-list { list-style: none; padding: 0; display: grid; gap: 3pt; }
+.legend-list li { display: flex; gap: 6pt; align-items: baseline; margin: 0; }
+.legend-list .num { flex-shrink: 0; width: 13pt; height: 13pt; border-radius: 50%; background: var(--red); color: #fff; font-size: 7.5pt; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; position: relative; top: 2pt; }
+
+/* Fitur & langkah */
+.feature { margin: 0 0 16pt; padding-top: 4pt; }
+.feature + .feature { border-top: 1px solid var(--border); padding-top: 14pt; }
+.step { border-left: 3px solid var(--gold); padding: 2pt 0 2pt 12pt; margin: 0 0 14pt; }
+.step-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8pt; margin-bottom: 4pt; break-after: avoid; }
+.time { font-family: 'JetBrains Mono', monospace; font-size: 8pt; background: var(--gold-soft); color: var(--warn); padding: 1pt 6pt; border-radius: 10pt; font-weight: 600; }
+.step-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 11.5pt; }
+.who { font-size: 8.5pt; color: var(--text-3); }
+.flow { counter-reset: f; list-style: none; padding: 0; }
+.flow li { counter-increment: f; position: relative; padding: 6pt 0 6pt 26pt; border-bottom: 1px dashed var(--border); margin: 0; break-inside: avoid; }
+.flow li::before { content: counter(f); position: absolute; left: 0; top: 6pt; width: 17pt; height: 17pt; border-radius: 50%; background: var(--navy); color: #fff; font-size: 8.5pt; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+/* Catatan & kutipan */
+.note { border-radius: 6pt; padding: 9pt 11pt; margin: 8pt 0 14pt; font-size: 9pt; break-inside: avoid; }
+.note.info { background: var(--info-soft); color: #0b3a66; border-left: 3px solid var(--info); }
+.note.warn { background: var(--warn-soft); color: #5a3a00; border-left: 3px solid var(--gold); }
+.quote { background: var(--surface); border: 1px solid var(--border); border-radius: 8pt; padding: 8pt 11pt; margin: 0 0 8pt; break-inside: avoid; }
+.quote p { margin: 0; font-size: 9.3pt; line-height: 1.5; }
+.q-label { font-size: 8pt !important; text-transform: uppercase; letter-spacing: .1em; color: var(--gold); font-weight: 700; margin-bottom: 4pt !important; }
+
+/* Gambar di dalam langkah kasus dibuat lebih ringkas agar dua langkah muat satu halaman. */
+.step figure img { max-height: 112mm; }
+.step figure.phone img { max-height: 150mm; }
+table.keep { break-inside: avoid; }
+.keep { break-inside: avoid; }
+</style></head><body>
+
+<section class="cover">
+  <div class="cover-top">
+    <div class="logo"><span>S</span></div>
+    <div><p class="brand">SIGAP</p><p class="brand-sub">Contact Center Kementerian Transmigrasi</p></div>
+  </div>
+  <div class="cover-mid">
+    <p class="kicker">Dokumentasi Fitur &amp; Use Case</p>
+    <h1>Semua urusan transmigrasi,<br>cukup mulai dari chat.</h1>
+    <p class="cover-lead">Penjelasan lengkap fitur SIGAP untuk warga, pegawai, dan petugas: alur kerja, tangkapan layar aplikasi, contoh kasus end-to-end, serta posisi SIGAP terhadap SP4N-LAPOR!.</p>
+  </div>
+  <div class="cover-meta">
+    <div><span>Versi</span><b>Edisi 2 · Oktober 2026 · cabang feat/contact-center-ai</b></div>
+    <div><span>Tanggal</span><b>25 Oktober 2026</b></div>
+    <div><span>Cakupan</span><b>Halaman publik TARA, Chat TARA, Panel Admin v2, Matriks Rekapitulasi, Asisten AI, Sumber Resmi, Pertanyaan Kebijakan</b></div>
+  </div>
+</section><section class="toc"><p class="eyebrow">Isi dokumen</p><h1>Daftar isi</h1><ol><li><a href="#ringkasan"><span class="toc-no">1</span><span class="toc-t">Ringkasan</span></a></li><li><a href="#latar"><span class="toc-no">2</span><span class="toc-t">Latar belakang, masalah, dan solusi</span></a></li><li><a href="#peran"><span class="toc-no">3</span><span class="toc-t">Peran pengguna dan hak akses</span></a></li><li><a href="#peta"><span class="toc-no">4</span><span class="toc-t">Peta fitur</span></a></li><li><a href="#warga"><span class="toc-no">5</span><span class="toc-t">Fitur untuk warga</span></a></li><li><a href="#admin"><span class="toc-no">6</span><span class="toc-t">Panel admin (Admin v2)</span></a></li><li><a href="#ai"><span class="toc-no">7</span><span class="toc-t">Asisten AI TARA, Basis Pengetahuan, dan Sumber Resmi</span></a></li><li><a href="#kasus"><span class="toc-no">8</span><span class="toc-t">Use case end-to-end</span></a></li><li><a href="#sp4n"><span class="toc-no">9</span><span class="toc-t">Posisi terhadap SP4N-LAPOR!</span></a></li><li><a href="#keamanan"><span class="toc-no">10</span><span class="toc-t">Keamanan dan pelindungan data</span></a></li><li><a href="#status"><span class="toc-no">11</span><span class="toc-t">Status dan tindak lanjut</span></a></li><li><a href="#lampiran"><span class="toc-no">12</span><span class="toc-t">Lampiran: daftar rute dan glosarium</span></a></li></ol><div class="note info"><b>Cara membaca gambar.</b> Semua gambar diambil dari aplikasi yang berjalan dengan data demo. Bagian yang dibahas diberi <span class='red'>bingkai merah</span>; bila lebih dari satu, bingkai diberi nomor yang dijelaskan di bawah gambar. Percakapan pada contoh kasus dijawab oleh AI asli (Sumopod, model deepseek-v4-flash).</div></section>
+<section class="chapter" id="ringkasan">
+  <p class="eyebrow">Bab 1</p>
+  <h1>Ringkasan</h1>
+  <p class="lead">SIGAP adalah contact center Kementerian Transmigrasi: satu pintu berbasis chat tempat warga dan pegawai bertanya, mengadu, dan dibimbing ke layanan yang tepat sampai urusannya selesai.</p>
+  
+<div class="kpis">
+  <div><b>1</b><span>pintu masuk: Chat TARA, untuk tamu tanpa akun maupun warga terdaftar</span></div>
+  <div><b>24</b><span>sumber resmi dikutip langsung (UU, Permentrans, Renstra, Laporan Kinerja, SIBARDUKTRANS, PPID), 24 jam</span></div>
+  <div><b>3 jalur</b><span>dijawab langsung, dirujuk dan didampingi ke portal, atau menjadi tiket kawasan</span></div>
+  <div><b>14</b><span>menu panel admin, termasuk Rujukan, Basis Pengetahuan, dan Sumber Resmi</span></div>
+</div>
+<h2>Apa yang dikerjakan SIGAP</h2>
+<table class="keep"><colgroup><col style="width:34%"><col style="width:66%"></colgroup><thead><tr><th>Kebutuhan</th><th>Yang dilakukan SIGAP</th></tr></thead><tbody><tr><td>Warga bertanya (syarat, cara daftar, lokasi)</td><td>TARA menjawab dari artikel terbit dan kutipan situs resmi, menyebut sumber, alamat, dan tanggal diambil.</td></tr><tr><td>Warga bertanya soal kebijakan</td><td>TARA merangkum posisi resmi dari Renstra, Laporan Kinerja, UU, dan siaran pers per aspek, jujur soal data yang belum ada, lalu mengarahkan ke PPID.</td></tr><tr><td>Warga perlu layanan portal lain</td><td>Kartu portal (SIBARDUKTRANS, Trans Tuntas, PPID, Cek Fakta), lalu rujukan yang didampingi petugas sampai warga mengirim kode bukti.</td></tr><tr><td>Warga mengadu</td><td>Ringkasan otomatis untuk petugas, tiket ke admin kawasan dengan SLA dan peringatan dini (EWS), dan warga memantau lewat nomor tiket.</td></tr><tr><td>Warga gaptek / tanpa email</td><td>Cukup chat dengan nama. Petugas bisa mendaftarkan akun dan memulihkan kata sandi dari chat.</td></tr><tr><td>Pegawai mengalami gangguan kantor</td><td>Formulir pengaduan internal, ditangani Super Admin, tidak masuk statistik publik.</td></tr><tr><td>Pimpinan butuh data</td><td>Matriks Rekapitulasi (alur penanganan, kategori × status, dampak × SLA, kanal, kawasan, EWS), Data Terbuka, rekap rujukan berhasil, survei kepuasan, dan log aktivitas.</td></tr></tbody></table>
+
+<figure class="full">
+  <img src="img/u01-darto-bertanya.jpg" alt="Contoh jawaban TARA di Chat TARA layar penuh: jawaban, kartu portal SIBARDUKTRANS, dan daftar sumber resmi.">
+  <figcaption><b>Gambar 1.</b> Contoh jawaban TARA di Chat TARA layar penuh: jawaban, kartu portal SIBARDUKTRANS, dan daftar sumber resmi.</figcaption>
+  <ol class="legend-list"><li><span class="num">1</span>Daftar sumber: artikel resmi dan kutipan langsung dari situs, dengan alamat dan tanggal diambil.</li><li><span class="num">2</span>Jawaban TARA beserta kartu portal tujuan.</li></ol>
+</figure>
+
+</section>
+<section class="chapter" id="latar">
+  <p class="eyebrow">Bab 2</p>
+  <h1>Latar belakang, masalah, dan solusi</h1>
+  <p class="lead">Warga tidak tahu harus ke mana, dan aduan yang masuk tidak punya pemilik, target waktu, atau catatan yang utuh. SIGAP menyatukan pintunya dan mengantar sampai selesai.</p>
+  
+<h2>Latar belakang</h2>
+<p>Sejak Kabinet Merah Putih (Oktober 2024), Kementerian Transmigrasi berdiri sendiri, sehingga layanan informasi dan pengaduannya perlu dibangun dengan identitas dan alur kerjanya sendiri. Penerima layanannya beragam: calon transmigran, warga transmigran di kawasan yang banyak berada di daerah terpencil dengan sinyal terbatas, serta pegawai di kantor pusat dan UPT.</p>
+<p>Layanan resmi Kementrans tersebar di banyak situs, dan kebijakan pemerintah mewajibkan pengelolaan pengaduan terintegrasi (SP4N, Perpres 76/2013), layanan digital (SPBE, Perpres 95/2018), serta pelindungan data pribadi (UU 27/2022).</p>
+<table class="keep"><caption><b>Tabel 1.</b> Layanan resmi yang dirujuk SIGAP</caption><colgroup><col style="width:30%"><col style="width:70%"></colgroup><thead><tr><th>Layanan resmi</th><th>Fungsi untuk warga</th></tr></thead><tbody><tr><td>SIBARDUKTRANS</td><td>Pendaftaran calon transmigran, tata cara, informasi lokasi</td></tr><tr><td>Trans Tuntas</td><td>Lapor dan lacak penyelesaian masalah lahan dan sertifikat</td></tr><tr><td>PPID</td><td>Permohonan informasi publik, keberatan, pengaduan penyalahgunaan wewenang</td></tr><tr><td>JDIH</td><td>Peraturan dan produk hukum transmigrasi</td></tr><tr><td>Cek Fakta</td><td>Klarifikasi hoaks seputar transmigrasi</td></tr><tr><td>SP4N-LAPOR!</td><td>Kanal pengaduan pelayanan publik nasional</td></tr><tr><td>KPK GOL</td><td>Pelaporan gratifikasi</td></tr></tbody></table>
+<h2>Masalah dan solusinya</h2>
+<table class="keep"><caption><b>Tabel 2.</b> Sembilan masalah dan solusinya</caption><colgroup><col style="width:5%"><col style="width:27%"><col style="width:40%"><col style="width:28%"></colgroup><thead><tr><th>#</th><th>Masalah</th><th>Solusi di SIGAP</th><th>Hasil</th></tr></thead><tbody><tr><td>1</td><td>Layanan tersebar; warga salah kanal</td><td><b>Katalog portal resmi</b> dengan langkah-langkah dan cek kesehatan tiap jam</td><td>Warga langsung ke tempat yang benar</td></tr><tr><td>2</td><td>Pertanyaan rutin dijawab manual, hanya jam kerja</td><td><b>TARA 24 jam</b> menjawab dari artikel terbit dan Sumber Resmi</td><td>Pertanyaan rutin selesai tanpa antre</td></tr><tr><td>3</td><td>Kanal formal butuh email dan formulir panjang</td><td><b>Chat tanpa akun</b>; petugas mendaftarkan akun dan memulihkan sandi dari chat</td><td>Warga gaptek tetap terlayani</td></tr><tr><td>4</td><td>Aduan dari WA, IG, surat, loket tercecer</td><td><b>Satu kotak masuk</b> + Input Manual</td><td>Semua aduan tercatat</td></tr><tr><td>5</td><td>Tidak jelas siapa yang menangani</td><td><b>Tiket per kawasan</b> dengan SLA, EWS, dan matriks</td><td>Setiap aduan punya penanggung jawab</td></tr><tr><td>6</td><td>Rujukan dilepas begitu saja</td><td><b>Rujukan didampingi</b>: kode bukti, pengingat, tombol bantuan</td><td>Diketahui warga berhasil atau tidak</td></tr><tr><td>7</td><td>NIK dan foto KTP lewat WA pribadi</td><td><b>Kartu konfirmasi data</b>, NIK disamarkan, foto tanpa EXIF di penyimpanan privat</td><td>Data warga di jalur resmi</td></tr><tr><td>8</td><td>Gangguan kantor dilaporkan informal</td><td><b>Helpdesk internal</b> pegawai</td><td>Ada target perbaikan</td></tr><tr><td>9</td><td>Pimpinan tanpa data utuh</td><td><b>Dasbor, survei, log, rekap rujukan</b></td><td>Keputusan berbasis data</td></tr></tbody></table>
+
+</section>
+<section class="chapter" id="peran">
+  <p class="eyebrow">Bab 3</p>
+  <h1>Peran pengguna dan hak akses</h1>
+  <p class="lead">Lima peran memakai SIGAP. Hak akses dibatasi sesuai tanggung jawab, dan tindakan admin tercatat di Log Aktivitas.</p>
+  <table class="keep"><caption><b>Tabel 3.</b> Peran dan hak akses</caption><colgroup><col style="width:17%"><col style="width:25%"><col style="width:58%"></colgroup><thead><tr><th>Peran</th><th>Siapa</th><th>Yang bisa dilakukan</th></tr></thead><tbody><tr><td>Tamu</td><td>Siapa saja, tanpa akun</td><td>Chat TARA dengan nama, kirim foto, menerima rujukan, melanjutkan chat di perangkat lain dengan nomor REF + kontak, melacak tiket.</td></tr><tr><td>Warga terdaftar</td><td>Akun mandiri atau dibuatkan petugas</td><td>Semua fitur tamu + Portal Warga (riwayat tiket, lampiran), formulir pengaduan, survei kepuasan.</td></tr><tr><td>Pegawai internal</td><td>Pegawai Kementrans</td><td>Formulir pengaduan internal (gangguan sarana dan TIK) tanpa akun, lalu melacak tiketnya.</td></tr><tr><td>Admin Kawasan</td><td>Petugas kawasan (mis. Rina, SP3 Bulungan)</td><td>Pesan Masuk, tiket kawasannya, Input Manual, Rujukan, Basis Pengetahuan (artikel masuk antrean tinjau), Data Kawasan, Kanal, Portal, Pengaturan profil.</td></tr><tr><td>Super Admin</td><td>Tim pusat / TIK</td><td>Semua menu, termasuk Tiket Internal, Daftar Admin, Log Aktivitas, menerbitkan artikel, menghapus sumber dan dokumen.</td></tr><tr><td>Asisten TARA</td><td>AI (Sumopod deepseek-v4-flash)</td><td>Menjawab dari sumber resmi (termasuk pertanyaan umum dan kebijakan), merujuk ke portal, meringkas aduan untuk petugas. Tidak beropini, tidak menerbitkan tiket, dan tidak memutuskan hak warga.</td></tr></tbody></table>
+</section>
+<section class="chapter" id="peta">
+  <p class="eyebrow">Bab 4</p>
+  <h1>Peta fitur</h1>
+  <p class="lead">Seluruh fitur SIGAP dalam satu tabel. Rute ditulis seperti di aplikasi.</p>
+  <table><caption><b>Tabel 4.</b> Peta fitur SIGAP</caption><colgroup><col style="width:13%"><col style="width:41%"><col style="width:31%"><col style="width:15%"></colgroup><thead><tr><th>Kelompok</th><th>Fitur</th><th>Rute</th><th>Peran</th></tr></thead><tbody><tr><td>Publik</td><td>Beranda TARA (baru) & beranda lama</td><td><code>/beranda-baru</code>, <code>/</code></td><td>Semua</td></tr><tr><td>Publik</td><td>Chat TARA layar penuh & widget</td><td><code>/chat</code></td><td>Tamu, warga</td></tr><tr><td>Publik</td><td>Katalog & formulir pengaduan</td><td><code>/katalog</code>, <code>/pengaduan/baru</code></td><td>Warga</td></tr><tr><td>Publik</td><td>Pengaduan internal pegawai</td><td><code>/pengaduan/internal</code></td><td>Pegawai</td></tr><tr><td>Publik</td><td>Lacak tiket</td><td><code>/lacak</code>, <code>/lacak/{tiket}</code></td><td>Semua</td></tr><tr><td>Publik</td><td>Halaman pengantar rujukan</td><td><code>/rujukan/{token}</code></td><td>Warga dirujuk</td></tr><tr><td>Publik</td><td>Akun: daftar, masuk, verifikasi, lupa & atur ulang sandi, aktivasi dari chat</td><td><code>/daftar</code>, <code>/masuk</code>, <code>/aktivasi/{token}</code></td><td>Warga</td></tr><tr><td>Publik</td><td>Portal Warga</td><td><code>/portal-warga</code></td><td>Warga</td></tr><tr><td>Publik</td><td>Panduan, pedoman layanan, peta kawasan, halaman statis</td><td><code>/panduan</code>, <code>/pedoman-layanan</code>, <code>/peta</code></td><td>Semua</td></tr><tr><td>Publik</td><td>Data Terbuka</td><td><code>/tentang</code></td><td>Semua</td></tr><tr><td>Admin</td><td>Matriks Rekapitulasi (alur, matriks, dampak × SLA, EWS, cetak)</td><td><code>/admin/matriks</code></td><td>Admin</td></tr><tr><td>Admin</td><td>Manajemen Tiket & detail tiket</td><td><code>/admin/tiket</code></td><td>Admin</td></tr><tr><td>Admin</td><td>Tiket Internal</td><td><code>/admin/tiket-internal</code></td><td>Super Admin</td></tr><tr><td>Admin</td><td>Input Manual</td><td><code>/admin/input-manual</code></td><td>Admin</td></tr><tr><td>Admin</td><td>Pesan Masuk (contact center)</td><td><code>/admin/chat</code></td><td>Admin</td></tr><tr><td>Admin</td><td>Rujukan (pendampingan)</td><td><code>/admin/rujukan</code></td><td>Admin</td></tr><tr><td>Admin</td><td>Basis Pengetahuan, tinjau, dokumen resmi</td><td><code>/admin/pengetahuan</code></td><td>Admin</td></tr><tr><td>Admin</td><td>Sumber Resmi (baru)</td><td><code>/admin/pengetahuan/sumber</code></td><td>Admin</td></tr><tr><td>Admin</td><td>Katalog Portal</td><td><code>/admin/portal</code></td><td>Admin</td></tr><tr><td>Admin</td><td>Daftar Admin, Log Aktivitas</td><td><code>/admin/petugas</code>, <code>/admin/log-aktivitas</code></td><td>Super Admin</td></tr><tr><td>Admin</td><td>Data Kawasan, Manajemen Kanal, Pengaturan</td><td><code>/admin/kawasan</code>, <code>/admin/kanal</code>, <code>/admin/pengaturan</code></td><td>Admin</td></tr><tr><td>Otomatis</td><td>Cek portal tiap jam, pantau rujukan, EWS harian, sinkron Sumber Resmi tiap Senin</td><td><code>sigap:*</code> (penjadwal)</td><td>Sistem</td></tr></tbody></table>
+</section>
+<section class="chapter" id="warga">
+  <p class="eyebrow">Bab 5</p>
+  <h1>Fitur untuk warga</h1>
+  <p class="lead">Warga cukup mulai dari chat. Halaman lain mendukung: melapor dengan formulir, melacak tiket, mengikuti rujukan, dan mengelola akun.</p>
+  
+
+<div class="feature">
+  <h3>5.1 Maskot TARA dan beranda baru</h3>
+  <p>TARA adalah maskot sekaligus nama asisten AI SIGAP: petugas perempuan berseragam Kementrans dengan headset, tampil dalam delapan pose (menyapa, mendengarkan, menunjuk, menjelaskan, memegang tablet, jempol, terima kasih, menyambut). Pose dipilih sesuai konteks halaman, mis. <i>menunjuk</i> di Katalog dan <i>mendengarkan</i> di Chat.</p>
+  <ul><li>Beranda baru (<code>/beranda-baru</code>) menonjolkan TARA dan satu ajakan utama: ketik pertanyaan atau mulai chat.</li><li>Semua halaman publik memakai bingkai yang sama: header dengan menu <b>Beranda · Lacak Tiket · Katalog Pengaduan · Peta Kawasan · Data · Panduan</b>, pita krem berisi judul dan pose TARA, footer navy, dan tombol TARA melayang di pojok kanan bawah.</li><li>Beranda lama (<code>/</code>) tetap ada dan menampilkan lencana <b>BARU · Coba Desain Baru</b>.</li></ul>
+  
+  
+<figure class="full">
+  <img src="img/t01-beranda-tara.jpg" alt="Beranda TARA (/beranda-baru).">
+  <figcaption><b>Gambar 2.</b> Beranda TARA (/beranda-baru).</figcaption>
+  <ol class="legend-list"><li><span class="num">1</span>Maskot TARA.</li><li><span class="num">2</span>Kolom tanya: pesan langsung dibawa ke Chat TARA.</li></ol>
+</figure>
+<figure class="phone">
+  <img src="img/t09-beranda-tara-ponsel.jpg" alt="Beranda TARA pada ponsel 390 px.">
+  <figcaption><b>Gambar 3.</b> Beranda TARA pada ponsel 390 px.</figcaption>
+  
+</figure>
+<figure class="full">
+  <img src="img/p01-beranda-lama.jpg" alt="Beranda lama dengan tombol menuju desain baru.">
+  <figcaption><b>Gambar 4.</b> Beranda lama dengan tombol menuju desain baru.</figcaption>
+  <p class="legend"><span class="box"></span>Tombol Coba Desain Baru.</p>
+</figure>
+</div>
+
+<div class="feature">
+  <h3>5.2 Chat TARA layar penuh</h3>
+  <p>Pintu utama SIGAP. Tamu cukup menulis nama, lalu bertanya. Riwayat tersimpan di server, sehingga tidak hilang saat halaman dimuat ulang.</p>
+  <ul><li><b>Tanpa akun:</b> nama disimpan, cookie terenkripsi 30 hari membuat riwayat tetap muncul di perangkat yang sama.</li><li><b>Jawaban bersumber:</b> setiap jawaban menyebut nomor [n] yang cocok dengan daftar sumber, termasuk kutipan asli dan tanggal diambil.</li><li><b>Kartu portal:</b> bila kebutuhan dilayani portal lain, muncul kartu dengan tombol menuju portal tersebut.</li><li><b>Diteruskan ke petugas:</b> aduan, urusan pribadi, atau permintaan warga diteruskan dengan ringkasan dan nomor referensi <code>REF-…</code>.</li><li><b>Panel tiket</b> di kanan menampilkan tahapan: diterima, diteruskan, tiket terbit, ditindaklanjuti, selesai.</li><li><b>Lampiran foto</b> (metadata lokasi dibuang), <b>kartu konfirmasi data</b> dari petugas, tombol <b>Transkrip</b> dan <b>Akhiri</b>.</li><li><b>Lanjut di perangkat lain:</b> masukkan nomor REF dan kontak yang pernah ditinggalkan.</li></ul>
+  
+  
+<figure class="full">
+  <img src="img/u02-darto-diteruskan.jpg" alt="Percakapan diteruskan ke petugas: nomor referensi dan tahapan di panel kanan.">
+  <figcaption><b>Gambar 5.</b> Percakapan diteruskan ke petugas: nomor referensi dan tahapan di panel kanan.</figcaption>
+  <p class="legend"><span class="box"></span>Pesan sistem berisi nomor referensi percakapan.</p>
+</figure>
+</div>
+
+<div class="feature">
+  <h3>5.3 Katalog dan formulir pengaduan</h3>
+  <p>Untuk warga yang ingin melapor lewat formulir. Katalog menjelaskan kanal yang tepat untuk tiap jenis masalah.</p>
+  <ul><li>Katalog mengarahkan: aduan layanan kawasan ke SIGAP, lahan ke Trans Tuntas, informasi publik ke PPID, penyalahgunaan wewenang ke Inspektorat.</li><li>Formulir pengaduan: kategori, kawasan, tingkat dampak, uraian, lampiran; tiket terbit dengan nomor untuk dilacak.</li><li>Formulir dilindungi reCAPTCHA dan batas laju.</li></ul>
+  
+  
+<figure class="tall">
+  <img src="img/t03-katalog-tara.jpg" alt="Katalog Pengaduan bergaya TARA.">
+  <figcaption><b>Gambar 6.</b> Katalog Pengaduan bergaya TARA.</figcaption>
+  <ol class="legend-list"><li><span class="num">1</span>Kanal utama: Layanan SIGAP (formulir).</li><li><span class="num">2</span>Pengaduan Internal Pegawai.</li></ol>
+</figure>
+<figure class="full">
+  <img src="img/t08-formulir-tara.jpg" alt="Formulir pengaduan warga.">
+  <figcaption><b>Gambar 7.</b> Formulir pengaduan warga.</figcaption>
+  
+</figure>
+</div>
+
+<div class="feature">
+  <h3>5.4 Pengaduan internal pegawai</h3>
+  <p>Helpdesk pegawai untuk gangguan sarana kantor: internet, listrik, perangkat, aplikasi, dan fasilitas. Tidak perlu akun.</p>
+  <ul><li>Isian: NIP, nama, unit, kontak, kategori, urgensi, lokasi, uraian, foto.</li><li>Tiket ditandai internal: hanya Super Admin yang melihat, tidak masuk statistik publik dan peta.</li><li>Formulir memuat peringatan bahwa pelanggaran pegawai dilaporkan ke Inspektorat Jenderal.</li></ul>
+  
+  
+<figure class="full">
+  <img src="img/p06-formulir-internal.jpg" alt="Formulir pengaduan internal pegawai.">
+  <figcaption><b>Gambar 8.</b> Formulir pengaduan internal pegawai.</figcaption>
+  
+</figure>
+</div>
+
+<div class="feature">
+  <h3>5.5 Lacak tiket</h3>
+  <p>Warga memasukkan nomor tiket untuk melihat status, riwayat, dan batas waktu penanganan.</p>
+  <ul><li>Status: Menunggu, Diverifikasi, Diproses, Selesai, Ditolak, ditampilkan sebagai garis waktu beserta petugas dan batas waktunya.</li><li>Setelah tiket selesai, warga diminta mengisi survei kepuasan.</li><li>Nomor tiket juga dikenali TARA di chat (mis. ketik <code>TKT-15</code>).</li></ul>
+  
+  
+<figure class="full">
+  <img src="img/t04-lacak-tara.jpg" alt="Lacak Tiket: hasil tiket ditemukan beserta garis waktunya.">
+  <figcaption><b>Gambar 9.</b> Lacak Tiket: hasil tiket ditemukan beserta garis waktunya.</figcaption>
+  
+</figure>
+</div>
+
+<div class="feature">
+  <h3>5.6 Akun warga</h3>
+  <p>Warga bisa mendaftar sendiri, atau dibuatkan akun oleh petugas dari chat.</p>
+  <ul><li>Daftar, masuk (NIK/email/username), verifikasi email, lupa dan atur ulang kata sandi.</li><li><b>Aktivasi dari chat:</b> petugas menekan Daftarkan akun; warga menerima tombol di chat untuk membuat kata sandi (<code>/aktivasi/{token}</code>). Token hanya disimpan dalam bentuk hash.</li><li><b>Pemulihan lewat chat:</b> petugas mengirim tautan kata sandi baru tanpa warga harus punya email.</li><li><b>Portal Warga:</b> riwayat tiket dan lampiran milik warga.</li></ul>
+  
+  
+<figure class="half">
+  <img src="img/p11-masuk.jpg" alt="Halaman Masuk.">
+  <figcaption><b>Gambar 10.</b> Halaman Masuk.</figcaption>
+  
+</figure>
+<figure class="half">
+  <img src="img/p12-daftar.jpg" alt="Halaman Daftar Akun.">
+  <figcaption><b>Gambar 11.</b> Halaman Daftar Akun.</figcaption>
+  
+</figure>
+</div>
+
+<div class="feature">
+  <h3>5.7 Panduan, pedoman layanan, dan peta kawasan</h3>
+  <p>Informasi pendukung: panduan memakai SIGAP, pedoman layanan (kanal, SLA, hak dan kewajiban), serta peta kawasan transmigrasi dan sebaran aduan publik.</p>
+  <ul><li>Peta hanya menampilkan tiket publik; tiket internal tidak pernah ditampilkan.</li><li>Pemilih wilayah di hero peta langsung memusatkan peta ke kawasan yang dipilih.</li></ul>
+  
+  
+<figure class="tall">
+  <img src="img/t05-peta-tara.jpg" alt="Peta Kawasan bergaya TARA.">
+  <figcaption><b>Gambar 12.</b> Peta Kawasan bergaya TARA.</figcaption>
+  
+</figure>
+<figure class="full">
+  <img src="img/t06-panduan-tara.jpg" alt="Panduan Layanan.">
+  <figcaption><b>Gambar 13.</b> Panduan Layanan.</figcaption>
+  
+</figure>
+</div>
+
+<div class="feature">
+  <h3>5.8 Data Terbuka</h3>
+  <p>Halaman <code>/tentang</code> (menu <b>Data</b>) menampilkan statistik layanan langsung dari database, tanpa data pribadi pelapor.</p>
+  <ul><li><b>Matriks harian:</b> laporan masuk hari ini, sedang diproses, selesai ditangani, total laporan publik.</li><li><b>Status penanganan</b> (Menunggu · Diverifikasi · Diproses · Selesai · Ditolak) dan <b>matriks bulanan</b> beserta persentase SLA.</li><li><b>Top kategori keluhan</b>, <b>distribusi kanal</b>, daftar <b>kawasan transmigrasi</b> beserta jumlah KK, dan dasar hukum keterbukaan data.</li><li>Angka dihitung dari tiket publik saja; tiket internal pegawai tidak dihitung. Bila belum ada tiket, halaman menampilkan nol, bukan angka contoh.</li></ul>
+  
+  
+<figure class="tall">
+  <img src="img/t07-data-terbuka.jpg" alt="Halaman Data Terbuka.">
+  <figcaption><b>Gambar 14.</b> Halaman Data Terbuka.</figcaption>
+  
+</figure>
+</div>
+
+</section>
+<section class="chapter" id="admin">
+  <p class="eyebrow">Bab 6</p>
+  <h1>Panel admin (Admin v2)</h1>
+  <p class="lead">Tampilan panel admin mengikuti desain Admin v2: sidebar navy, topbar dengan remah roti, judul halaman yang tegas, kartu statistik, dan tabel yang lega. Semua fitur lama tetap ada.</p>
+  
+
+<div class="feature">
+  <h3>6.1 Tata letak baru</h3>
+  <p>Sidebar memuat 14 menu dalam satu daftar, antrean Menunggu petugas, dan tombol ciutkan. Topbar berisi remah roti, notifikasi, dan menu akun.</p>
+  <ul><li>Badge emas pada <b>Pesan Masuk</b> (belum dibaca) dan <b>Rujukan</b> (perlu tindakan).</li><li>Menu khusus Super Admin (Tiket Internal, Daftar Admin, Log Aktivitas) disembunyikan dari Admin Kawasan.</li><li>Pada ponsel, sidebar dibuka lewat tombol menu di topbar.</li></ul>
+  
+  
+<figure class="full">
+  <img src="img/a01-layout-admin.jpg" alt="Tata letak panel admin Admin v2.">
+  <figcaption><b>Gambar 15.</b> Tata letak panel admin Admin v2.</figcaption>
+  <ol class="legend-list"><li><span class="num">1</span>Sidebar navy: menu, badge, dan antrean Menunggu petugas.</li><li><span class="num">2</span>Topbar: remah roti, notifikasi, menu akun.</li><li><span class="num">3</span>Kartu statistik (KPI) bergaya Admin v2.</li></ol>
+</figure>
+</div>
+
+<div class="feature">
+  <h3>6.2 Matriks Rekapitulasi</h3>
+  <p>Halaman pertama panel admin (<code>/admin</code>). Merekap tiket mengikuti proses aslinya: dari pintu masuk, lewat setiap tahap penanganan, sampai tuntas, lengkap dengan target SLA Pedoman Layanan. Semua angka dihitung langsung dari database sesuai cakupan peran (Admin Kawasan hanya melihat kawasannya).</p>
+  <ul><li><b>Saringan periode</b> (bulan berjalan, bulan sebelumnya, atau semua waktu) dan <b>kawasan</b>; tombol <b>Print</b> menghasilkan laporan cetak tanpa sidebar.</li><li><b>Alur penanganan:</b> pintu masuk (Formulir web, Input manual petugas, Chat TARA → petugas) → Menunggu → Diverifikasi → Diproses → Selesai / Ditolak, dengan penanda EWS per tahap. Klik tahap untuk menyaring daftar tiket.</li><li><b>Ditangani tanpa tiket:</b> percakapan yang cukup dijawab TARA, rujukan ke portal (dan yang berhasil), serta pertanyaan kebijakan yang diarahkan ke PPID.</li><li><b>KPI:</b> tiket berjalan, peringatan EWS, SLA terpenuhi, rata-rata respons awal, rata-rata penyelesaian.</li><li><b>Matriks</b> baris × status dengan sumbu yang bisa diganti: Kategori, Kawasan, Kanal, atau Petugas. Warna sel makin pekat sesuai jumlah; klik angka untuk membuka Manajemen Tiket yang sudah tersaring.</li><li><b>Dampak × SLA</b> (Kritis 1×24 jam / 3 hari kerja, Tinggi 3×24 jam / 7 hari, Sedang & Rendah 5 hari / 14 hari), <b>kanal masuk</b>, <b>sebaran kawasan</b>, dan <b>survei kepuasan</b>.</li><li><b>Perlu tindakan:</b> tiket yang melewati tenggat, urut dari yang paling lama, lengkap dengan petugas (atau "Belum ditugaskan").</li><li><b>Daftar tiket</b> lama tetap ada di bawah: pencarian, saringan, urutan, paginasi, dan sorotan baris EWS.</li><li><b>Kondisi kosong:</b> bila belum ada tiket, struktur alur dan matriks tetap tampil dengan angka nol, disertai panel yang menjelaskan tiga pintu masuk tiket.</li></ul>
+  
+  
+<figure class="full">
+  <img src="img/a02-matriks.jpg" alt="Matriks Rekapitulasi: bagian atas.">
+  <figcaption><b>Gambar 16.</b> Matriks Rekapitulasi: bagian atas.</figcaption>
+  <ol class="legend-list"><li><span class="num">1</span>Alur penanganan tiket dari pintu masuk sampai tuntas, termasuk yang ditangani tanpa tiket.</li><li><span class="num">2</span>Matriks kategori × tahap penanganan.</li></ol>
+</figure>
+<figure class="tall">
+  <img src="img/a02b-matriks-penuh.jpg" alt="Matriks Rekapitulasi satu halaman penuh.">
+  <figcaption><b>Gambar 17.</b> Matriks Rekapitulasi satu halaman penuh.</figcaption>
+  <ol class="legend-list"><li><span class="num">1</span>Dampak × SLA, kanal masuk, dan sebaran kawasan.</li><li><span class="num">2</span>Perlu tindakan: tiket lewat tenggat.</li><li><span class="num">3</span>Daftar tiket lama dengan saringan.</li></ol>
+</figure>
+<figure class="tall">
+  <img src="img/a02e-matriks-kosong.jpg" alt="Kondisi kosong (periode tanpa tiket), seperti keadaan produksi saat ini.">
+  <figcaption><b>Gambar 18.</b> Kondisi kosong (periode tanpa tiket), seperti keadaan produksi saat ini.</figcaption>
+  <p class="legend"><span class="box"></span>Panel penjelasan dan tiga pintu masuk tiket.</p>
+</figure>
+</div>
+
+<div class="feature">
+  <h3>6.3 Manajemen Tiket dan detail tiket</h3>
+  <p>Daftar tiket aktif dari semua kanal. Detail tiket memuat data pelapor, riwayat, balasan, lampiran, dan ubah status dengan catatan.</p>
+  <ul><li>Admin Kawasan hanya melihat tiket kawasannya.</li><li>Setiap perubahan status tercatat di riwayat dan Log Aktivitas, dan warga diberi notifikasi.</li></ul>
+  
+  
+<figure class="full">
+  <img src="img/a03-tiket.jpg" alt="Manajemen Tiket Aktif.">
+  <figcaption><b>Gambar 19.</b> Manajemen Tiket Aktif.</figcaption>
+  
+</figure>
+<figure class="full">
+  <img src="img/u17-tiket-detail-status.jpg" alt="Detail tiket.">
+  <figcaption><b>Gambar 20.</b> Detail tiket.</figcaption>
+  <p class="legend"><span class="box"></span>Bagian pengelolaan status tiket.</p>
+</figure>
+</div>
+
+<div class="feature">
+  <h3>6.4 Tiket Internal dan Input Manual</h3>
+  <p>Tiket Internal menampung laporan pegawai. Input Manual mencatat laporan dari Instagram, WhatsApp, surat, atau loket agar masuk ke alur yang sama.</p>
+  <ul><li>Kartu statistik: laporan hari ini, bulan ini, kategori teratas, rata-rata penyelesaian.</li><li>Input Manual: sumber laporan, data pelapor (NIK opsional untuk medsos, tautan unggahan), detail, kawasan, kategori, dampak, lampiran.</li></ul>
+  
+  
+<figure class="full">
+  <img src="img/a05-tiket-internal.jpg" alt="Tiket Internal Pegawai.">
+  <figcaption><b>Gambar 21.</b> Tiket Internal Pegawai.</figcaption>
+  
+</figure>
+<figure class="full">
+  <img src="img/a06-input-manual.jpg" alt="Input Pengaduan Manual.">
+  <figcaption><b>Gambar 22.</b> Input Pengaduan Manual.</figcaption>
+  
+</figure>
+</div>
+
+<div class="feature">
+  <h3>6.5 Pesan Masuk (contact center)</h3>
+  <p>Tempat petugas melayani percakapan yang diteruskan TARA maupun live chat. Petugas melihat ringkasan AI, sehingga tidak perlu membaca dari awal.</p>
+  <ul><li>Tab <b>Menunggu · Dijawab AI · Selesai · Semua</b>, pencarian nama/isi/REF.</li><li><b>Ambil percakapan</b> agar warga tahu siapa petugasnya.</li><li><b>Daftarkan akun</b> dan <b>Lupa kata sandi</b> langsung dari chat.</li><li><b>Minta konfirmasi data</b>: kartu berisi data laporan (NIK disamarkan) untuk dikonfirmasi warga.</li><li><b>Terbitkan tiket</b> dengan saran isian dari AI, <b>Sudah terjawab</b>, <b>Rujuk ke portal</b>, <b>Rujuk ke Inspektorat</b>.</li><li>Penanda kuning bila sumber resmi yang dikutip TARA saling berbeda.</li></ul>
+  
+  
+<figure class="full">
+  <img src="img/a07-pesan-masuk.jpg" alt="Pesan Masuk.">
+  <figcaption><b>Gambar 23.</b> Pesan Masuk.</figcaption>
+  <ol class="legend-list"><li><span class="num">1</span>Tab antrean percakapan.</li><li><span class="num">2</span>Daftarkan akun warga dari chat.</li><li><span class="num">3</span>Minta konfirmasi data.</li><li><span class="num">4</span>Terbitkan tiket.</li><li><span class="num">5</span>Rujuk ke portal.</li></ol>
+</figure>
+</div>
+
+<div class="feature">
+  <h3>6.6 Rujukan</h3>
+  <p>Pendampingan warga yang dirujuk ke portal lain sampai warga mengirim kode bukti (mis. nomor pendaftaran).</p>
+  <ul><li>Tab <b>Perlu tindakan · Menunggu warga · Selesai</b>; penanggung jawab otomatis petugas yang merujuk atau yang bebannya paling sedikit.</li><li>Warga diingatkan sekitar 20 jam setelah dirujuk; petugas diingatkan bila lewat 2 hari kerja.</li><li>Aksi: catatan, kirim pesan, tandai berhasil, alihkan ke petugas lain, tutup.</li></ul>
+  
+  
+<figure class="full">
+  <img src="img/a08-rujukan.jpg" alt="Daftar Rujukan.">
+  <figcaption><b>Gambar 24.</b> Daftar Rujukan.</figcaption>
+  
+</figure>
+</div>
+
+<div class="feature">
+  <h3>6.7 Katalog Portal</h3>
+  <p>Daftar portal resmi yang boleh dirujuk TARA dan petugas, lengkap dengan langkah, persiapan, dan status kesehatan.</p>
+  <ul><li>Setiap portal dicek tiap jam. Bila tidak dapat diakses, warga tidak diarahkan ke halaman error dan percakapan diteruskan ke petugas.</li><li>Portal internal (TC-More, TEP, TransCloud, Presensi Rapat) tidak pernah ditawarkan ke warga.</li></ul>
+  
+  
+<figure class="full">
+  <img src="img/a14-katalog-portal.jpg" alt="Katalog Portal.">
+  <figcaption><b>Gambar 25.</b> Katalog Portal.</figcaption>
+  
+</figure>
+</div>
+
+<div class="feature">
+  <h3>6.8 Daftar Admin, Log Aktivitas, Data Kawasan, Kanal, Pengaturan</h3>
+  <p>Menu pengelolaan.</p>
+  <ul><li><b>Daftar Admin:</b> tambah petugas, peran, wilayah tugas, email notifikasi.</li><li><b>Log Aktivitas:</b> jejak audit (login, perubahan status, penerbitan artikel, dll.).</li><li><b>Data Kawasan:</b> kode, nama, provinsi, koordinat, jumlah KK, status infrastruktur.</li><li><b>Manajemen Kanal:</b> media sosial, kantor pengaduan, integrasi kanal nasional (SP4N-LAPOR! masih stub) beserta log sinkron.</li><li><b>Pengaturan:</b> profil dan kata sandi, SLA dan EWS, kategori laporan, notifikasi tiket internal.</li></ul>
+  
+  
+<figure class="full">
+  <img src="img/a15-daftar-admin.jpg" alt="Daftar Admin SIGAP.">
+  <figcaption><b>Gambar 26.</b> Daftar Admin SIGAP.</figcaption>
+  
+</figure>
+<figure class="full">
+  <img src="img/a19-pengaturan.jpg" alt="Pengaturan & Preferensi.">
+  <figcaption><b>Gambar 27.</b> Pengaturan & Preferensi.</figcaption>
+  
+</figure>
+<figure class="full">
+  <img src="img/a18-manajemen-kanal.jpg" alt="Manajemen Kanal Pengaduan.">
+  <figcaption><b>Gambar 28.</b> Manajemen Kanal Pengaduan.</figcaption>
+  
+</figure>
+<figure class="full">
+  <img src="img/a16-log-aktivitas.jpg" alt="Log Aktivitas.">
+  <figcaption><b>Gambar 29.</b> Log Aktivitas.</figcaption>
+  
+</figure>
+<figure class="full">
+  <img src="img/a17-data-kawasan.jpg" alt="Direktori Kawasan Transmigrasi.">
+  <figcaption><b>Gambar 30.</b> Direktori Kawasan Transmigrasi.</figcaption>
+  
+</figure>
+<figure class="full">
+  <img src="img/a20-notifikasi.jpg" alt="Notifikasi di topbar.">
+  <figcaption><b>Gambar 31.</b> Notifikasi di topbar.</figcaption>
+  <p class="legend"><span class="box"></span>Daftar notifikasi petugas.</p>
+</figure>
+</div>
+
+</section>
+<section class="chapter" id="ai">
+  <p class="eyebrow">Bab 7</p>
+  <h1>Asisten AI TARA, Basis Pengetahuan, dan Sumber Resmi</h1>
+  <p class="lead">TARA hanya menjawab dari sumber resmi. Ada dua jenis sumber: artikel yang ditinjau petugas, dan kutipan langsung dari situs serta berkas resmi.</p>
+  
+<h2>Alur jawaban TARA</h2>
+<ol class="flow">
+  <li><b>Pesan masuk.</b> Data pribadi (NIK, nomor HP, surel, nomor panjang) disamarkan sebelum dikirim ke AI. Nomor tiket langsung dijawab dengan kartu status.</li>
+  <li><b>Cari sumber.</b> Maksimal 3 artikel terbit dan 3 kutipan Sumber Resmi. Pertanyaan panjang (12 kata kunci atau lebih) dipecah per bagian, misalnya "demografi", "urbanisasi", "hak masyarakat lokal"; tiap bagian dicarikan kutipannya sendiri lalu digabung bergiliran sampai 6 kutipan. Kutipan yang sama persis dikirim sekali, dan tiap situs mendapat giliran.</li>
+  <li><b>AI menjawab</b> hanya dari sumber, menyebut nomor [n], dan menggolongkan pesan: informasi, aduan, pribadi, tidak jelas, atau lainnya. Pertanyaan kebijakan diberi penanda khusus (lihat 7.4).</li>
+  <li><b>Tindakan:</b> menjawab dengan sumber; menampilkan kartu portal; merujuk otomatis (aduan yang dilayani portal, mis. lahan ke Trans Tuntas); atau meneruskan ke petugas dengan ringkasan.</li>
+  <li><b>Tanpa sumber, tanpa jawaban:</b> TARA menulis "belum menemukan informasi resmi" dan pertanyaannya masuk daftar <i>Belum bisa dijawab AI</i> sebagai bahan artikel.</li>
+</ol>
+<table class="keep"><caption><b>Tabel 5.</b> Dua jenis sumber jawaban</caption><colgroup><col style="width:16%"><col style="width:42%"><col style="width:42%"></colgroup><thead><tr><th></th><th>Artikel (Basis Pengetahuan)</th><th>Kutipan (Sumber Resmi)</th></tr></thead><tbody><tr><td>Isi</td><td>Tanya-jawab yang ditulis atau dirapikan petugas</td><td>Potongan teks asli dari situs dan berkas resmi</td></tr><tr><td>Asal</td><td>Ditulis manual, atau usulan AI dari dokumen</td><td>Diambil otomatis dari <code>*.transmigrasi.go.id</code> dan berkas unggahan</td></tr><tr><td>Ditinjau?</td><td>Ya: Draf → Ditinjau → Terbit (Super Admin)</td><td>Tidak; dapat dinonaktifkan per sumber</td></tr><tr><td>Prioritas</td><td>Pertama</td><td>Pengisi pertanyaan yang belum punya artikel</td></tr><tr><td>Diperbarui</td><td>Manual</td><td>Otomatis tiap Senin 02.00, hanya bila isi berubah</td></tr></tbody></table>
+
+<div class="feature">
+  <h3>7.1 Basis Pengetahuan</h3>
+  <p>Artikel tanya-jawab dengan sumber, kategori, kata kunci, dan tanggal tinjau.</p>
+  <ul><li>Admin Kawasan menyimpan artikel ke antrean tinjau; Super Admin menerbitkan lewat <b>Tinjau berurutan</b>.</li><li><b>Uji pencarian</b> memperlihatkan artikel dan kutipan yang akan dikirim ke AI untuk sebuah pertanyaan.</li><li><b>Buat dari dokumen resmi:</b> unggah PDF/DOCX; isinya langsung dapat dikutip dan AI mengusulkan artikel per halaman.</li></ul>
+  
+  
+<figure class="full">
+  <img src="img/a09-basis-pengetahuan.jpg" alt="Basis Pengetahuan.">
+  <figcaption><b>Gambar 32.</b> Basis Pengetahuan.</figcaption>
+  <ol class="legend-list"><li><span class="num">1</span>Menuju Sumber Resmi.</li><li><span class="num">2</span>Buat artikel dari dokumen resmi.</li></ol>
+</figure>
+<figure class="full">
+  <img src="img/a10-uji-pencarian.jpg" alt="Uji pencarian untuk pertanyaan 'berapa batas usia ikut transmigrasi?'.">
+  <figcaption><b>Gambar 33.</b> Uji pencarian untuk pertanyaan 'berapa batas usia ikut transmigrasi?'.</figcaption>
+  <p class="legend"><span class="box"></span>Artikel dan kutipan Sumber Resmi yang ikut terkirim ke AI.</p>
+</figure>
+<figure class="full">
+  <img src="img/a13-tinjau-artikel.jpg" alt="Tinjau artikel berurutan.">
+  <figcaption><b>Gambar 34.</b> Tinjau artikel berurutan.</figcaption>
+  
+</figure>
+<figure class="full">
+  <img src="img/a12-dokumen-resmi.jpg" alt="Buat artikel dari dokumen resmi (PDF/DOCX).">
+  <figcaption><b>Gambar 35.</b> Buat artikel dari dokumen resmi (PDF/DOCX).</figcaption>
+  
+</figure>
+</div>
+
+<div class="feature">
+  <h3>7.2 Sumber Resmi</h3>
+  <p>Situs dan berkas resmi yang dikutip langsung oleh TARA. Setiap kutipan menyebut alamat, halaman, dan tanggal diambil.</p>
+  <ul><li>Hanya domain <code>transmigrasi.go.id</code>, <code>peraturan.bpk.go.id</code>, dan <code>peraturan.go.id</code> beserta subdomainnya; pengalihan ke domain lain ditolak.</li><li>Opsi <b>Ikuti tautan</b> mengambil halaman lain di bagian yang sama dan PDF/DOCX yang ditautkan (maks. 25 halaman).</li><li>Situs yang sedang mati tidak menghapus kutipan lama; kutipan terakhir yang berhasil tetap dipakai.</li><li>Berkas unggahan bisa ditandai <i>boleh dibuka warga</i> atau tidak.</li><li>Saat ini terdaftar <b>24 sumber</b> dengan sekitar 1.300 kutipan (Tabel di bawah).</li></ul>
+  <table class="keep"><caption><b>Tabel 6.</b> Sumber Resmi yang terdaftar (25 Oktober 2026)</caption><colgroup><col style="width:24%"><col style="width:76%"></colgroup><thead><tr><th>Kelompok</th><th>Sumber resmi yang dikutip TARA</th></tr></thead><tbody><tr><td>Layanan & pendaftaran</td><td>SIBARDUKTRANS (tata cara bertransmigrasi, informasi lokasi), persyaratan transmigrasi (transmigrasi.go.id)</td></tr><tr><td>Informasi publik</td><td>PPID: tanya jawab, standar layanan, tugas & fungsi, visi & misi; visi & misi Kementrans; Cek Fakta</td></tr><tr><td>Dasar hukum</td><td>UU 15/1997 Ketransmigrasian, UU 29/2009 (perubahan), Permentrans 3/2026 Transmigrasi Patriot, Permentrans 8/2025 Transformasi Transmigrasi dan perubahannya (Permentrans 13/2025)</td></tr><tr><td>Arah & kinerja kebijakan</td><td>Permentrans 11/2025 tentang Renstra Kementrans 2025–2029, Laporan Kinerja Kementrans 2025, Renstra Ditjen PPKTrans 2025–2029, halaman Program Unggulan 5T, Program dan Kebijakan</td></tr><tr><td>Siaran pers Menteri</td><td>Transmigrasi diukur dari lapangan kerja; Transmigrasi hari ini: dari miskin menjadi sejahtera; Dialog dengan warga setempat atas usulan pemda; Pusat pertumbuhan ekonomi tak cukup dengan infrastruktur; Berdayakan masyarakat setempat lewat transmigran lokal</td></tr></tbody></table>
+  
+<figure class="full">
+  <img src="img/a11-sumber-resmi.jpg" alt="Sumber Resmi.">
+  <figcaption><b>Gambar 36.</b> Sumber Resmi.</figcaption>
+  <ol class="legend-list"><li><span class="num">1</span>Tambah situs resmi.</li><li><span class="num">2</span>Jumlah kutipan aktif dan aturan domain.</li></ol>
+</figure>
+</div>
+
+<div class="feature">
+  <h3>7.3 Bila sumber resmi berbeda</h3>
+  <p>Situs resmi bisa saling berbeda. Contoh nyata: SIBARDUKTRANS menulis batas usia <b>19–53 tahun</b>, sedangkan halaman persyaratan transmigrasi.go.id menulis <b>19–49 tahun</b>. TARA tidak memilih salah satu.</p>
+  <ul><li>Setiap versi ditampilkan beserta asal sumbernya dan nomornya.</li><li>Muncul penanda kuning <b>Sumber resmi menyebut ketentuan berbeda</b> di chat warga dan di layar petugas.</li><li>Untuk pertanyaan pribadi (mis. 'umur saya 50, bisa?'), ketentuan umum tetap ditampilkan, lalu diteruskan ke petugas untuk kepastian.</li><li>Rekomendasi: setelah angka yang berlaku dipastikan, terbitkan satu artikel resmi agar diutamakan.</li></ul>
+  
+  
+<figure class="phone">
+  <img src="img/u13-sri-sumber-berbeda.jpg" alt="Jawaban TARA saat sumber berbeda (ponsel).">
+  <figcaption><b>Gambar 37.</b> Jawaban TARA saat sumber berbeda (ponsel).</figcaption>
+  <p class="legend"><span class="box"></span>Penanda sumber resmi berbeda.</p>
+</figure>
+</div>
+
+<div class="feature">
+  <h3>7.4 Pertanyaan umum dan pertanyaan kebijakan</h3>
+  <p>Warga tidak hanya bertanya soal syarat atau cara daftar. Ada juga pertanyaan umum ("apa itu transmigrasi?") dan pertanyaan kebijakan yang kritis, misalnya meminta kementerian <i>membuktikan</i>, <i>mengevaluasi</i>, atau <i>membenarkan</i> program transmigrasi. TARA menjawab keduanya langsung di chat dari sumber resmi, tanpa menerbitkan artikel baru.</p>
+  <ul><li><b>Pertanyaan umum</b> dijawab ringkas dengan sitasi [n] ke UU, Permentrans, dan halaman program.</li><li><b>Pertanyaan kebijakan</b> dijawab dengan susunan tetap: (1) posisi resmi yang ADA di sumber, dikelompokkan per aspek yang ditanyakan, setiap kalimat bersitasi; (2) aspek yang tidak tercakup sumber disebut terang, mis. "data perbandingan efisiensi belum tersedia di sumber resmi yang saya miliki"; (3) arahan ke PPID atau Humas untuk pernyataan resmi atau data kinerja.</li><li>TARA <b>tidak beropini</b>, tidak membela atau mengkritik kebijakan, dan tidak mengarang angka, target, atau hasil evaluasi.</li><li>Di bawah jawaban muncul catatan biru <b>Pertanyaan kebijakan</b> dengan tautan ke PPID Kementerian Transmigrasi. Catatan yang sama tampil di Pesan Masuk petugas.</li><li>Bila sumber sama sekali tidak membahasnya, TARA tetap menjelaskan bahwa ini pertanyaan kebijakan dan mengarahkan ke PPID, lalu pertanyaannya masuk daftar <i>Belum bisa dijawab AI</i>.</li><li>Pertanyaan kebijakan tidak diteruskan ke petugas (kecuali warga memintanya), dan aduan tidak pernah diturunkan menjadi pertanyaan kebijakan.</li></ul>
+  
+  
+<figure class="full">
+  <img src="img/u22-kebijakan-ppid.jpg" alt="Jawaban pertanyaan kebijakan: catatan PPID dan enam sumber resmi.">
+  <figcaption><b>Gambar 38.</b> Jawaban pertanyaan kebijakan: catatan PPID dan enam sumber resmi.</figcaption>
+  <ol class="legend-list"><li><span class="num">1</span>Catatan Pertanyaan kebijakan dengan tautan PPID.</li><li><span class="num">2</span>Sumber resmi: Renstra 2025–2029, siaran pers Menteri, Program dan Kebijakan, Permentrans 13/2025.</li></ol>
+</figure>
+</div>
+<div class="keep"><h2>Konfigurasi AI</h2>
+<table class="keep"><caption><b>Tabel 7.</b> Konfigurasi asisten AI</caption><colgroup><col style="width:28%"><col style="width:72%"></colgroup><thead><tr><th>Pengaturan</th><th>Nilai</th></tr></thead><tbody><tr><td>Penyedia</td><td>Sumopod (endpoint kompatibel OpenAI) <code>https://ai.sumopod.com/v1</code></td></tr><tr><td>Model</td><td><code>deepseek-v4-flash</code> (model penalaran)</td></tr><tr><td>Mode berpikir</td><td><code>AI_REASONING_EFFORT=none</code> → jawaban ±1–3 detik (tanpa ini bisa lebih dari 45 detik)</td></tr><tr><td>Suhu</td><td>0,2 (jawaban konsisten)</td></tr><tr><td>Data yang dikirim</td><td>Pertanyaan dan riwayat 6 pesan terakhir yang sudah disamarkan, daftar portal, dan sumber</td></tr></tbody></table></div>
+
+</section>
+<section class="chapter" id="kasus">
+  <p class="eyebrow">Bab 8</p>
+  <h1>Use case end-to-end</h1>
+  <p class="lead">Contoh kasus nyata, dari warga yang ingin mendaftar, pegawai yang internetnya mati, sampai pertanyaan kebijakan yang kritis. Kasus A, C, D, F, dan G dijalankan sungguhan dengan AI asli.</p>
+  
+<h2>A. Pak Darto ingin ikut transmigrasi, didampingi petugas Rina</h2>
+<p><b>Pak Darto</b> (42 tahun) petani di Wonogiri, ingin ikut transmigrasi bersama keluarganya, tapi gaptek dan <b>tidak punya email</b>. Anaknya membukakan SIGAP di HP. Petugas yang mendampingi adalah <b>Rina Kartika</b>, Admin Kawasan SP3 Bulungan. Seluruh langkah di bawah dijalankan sungguhan di aplikasi.</p>
+
+<div class="step">
+  <div class="step-head"><span class="time">Hari 1 · 09.05</span><span class="step-title">Bertanya</span><span class="who">Pak Darto</span></div>
+  <div class="step-body"><p>Pak Darto menulis nama, lalu bertanya <i>"Saya mau ikut transmigrasi, caranya gimana?"</i>. TARA menjawab dari artikel UU 15/1997 jo. 29/2009 dan kutipan SIBARDUKTRANS (tata cara & seleksi), menyertakan sumber dan kartu <b>SIBARDUKTRANS</b>.</p></div>
+  
+<figure class="full">
+  <img src="img/u01-darto-bertanya.jpg" alt="TARA menjawab dengan sumber resmi dan kartu portal.">
+  <figcaption><b>Gambar 39.</b> TARA menjawab dengan sumber resmi dan kartu portal.</figcaption>
+  <ol class="legend-list"><li><span class="num">1</span>Sumber resmi dengan kutipan dan tanggal diambil.</li><li><span class="num">2</span>Jawaban dan kartu SIBARDUKTRANS.</li></ol>
+</figure>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="time">Hari 1 · 09.08</span><span class="step-title">Tersendat: tidak punya email</span><span class="who">Pak Darto → TARA</span></div>
+  <div class="step-body"><p>Pak Darto menulis <i>"Saya tidak punya email, bagaimana?"</i>. Karena butuh bantuan petugas, percakapan <b>diteruskan</b> dengan ringkasan otomatis dan nomor referensi <code>REF-…</code>. Di luar jam kerja, Pak Darto diminta meninggalkan nomor WhatsApp.</p></div>
+  
+<figure class="full">
+  <img src="img/u02-darto-diteruskan.jpg" alt="Percakapan diteruskan ke petugas.">
+  <figcaption><b>Gambar 40.</b> Percakapan diteruskan ke petugas.</figcaption>
+  <p class="legend"><span class="box"></span>Nomor referensi percakapan.</p>
+</figure>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="time">Hari 1 · 09.15</span><span class="step-title">Rina melihat antrean</span><span class="who">Rina (petugas)</span></div>
+  <div class="step-body"><p>Percakapan Pak Darto muncul di tab <b>Menunggu</b> dan di daftar <b>Menunggu petugas</b> di sidebar, lengkap dengan ringkasan asisten, sehingga Rina tidak perlu membaca dari awal.</p></div>
+  
+<figure class="full">
+  <img src="img/u04-rina-kotak-masuk.jpg" alt="Pesan Masuk milik Rina.">
+  <figcaption><b>Gambar 41.</b> Pesan Masuk milik Rina.</figcaption>
+  <ol class="legend-list"><li><span class="num">1</span>Percakapan Pak Darto di tab Menunggu.</li><li><span class="num">2</span>Ringkasan asisten.</li><li><span class="num">3</span>Antrean Menunggu petugas di sidebar.</li></ol>
+</figure>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="time">Hari 1 · 09.20</span><span class="step-title">Rina membalas dan merujuk</span><span class="who">Rina</span></div>
+  <div class="step-body"><p>Rina mengambil percakapan, menyapa Pak Darto, lalu menekan <b>Rujuk ke portal → SIBARDUKTRANS</b>. Rujukan dibuat dengan kode <code>RJK-…</code>, Rina otomatis menjadi pendamping, dan batas tindak lanjut 2 hari kerja.</p></div>
+  
+<figure class="full">
+  <img src="img/u05-rina-pilih-portal.jpg" alt="Rina memilih portal tujuan.">
+  <figcaption><b>Gambar 42.</b> Rina memilih portal tujuan.</figcaption>
+  <p class="legend"><span class="box"></span>Kartu SIBARDUKTRANS.</p>
+</figure>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="time">Hari 1 · 09.21</span><span class="step-title">Kartu rujukan di chat warga</span><span class="who">Pak Darto</span></div>
+  <div class="step-body"><p>Di chat Pak Darto muncul kartu: <i>"Petugas merujuk Anda ke SIBARDUKTRANS… Rina mendampingi Anda sampai berhasil."</i> beserta tombol <b>Buka pengantar &amp; langkahnya</b>.</p></div>
+  
+<figure class="full">
+  <img src="img/u07-darto-kartu-rujukan.jpg" alt="Kartu rujukan di Chat TARA.">
+  <figcaption><b>Gambar 43.</b> Kartu rujukan di Chat TARA.</figcaption>
+  <p class="legend"><span class="box"></span>Kartu rujukan beserta kode dan nama pendamping.</p>
+</figure>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="time">Hari 1 · 09.25</span><span class="step-title">Halaman pengantar</span><span class="who">Pak Darto</span></div>
+  <div class="step-body"><p>Halaman pengantar berisi langkah demi langkah, dokumen yang disiapkan, ringkasan, dan tombol ke SIBARDUKTRANS. Saat tombol ditekan, status rujukan menjadi <b>dibuka</b>.</p></div>
+  
+<figure class="full">
+  <img src="img/u08-halaman-pengantar.jpg" alt="Halaman pengantar rujukan (/rujukan/{token}).">
+  <figcaption><b>Gambar 44.</b> Halaman pengantar rujukan (/rujukan/{token}).</figcaption>
+  
+</figure>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="time">Hari 1 · 09.30</span><span class="step-title">Minta bantuan</span><span class="who">Pak Darto → Rina</span></div>
+  <div class="step-body"><p>Pak Darto membuka <b>Mengalami kendala?</b> dan menulis <i>"Saya belum punya email…"</i>. Status rujukan menjadi <b>butuh bantuan</b> dan percakapan kembali ke Rina. Rina memandu: membuat email bersama anaknya, atau mendaftar langsung di dinas kabupaten sesuai KTP. Bila perlu akun SIGAP, Rina menekan <b>Daftarkan akun</b>.</p></div>
+  
+<figure class="full">
+  <img src="img/u09-minta-bantuan.jpg" alt="Formulir minta bantuan di halaman pengantar.">
+  <figcaption><b>Gambar 45.</b> Formulir minta bantuan di halaman pengantar.</figcaption>
+  <p class="legend"><span class="box"></span>Formulir kendala yang langsung sampai ke pendamping.</p>
+</figure>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="time">Hari 2 · 06.00</span><span class="step-title">Pengingat otomatis</span><span class="who">Sistem</span></div>
+  <div class="step-body"><p>Sekitar 20 jam setelah dirujuk, chat Pak Darto menerima pesan: <i>"Apakah pendaftaran Anda di SIBARDUKTRANS sudah terkirim? Balas pesan ini dengan nomor pendaftaran…"</i>. Riwayatnya masih ada berkat cookie 30 hari.</p></div>
+  
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="time">Hari 2 · 10.15</span><span class="step-title">Berhasil</span><span class="who">Pak Darto</span></div>
+  <div class="step-body"><p>Pak Darto cukup membalas <i>"nomornya SBT-2026-04417"</i>. Pesan itu dikenali sebagai <b>kode bukti</b> (tidak dikirim ke AI), rujukan langsung <b>BERHASIL</b>, dan Rina mendapat notifikasi. Nomor HP, NIK, dan nomor tiket SIGAP tidak akan dianggap kode bukti.</p></div>
+  
+<figure class="full">
+  <img src="img/u11-darto-kirim-kode.jpg" alt="Kode bukti tercatat otomatis.">
+  <figcaption><b>Gambar 46.</b> Kode bukti tercatat otomatis.</figcaption>
+  <p class="legend"><span class="box"></span>Konfirmasi nomor pendaftaran SIBARDUKTRANS.</p>
+</figure>
+</div>
+
+<div class="step">
+  <div class="step-head"><span class="time">Hasil</span><span class="step-title">Tercatat untuk pimpinan</span><span class="who">Menu Rujukan</span></div>
+  <div class="step-body"><p>Di menu Rujukan tercatat: Pak Darto dirujuk ke SIBARDUKTRANS, <b>berhasil</b> dengan pendamping Rina, beserta riwayat lengkap (dibuat → dibuka → butuh bantuan → berhasil). Pimpinan melihat berapa warga yang <b>benar-benar berhasil mendaftar</b>, bukan hanya yang bertanya.</p></div>
+  
+<figure class="full">
+  <img src="img/u12-rujukan-berhasil.jpg" alt="Rujukan berhasil di menu Rujukan.">
+  <figcaption><b>Gambar 47.</b> Rujukan berhasil di menu Rujukan.</figcaption>
+  <ol class="legend-list"><li><span class="num">1</span>Status selesai: warga berhasil, dengan nomor pendaftaran.</li><li><span class="num">2</span>Riwayat langkah rujukan.</li></ol>
+</figure>
+</div>
+<table class="keep"><caption><b>Tabel 8.</b> Bila ada yang macet</caption><colgroup><col style="width:32%"><col style="width:68%"></colgroup><thead><tr><th>Kejadian</th><th>Respons aplikasi</th></tr></thead><tbody><tr><td>Situs SIBARDUKTRANS mati</td><td>Dicek tiap jam; tombol berubah menjadi <i>Portal sedang tidak dapat diakses</i>, warga tidak diarahkan ke halaman error.</td></tr><tr><td>Lewat 2 hari kerja tanpa bukti</td><td>Pendamping diingatkan pada jam kerja; rujukan ditandai <b>Perlu tindakan</b>.</td></tr><tr><td>Rina cuti</td><td>Super Admin <b>mengalihkan</b> rujukan ke petugas lain beserta riwayatnya.</td></tr><tr><td>Pak Darto ganti HP</td><td>Melanjutkan chat dengan nomor REF dan nomor WhatsApp yang pernah ditinggalkan.</td></tr><tr><td>Bertanya soal calo</td><td>TARA mengarahkan ke Cek Fakta Kementrans.</td></tr></tbody></table>
+
+<h2>B. Pak Hendra: internet lantai 3 mati saat rapat anggaran</h2>
+<p><b>Pak Hendra</b>, pegawai Biro Umum. Pukul 08.40 internet lantai 3 gedung Kalibata mati, padahal pukul 10.00 ada rapat daring dengan Bappenas.</p>
+<table class="keep"><caption><b>Tabel 9.</b> Alur pengaduan internal</caption><colgroup><col style="width:22%"><col style="width:78%"></colgroup><thead><tr><th>Langkah</th><th>Yang terjadi</th></tr></thead><tbody><tr><td>1. Melapor (1 menit)</td><td>Membuka <b>Pengaduan Internal Pegawai</b>: NIP, nama, unit, ekstensi; kategori Internet/Jaringan, urgensi Tinggi, lokasi Lt. 3 Ruang Rapat Utama; foto modem. Tanpa akun.</td></tr><tr><td>2. Sistem</td><td>Tiket terbit dan ditandai <b>internal</b>; urgensi Tinggi menentukan SLA; tidak masuk statistik publik, peta, atau daftar admin kawasan.</td></tr><tr><td>3. Penanganan</td><td>Super Admin (dukungan TIK) di menu <b>Tiket Internal</b>: Verifikasi → Diproses (teknisi menuju lokasi) → Selesai (switch lantai 3 diganti). Setiap perubahan tercatat.</td></tr><tr><td>4. Pemantauan</td><td>Pak Hendra memasukkan nomor tiket di <b>Lacak Tiket</b>.</td></tr><tr><td>5. Evaluasi</td><td>Akhir bulan terlihat kategori gangguan terbanyak dan unit terdampak, mis. 'switch lantai 3 bermasalah 5 kali sebulan, perlu diganti total'.</td></tr></tbody></table>
+
+<figure class="full">
+  <img src="img/p06-formulir-internal.jpg" alt="Formulir yang diisi Pak Hendra.">
+  <figcaption><b>Gambar 48.</b> Formulir yang diisi Pak Hendra.</figcaption>
+  
+</figure>
+
+<figure class="full">
+  <img src="img/a05-tiket-internal.jpg" alt="Tiket Internal di panel Super Admin.">
+  <figcaption><b>Gambar 49.</b> Tiket Internal di panel Super Admin.</figcaption>
+  
+</figure>
+<div class="note warn"><b>Penegasan:</b> pengaduan internal bukan kanal untuk melaporkan pelanggaran pegawai. Pungli atau penyalahgunaan wewenang diarahkan ke PPID / Inspektorat Jenderal (itjen@transmigrasi.go.id).</div>
+
+<h2>C. Bu Sri bertanya batas usia: sumber resmi berbeda</h2>
+<p><b>Bu Sri Wahyuni</b> bertanya dari HP: <i>"Berapa batas usia ikut transmigrasi?"</i>. TARA menemukan dua ketentuan berbeda di situs resmi dan menampilkan keduanya, beserta saran untuk memastikan ke petugas atau dinas.</p>
+<div class="two">
+<figure class="phone">
+  <img src="img/u14-sri-jawaban.jpg" alt="Jawaban TARA menyebut kedua versi.">
+  <figcaption><b>Gambar 50.</b> Jawaban TARA menyebut kedua versi.</figcaption>
+  
+</figure>
+<figure class="phone">
+  <img src="img/u13-sri-sumber-berbeda.jpg" alt="Penanda sumber berbeda dan daftar sumbernya.">
+  <figcaption><b>Gambar 51.</b> Penanda sumber berbeda dan daftar sumbernya.</figcaption>
+  <p class="legend"><span class="box"></span>Penanda sumber resmi berbeda.</p>
+</figure></div>
+
+<h2>D. Aduan jalan rusak lewat chat → tiket → selesai</h2>
+<p><b>Siti Aminah</b> menulis di chat: <i>"Jalan poros SP3 Bulungan rusak parah sejak Juli, akses anak ke sekolah terganggu."</i> TARA menggolongkannya sebagai <b>aduan</b>, meringkasnya, dan meneruskan ke petugas.</p>
+<table class="keep"><caption><b>Tabel 10.</b> Alur aduan dari chat</caption><colgroup><col style="width:10%"><col style="width:90%"></colgroup><thead><tr><th>Langkah</th><th>Yang terjadi</th></tr></thead><tbody><tr><td>1</td><td>TARA meringkas aduan (masalah, lokasi, sejak kapan, dampak) dan meneruskan ke petugas.</td></tr><tr><td>2</td><td>Petugas membuka Pesan Masuk, menekan <b>Terbitkan tiket</b>; judul, kawasan, kategori, dan dampak sudah disarankan AI.</td></tr><tr><td>3</td><td>Nomor tiket otomatis dikirim ke chat warga; tiket masuk ke admin kawasan SP3 Bulungan dengan SLA.</td></tr><tr><td>4</td><td>Bila melewati batas waktu, EWS menandai tiket di Matriks Rekapitulasi dan kartu <i>Perlu tindakan</i>.</td></tr><tr><td>5</td><td>Warga memantau di Lacak Tiket; setelah Selesai, warga mengisi survei kepuasan.</td></tr></tbody></table>
+
+<figure class="full">
+  <img src="img/u15-siti-terbitkan-tiket.jpg" alt="Petugas menerbitkan tiket dengan saran isian AI.">
+  <figcaption><b>Gambar 52.</b> Petugas menerbitkan tiket dengan saran isian AI.</figcaption>
+  <ol class="legend-list"><li><span class="num">1</span>Ringkasan asisten.</li><li><span class="num">2</span>Formulir tiket yang sudah terisi saran AI.</li></ol>
+</figure>
+
+<figure class="full">
+  <img src="img/t04-lacak-tara.jpg" alt="Warga memantau tiket di Lacak Tiket: status, garis waktu, petugas, dan batas waktu.">
+  <figcaption><b>Gambar 53.</b> Warga memantau tiket di Lacak Tiket: status, garis waktu, petugas, dan batas waktu.</figcaption>
+  
+</figure>
+
+<h2>E. Laporan dari Instagram dicatat lewat Input Manual</h2>
+<p>Akun <i>@warga_sp1</i> mengunggah foto lampu jalan padam di jalur poros SP1 Merauke. Petugas mencatatnya di <b>Input Manual</b>: sumber Media Sosial, username dan tautan unggahan, kawasan, kategori, dampak, serta lampiran. Tiket ikut alur yang sama (SLA, EWS, matriks), sehingga laporan dari kanal mana pun tercatat di satu tempat.</p>
+
+<figure class="full">
+  <img src="img/a06-input-manual.jpg" alt="Input Manual untuk laporan dari media sosial.">
+  <figcaption><b>Gambar 54.</b> Input Manual untuk laporan dari media sosial.</figcaption>
+  
+</figure>
+
+<h2>F. Bu Wulan bertanya "apa itu transmigrasi?"</h2>
+<p><b>Bu Wulan</b>, guru SMP, ingin menjelaskan program transmigrasi kepada muridnya. Ia membuka Chat TARA dan bertanya <i>"Apa itu transmigrasi dan apa tujuannya?"</i>. Tidak perlu ada artikel khusus: TARA merangkum langsung dari sumber resmi.</p>
+<table class="keep"><caption><b>Tabel 11.</b> Alur pertanyaan umum</caption><colgroup><col style="width:22%"><col style="width:78%"></colgroup><thead><tr><th>Langkah</th><th>Yang terjadi</th></tr></thead><tbody><tr><td>1. Bertanya</td><td>Bu Wulan menulis nama, lalu pertanyaannya. TARA menggolongkannya sebagai <b>informasi</b>.</td></tr><tr><td>2. Mencari sumber</td><td>Sistem mengambil artikel dan kutipan yang paling cocok: program unggulan (Translok, Trans Gotong Royong), Permentrans 3/2026 Transmigrasi Patriot, dan Renstra Kementrans 2025–2029.</td></tr><tr><td>3. Menjawab</td><td>TARA menjelaskan pengertian dan tujuan program, setiap kalimat dengan nomor sumber [1]–[6].</td></tr><tr><td>4. Memeriksa</td><td>Bu Wulan bisa membuka setiap sumber: nama dokumen, kutipan aslinya, halaman, dan tanggal diambil.</td></tr></tbody></table>
+
+<figure class="full">
+  <img src="img/u20-tanya-umum.jpg" alt="Jawaban TARA untuk pertanyaan umum beserta sumber resminya.">
+  <figcaption><b>Gambar 55.</b> Jawaban TARA untuk pertanyaan umum beserta sumber resminya.</figcaption>
+  <p class="legend"><span class="box"></span>Daftar sumber resmi: artikel program unggulan, Permentrans 3/2026, dan Renstra 2025–2029 (halaman 85).</p>
+</figure>
+
+<h2>G. Pertanyaan kebijakan yang kritis</h2>
+<p>Seorang mahasiswa pascasarjana menguji TARA dengan empat pertanyaan kebijakan, setara pertanyaan rapat dengar pendapat atau ujian tesis. Sebelum perbaikan 25 Oktober 2026, TARA hanya menemukan 1–2 kutipan, sehingga jawabannya dangkal atau "belum menemukan informasi resmi". Penyebabnya: sumber yang terdaftar belum memuat alasan kebijakan, dan pertanyaan sepanjang 20–29 kata kunci hampir tidak pernah cocok dengan satu kutipan.</p>
+<p>Perbaikannya: 12 sumber kebijakan ditambahkan (Renstra, Laporan Kinerja, Permentrans 8 & 13/2025, siaran pers Menteri), pencarian pertanyaan panjang dipecah per aspek, dan aturan khusus pertanyaan kebijakan diberlakukan. Hasil uji ulang di <b>server produksi</b> (app2.andimohamad.my.id) dengan AI asli:</p>
+<table class="keep"><caption><b>Tabel 12.</b> Uji pertanyaan kebijakan di produksi, sebelum dan sesudah perbaikan</caption><colgroup><col style="width:40%"><col style="width:13%"><col style="width:11%"><col style="width:36%"></colgroup><thead><tr><th>Pertanyaan (diringkas)</th><th>Sebelum</th><th>Sesudah</th><th>Sumber utama yang dikutip</th></tr></thead><tbody><tr><td>1. Bagaimana membuktikan transmigrasi modern bukan sekadar pemindahan penduduk, melainkan strategi pembangunan yang adil dan berkelanjutan?</td><td>1 kutipan</td><td>6 sumber</td><td>Renstra 2025–2029, Renstra PPKTrans, Permentrans 8/2025, Cek Fakta, siaran pers "dari miskin menjadi sejahtera"</td></tr><tr><td>2. Bagaimana mengevaluasi keberhasilan pendekatan berbasis kawasan (demografi, urbanisasi, ketimpangan, hak masyarakat lokal)?</td><td>Tidak terjawab</td><td>5 sumber</td><td>Renstra 2025–2029, Program 5T, UU 29/2009, Renstra PPKTrans, Cek Fakta</td></tr><tr><td>3. Bila pemerataan bisa lewat infrastruktur, investasi, dan digitalisasi tanpa memindahkan penduduk, apa dasar transmigrasi tetap relevan dan efisien?</td><td>Tidak terjawab</td><td>5 sumber</td><td>Siaran pers "diukur dari lapangan kerja", Renstra 2025–2029, Laporan Kinerja 2025, Program dan Kebijakan, Permentrans 13/2025</td></tr><tr><td>4. Bagaimana menyeimbangkan kepentingan nasional dengan hak individu memilih tempat tinggal dan pekerjaan?</td><td>2 kutipan</td><td>5 sumber</td><td>UU 15/1997, UU 29/2009, Renstra, siaran pers "pusat pertumbuhan tak cukup dengan infrastruktur"</td></tr></tbody></table>
+<p>Contoh inti jawaban pertanyaan 3: <i>"Paradigma keberhasilan transmigrasi kini tidak lagi diukur dari jumlah penduduk yang dipindahkan, melainkan dari lapangan kerja yang tercipta, investasi yang masuk, dan kesejahteraan masyarakat [5]."</i> Jawaban lalu menyebut bahwa kajian yang membandingkan efisiensi transmigrasi dengan alternatif tanpa pemindahan penduduk belum tersedia di sumber resmi, dan menutup dengan arahan ke PPID atau Humas.</p>
+
+<figure class="full">
+  <img src="img/u21-kebijakan-jawaban.jpg" alt="Jawaban pertanyaan kebijakan nomor 3 di Chat TARA (AI asli), dikelompokkan per aspek dengan sitasi. Di akhir jawaban TARA menyebut aspek yang tidak tercakup sumber.">
+  <figcaption><b>Gambar 56.</b> Jawaban pertanyaan kebijakan nomor 3 di Chat TARA (AI asli), dikelompokkan per aspek dengan sitasi. Di akhir jawaban TARA menyebut aspek yang tidak tercakup sumber.</figcaption>
+  
+</figure>
+<div class="note info"><b>Batas yang disengaja:</b> TARA tidak akan menjawab sedalam pejabat, karena ia tidak boleh mengarang sikap resmi atau data evaluasi. Targetnya: menjawab sebatas yang tertulis di sumber resmi, jujur soal sisanya, dan mengarahkan ke jalur resmi (permohonan informasi publik ke PPID).</div>
+
+<h2>H. Koordinator memakai Matriks Rekapitulasi di rapat Senin</h2>
+<p><b>Pak Bayu</b>, koordinator contact center, menyiapkan bahan rapat mingguan. Ia membuka panel admin; halaman pertama langsung Matriks Rekapitulasi periode Oktober 2026. Angka di bawah adalah data demo lokal; keadaan produksi dibahas di akhir.</p>
+<table class="keep"><caption><b>Tabel 13.</b> Matriks Rekapitulasi dalam rapat mingguan</caption><colgroup><col style="width:22%"><col style="width:78%"></colgroup><thead><tr><th>Langkah</th><th>Yang dilihat dan dilakukan</th></tr></thead><tbody><tr><td>1. Gambaran umum</td><td><b>14 tiket</b> bulan ini: 13 dari formulir web, 1 dari input manual. Menunggu 6, Diverifikasi 0, Diproses 6, Selesai 2, Ditolak 0. <b>10 tiket lewat tenggat</b>. Di luar tiket, 8 percakapan cukup dijawab TARA dan 14 warga dirujuk ke portal (5 berhasil).</td></tr><tr><td>2. Mencari titik masalah</td><td>Matriks kategori menunjukkan <b>Infrastruktur Dasar 11 tiket dengan 9 EWS</b>. Ganti sumbu ke Kawasan: hampir semuanya dari <b>SP1 Merauke</b>.</td></tr><tr><td>3. Menelusuri</td><td>Klik sel <i>Infrastruktur Dasar × Diproses</i> (6). Manajemen Tiket terbuka dengan saringan periode dan kategori yang tampil sebagai chip; tiket bisa langsung dibuka dan ditindaklanjuti.</td></tr><tr><td>4. Menugaskan</td><td>Kartu <b>Perlu tindakan</b> menunjukkan beberapa tiket sudah lewat 6–17 hari dan sebagian <b>belum ditugaskan</b>. Pak Bayu menugaskan petugas kawasan dari detail tiket.</td></tr><tr><td>5. Membaca kanal</td><td>Sumbu Kanal memperlihatkan belum ada tiket dari Chat TARA. Artinya aduan di chat masih diselesaikan sebagai jawaban atau rujukan, belum diterbitkan sebagai tiket; dibahas apakah ada aduan yang perlu diterbitkan.</td></tr><tr><td>6. Rapat</td><td>Tombol <b>Print</b> mencetak matriks tanpa sidebar untuk dibagikan.</td></tr></tbody></table>
+
+<figure class="full">
+  <img src="img/a02c-matriks-sumbu-kanal.jpg" alt="Matriks dengan sumbu Kanal.">
+  <figcaption><b>Gambar 57.</b> Matriks dengan sumbu Kanal.</figcaption>
+  <p class="legend"><span class="box"></span>Matriks kanal masuk × tahap penanganan.</p>
+</figure>
+
+<figure class="full">
+  <img src="img/a02d-drilldown-tiket.jpg" alt="Hasil klik sel matriks: Manajemen Tiket tersaring periode dan kategori.">
+  <figcaption><b>Gambar 58.</b> Hasil klik sel matriks: Manajemen Tiket tersaring periode dan kategori.</figcaption>
+  
+</figure>
+<div class="note info"><b>Keadaan produksi (25 Oktober 2026):</b> belum ada tiket sama sekali, sehingga Matriks tampil dalam kondisi kosong. Ini bukan error. Pada periode yang sama tercatat 5 percakapan yang cukup dijawab TARA dan 1 rujukan ke portal; keduanya tampil di baris <i>Ditangani tanpa tiket</i>. Matriks terisi otomatis begitu tiket pertama masuk lewat formulir web, input manual, atau diterbitkan dari Pesan Masuk.</div>
+
+</section>
+<section class="chapter" id="sp4n">
+  <p class="eyebrow">Bab 9</p>
+  <h1>Posisi terhadap SP4N-LAPOR!</h1>
+  <p class="lead">SIGAP melengkapi SP4N-LAPOR!, bukan menggantikannya. SP4N-LAPOR! adalah kanal nasional untuk mengirim pengaduan; SIGAP adalah pintu depan dan dapur Kementrans.</p>
+  
+<div class="quote"><p class="q-label">Jawaban singkat (10 detik)</p><p>"SP4N-LAPOR! itu kanal nasional untuk mengirim pengaduan. SIGAP adalah contact center Kementrans: menjawab pertanyaan warga 24 jam, menyalurkan aduan ke petugas kawasan yang tepat, dan mendampingi sampai selesai. Aduan yang menyangkut instansi lain tetap kami arahkan ke SP4N-LAPOR!."</p></div>
+<div class="quote"><p class="q-label">Jawaban lengkap (30 detik)</p><p>"Kebanyakan warga yang menghubungi kami sebenarnya bertanya, bukan mengadu: cara daftar transmigrasi, syarat, status sertifikat. SIGAP menjawabnya langsung dari sumber resmi, meneruskan yang perlu ditindaklanjuti ke petugas kawasan dengan target waktu, lalu mengarahkan ke layanan Kementrans yang tepat, seperti Trans Tuntas atau SIBARDUKTRANS, dan mendampingi warga sampai berhasil. Warga yang tidak punya email pun bisa dilayani lewat chat. Untuk aduan lintas instansi, kami justru mengarahkan warga ke SP4N-LAPOR!."</p></div>
+<table class="keep"><caption><b>Tabel 14.</b> SP4N-LAPOR! dan SIGAP</caption><colgroup><col style="width:18%"><col style="width:36%"><col style="width:46%"></colgroup><thead><tr><th></th><th>SP4N-LAPOR!</th><th>SIGAP</th></tr></thead><tbody><tr><td>Kebutuhan</td><td>Pengaduan, aspirasi, permintaan informasi</td><td>Pertanyaan dan pengaduan, dijawab 24 jam dari sumber resmi</td></tr><tr><td>Penerusan</td><td>Ke instansi, lalu diteruskan lagi di dalamnya</td><td>Langsung ke admin kawasan, dengan SLA dan EWS</td></tr><tr><td>Layanan Kementrans</td><td>Umum untuk semua instansi</td><td>Rujukan yang didampingi ke SIBARDUKTRANS, Trans Tuntas, PPID, Cek Fakta</td></tr><tr><td>Warga gaptek</td><td>Harus membuat akun dan mengisi formulir</td><td>Cukup chat; akun bisa dibuatkan petugas</td></tr><tr><td>Banyak kanal</td><td>Hanya laporan yang masuk lewat LAPOR!</td><td>WA, IG, surat, loket lewat Input Manual + helpdesk internal</td></tr><tr><td>Aduan internal pegawai</td><td>Bukan tempatnya</td><td>Helpdesk internal, hanya Super Admin</td></tr></tbody></table>
+<div class="note warn"><b>Jangan diklaim dulu:</b> "SIGAP sudah terhubung dengan SP4N-LAPOR!". Integrasi dua arah baru berupa kerangka (stub) dan perlu akses API resmi dari KemenPAN-RB. Jawaban jujurnya: <i>"Integrasinya sudah disiapkan, tinggal diaktifkan setelah kami mendapat akses API resmi."</i> Pasal Perpres 76/2013 sebaiknya dicek bagian hukum sebelum dikutip.</div>
+
+</section>
+<section class="chapter" id="keamanan">
+  <p class="eyebrow">Bab 10</p>
+  <h1>Keamanan dan pelindungan data</h1>
+  <p class="lead">Data warga diperlakukan seminimal mungkin dan selalu lewat jalur resmi.</p>
+  <table class="keep"><caption><b>Tabel 15.</b> Keamanan dan privasi</caption><colgroup><col style="width:24%"><col style="width:76%"></colgroup><thead><tr><th>Aspek</th><th>Penerapan</th></tr></thead><tbody><tr><td>Data pribadi ke AI</td><td>NIK, nomor HP, surel, dan nomor panjang disamarkan sebelum dikirim; AI tidak menerbitkan tiket atau memutuskan hak warga.</td></tr><tr><td>NIK</td><td>Disimpan dengan hash (kunci terpisah <code>NIK_HASH_KEY</code>); kartu konfirmasi menampilkan NIK tersamar.</td></tr><tr><td>Foto & lampiran</td><td>Diproses ulang untuk membuang metadata lokasi (EXIF), disimpan di penyimpanan privat, dihapus saat percakapan dipangkas.</td></tr><tr><td>Akun dari chat</td><td>Token aktivasi/pemulihan hanya disimpan dalam bentuk hash dan punya masa berlaku.</td></tr><tr><td>Formulir publik</td><td>reCAPTCHA v3 dan batas laju (lookup, akun, login, lampiran chat, lanjut chat 6×/jam).</td></tr><tr><td>Sumber Resmi</td><td>Hanya domain resmi, termasuk tujuan pengalihan; batas ukuran 20 MB dan batas waktu 30 detik.</td></tr><tr><td>Jejak audit</td><td>Login, perubahan status, penerbitan artikel, sumber ditambah/dinonaktifkan tercatat di Log Aktivitas.</td></tr><tr><td>Tiket internal</td><td>Hanya Super Admin; tidak masuk statistik publik, peta, maupun daftar admin kawasan.</td></tr></tbody></table>
+</section>
+<section class="chapter" id="status">
+  <p class="eyebrow">Bab 11</p>
+  <h1>Status dan tindak lanjut</h1>
+  <p class="lead">Seluruh fitur di dokumen ini sudah berjalan di produksi <code>app2.andimohamad.my.id</code> (cabang <code>feat/contact-center-ai</code>) dengan 401 tes otomatis lolos. Beberapa hal masih perlu disiapkan sebelum dipakai warga secara luas.</p>
+  
+<table><caption><b>Tabel 16.</b> Status dan langkah berikutnya</caption><colgroup><col style="width:30%"><col style="width:26%"><col style="width:44%"></colgroup><thead><tr><th>Hal</th><th>Status</th><th>Langkah</th></tr></thead><tbody><tr><td>AI TARA di produksi</td><td>Aktif (Sumopod, deepseek-v4-flash)</td><td>Ganti kunci API Sumopod yang sempat dibagikan di percakapan pengembangan</td></tr><tr><td>Maskot TARA & halaman publik baru</td><td>Aktif</td><td>Putuskan apakah beranda TARA (<code>/beranda-baru</code>) dijadikan halaman utama <code>/</code></td></tr><tr><td>Sumber Resmi (24 sumber, ±1.300 kutipan)</td><td>Aktif, sinkron tiap Senin</td><td>Tambahkan dokumen resmi baru (mis. Laporan Kinerja 2026) bila terbit</td></tr><tr><td>Pertanyaan kebijakan + arahan PPID</td><td>Aktif (commit c346171)</td><td>Pantau daftar <i>Belum bisa dijawab AI</i> untuk mencari dokumen yang masih kurang</td></tr><tr><td>Matriks Rekapitulasi baru</td><td>Aktif (commit b67e59b)</td><td>Data produksi masih 0 tiket; matriks terisi otomatis saat tiket pertama tercatat</td></tr><tr><td>32 artikel resmi hasil AI</td><td>Status <i>Ditinjau</i>, sengaja tidak diterbitkan</td><td>TARA menjawab langsung dari kutipan resmi; artikel diterbitkan hanya bila perlu jawaban baku</td></tr><tr><td>Email notifikasi</td><td>SMTP belum diatur</td><td>Isi <code>MAIL_HOST</code> dan kredensial di server</td></tr><tr><td>Integrasi SP4N-LAPOR!</td><td>Kerangka (stub)</td><td>Ajukan akses API resmi ke KemenPAN-RB</td></tr><tr><td>Unit kerja formulir internal</td><td>Masih nama lama</td><td>Sesuaikan dengan Setjen, Itjen, Ditjen PPK Transmigrasi, Ditjen PEM Transmigrasi, BBPPMT/BPPMT</td></tr><tr><td>Pengingat rujukan</td><td>Lewat chat</td><td>Peningkatan berikutnya: WhatsApp/SMS</td></tr></tbody></table>
+<h2>Riwayat rilis ke produksi (25 Oktober 2026)</h2>
+<table class="keep"><caption><b>Tabel 17.</b> Rilis ke produksi</caption><colgroup><col style="width:18%"><col style="width:82%"></colgroup><thead><tr><th>Commit</th><th>Isi rilis</th></tr></thead><tbody><tr><td>6b9c8b5</td><td>Sumber Resmi, portal resmi, AI diaktifkan di server</td></tr><tr><td>801bd20</td><td>Maskot TARA menggantikan TRANSI</td></tr><tr><td>4558f50</td><td>Halaman publik (Lacak, Katalog, Peta, Panduan) bergaya TARA</td></tr><tr><td>4898a2d</td><td>Perbaikan AI (salam, kata kunci pendek, aduan tanpa detail) + PDF UU dari JDIH sebagai Sumber Resmi</td></tr><tr><td>54ed5ec</td><td>Halaman Data Terbuka dan menu Data</td></tr><tr><td>c346171</td><td>Pertanyaan kebijakan, pencarian pertanyaan panjang, 12 sumber kebijakan baru</td></tr><tr><td>b67e59b</td><td>Matriks Rekapitulasi sesuai proses asli</td></tr></tbody></table>
+<div class="note info"><b>Cadangan:</b> sebelum setiap rilis, image server diberi tag cadangan (mis. <code>pre-kebijakan</code>), sehingga versi sebelumnya bisa dipulihkan dalam hitungan menit.</div>
+<div class="note warn"><b>Temuan data:</b> batas usia calon transmigran berbeda antara SIBARDUKTRANS (19–53 tahun) dan halaman persyaratan transmigrasi.go.id (19–49 tahun). Sebaiknya dipastikan ke unit terkait, lalu diterbitkan satu artikel resmi.</div>
+
+</section>
+<section class="chapter" id="lampiran">
+  <p class="eyebrow">Bab 12</p>
+  <h1>Lampiran: daftar rute dan glosarium</h1>
+  <p class="lead">Rujukan cepat untuk tim teknis dan pembaca dokumen.</p>
+  
+<h2>Perintah terjadwal</h2>
+<table class="keep"><colgroup><col style="width:30%"><col style="width:22%"><col style="width:48%"></colgroup><thead><tr><th>Perintah</th><th>Jadwal</th><th>Fungsi</th></tr></thead><tbody><tr><td><code>sigap:cek-portal</code></td><td>Tiap jam</td><td>Cek ketersediaan portal tujuan rujukan</td></tr><tr><td><code>sigap:pantau-rujukan</code></td><td>Jam kerja, tiap jam</td><td>Pengingat warga (~20 jam) dan pendamping (2 hari kerja)</td></tr><tr><td><code>sigap:ews-check</code></td><td>Harian 07.00</td><td>Peringatan dini tiket mendekati/lewat batas</td></tr><tr><td><code>sigap:sync-channels</code></td><td>Harian 06.00</td><td>Sinkron kanal nasional (stub)</td></tr><tr><td><code>sigap:sinkron-sumber</code></td><td>Senin 02.00</td><td>Ambil ulang situs Sumber Resmi</td></tr><tr><td><code>sigap:uji-asisten</code></td><td>Manual</td><td>Uji kualitas jawaban AI terhadap kumpulan pertanyaan</td></tr></tbody></table>
+<h2>Glosarium</h2>
+<table><colgroup><col style="width:24%"><col style="width:76%"></colgroup><thead><tr><th>Istilah</th><th>Arti</th></tr></thead><tbody><tr><td>TARA</td><td>Maskot sekaligus nama asisten AI SIGAP (sebelumnya TRANSI)</td></tr><tr><td>Pertanyaan kebijakan</td><td>Pertanyaan yang meminta pembuktian, evaluasi, atau pembenaran kebijakan; dijawab dari sumber resmi lalu diarahkan ke PPID</td></tr><tr><td>PPID</td><td>Pejabat Pengelola Informasi dan Dokumentasi; jalur resmi permohonan informasi publik</td></tr><tr><td>Renstra</td><td>Rencana Strategis Kementrans 2025–2029 (Permentrans 11/2025)</td></tr><tr><td>REF-…</td><td>Nomor referensi percakapan chat</td></tr><tr><td>TKT-…</td><td>Nomor tiket pengaduan</td></tr><tr><td>RJK-…</td><td>Kode rujukan ke portal lain</td></tr><tr><td>SLA</td><td>Batas waktu penanganan sesuai tingkat dampak/urgensi</td></tr><tr><td>EWS</td><td>Early Warning System: penanda tiket mendekati atau melewati batas waktu</td></tr><tr><td>Kode bukti</td><td>Nomor dari portal tujuan (mis. nomor pendaftaran) yang menandai rujukan berhasil</td></tr><tr><td>Kutipan</td><td>Potongan teks asli dari Sumber Resmi yang dirujuk TARA</td></tr><tr><td>Admin Kawasan</td><td>Petugas yang menangani tiket kawasan tertentu</td></tr></tbody></table>
+
+</section>
+</body></html>

@@ -67,9 +67,9 @@ langkah 7, tapi **tidak boleh dipindah ke produksi** sebelum slice sebelumnya lu
 
 | # | Langkah | Hasil / bukti |
 |---|---|---|
-| 1 | **Spesifikasi slice**: daftar rute, halaman, endpoint, job, cron, tabel, event, dan surel yang dicakup (diambil dari inventaris) | checklist di `docs/slices/Sxx.md` |
+| 1 | **Spesifikasi slice**: daftar rute, halaman, endpoint web & `/api/v1`, job, cron, tabel, event, dan surel yang dicakup (diambil dari inventaris) | checklist di `docs/slices/Sxx.md` |
 | 2 | **Test dulu**: test paritas HTTP, vektor logika, suite visual, dan template surel untuk slice ini — dijalankan **hijau terhadap Laravel** | PR test |
-| 3 | **Bangun** di Next.js mengikuti §8 (desain) & §9 (backend) | PR fitur |
+| 3 | **Bangun** di Next.js mengikuti §8 (desain) & §9 (backend), termasuk endpoint `/api/v1` slice dan entri OpenAPI-nya | PR fitur + `openapi.json` diperbarui |
 | 4 | **Test hijau terhadap Next.js**: unit, vektor, paritas, visual 0 piksel, typecheck, lint, SAST | CI hijau |
 | 5 | **Review & audit keamanan**: code review (`code-reviewer`, skill `ponytail-review`) + audit keamanan slice dengan skill `security-audit` Cloudflare (§6.3); semua temuan *Must fix* dan temuan keamanan `confirmed` diperbaiki lalu diverifikasi ulang | laporan review + `docs/slices/Sxx-keamanan.md` |
 | 6 | **Staging & UAT**: deploy ke staging (snapshot produksi), smoke test, uji beban slice bila menyangkut publik. Tim menyiapkan skenario UAT lengkap (`docs/slices/Sxx-uat.md` dari `TEMPLATE-UAT.md`); **pemilik proyek** menjalankan UAT sendiri | skenario UAT berisi hasil & keputusan pemilik proyek |
@@ -330,7 +330,7 @@ percakapan.
 - Hapus semua nama lama `sigap` yang tersisa (cookie, database, image, folder) sesuai §10 rencana utama.
 - Jendela rollback terakhir 2 minggu → matikan container Laravel (`app`, `queue`, `queue-ai`, `scheduler`,
   `reverb`), hapus jembatan Inertia & cron, hapus folder `sigap/`.
-- Drop tabel framework Laravel; tulis ulang `TECH-SPEC`, `DEPLOY`, `openapi.yaml`.
+- Drop tabel framework Laravel; tulis ulang `TECH-SPEC` dan `DEPLOY`; hapus `docs/openapi.yaml` lama (diganti `web/openapi/openapi.json` yang sudah dibangun per slice).
 - Mulai backlog §9.9 (MFA admin, dll.).
 
 ---

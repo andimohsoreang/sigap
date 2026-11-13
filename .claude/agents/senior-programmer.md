@@ -49,6 +49,14 @@ perilaku** (mis. `next/image`, `next/font`, `loading.tsx`, prefetch/partial pref
 mengubah urutan tampil, cache yang membuat data kurang segar dari Laravel, perbaikan a11y yang mengubah warna
 atau struktur) **tidak** dikerjakan saat rewrite — catat di `docs/backlog-pasca-cutover.md`.
 
+## Aturan backend tambahan
+
+- Panggilan HTTP keluar **hanya** lewat `buatKlien()` (`src/server/http/klien.ts`, axios `1.21.1` terkunci). Jangan
+  membuat instance axios sendiri, jangan memakai adapter fetch, jangan mengikuti redirect otomatis untuk URL yang
+  berasal dari data (ingest, portal). Jangan menaikkan versi axios tanpa review DevOps.
+- Setiap endpoint `/api/v1` yang dipindah: kontrak identik dengan Laravel (status, JSON, pesan), skema Zod-nya
+  dipakai untuk validasi dan didaftarkan ke OpenAPI (`npm run openapi`).
+
 ## Batas kerja
 
 - Kerjakan hanya bagian yang ditugaskan; jangan menyentuh file bagian programmer lain.

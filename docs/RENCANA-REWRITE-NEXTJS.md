@@ -23,6 +23,8 @@
 | 13 Nov 2026 | **UAT dilakukan sendiri oleh pemilik proyek**; tim menyiapkan skenario UAT lengkap per slice (`docs/slices/TEMPLATE-UAT.md`). **Pindah rute disetujui oleh pemilik proyek** lewat konfirmasi berbahasa sederhana (`docs/slices/TEMPLATE-PINDAH-RUTE.md`) |
 | 13 Nov 2026 | **Freeze fitur Laravel mulai hari S0 dimulai**; basis = commit produksi hari itu (saat ini `f8713a0`), diberi tag `laravel-baseline` |
 | 13 Nov 2026 | Data trafik Cloudflare **ditunda**; target §9.1 tetap memakai asumsi kerja. Rename repo GitHub dilakukan sendiri oleh pemilik proyek nanti |
+| 13 Nov 2026 | **Klien HTTP backend = axios** (dikunci persis `1.21.1`), satu pabrik klien `src/server/http/klien.ts` dengan pengaman wajib (§9.2). Browser tetap memakai pola yang ada di halaman Laravel kecuali diputuskan lain |
+| 13 Nov 2026 | **Endpoint API dibuat sambil jalan**: setiap slice memindahkan endpoint `/api/v1` miliknya dengan kontrak identik, dan dokumentasi OpenAPI dibangkitkan dari skema Zod per slice (bukan ditulis ulang di akhir) |
 | 13 Nov 2026 | Desain **identik 100%** dengan versi Laravel: 0 piksel beda pada screenshot pembanding. Aturan & gerbangnya di §8 |
 
 ## 0. Asumsi (perlu dikonfirmasi)
@@ -432,6 +434,8 @@ log nginx produksi, lalu sesuaikan.
 |---|---|
 | Lapisan jelas | `app/**` (page, route handler, Server Action) tipis → `server/<domain>/service.ts` (aturan bisnis, transaksi) → `repo.ts` (Drizzle). Kode domain tidak mengimpor Next.js. Batas diperiksa ESLint (`import/no-restricted-paths`), padanan test `ModuleBoundaries` Laravel |
 | Validasi di setiap batas | Zod untuk input HTTP, env, payload job, respons AI, dan event realtime |
+| Klien HTTP keluar | **axios `1.21.1` (dikunci persis)** hanya lewat `buatKlien()` di `src/server/http/klien.ts`: adapter Node `http` (bukan fetch), `allowAbsoluteUrls: false` bila ada `baseURL`, `maxRedirects: 0` (redirect diikuti manual & divalidasi ulang tiap lompatan — wajib untuk ingest), batas ukuran respons, `proxy: false`, timeout eksplisit. Retry milik pemanggil. Alasan pengaman: 49 advisori axios terbit di 2026 dan rilis berbahaya MAL-2026-2307 (31 Mar 2026); pembaruan versi lewat review + `supply-chain-risk-auditor` |
+| Kontrak API | endpoint `/api/v1` slice dipindah dengan status, bentuk JSON, dan pesan identik Laravel; skema Zod yang sama dipakai untuk validasi **dan** membangkitkan `web/openapi/openapi.json` (`npm run openapi`, memakai `z.toJSONSchema` bawaan Zod 4) |
 | Konfigurasi | env divalidasi Zod saat start; aplikasi menolak jalan bila kunci wajib kosong atau `APP_DEBUG`-padanan aktif di produksi |
 | Error | kelas error domain dipetakan ke HTTP di satu tempat; respons tidak pernah membawa stack trace; bentuk respons sama dengan Laravel |
 | Transaksi & efek samping | efek samping (surel, broadcast, job) ditulis ke **outbox** dalam transaksi yang sama lalu dikirim dispatcher → tidak ada surel untuk tiket yang gagal tersimpan, tidak ada tiket tanpa notifikasi |
