@@ -5,23 +5,29 @@
 #   cp pgbouncer/userlist.txt.example pgbouncer/userlist.txt     # isi (cara: pgbouncer/pgbouncer.ini)
 #   sudo chown 70:70 pgbouncer/userlist.txt && sudo chmod 600 pgbouncer/userlist.txt
 #     (70 = user postgres di image pgbouncer; cek: docker run --rm --entrypoint id <image pgbouncer>)
-#   docker compose build && docker compose up -d                 # web, valkey, pgbouncer
+#   docker compose build && docker compose up -d                 # cc-web, valkey, pgbouncer
 #   docker compose --profile migrate run --rm migrate            # migrasi (setelah ada)
 #
-# Jaringan:
-#   backend  internal (tanpa egress): web, worker, migrate, valkey, pgbouncer. Valkey HANYA di sini.
-#   default  bridge biasa: web & worker untuk panggilan keluar (AI, reCAPTCHA, SMTP).
-#   laravel  jaringan `internal` milik stack Laravel (external; compose Laravel tidak diubah).
-#            Nama = <project Laravel>_internal; produksi `app2-sigap_internal` (rencana §10.2).
-#            Cek: docker network ls | grep _internal
-#            - pgbouncer ikut supaya menjangkau service `db` (PostgreSQL bersama).
-#            - web ikut dengan alias `cc-web`: nginx Laravel meneruskan rute yang sudah pindah ke
-#              Next.js lewat variabel + resolver Docker (re-resolve, DNS round-robin antar replica):
+# Jaringan (prinsip: dari stack Laravel hanya nginx yang terlihat oleh cc-web):
+#   backend  internal (tanpa egress): cc-web, worker, migrate, valkey, pgbouncer. Valkey HANYA di sini.
+#   default  bridge biasa: cc-web & worker untuk panggilan keluar (AI, reCAPTCHA, SMTP).
+#   edge     jaringan `cc-edge` MILIK compose Laravel (deploy/docker/compose.yml), isinya hanya nginx
+#            Laravel + cc-web. Nama = <project Laravel>_cc-edge; produksi `app2-sigap_cc-edge`.
+#            cc-web TIDAK ikut jaringan `internal` Laravel: dari sana php-fpm `app:9000` (FastCGI
+#            menerima PHP_VALUE dari klien mana pun), `db:5432`, dan Reverb terjangkau.
+#            nginx meneruskan rute yang sudah pindah ke Next.js lewat variabel + resolver Docker
+#            (re-resolve tiap 10 dtk, DNS round-robin antar replica):
 #                resolver 127.0.0.11 valid=10s ipv6=off;   # sudah ada di deploy/docker/nginx.conf
 #                set $cc_web cc-web:3000;
 #                proxy_pass http://$cc_web;
-#            Web tidak mempublikasikan port host. Jangan resolve nama `web` dari stack Laravel:
-#            di jaringan ini nama itu dipakai service nginx Laravel DAN service web ini.
+#            Menerapkan perubahan compose Laravel membuat ulang container nginx (±1–2 dtk putus);
+#            dilakukan bersama peta rute gelombang 2, dengan persetujuan pemilik, lalu dicek:
+#                curl -s 127.0.0.1:8092/up
+#            Jaringan ini harus ada (Laravel di-`up` dulu) sebelum stack ini bisa start.
+#   laravel  jaringan `internal` Laravel (external). HANYA pgbouncer yang ikut, untuk menjangkau
+#            service `db` (PostgreSQL bersama). Nama = <project Laravel>_internal; produksi
+#            `app2-sigap_internal` (rencana §10.2). Cek: docker network ls | grep app2-sigap_
+#            cc-web tidak mempublikasikan port host.
 
 name: contact-center
 
@@ -49,7 +55,7 @@ x-app: &app
       condition: service_healthy
 
 services:
-  web:
+  cc-web:
     <<: *app
     build:
       context: ../..
@@ -58,7 +64,9 @@ services:
       OTEL_SERVICE_NAME: contact-center-web
       VALKEY_URL: redis://:${VALKEY_PASSWORD}@valkey:6379/0
       # Next.js tidak memasang handler SIGTERM sendiri; aplikasi (paket A) yang menutup server &
-      # koneksi dengan rapi (rencana §9.5). Tanpa handler itu, SIGTERM diabaikan sampai SIGKILL.
+      # koneksi dengan rapi (rencana §9.5). Tanpa handler itu (init: true meneruskan SIGTERM ke
+      # node), proses langsung keluar 143 dan request yang sedang jalan terputus. Handler §9.5 di
+      # paket A WAJIB ada sebelum staging.
       NEXT_MANUAL_SIG_HANDLE: "true"
     tmpfs:
       - /tmp:size=64m,mode=1777
@@ -66,8 +74,7 @@ services:
     networks:
       default:
       backend:
-      laravel:
-        aliases: [cc-web]
+      edge:
     deploy:
       replicas: 2
       resources:
@@ -88,7 +95,7 @@ services:
       - /tmp:size=64m,mode=1777
     networks: [default, backend]
     healthcheck:
-      disable: true # HEALTHCHECK image memeriksa HTTP /up milik web
+      disable: true # HEALTHCHECK image memeriksa HTTP /up milik cc-web
     deploy:
       resources:
         limits: { cpus: "1", memory: 512M }
@@ -164,6 +171,9 @@ networks:
   default:
   backend:
     internal: true
+  edge:
+    external: true
+    name: ${LARAVEL_EDGE_NETWORK:-app2-sigap_cc-edge}
   laravel:
     external: true
     name: ${LARAVEL_NETWORK:-app2-sigap_internal}
