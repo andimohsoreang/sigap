@@ -1,6 +1,8 @@
+import { availableParallelism } from 'node:os';
+
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { hashSandi, tutupPoolSandi, verifikasiSandi } from '@/server/legacy/sandi';
+import { GalatSandiSibuk, hashSandi, MAKS_ANTREAN, tutupPoolSandi, ukuranPool, verifikasiSandi } from '@/server/legacy/sandi';
 
 import { fixture, type FixtureSandi } from './fixture';
 
@@ -74,6 +76,47 @@ describe('sandi: pool worker_threads', () => {
         async () => {
             await tutupPoolSandi();
             expect(await verifikasiSandi(f.kasus[0].sandi, f.kasus[0].hash)).toBe(true);
+        },
+        LAMBAT,
+    );
+});
+
+describe('sandi: batas pool dan antrean', () => {
+    it('BCRYPT_POOL: bawaan 1, dibatasi [1, availableParallelism()-1]', () => {
+        const maks = Math.max(1, availableParallelism() - 1);
+        expect(ukuranPool(undefined)).toBe(1);
+        expect(ukuranPool('')).toBe(1);
+        expect(ukuranPool('abc')).toBe(1);
+        expect(ukuranPool('0')).toBe(1);
+        expect(ukuranPool('-3')).toBe(1);
+        expect(ukuranPool('2')).toBe(Math.min(2, maks));
+        expect(ukuranPool('9999')).toBe(maks);
+    });
+
+    it(
+        `lebih dari ${MAKS_ANTREAN} pekerjaan → GalatSandiSibuk; yang dibatalkan dibuang sebelum berjalan`,
+        async () => {
+            const { hash, sandi } = f.kasus[0];
+            const batal = new AbortController();
+            const mulai = performance.now();
+            const jalan = Array.from({ length: MAKS_ANTREAN }, () => verifikasiSandi(sandi, hash, batal.signal));
+            await expect(verifikasiSandi(sandi, hash)).rejects.toBeInstanceOf(GalatSandiSibuk);
+            await expect(hashSandi('x')).rejects.toBeInstanceOf(GalatSandiSibuk);
+
+            batal.abort(new Error('pemanggil menyerah'));
+            const hasil = await Promise.allSettled(jalan);
+            // Hanya yang sudah berjalan (satu per worker) selesai; sisanya ditolak tanpa menghitung bcrypt.
+            const selesai = hasil.filter((h) => h.status === 'fulfilled');
+            expect(selesai.length).toBeGreaterThanOrEqual(1);
+            expect(selesai.length).toBeLessThanOrEqual(ukuranPool());
+            expect(hasil.filter((h) => h.status === 'rejected' && (h.reason as Error).message === 'pemanggil menyerah')).toHaveLength(
+                MAKS_ANTREAN - selesai.length,
+            );
+            expect(performance.now() - mulai).toBeLessThan(5_000); // 32 × ±0,4 dtk bila tidak dibuang
+
+            // Sinyal yang sudah dibatalkan ditolak tanpa masuk antrean; antrean kosong lagi menerima pekerjaan.
+            await expect(verifikasiSandi(sandi, hash, batal.signal)).rejects.toThrow('pemanggil menyerah');
+            expect(await verifikasiSandi(sandi, hash)).toBe(true);
         },
         LAMBAT,
     );
