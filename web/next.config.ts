@@ -6,6 +6,7 @@ const root = path.resolve(import.meta.dirname, '..');
 
 const nextConfig: NextConfig = {
     output: 'standalone',
+    poweredByHeader: false,
     outputFileTracingRoot: root,
     turbopack: { root },
     // Filesystem container read-only (kecuali /tmp & .next/cache): cache ISR tetap di memori.
