@@ -100,6 +100,11 @@ PSQL_APP='PGPASSWORD="$(sed -n "s/^\"cc_app\" \"\(.*\)\"$/\1/p" /etc/pgbouncer/u
 diagnosis() { "${DC[@]}" ps; "${DC[@]}" logs --tail=50 cc-web worker sockudo pgbouncer postgres || true; }
 
 health() {
+  # cc-web mempercayai CF-Connecting-IP (IP klien untuk rate limit & audit): aman hanya bila satu-satunya jalan masuk
+  # adalah cloudflared lewat loopback. Port terbuka ke luar → siapa pun bisa memalsukan IP.
+  local alamat
+  alamat="$("${DC[@]}" port cc-web 3000 2>/dev/null || true)"
+  [[ "$alamat" == "127.0.0.1:$PORT" ]] || { diagnosis; die "cc-web harus terbuka hanya di 127.0.0.1:$PORT (sekarang: ${alamat:-tidak ada})"; }
   echo "==> Cek kesehatan http://127.0.0.1:$PORT/up"
   local ok=0
   for _ in $(seq 1 30); do
