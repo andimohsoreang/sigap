@@ -8,7 +8,7 @@ name: paritas
 #
 # Job berjalan di container resmi Playwright yang dipin digest (rencana §8.3: baseline & pembandingan di
 # container yang sama) supaya font/FreeType tidak bergeser mengikuti apt runner. Paket font dicatat di
-# awal dan job gagal bila langkah apt (git, psql, PHP) mengubahnya.
+# awal, di-hold sebelum apt, dan job gagal bila langkah apt (git, psql, PHP) tetap mengubahnya.
 #
 # Baseline visual (parity/README.md): PNG/DOM Laravel dibuat di mesin yang sama dengan pembandingan
 # (.baseline/, tidak di-commit); hashnya per `${platform}-${arch}` di parity/visual/manifest.json —
@@ -69,16 +69,46 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     steps:
-      - name: Catat paket font
+      # Paket font image dicatat lalu di-hold SEBELUM apt apa pun: apt gagal keras bila dependensi mencoba
+      # meng-upgrade-nya (setup-php dulu meng-upgrade libfreetype6 dan menambah paket -dev).
+      - name: Catat & kunci paket font
         run: |
           { dpkg-query -W -f '${Package} ${Version}\n' 'libfreetype*' 'libfontconfig*' 'fontconfig*' 'fonts-*' || true; } | sort > "$RUNNER_TEMP/font-awal.txt"
           cat "$RUNNER_TEMP/font-awal.txt"
+          { dpkg-query -W -f '${db:Status-Abbrev} ${Package}\n' 'libfreetype*' 'libfontconfig*' 'fontconfig*' 'fonts-*' 2>/dev/null || true; } \
+            | awk '$1 == "ii" { print $2 }' | xargs -r apt-mark hold
+          apt-mark showhold
 
       # git dulu supaya actions/checkout membuat clone sungguhan (laravel.sh memakai git diff).
-      - name: Paket dasar
+      # PHP 8.4 dari PPA ondrej/php (noble hanya punya 8.3), kunci diverifikasi fingerprint dari Launchpad;
+      # hanya CLI + ekstensi yang dipakai (composer.lock: ctype curl dom fileinfo filter hash iconv json
+      # libxml mbstring openssl pcre phar session tokenizer xml xmlwriter zlib; aplikasi: pgsql intl zip
+      # bcmath). Tanpa gd: tidak diwajibkan dan membawa FreeType. Composer: phar dipin sha256.
+      - name: Paket dasar, PHP 8.4, Composer
+        env:
+          PHP_PPA_FPR: B8DC7E53946656EFBCE4C1DD71DAEAAB4AD4CAB6
+          COMPOSER_VERSION: 2.11.2
+          COMPOSER_SHA256: dd158c0afd41d15fac89e1b4e47b5d42911fe316c3687cd5edac98319b25d028
         run: |
           apt-get update
           apt-get install -y --no-install-recommends git postgresql-client
+          install -d -m 755 /etc/apt/keyrings
+          curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x${PHP_PPA_FPR}" | gpg --dearmor > /etc/apt/keyrings/ondrej-php.gpg
+          fpr="$(gpg --show-keys --with-colons /etc/apt/keyrings/ondrej-php.gpg | awk -F: '/^fpr/ { print $10; exit }')"
+          [ "$fpr" = "$PHP_PPA_FPR" ] || { echo "Fingerprint kunci PPA ondrej/php tidak cocok: $fpr" >&2; exit 1; }
+          echo "deb [signed-by=/etc/apt/keyrings/ondrej-php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu noble main" > /etc/apt/sources.list.d/ondrej-php.list
+          apt-get update
+          apt-get install -y --no-install-recommends php8.4-cli php8.4-pgsql php8.4-mbstring php8.4-xml \
+            php8.4-intl php8.4-zip php8.4-bcmath php8.4-curl
+          curl -fsSL -o /usr/local/bin/composer "https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar"
+          echo "${COMPOSER_SHA256}  /usr/local/bin/composer" | sha256sum -c -
+          chmod 755 /usr/local/bin/composer
+          php -v && php -m && composer --version
+
+      - name: Paket font tidak berubah
+        run: |
+          { dpkg-query -W -f '${Package} ${Version}\n' 'libfreetype*' 'libfontconfig*' 'fontconfig*' 'fonts-*' || true; } | sort > "$RUNNER_TEMP/font-akhir.txt"
+          diff "$RUNNER_TEMP/font-awal.txt" "$RUNNER_TEMP/font-akhir.txt"
 
       # fetch-depth 0: tag laravel-baseline & commit-nya harus ada untuk `git diff` di laravel.sh.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -100,20 +130,6 @@ jobs:
           echo "urutan=$urut zona=$zona"
           [ "$urut" = 'Cipta,apel' ] || { echo "Kolasi bukan urutan byte seperti produksi" >&2; exit 1; }
           [ "$zona" = 'UTC' ] || [ "$zona" = 'Etc/UTC' ] || { echo "TimeZone server bukan UTC" >&2; exit 1; }
-
-      # setup-php mendukung container Ubuntu (root, PPA ondrej). Tanpa gd: tidak diwajibkan composer dan
-      # halaman paritas, sedangkan libgd membawa dependensi FreeType.
-      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
-        with:
-          php-version: '8.4'
-          tools: composer:v2
-          extensions: pdo_pgsql, intl, zip, bcmath, mbstring
-          coverage: none
-
-      - name: Paket font tidak berubah
-        run: |
-          { dpkg-query -W -f '${Package} ${Version}\n' 'libfreetype*' 'libfontconfig*' 'fontconfig*' 'fonts-*' || true; } | sort > "$RUNNER_TEMP/font-akhir.txt"
-          diff "$RUNNER_TEMP/font-awal.txt" "$RUNNER_TEMP/font-akhir.txt"
 
       # Dev dependencies ikut: sigap:e2e-setup memakai factory (Faker). Aset dibangun laravel.sh.
       - name: Dependensi Laravel
