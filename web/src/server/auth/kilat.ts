@@ -20,19 +20,29 @@ export function kilatkan(data: DataSesi, kunci: string, nilai: unknown): void {
     data._flash = { new: [...new Set([...f.new, kunci])], old: f.old.filter((k) => k !== kunci) };
 }
 
-/** ageFlashData: hapus kunci `old`, `new` menjadi `old`. Mengembalikan true bila data berubah. */
+/**
+ * ageFlashData: hapus kunci `old`, `new` menjadi `old`. `_flash` yang kosong dibuang (Laravel menyimpan
+ * `{new: [], old: []}`; tidak terlihat), jadi sesi tanpa flash tidak ditulis ulang. True bila data berubah.
+ */
 export function umurkanKilat(data: DataSesi): boolean {
     const f = daftar(data);
-    if (f.new.length === 0 && f.old.length === 0) return false;
+    if (f.new.length === 0 && f.old.length === 0) {
+        if (!('_flash' in data)) return false;
+        delete data._flash;
+        return true;
+    }
     for (const k of f.old) delete data[k];
-    data._flash = { new: [], old: f.new };
+    if (f.new.length === 0) delete data._flash;
+    else data._flash = { new: [], old: f.new };
     return true;
 }
 
-/** `$session->reflash()`: pertahankan flash satu permintaan lagi. */
-export function reflash(data: DataSesi): void {
+/** `$session->reflash()`: pertahankan flash satu permintaan lagi. False (tanpa perubahan) bila tidak ada flash lama. */
+export function reflash(data: DataSesi): boolean {
     const f = daftar(data);
+    if (f.old.length === 0) return false;
     data._flash = { new: [...new Set([...f.new, ...f.old])], old: [] };
+    return true;
 }
 
 /** `$session->pull($kunci, $bawaan)`. */
