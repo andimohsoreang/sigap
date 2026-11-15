@@ -552,8 +552,7 @@ Diputuskan 13 Nov 2026: rewrite berjalan di server produksi yang sama dengan Lar
 
 Konsekuensi yang harus ditangani:
 
-- **CPU tanpa AVX**: binary native harus diuji di S0 (SWC/Next.js build, `sharp`, Valkey, Soketi). Bila ada yang
-  gagal di server, image dibangun di CI lalu ditarik ke server, atau dipakai varian baseline x86-64.
+- **CPU tanpa AVX**: **diuji 15 Nov 2026, lulus semua** (SWC/Turbopack, Tailwind oxide, lightningcss, esbuild, sharp, Valkey, PgBouncer, server standalone read-only). Image boleh dibangun di server; Soketi diuji saat S16.
 - **Satu VM** berarti replica web/worker hanya melindungi dari crash proses, bukan dari matinya server. Target
   ketersediaan 99,9% (§9.1) **belum** bisa dijanjikan di hosting ini; dicatat sebagai risiko yang diterima.
 - **Berbagi sumber daya** dengan stack lain: tiap container diberi batas CPU & memori; uji beban (§9.8) di staging
