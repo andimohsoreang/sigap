@@ -2,11 +2,18 @@ name: paritas
 
 # Suite paritas (parity/) terhadap Laravel lokal di runner. Laravel di-boot oleh webServer
 # parity/playwright.config.ts → parity/scripts/laravel.sh (konfigurasi cermin produksi dari
-# parity/env/laravel.env); CI hanya memasang dependensi sigap/ dan menjalankan Playwright.
+# parity/env/laravel.env, PostgreSQL cc_paritas milik cc_migrate di 127.0.0.1:5432); CI hanya
+# menyiapkan PostgreSQL, dependensi sigap/, dan menjalankan Playwright. laravel.sh menolak jalan bila
+# sigap/ berbeda dari tag laravel-baseline, jadi checkout memuat riwayat & tag.
 #
-# Baseline visual per platform (parity/visual/{platform}/); baru ada darwin. Sampai baseline Linux
-# di-commit, CI hanya menjalankan project `http`. Jalankan workflow ini manual untuk membuat baseline
-# Linux dari Laravel (artefak `baseline-visual-linux`), tinjau, lalu commit ke parity/visual/linux/.
+# Baseline visual (parity/README.md): PNG/DOM Laravel dibuat di mesin yang sama dengan pembandingan
+# (.baseline/<platform>, tidak di-commit); hashnya per platform di parity/visual/manifest.json.
+#   - Selama manifest belum punya entri `linux`: PR/push hanya menjalankan project `http`.
+#   - Jalankan workflow ini manual → `npm run baseline -- tulis` di runner; artefak
+#     `baseline-visual-linux` berisi visual/manifest.json (entri linux) + .baseline/linux untuk
+#     ditinjau manusia, lalu commit HANYA visual/manifest.json.
+#   - Setelah entri `linux` ter-commit, langkah suite otomatis beralih ke
+#     `npm run baseline && npx playwright test` (baseline dibuat ulang, dicek ke manifest, lalu suite penuh).
 on:
   workflow_dispatch:
   push:
@@ -30,17 +37,43 @@ jobs:
   paritas:
     name: Paritas vs Laravel
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
+    # Image keluarga yang sama dengan produksi (deploy/docker/compose.yml: postgres:16-alpine), dipin
+    # digest: kolasi musl en_US.utf8 = urutan byte, zona UTC, seperti produksi.
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:f377d590e5474681d4d7838635031a2b50647923b7abfa803ce9b5ff35d5c663
+        env:
+          # KHUSUS UJI: env/laravel.env memaksa DB_PASSWORD kosong (sama dengan setup lokal `trust`),
+          # jadi tanpa sandi. Container hanya hidup selama job di runner sekali pakai.
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
+      # fetch-depth 0: tag laravel-baseline & commit-nya harus ada untuk `git diff` di laravel.sh.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
+
+      - name: Database cc_paritas
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+        run: |
+          psql -v ON_ERROR_STOP=1 -c 'CREATE ROLE cc_migrate LOGIN' -c 'CREATE DATABASE cc_paritas OWNER cc_migrate'
+          psql -tAc "SELECT datcollate, current_setting('TimeZone') FROM pg_database WHERE datname = 'cc_paritas'"
 
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
           tools: composer:v2
-          extensions: pdo_sqlite
+          extensions: pdo_pgsql
           coverage: none
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -86,21 +119,30 @@ jobs:
         working-directory: parity
         run: npx playwright install-deps chromium
 
-      - name: Suite paritas (http)
+      - name: Suite paritas
         working-directory: parity
-        run: npx playwright test --project=http
+        run: |
+          if node -e "process.exit(require('./visual/manifest.json').linux ? 0 : 1)"; then
+            npm run baseline && npx playwright test
+          else
+            echo "visual/manifest.json belum punya entri linux: hanya project http"
+            npx playwright test --project=http
+          fi
 
-      - name: Buat baseline visual Linux
+      - name: Tulis baseline visual Linux
         if: github.event_name == 'workflow_dispatch' && !cancelled()
         working-directory: parity
-        run: npx playwright test --project=desktop --project=tablet --project=mobile --update-snapshots
+        run: npm run baseline -- tulis
 
       - name: Unggah baseline visual Linux
         if: github.event_name == 'workflow_dispatch' && !cancelled()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: baseline-visual-linux
-          path: parity/visual/linux/
+          path: |
+            parity/visual/manifest.json
+            parity/.baseline/linux/
+          include-hidden-files: true
           retention-days: 14
           if-no-files-found: error
 
