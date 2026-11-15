@@ -1,0 +1,221 @@
+{
+    "sumber": [
+        "Illuminate\\Hashing\\BcryptHasher (rounds 12, verify true)"
+    ],
+    "commit": "f8713a05929dca41c78de8b1df39ec37128148e3",
+    "tag": "laravel-baseline",
+    "laravel": "12.69.3",
+    "perintah": "php artisan cc:ekspor-fixture-kripto --env=testing",
+    "peringatan": "Semua kunci di berkas ini KUNCI UJI (sha256 teks tetap), bukan kunci produksi.",
+    "galat_make_nul": {
+        "kelas": "RuntimeException",
+        "pesan": "Bcrypt hashing not supported."
+    },
+    "kasus": [
+        {
+            "sandi": "rahasia123",
+            "hash": "$2y$12$N6Eh4yGw7RA50oY25GjUYurtxT/wJtl5wv3usjaqFwy8IABP355qG",
+            "perlu_rehash": false,
+            "cek": [
+                {
+                    "sandi": "rahasia123",
+                    "hasil": true
+                },
+                {
+                    "sandi": "rahasia123x",
+                    "hasil": false
+                },
+                {
+                    "sandi": "RAHASIA123",
+                    "hasil": false
+                },
+                {
+                    "sandi": "rahasia12",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                }
+            ]
+        },
+        {
+            "sandi": "Kata Sandi Indonesia ñ 🙂",
+            "hash": "$2y$12$dKu/yaaOh0t9C7bsWfuxZeAhKybw5NQwj10KrIbRChVMHt2kvFTFG",
+            "perlu_rehash": false,
+            "cek": [
+                {
+                    "sandi": "Kata Sandi Indonesia ñ 🙂",
+                    "hasil": true
+                },
+                {
+                    "sandi": "Kata Sandi Indonesia ñ 🙂x",
+                    "hasil": false
+                },
+                {
+                    "sandi": "KATA SANDI INDONESIA Ñ 🙂",
+                    "hasil": false
+                },
+                {
+                    "sandi": "Kata Sandi Indonesia ñ ",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                }
+            ]
+        },
+        {
+            "sandi": "",
+            "hash": "$2y$12$OevBi7s3qHd4XqkYYf5mQOkDprZsQVzPyTS9hOI3Her4GYq/M08C6",
+            "perlu_rehash": false,
+            "cek": [
+                {
+                    "sandi": "",
+                    "hasil": true
+                },
+                {
+                    "sandi": "x",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                }
+            ]
+        },
+        {
+            "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "hash": "$2y$12$K2m38O0WalLXiE/y1aLdF.Fno1Lq3wzp6l4K16YtGWRQyPlvEfY.S",
+            "perlu_rehash": false,
+            "cek": [
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": true
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaax",
+                    "hasil": true
+                },
+                {
+                    "sandi": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": true
+                }
+            ]
+        },
+        {
+            "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "hash": "$2y$12$oarHiDESa6Mzl05INs8UQewgdT1dbB6KPaCpz6P0.CA5x7HHqjDJq",
+            "perlu_rehash": false,
+            "cek": [
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": true
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaax",
+                    "hasil": true
+                },
+                {
+                    "sandi": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": true
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": true
+                }
+            ]
+        },
+        {
+            "sandi": "éééééééééééééééééééééééééééééééééééééééé",
+            "hash": "$2y$12$qarCGIY9MFMZwNrxusAyZOaIxCOlUDyjZRYyMJowFRKBuZdwP8WTq",
+            "perlu_rehash": false,
+            "cek": [
+                {
+                    "sandi": "éééééééééééééééééééééééééééééééééééééééé",
+                    "hasil": true
+                },
+                {
+                    "sandi": "ééééééééééééééééééééééééééééééééééééééééx",
+                    "hasil": true
+                },
+                {
+                    "sandi": "ÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉ",
+                    "hasil": false
+                },
+                {
+                    "sandi": "ééééééééééééééééééééééééééééééééééééééé",
+                    "hasil": true
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                }
+            ]
+        }
+    ],
+    "negatif": [
+        {
+            "label": "awalan_2b",
+            "hash": "$2b$12$N6Eh4yGw7RA50oY25GjUYurtxT/wJtl5wv3usjaqFwy8IABP355qG",
+            "galat": {
+                "kelas": "RuntimeException",
+                "pesan": "This password does not use the Bcrypt algorithm."
+            },
+            "hasil": null
+        },
+        {
+            "label": "awalan_2a",
+            "hash": "$2a$12$N6Eh4yGw7RA50oY25GjUYurtxT/wJtl5wv3usjaqFwy8IABP355qG",
+            "galat": {
+                "kelas": "RuntimeException",
+                "pesan": "This password does not use the Bcrypt algorithm."
+            },
+            "hasil": null
+        },
+        {
+            "label": "kosong",
+            "hash": "",
+            "galat": null,
+            "hasil": false
+        },
+        {
+            "label": "bukan_bcrypt",
+            "hash": "bee5688aea66a47460b19c76f8f199c6b9585eb726f8322b1429793863609ca2",
+            "galat": {
+                "kelas": "RuntimeException",
+                "pesan": "This password does not use the Bcrypt algorithm."
+            },
+            "hasil": null
+        }
+    ]
+}

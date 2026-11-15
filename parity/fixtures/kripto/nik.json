@@ -1,0 +1,189 @@
+{
+    "sumber": [
+        "App\\Support\\Nik"
+    ],
+    "commit": "f8713a05929dca41c78de8b1df39ec37128148e3",
+    "tag": "laravel-baseline",
+    "laravel": "12.69.3",
+    "perintah": "php artisan cc:ekspor-fixture-kripto --env=testing",
+    "peringatan": "Semua kunci di berkas ini KUNCI UJI (sha256 teks tetap), bukan kunci produksi.",
+    "kunci_nik": {
+        "base64": "base64:go5GeogGqlxeCBqg7NL+MMrxvFUHODXfIR1xC/xvbfc=",
+        "literal": "kunci-nik-uji-literal-bukan-produksi",
+        "base64_tidak_sah": "base64:!!bukan*base64*kunci*uji*panjang!!",
+        "base64_tanpa_padding": "base64:go5GeogGqlxeCBqg7NL+MMrxvFUHODXfIR1xC/xvbfc",
+        "base64_padding_kurang": "base64:go5GeogGqlxeCBqg7NL+MMrxvFUHODXfIR1xC/xvbQ=",
+        "spasi_di_tepi": "  \tbase64:go5GeogGqlxeCBqg7NL+MMrxvFUHODXfIR1xC/xvbfc=\n"
+    },
+    "kasus": [
+        {
+            "nik": "3201234567890001",
+            "hash": {
+                "base64": "7eb868c70794487b98657acd7608c4c5f23bf28d241c97063dcb70449b115a1f",
+                "literal": "9964f6de0a3e4b3174896b00bacf073d0df875098ff6cbe9aaf2263681c98edc",
+                "base64_tidak_sah": "bb0ea388b312f4d2cae3b16ff5ef01b616447b4bbac60680831c7e2acfe5d50c",
+                "base64_tanpa_padding": "7eb868c70794487b98657acd7608c4c5f23bf28d241c97063dcb70449b115a1f",
+                "base64_padding_kurang": "e146eb2807b57a88a807cb11ca24dfa1ce57efc814d5f6774718bd61f1da307a",
+                "spasi_di_tepi": "7eb868c70794487b98657acd7608c4c5f23bf28d241c97063dcb70449b115a1f"
+            },
+            "mask": "3201********0001",
+            "mirip_nik": true
+        },
+        {
+            "nik": "7304056708990002",
+            "hash": {
+                "base64": "1488c7af3a97715db8b13c3b91177357735cb65528ec3ffc0f53ac60d0ea11fd",
+                "literal": "acff0e400d3f943692f84f4c00f3326c534ba571ee11c0e92af6bd2fa634620c",
+                "base64_tidak_sah": "d546d1d7433aa49e4cb76d38b600032800f6d06fd5e786c43cc0a4fe3795bd02",
+                "base64_tanpa_padding": "1488c7af3a97715db8b13c3b91177357735cb65528ec3ffc0f53ac60d0ea11fd",
+                "base64_padding_kurang": "4bec008b993e43137df37117d511c3293a80d98135d7e7c690c4b93e0d22a2fb",
+                "spasi_di_tepi": "1488c7af3a97715db8b13c3b91177357735cb65528ec3ffc0f53ac60d0ea11fd"
+            },
+            "mask": "7304********0002",
+            "mirip_nik": true
+        },
+        {
+            "nik": " 3201234567890001 ",
+            "hash": {
+                "base64": "7eb868c70794487b98657acd7608c4c5f23bf28d241c97063dcb70449b115a1f",
+                "literal": "9964f6de0a3e4b3174896b00bacf073d0df875098ff6cbe9aaf2263681c98edc",
+                "base64_tidak_sah": "bb0ea388b312f4d2cae3b16ff5ef01b616447b4bbac60680831c7e2acfe5d50c",
+                "base64_tanpa_padding": "7eb868c70794487b98657acd7608c4c5f23bf28d241c97063dcb70449b115a1f",
+                "base64_padding_kurang": "e146eb2807b57a88a807cb11ca24dfa1ce57efc814d5f6774718bd61f1da307a",
+                "spasi_di_tepi": "7eb868c70794487b98657acd7608c4c5f23bf28d241c97063dcb70449b115a1f"
+            },
+            "mask": "3201********0001",
+            "mirip_nik": true
+        },
+        {
+            "nik": "\t3201234567890001\n",
+            "hash": {
+                "base64": "7eb868c70794487b98657acd7608c4c5f23bf28d241c97063dcb70449b115a1f",
+                "literal": "9964f6de0a3e4b3174896b00bacf073d0df875098ff6cbe9aaf2263681c98edc",
+                "base64_tidak_sah": "bb0ea388b312f4d2cae3b16ff5ef01b616447b4bbac60680831c7e2acfe5d50c",
+                "base64_tanpa_padding": "7eb868c70794487b98657acd7608c4c5f23bf28d241c97063dcb70449b115a1f",
+                "base64_padding_kurang": "e146eb2807b57a88a807cb11ca24dfa1ce57efc814d5f6774718bd61f1da307a",
+                "spasi_di_tepi": "7eb868c70794487b98657acd7608c4c5f23bf28d241c97063dcb70449b115a1f"
+            },
+            "mask": "3201********0001",
+            "mirip_nik": true
+        },
+        {
+            "nik": "\u000b3201234567890001\u0000",
+            "hash": {
+                "base64": "7eb868c70794487b98657acd7608c4c5f23bf28d241c97063dcb70449b115a1f",
+                "literal": "9964f6de0a3e4b3174896b00bacf073d0df875098ff6cbe9aaf2263681c98edc",
+                "base64_tidak_sah": "bb0ea388b312f4d2cae3b16ff5ef01b616447b4bbac60680831c7e2acfe5d50c",
+                "base64_tanpa_padding": "7eb868c70794487b98657acd7608c4c5f23bf28d241c97063dcb70449b115a1f",
+                "base64_padding_kurang": "e146eb2807b57a88a807cb11ca24dfa1ce57efc814d5f6774718bd61f1da307a",
+                "spasi_di_tepi": "7eb868c70794487b98657acd7608c4c5f23bf28d241c97063dcb70449b115a1f"
+            },
+            "mask": "3201********0001",
+            "mirip_nik": true
+        },
+        {
+            "nik": "3201234567890001 ",
+            "hash": {
+                "base64": "f1c2ba318c4f5dc0a08a128831220753c19bc1b30c772e2d1da8f1d73785b642",
+                "literal": "edb18cb9354d5bfea741b0589a0fbe7789bcb356701c6a4d4914afe548823a81",
+                "base64_tidak_sah": "255c338d345129085bf194b1bebeedc27b82bf42ae84466b7edbfd3f33361745",
+                "base64_tanpa_padding": "f1c2ba318c4f5dc0a08a128831220753c19bc1b30c772e2d1da8f1d73785b642",
+                "base64_padding_kurang": "3c739032471e2a6644e80dbcea32816924766e6628bddab489711d029517cf90",
+                "spasi_di_tepi": "f1c2ba318c4f5dc0a08a128831220753c19bc1b30c772e2d1da8f1d73785b642"
+            },
+            "mask": "3201********01 ",
+            "mirip_nik": false
+        },
+        {
+            "nik": "",
+            "hash": {
+                "base64": null,
+                "literal": null,
+                "base64_tidak_sah": null,
+                "base64_tanpa_padding": null,
+                "base64_padding_kurang": null,
+                "spasi_di_tepi": null
+            },
+            "mask": null,
+            "mirip_nik": false
+        },
+        {
+            "nik": "   ",
+            "hash": {
+                "base64": null,
+                "literal": null,
+                "base64_tidak_sah": null,
+                "base64_tanpa_padding": null,
+                "base64_padding_kurang": null,
+                "spasi_di_tepi": null
+            },
+            "mask": null,
+            "mirip_nik": false
+        },
+        {
+            "nik": null,
+            "hash": {
+                "base64": null,
+                "literal": null,
+                "base64_tidak_sah": null,
+                "base64_tanpa_padding": null,
+                "base64_padding_kurang": null,
+                "spasi_di_tepi": null
+            },
+            "mask": null,
+            "mirip_nik": null
+        },
+        {
+            "nik": "1234567",
+            "hash": {
+                "base64": "1f3747c61842eb078f7d672351926450b4fb839f30d235cd1ba600f2b5d6287d",
+                "literal": "76f497972468219d400a57da69ec6545fe7014eaef118f1f2044ac060c9d4719",
+                "base64_tidak_sah": "3dd70e11bfbfe55de29ca19e2f7b49837f44bf3958728afa7bbeb75d7fbf4297",
+                "base64_tanpa_padding": "1f3747c61842eb078f7d672351926450b4fb839f30d235cd1ba600f2b5d6287d",
+                "base64_padding_kurang": "dc9a1b00c1d93528594ff94f365aa518db3fdd31542aa6b963e3dd62855b50da",
+                "spasi_di_tepi": "1f3747c61842eb078f7d672351926450b4fb839f30d235cd1ba600f2b5d6287d"
+            },
+            "mask": "*******",
+            "mirip_nik": false
+        },
+        {
+            "nik": "12345678",
+            "hash": {
+                "base64": "c0e9f3060bd05268b4d11447793f6c626ed5de6ad2df50555d3a7e4adb0f254f",
+                "literal": "4956010a0d613451ce0c2e606ad4df9d7ae183f7b04fc0686cf0908c48e3ed76",
+                "base64_tidak_sah": "d1087ea20b2abb393172536629656563782d9bc5aa23ae8fbf5ab2f3f10f5383",
+                "base64_tanpa_padding": "c0e9f3060bd05268b4d11447793f6c626ed5de6ad2df50555d3a7e4adb0f254f",
+                "base64_padding_kurang": "833f76f29ee7c7e35cb6b21f764e4354ebdf08345d2c52f890fa0d964582d898",
+                "spasi_di_tepi": "c0e9f3060bd05268b4d11447793f6c626ed5de6ad2df50555d3a7e4adb0f254f"
+            },
+            "mask": "1234********5678",
+            "mirip_nik": false
+        },
+        {
+            "nik": "320123456789000",
+            "hash": {
+                "base64": "bd615b5119de642f7aa7f55bd4ffb0801eb21a983864dc3a762fdf92b58ebe35",
+                "literal": "fa7449be32ceb49c84ec846289e372d7da04a178d3bee207b91c4f4bdff415cb",
+                "base64_tidak_sah": "966da7cc68b848581fd4a0ff9420e721fb26a3bb00a92eb035a358efa8199800",
+                "base64_tanpa_padding": "bd615b5119de642f7aa7f55bd4ffb0801eb21a983864dc3a762fdf92b58ebe35",
+                "base64_padding_kurang": "fda66e333b72c2aab77102a2480571a5370d3358bbd5ca605828f3fb58eb3037",
+                "spasi_di_tepi": "bd615b5119de642f7aa7f55bd4ffb0801eb21a983864dc3a762fdf92b58ebe35"
+            },
+            "mask": "3201********9000",
+            "mirip_nik": false
+        },
+        {
+            "nik": "abcdEFGH1234",
+            "hash": {
+                "base64": "4d83b2cc1e7f6e329e2bff6f05cb72f9da69c8030b3595f16a30974611930c0e",
+                "literal": "61f27453c1567f6e5acb26437da46072377bd6abe5640aa1128f00df7ba1fae2",
+                "base64_tidak_sah": "52bae528ccd807e141209d6f5db4e6bd1d2600161b9128ccaab1efd87103b214",
+                "base64_tanpa_padding": "4d83b2cc1e7f6e329e2bff6f05cb72f9da69c8030b3595f16a30974611930c0e",
+                "base64_padding_kurang": "33f04fa721538447e02d5b77d9bc80ca85d27bfda2a99c3691c1de0b9c401c36",
+                "spasi_di_tepi": "4d83b2cc1e7f6e329e2bff6f05cb72f9da69c8030b3595f16a30974611930c0e"
+            },
+            "mask": "abcd********1234",
+            "mirip_nik": false
+        }
+    ]
+}

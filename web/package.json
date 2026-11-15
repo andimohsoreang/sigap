@@ -13,6 +13,7 @@
         "lint": "eslint .",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
+        "test:laravel": "CC_TEST_LARAVEL=1 vitest run tests/unit/legacy/verifikasi-laravel.test.ts",
         "format": "prettier --write .",
         "cek:css": "node scripts/cek-css.mjs"
     },
