@@ -1,3 +1,4 @@
+import { inspect } from 'node:util';
 import pino from 'pino';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -36,22 +37,30 @@ describe('log', () => {
         expect(isi.pesan).toEqual({ body: '[REDACTED]', kontak: '[REDACTED]' });
     });
 
-    it('galat axios hanya membawa ringkasan, tanpa header, body, atau query', async () => {
+    it('galat axios tidak membocorkan header, body, atau query di jalur log mana pun', async () => {
         const err = await buatKlien({ baseURL: srv.url, timeoutMs: 2000, maxBytes: 1024 })
             .post('/ai?token=rahasia-query', { nik: '3201999999990001' }, { headers: { Authorization: 'Bearer rahasia-header' } })
             .catch((e: unknown) => e);
         const { baris, log } = logUji();
         log.error({ err }, 'gagal');
+        log.error({ error: err }, 'kunci lain');
+        log.error({ konteks: { err } }, 'bersarang');
 
-        expect(baris[0]).not.toMatch(/rahasia|3201999999990001|Bearer/);
-        expect(JSON.parse(baris[0]).err).toEqual({
+        const ringkas = {
             type: 'AxiosError',
             message: 'Request failed with status code 500',
             code: 'ERR_BAD_RESPONSE',
             status: 500,
             method: 'POST',
             url: `${srv.url}/ai`,
-        });
+        };
+        expect(JSON.parse(baris[0]).err).toEqual(ringkas);
+        expect(JSON.parse(baris[1]).error).toEqual(ringkas);
+        expect(JSON.parse(baris[2]).konteks.err).toEqual(ringkas);
+        // util.inspect = yang dipakai console.error (Next.js mencatat galat rute dengan console.error).
+        for (const teks of [...baris, inspect(err), inspect({ err }, { depth: 5 }), JSON.stringify(err)]) {
+            expect(teks).not.toMatch(/Bearer|rahasia|3201999999990001|token=/);
+        }
     });
 
     it('galat biasa tetap memakai serializer standar pino', () => {

@@ -24,28 +24,9 @@ const SENSITIF = [
     'lookup_token',
 ];
 
-// URL tanpa userinfo, query, dan fragmen (token & data pribadi sering ada di sana).
-function urlAman(url?: string, baseURL?: string): string | undefined {
-    if (!url) return undefined;
-    try {
-        const u = new URL(url, baseURL);
-        return `${u.origin}${u.pathname}`;
-    } catch {
-        return url.split(/[?#]/)[0];
-    }
-}
-
-// Galat axios membawa config (header Authorization, body permintaan) dan respons; hanya ringkasannya yang dicatat.
+// Galat axios dari buatKlien sudah punya toJSON() yang aman (tanpa config, header, body, query).
 function serializerErr(err: unknown) {
-    if (!isAxiosError(err)) return pino.stdSerializers.err(err as Error);
-    return {
-        type: 'AxiosError',
-        message: err.message,
-        code: err.code,
-        status: err.response?.status,
-        method: err.config?.method?.toUpperCase(),
-        url: urlAman(err.config?.url, err.config?.baseURL),
-    };
+    return isAxiosError(err) ? err.toJSON() : pino.stdSerializers.err(err as Error);
 }
 
 export const opsiLog: LoggerOptions = {
