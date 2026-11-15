@@ -10,6 +10,41 @@
 
 ---
 
+## 0. Perubahan strategi (15 Nov 2026) — berlaku di atas isi dokumen ini
+
+Fakta: `app2.andimohamad.my.id` **belum dipakai warga**. Database produksi hanya berisi data uji (27 tiket,
+0 akun warga, 3 admin, 11 chat). Strategi "berdampingan di produksi" di bawah dirancang untuk melindungi pengguna
+yang sedang aktif — tidak diperlukan. Pemilik proyek memutuskan:
+
+| Keputusan | Isi |
+|---|---|
+| Strategi | **Per fitur tanpa jembatan.** Tiap fitur: bangun → QA paritas vs Laravel → review (+ optimasi ditanyakan) → audit keamanan → **deploy ke subdomain uji** → UAT oleh pemilik proyek → fitur berikutnya |
+| Pergantian | Setelah semua fitur lulus UAT, `app2.andimohamad.my.id` diganti dari Laravel ke Next.js **sekali jalan**. Image Laravel disimpan sebagai jalan pulang |
+| Data | Database **boleh direset** saat pergantian. Skema PostgreSQL tetap sama (hasil migrasi `laravel-baseline`) |
+| Laravel | Tetap **beku** dan tetap berjalan di app2 sampai pergantian, sebagai **kunci jawaban** suite paritas (lokal & CI) |
+
+Yang **dihapus** dari rencana (tidak dikerjakan): jembatan sesi Laravel ↔ Next.js, respons Inertia 409, jembatan
+cron, penerbit event ke Reverb Laravel, peta rute nginx per fitur & `pindah-rute.sh`, deploy gelap, masa pantau 3
+hari per fitur di produksi, penulisan sesi format Laravel. Next.js memakai **sesi & cookie sendiri** (`cc_session`)
+dan **Soketi** sejak awal.
+
+Yang **tetap**: freeze & `laravel-baseline`, suite paritas (desain 0 piksel, perilaku identik), vektor uji PHP,
+standar backend §9, siklus QA → review → optimasi, audit keamanan per fitur, UAT oleh pemilik proyek, konfirmasi
+berbahasa sederhana sebelum pergantian akhir. Paket B (enkripsi NIK & bcrypt format Laravel) tetap dipakai:
+Next.js dan Laravel berbagi data uji yang sama di suite paritas.
+
+Siklus fitur yang berlaku (menggantikan tabel §2 langkah 6–9):
+
+| # | Langkah | Hasil |
+|---|---|---|
+| 6 | Deploy ke **subdomain uji** (stack Next.js terpisah di server, DB uji sendiri) | URL uji hidup |
+| 7 | **UAT** oleh pemilik proyek dengan skenario `docs/slices/Sxx-uat.md` | keputusan Lulus / Tidak |
+| 8 | Tutup fitur, lanjut fitur berikutnya | — |
+| Akhir | Semua fitur lulus → konfirmasi berbahasa sederhana → ganti app2 ke Next.js (DB direset, akun admin dibuat ulang) → pantau | app2 = Next.js |
+
+Estimasi ulang kasar: **±16–22 minggu** total (sebelumnya ±25–31), karena jembatan S0 dan pindah rute + pantau per
+fitur di produksi tidak ada lagi. Ditinjau ulang setelah S1.
+
 ## 1. Cara kerjanya
 
 Laravel dan Next.js berjalan **bersamaan di produksi** dengan database yang sama. Di depan keduanya ada nginx

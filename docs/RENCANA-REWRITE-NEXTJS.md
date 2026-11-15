@@ -25,6 +25,7 @@
 | 13 Nov 2026 | Data trafik Cloudflare **ditunda**; target §9.1 tetap memakai asumsi kerja. Rename repo GitHub dilakukan sendiri oleh pemilik proyek nanti |
 | 13 Nov 2026 | **Klien HTTP backend = axios** (dikunci persis `1.21.1`), satu pabrik klien `src/server/http/klien.ts` dengan pengaman wajib (§9.2). Browser juga memakai axios (diputuskan 13 Nov 2026) lewat satu instance `src/lib/api.ts` untuk panggilan JSON ke API kita sendiri; submit formulir halaman tetap Server Actions |
 | 13 Nov 2026 | **Endpoint API dibuat sambil jalan**: setiap slice memindahkan endpoint `/api/v1` miliknya dengan kontrak identik, dan dokumentasi OpenAPI dibangkitkan dari skema Zod per slice (bukan ditulis ulang di akhir) |
+| 15 Nov 2026 | **Strategi diubah: per fitur tanpa jembatan.** app2 belum dipakai warga (DB hanya data uji). Tiap fitur dideploy ke subdomain uji untuk UAT; app2 diganti ke Next.js sekali jalan di akhir; **DB boleh direset** saat pergantian. Detail: `docs/RENCANA-PER-FITUR.md` §0 |
 | 13 Nov 2026 | Desain **identik 100%** dengan versi Laravel: 0 piksel beda pada screenshot pembanding. Aturan & gerbangnya di §8 |
 
 ## 0. Asumsi (perlu dikonfirmasi)
