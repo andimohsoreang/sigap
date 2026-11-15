@@ -52,6 +52,26 @@ describe.skipIf(!ada)(`rate limit di Valkey${ada ? '' : ' — dilewati: Valkey l
         await r.del(`batas:${md5}`, `batas:${md5}:timer`);
     });
 
+    it('EVALSHA; setelah SCRIPT FLUSH (mis. Valkey restart) jatuh ke EVAL dan hasil tetap benar', async () => {
+        const r = klienValkey();
+        const panggilan = async (cmd: string) =>
+            Number(/calls=(\d+)/.exec((await r.info('commandstats')).split('\n').find((b) => b.startsWith(`cmdstat_${cmd}:`)) ?? '')?.[1] ?? 0);
+        const limit = [{ kunci: 'flush', maks: 3, detik: 30 }];
+        const now = Math.floor(Date.now() / 1000);
+        await cobaBatas(nama, limit, now); // memuat skrip
+        const shaAwal = await panggilan('evalsha');
+        expect((await cobaBatas(nama, limit, now)).header['X-RateLimit-Remaining']).toBe('1');
+        expect(await panggilan('evalsha')).toBeGreaterThan(shaAwal);
+
+        await r.script('FLUSH');
+        const evalAwal = await panggilan('eval');
+        const h = await cobaBatas(nama, limit, now);
+        expect(h).toMatchObject({ lolos: true, sumber: 'valkey', header: { 'X-RateLimit-Remaining': '0' } });
+        // commandstats milik seluruh server (test lain bisa berjalan paralel): cukup bertambah.
+        expect(await panggilan('eval')).toBeGreaterThan(evalAwal);
+        expect(await cobaBatas(nama, limit, now)).toMatchObject({ lolos: false, sumber: 'valkey' });
+    });
+
     it('Limit pertama di-hit walau Limit kedua menolak (atomik dalam satu skrip)', async () => {
         const now = Math.floor(Date.now() / 1000);
         const limits = [
