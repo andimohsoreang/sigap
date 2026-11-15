@@ -1,6 +1,6 @@
-# Rahasia — JANGAN di-commit
+# Rahasia & data — JANGAN di-commit
 .env
 .env.*
 !.env.example
-!.env.migrate.example
 pgbouncer/userlist.txt
+backups/

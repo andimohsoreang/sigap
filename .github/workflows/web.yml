@@ -66,5 +66,9 @@ jobs:
         with:
           persist-credentials: false
 
+      # Compose stack subdomain uji sah (interpolasi dari .env.example yang memuat semua kunci wajib); tidak
+      # menjalankan container apa pun.
+      - run: docker compose --env-file deploy/next/.env.example -f deploy/next/compose.yml config --quiet
+
       # BuildKit (bawaan Docker runner) memakai deploy/next/Dockerfile.dockerignore untuk konteks ini.
       - run: docker build -f deploy/next/Dockerfile -t contact-center-web:ci .

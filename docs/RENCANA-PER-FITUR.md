@@ -142,7 +142,7 @@ dipindah lebih dulu.
 | **S13** | Contact center: chat warga & petugas + TARA aktif | **sangat tinggi** | 2,5–3 |
 | **S14** | Akun dari chat & aktivasi | sedang | 1 |
 | **S15** | Akun: masuk, daftar, lupa sandi, verifikasi email | tinggi | 1–1,5 |
-| **S16** | Realtime: Reverb → Soketi | sedang | 0,5–1 |
+| **S16** | Realtime: Reverb → Sockudo | sedang | 0,5–1 |
 | **S17** | Sisa API, pemadaman Laravel, bersih-bersih | rendah | 1 |
 | | **Total** (satu developer + dukungan ops & pentest) | | **~25–31** |
 
@@ -352,9 +352,9 @@ percakapan.
   & `akun`; link verifikasi bertanda tangan; reset sandi; akun nonaktif.
 - **Gerbang:** **pentest pihak ketiga #2** (auth & seluruh aplikasi).
 
-### S16 — Realtime: Reverb → Soketi
+### S16 — Realtime: Reverb → Sockudo
 
-- Soketi ≥ 2 instance dengan adapter Valkey; kunci app sama sehingga klien cukup ganti host/port.
+- Sockudo ≥ 2 instance dengan adapter Valkey; kunci app sama sehingga klien cukup ganti host/port.
 - Uji: semua channel & event, reconnect, 1.000 koneksi lewat Cloudflare Tunnel.
 - Rollback: arahkan klien & publisher kembali ke Reverb.
 

@@ -6,6 +6,8 @@
 #   - next build    : @next/swc, Turbopack, @tailwindcss/oxide, lightningcss, esbuild (plugin PostCSS)
 #   - server        : node web/server.js dari output standalone, --read-only + tmpfs, GET /up, TZ
 #   - sharp, Valkey, PgBouncer
+#   - Sockudo (binary Rust): start read-only seperti di compose, klien Pusher (Node image web) subscribe,
+#     event dikirim lewat HTTP API bertanda tangan, lalu diterima lewat WebSocket
 #
 # Jalankan DI SERVER hanya setelah persetujuan pemilik proyek, dari clone repo ini:
 #   bash scripts/cek-binary-native.sh            # uji penuh
@@ -31,7 +33,8 @@ die() { echo "GAGAL: $*" >&2; exit 1; }
 NODE_IMAGE="$(sed -nE 's/^ARG NODE_IMAGE=(.+)$/\1/p' "$ROOT/deploy/next/Dockerfile")"
 VALKEY_IMAGE="$(grep -oE 'valkey/valkey:[^" ]+' "$ROOT/deploy/next/compose.yml" | head -n1)"
 PGB_IMAGE="$(grep -oE 'edoburu/pgbouncer:[^" ]+' "$ROOT/deploy/next/compose.yml" | head -n1)"
-[[ -n "$NODE_IMAGE" && -n "$VALKEY_IMAGE" && -n "$PGB_IMAGE" ]] || die "image tidak terbaca dari deploy/next/"
+RT_IMAGE="$(grep -oE 'sockudo/sockudo:[^" ]+' "$ROOT/deploy/next/compose.yml" | head -n1)"
+[[ -n "$NODE_IMAGE" && -n "$VALKEY_IMAGE" && -n "$PGB_IMAGE" && -n "$RT_IMAGE" ]] || die "image tidak terbaca dari deploy/next/"
 # Pola web/ & sigap/ dari dockerignore → --exclude tar (satu sumber kebenaran dengan konteks image).
 EXCL=()
 while IFS= read -r l; do EXCL+=("--exclude=$l"); done < <(grep -E '^(web|sigap)/' "$ROOT/deploy/next/Dockerfile.dockerignore")
@@ -69,6 +72,7 @@ fi
 echo "Image node    : $NODE_IMAGE"
 echo "Image valkey  : $VALKEY_IMAGE"
 echo "Image pgbounce: $PGB_IMAGE"
+echo "Image sockudo : $RT_IMAGE"
 echo "Exclude       : ${EXCL[*]}"
 if [[ $RENCANA -eq 1 ]]; then tabel || true; exit 0; fi
 
@@ -96,7 +100,7 @@ NODE_RUN=(--user "$UID_GID" -e HOME=/tmp -e NEXT_TELEMETRY_DISABLED=1 -v "$TMP/r
 sigill() { [[ $1 -eq 132 ]] && echo " (SIGILL: instruksi CPU tidak didukung)"; true; }
 
 echo "==> Pull image (pakai jaringan)"
-for img in "$NODE_IMAGE" "$VALKEY_IMAGE" "$PGB_IMAGE"; do docker pull -q "$img" >/dev/null || die "pull gagal: $img"; done
+for img in "$NODE_IMAGE" "$VALKEY_IMAGE" "$PGB_IMAGE" "$RT_IMAGE"; do docker pull -q "$img" >/dev/null || die "pull gagal: $img"; done
 
 echo "==> Salin web/ + sigap/ tersaring ke $TMP/repo"
 mkdir -p "$TMP/repo"
@@ -138,10 +142,13 @@ if [[ -f "$S/web/server.js" ]]; then
   cp -R "$TMP/repo/web/.next/static" "$S/web/.next/static"
   [[ -d "$TMP/repo/web/public" ]] && cp -R "$TMP/repo/web/public" "$S/web/public"
   mkdir -p "$S/web/.next/cache"
-  # Env dummy hanya agar validasi env produksi lolos; tidak ada koneksi DB saat start.
+  # Env dummy hanya agar validasi env produksi lolos (web/src/server/env.ts: APP_KEY & NIK_HASH_KEY 32 byte
+  # format Laravel, dibuat acak per jalan); tidak ada koneksi DB saat start.
+  DUMMY_KEY="base64:$(head -c 32 /dev/urandom | base64)"
   jalan server -d --network none --read-only --tmpfs /tmp --tmpfs /app/web/.next/cache:mode=1777 \
     --user "$UID_GID" -e NODE_ENV=production -e TZ=Asia/Jakarta -e PORT=3000 -e HOSTNAME=127.0.0.1 \
     -e APP_URL=http://127.0.0.1:3000 -e DATABASE_URL=postgres://cek:cek@127.0.0.1:1/cek \
+    -e APP_KEY="$DUMMY_KEY" -e NIK_HASH_KEY="$DUMMY_KEY" \
     -v "$S:/app:ro" -w /app "$NODE_IMAGE" node web/server.js >/dev/null
   UP_JS='fetch("http://127.0.0.1:3000/up").then(r=>r.text().then(t=>{console.log(r.status,t);process.exit(r.ok?0:1)}),()=>process.exit(1))'
   hasil=""
@@ -195,7 +202,40 @@ else
   catat "pgbouncer start + SHOW VERSION" FAIL "$(tail -n1 <<<"$out")"
 fi
 
-# TODO(realtime): uji Soketi (rencana §9.10) saat image-nya masuk deploy/next/compose.yml.
-catat "soketi" TODO "belum ada di deploy/next; tambahkan saat realtime masuk"
+# Sockudo seperti di compose: read-only, user image (non-root), /app/config tmpfs kosong (tanpa config demo),
+# tanpa jaringan. Dockerfile upstream tanpa target-cpu (baseline x86-64), tapi dependensi bisa memilih SIMD saat
+# jalan — karena itu diuji di CPU server. Klien = Node image web (WebSocket global) di namespace jaringan
+# container sockudo (--network container:), jadi hanya loopback, tanpa egress.
+# Tanpa --rm (dihapus `bersih`/di bawah) supaya exit code terbaca bila sockudo mati, mis. 132 = SIGILL.
+docker run -d --name "$PREFIX-sockudo" --cpus 2 --memory 4g --network none --read-only \
+  --tmpfs /tmp --tmpfs /app/config -e ENVIRONMENT=production -e METRICS_ENABLED=false \
+  -e SOCKUDO_DEFAULT_APP_ID=cek -e SOCKUDO_DEFAULT_APP_KEY=cek-key -e SOCKUDO_DEFAULT_APP_SECRET=cek-secret \
+  "$RT_IMAGE" sockudo >/dev/null
+RT_JS='const c=require("crypto"),h="127.0.0.1:6001";
+const gagal=m=>{console.error(m);process.exit(1)};setTimeout(()=>gagal("tidak ada event dalam 30 dtk"),30000);
+async function kirim(){const body=JSON.stringify({name:"cek",channel:"cc-cek",data:"{\"ok\":1}"}),p="/apps/cek/events";
+const q="auth_key=cek-key&auth_timestamp="+Math.floor(Date.now()/1000)+"&auth_version=1.0&body_md5="+c.createHash("md5").update(body).digest("hex");
+const sig=c.createHmac("sha256","cek-secret").update("POST\n"+p+"\n"+q).digest("hex");
+const r=await fetch("http://"+h+p+"?"+q+"&auth_signature="+sig,{method:"POST",headers:{"content-type":"application/json"},body});
+if(!r.ok)gagal("HTTP API "+r.status+" "+await r.text())}
+function sambung(n){const ws=new WebSocket("ws://"+h+"/app/cek-key?protocol=7&client=js&version=8.6.0&flash=false");
+ws.onerror=()=>n>0?setTimeout(()=>sambung(n-1),1000):gagal("WebSocket tidak tersambung");
+ws.onmessage=e=>{const m=JSON.parse(e.data);
+if(m.event==="pusher:connection_established")ws.send(JSON.stringify({event:"pusher:subscribe",data:{channel:"cc-cek"}}));
+else if(m.event==="pusher_internal:subscription_succeeded")kirim().catch(x=>gagal(x.message));
+else if(m.event==="cek"&&m.channel==="cc-cek"){console.log("event diterima "+m.data);process.exit(0)}}}
+sambung(20)'
+kode=0
+out="$(jalan rt-klien --network "container:$PREFIX-sockudo" --user "$UID_GID" -e HOME=/tmp "$NODE_IMAGE" node -e "$RT_JS" 2>&1)" || kode=$?
+versi="$(docker exec "$PREFIX-sockudo" sockudo --version 2>/dev/null | head -n1 || true)"
+if [[ $kode -eq 0 ]]; then
+  catat "sockudo start + subscribe + event" OK "${versi:-sockudo}, $(tail -n1 <<<"$out")"
+else
+  mati="$(docker inspect -f '{{if not .State.Running}}{{.State.ExitCode}}{{end}}' "$PREFIX-sockudo" 2>/dev/null || true)"
+  [[ -n "$mati" ]] && out="sockudo keluar exit $mati$(sigill "$mati")"
+  catat "sockudo start + subscribe + event" FAIL "klien exit $kode, $(tail -n1 <<<"$out")"
+  docker logs --tail 20 "$PREFIX-sockudo" 2>&1 || true
+fi
+docker rm -f "$PREFIX-sockudo" >/dev/null 2>&1 || true
 
 tabel && echo -e "\nSemua lulus." || { echo -e "\nAda yang FAIL — lihat rencana §9.10 (build di CI / varian baseline)." >&2; exit 1; }
