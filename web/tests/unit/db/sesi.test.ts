@@ -52,7 +52,9 @@ describe.skipIf(!!alasan)(`sesi & login DB${alasan ? ` — dilewati: ${alasan}` 
     const { cobaMasuk, masukkan, keluarkan, penggunaDariIngat, PESAN_GAGAL_MASUK, TIMEBOX_MS } = await import('@/server/auth/masuk');
     const { ambilPengguna } = await import('@/server/auth/pengguna');
     const { teruskanApiLuar, tumpukanWeb } = await import('@/server/auth/tumpukan');
-    const { penggunaDariSesi, sesiDariHeader } = await import('@/server/auth/konteks');
+    const { konteksDariHeader, penggunaDariSesi, sesiDariHeader } = await import('@/server/auth/konteks');
+    const { bacaKonteks, HEADER_KONTEKS } = await import('@/server/auth/konteks-tertanda');
+    const { proxy } = await import('@/proxy');
     const { COOKIE_INGAT, COOKIE_SESI } = await import('@/server/auth/cookie');
     const { tutupPoolSandi } = await import('@/server/legacy/sandi');
 
@@ -314,6 +316,64 @@ describe.skipIf(!!alasan)(`sesi & login DB${alasan ? ` — dilewati: ${alasan}` 
             // Dari halaman sendiri → tumpukan web biasa (sesi dipakai).
             expect(await diteruskan({ referer: 'http://cc.test/portal-warga' })).toBeNull();
             expect(await penggunaDariSesi(await sesiDariHeader(new Headers({ cookie })))).toMatchObject({ id: id.warga });
+        });
+
+        it('O1: proxy membuang header konteks palsu (halaman & /api luar) dan menggantinya dengan yang bertanda tangan', async () => {
+            const admin = (await ambilPengguna(id.admin))!;
+            const s = sesiBaru();
+            await masukkan(s, admin, false);
+            await simpanSesi(s, meta);
+            const palsu = 'v1.rid.sid.1.sidik.palsu';
+            const teruskan = (res: Response) => {
+                const h = new Headers();
+                for (const n of ['cookie', 'x-nonce', HEADER_KONTEKS]) {
+                    const v = res.headers.get(`x-middleware-request-${n}`);
+                    if (v !== null) h.set(n, v);
+                }
+                return h;
+            };
+            const cookie = `${COOKIE_SESI}=${s.id}`;
+            const halaman = teruskan(
+                await proxy(new NextRequest('http://cc.test/admin', { headers: { cookie, [HEADER_KONTEKS]: palsu, 'x-nonce': 'klien' } })),
+            );
+            expect(halaman.get(HEADER_KONTEKS)).not.toBe(palsu);
+            expect(halaman.get('x-nonce')).not.toBe('klien');
+            expect(bacaKonteks(halaman)).toMatchObject({ sesi: { userId: id.admin }, pengguna: { id: id.admin } });
+            const api = teruskan(
+                await proxy(new NextRequest('http://cc.test/api/v1/katalog/kanal', { headers: { cookie, [HEADER_KONTEKS]: palsu } })),
+            );
+            expect(bacaKonteks(api)).toEqual({ sesi: null, pengguna: null });
+            // Header sah dipakai di permintaan lain (nonce berbeda) → ditolak, rute jatuh ke DB (cookie permintaan itu).
+            const lain = new Headers({ cookie: `${COOKIE_SESI}=x`, 'x-nonce': 'nonce-lain', [HEADER_KONTEKS]: halaman.get(HEADER_KONTEKS)! });
+            expect(bacaKonteks(lain)).toBe('tidak-sah');
+            expect(await konteksDariHeader(lain)).toEqual({ sesi: null, pengguna: null });
+        });
+
+        it('O2: halaman tanpa flash tidak menulis sesi; last_activity disentuh paling sering sekali per 60 dtk', async () => {
+            const s = sesiBaru();
+            s.data._flash = { new: [], old: [] }; // bentuk lama: _flash kosong
+            await simpanSesi(s, meta);
+            const baris = async () =>
+                (await mentah(`SELECT data, last_activity FROM ${SKEMA}.cc_sessions WHERE id = encode(sha256($1::bytea), 'hex')`, [s.id]))[0];
+            const halaman = () =>
+                tumpukanWeb(new NextRequest('http://cc.test/_platform', { headers: { cookie: `${COOKIE_SESI}=${s.id}` } }), new Headers());
+            await halaman(); // _flash kosong dibuang (satu kali tulis)
+            expect((await muatSesi(s.id))?.data).toEqual({});
+            const a = await baris();
+            await halaman();
+            await halaman();
+            expect(await baris()).toEqual(a); // tanpa UPDATE sama sekali
+            await mentah(
+                `UPDATE ${SKEMA}.cc_sessions SET last_activity = now() - interval '90 seconds' WHERE id = encode(sha256($1::bytea), 'hex')`,
+                [s.id],
+            );
+            const lama = (await baris()).last_activity as Date;
+            await halaman();
+            const b = await baris();
+            expect(b.last_activity.getTime()).toBeGreaterThan(lama.getTime() + 80_000); // disentuh
+            expect(b.data).toBe(a.data); // data tidak ditulis ulang
+            await halaman();
+            expect(await baris()).toEqual(b);
         });
 
         it('proxy: akun nonaktif → audit, sesi di-invalidate, redirect /masuk dengan flash error', async () => {

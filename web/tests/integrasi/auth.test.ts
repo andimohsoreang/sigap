@@ -1,6 +1,6 @@
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { createServer } from 'node:net';
+import { connect, createServer, type Server } from 'node:net';
 import path from 'node:path';
 
 import bcrypt from 'bcryptjs';
@@ -42,6 +42,9 @@ describe.runIf(diminta)('integrasi auth (server standalone)', { timeout: 120_000
     let valkey: ChildProcess;
     let base = '';
     let portValkey = 0;
+    let pgProxy: Server;
+    let urlPgAplikasi = '';
+    let jumlahQuery = 0;
     const migrate = new pg.Client({ connectionString: URL_MIGRATE });
     const mentah = async (q: string, p: unknown[] = []) => (await migrate.query(q, p)).rows;
     let log = '';
@@ -69,6 +72,32 @@ describe.runIf(diminta)('integrasi auth (server standalone)', { timeout: 120_000
             [h, hashNik(NIK, kunciNik(KUNCI))],
         );
 
+        // Penghitung query: proxy TCP di depan PostgreSQL yang menghitung pesan Parse ('P', satu per query Drizzle/pg)
+        // dan Query sederhana ('Q') dari aplikasi. Hasil langsung, tanpa menunggu flush statistik PostgreSQL.
+        pgProxy = createServer((klien) => {
+            const pgsql = connect(5432, '127.0.0.1');
+            pgsql.pipe(klien);
+            let sisa = Buffer.alloc(0);
+            let mulai = true;
+            klien.on('data', (d: Buffer) => {
+                pgsql.write(d);
+                sisa = Buffer.concat([sisa, d]);
+                for (;;) {
+                    const kepala = mulai ? 0 : 1;
+                    if (sisa.length < kepala + 4) break;
+                    const panjang = sisa.readInt32BE(kepala);
+                    if (sisa.length < kepala + panjang) break;
+                    if (!mulai && (sisa[0] === 0x50 || sisa[0] === 0x51)) jumlahQuery++;
+                    sisa = sisa.subarray(kepala + panjang);
+                    mulai = false;
+                }
+            });
+            klien.on('error', () => pgsql.destroy());
+            pgsql.on('error', () => klien.destroy());
+        });
+        const portPg = await portBebas();
+        await new Promise<void>((ok) => pgProxy.listen(portPg, '127.0.0.1', ok));
+        urlPgAplikasi = `postgres://cc_app@127.0.0.1:${portPg}/contact_center_dev?options=${encodeURIComponent(`-c search_path=${SKEMA}`)}`;
         portValkey = await portBebas();
         valkey = spawn('valkey-server', ['--port', String(portValkey), '--bind', '127.0.0.1', '--save', '', '--appendonly', 'no'], {
             stdio: 'ignore',
@@ -84,7 +113,7 @@ describe.runIf(diminta)('integrasi auth (server standalone)', { timeout: 120_000
                 APP_URL: base,
                 APP_KEY: KUNCI,
                 NIK_HASH_KEY: KUNCI,
-                DATABASE_URL: `postgres://cc_app@127.0.0.1:5432/contact_center_dev?options=${encodeURIComponent(`-c search_path=${SKEMA}`)}`,
+                DATABASE_URL: urlPgAplikasi,
                 VALKEY_URL: `redis://127.0.0.1:${portValkey}/0`,
                 REALTIME_APP_ID: 'cc',
                 REALTIME_APP_KEY: 'kunci-publik',
@@ -115,6 +144,7 @@ describe.runIf(diminta)('integrasi auth (server standalone)', { timeout: 120_000
     afterAll(async () => {
         web?.kill('SIGTERM');
         valkey?.kill('SIGKILL');
+        pgProxy?.close();
         await mentah(`DROP SCHEMA IF EXISTS ${SKEMA} CASCADE; DROP SCHEMA IF EXISTS ${SKEMA_BOSS} CASCADE`).catch(() => {});
         await migrate.end();
     });
@@ -277,6 +307,38 @@ describe.runIf(diminta)('integrasi auth (server standalone)', { timeout: 120_000
         expect([r.status, await r.text()]).toEqual([413, expect.stringContaining('<hr><center>nginx</center>')]);
     });
 
+    it('jumlah query auth per permintaan: proxy memuat sesi & pengguna sekali, rute memakai konteks bertanda tangan', async () => {
+        const admin = peramban('198.51.100.12');
+        await admin.masuk('superadmin');
+        const tamu = peramban('198.51.100.13');
+        await tamu.minta('/_platform');
+        const hitung = async (fn: () => Promise<unknown>) => {
+            await fn(); // pemanasan (last_activity baru disentuh paling sering 60 dtk sekali)
+            const awal = jumlahQuery;
+            await fn();
+            return jumlahQuery - awal;
+        };
+        const izin = (b: ReturnType<typeof peramban>) => () =>
+            b.minta('/broadcasting/auth', { form: { socket_id: '1.2', channel_name: 'private-admin.chat' } });
+        // Pernah gagal login (flash errors), lalu berhasil: flash sudah habis umurnya → tidak ada UPDATE sesi lagi.
+        const bekasFlash = peramban('198.51.100.14');
+        await bekasFlash.masuk('superadmin', 'salah');
+        await bekasFlash.minta('/_platform'); // errors terbaca
+        await bekasFlash.masuk('superadmin');
+        await bekasFlash.minta('/_platform');
+        const hasil = {
+            halamanAdmin: await hitung(() => admin.minta('/_platform')),
+            halamanTamu: await hitung(() => tamu.minta('/_platform')),
+            izinKanal: await hitung(izin(admin)),
+            izinKanalBekasFlash: await hitung(izin(bekasFlash)),
+            halamanBekasFlash: await hitung(() => bekasFlash.minta('/_platform')),
+        };
+        console.log('query per permintaan', hasil);
+        expect(hasil).toEqual({ halamanAdmin: 2, halamanTamu: 1, izinKanal: 2, izinKanalBekasFlash: 2, halamanBekasFlash: 2 });
+        // Semua rute memakai konteks proxy yang sah: tidak ada peringatan jatuh ke DB.
+        expect(log).not.toContain('konteks auth proxy tidak tersedia');
+    });
+
     it('satu pool DB per proses (proxy & rute berbagi; DB_POOL_MAX=1 → tepat satu koneksi)', async () => {
         await Promise.all([peramban('198.51.100.10').masuk('superadmin'), peramban('198.51.100.11').minta('/_platform')]);
         const [r] = await mentah('SELECT count(*)::int AS n FROM pg_stat_activity WHERE application_name = $1', [NAMA_APP]);
@@ -295,6 +357,9 @@ describe.runIf(diminta)('integrasi auth (server standalone)', { timeout: 120_000
         expect((await warga.minta('/broadcasting/auth', { form })).status).toBe(403);
         expect((await warga.minta('/broadcasting/auth', { form: { ...form, channel_name: 'private-user.2' } })).status).toBe(200);
         expect((await peramban('198.51.100.6').minta('/broadcasting/auth', { form })).status).toBe(403);
+        // Header konteks internal dari klien dibuang proxy (O1): warga tidak bisa mengaku admin.
+        const palsu = { 'x-cc-konteks': 'v1.rid.sid.3.sidik.mac', 'x-nonce': 'n' };
+        expect((await warga.minta('/broadcasting/auth', { form, headers: palsu })).status).toBe(403);
     });
 
     async function ujiBatas(ipDasar: string) {
