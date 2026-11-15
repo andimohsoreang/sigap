@@ -5,7 +5,7 @@
     "commit": "f8713a05929dca41c78de8b1df39ec37128148e3",
     "tag": "laravel-baseline",
     "laravel": "12.69.3",
-    "perintah": "php artisan cc:ekspor-fixture-kripto",
+    "perintah": "php artisan cc:ekspor-fixture-kripto --env=testing",
     "peringatan": "Semua kunci di berkas ini KUNCI UJI (sha256 teks tetap), bukan kunci produksi.",
     "catatan": "json = json_encode nilai PHP (null untuk INF/NAN); int vs float hanya terlihat di serial.",
     "kasus": [
@@ -153,6 +153,11 @@
             "label": "string_nul",
             "serial": "s:5:\"a\u0000b\nc\";",
             "json": "a\u0000b\nc"
+        },
+        {
+            "label": "string_bom",
+            "serial": "s:6:\"﻿abc\";",
+            "json": "﻿abc"
         },
         {
             "label": "array_kosong",

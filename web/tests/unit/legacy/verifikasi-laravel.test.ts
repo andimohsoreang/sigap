@@ -17,14 +17,14 @@ import { DIR_SIGAP, fixture, kunciUji, type FixtureCookie, type FixtureEnkripsi,
 // Hanya lewat `npm run test:laravel`; butuh PHP + sigap/vendor (composer install).
 
 const diminta = process.env.CC_TEST_LARAVEL === '1';
-const php = spawnSync('php', ['-v']);
-const siap = php.status === 0 && existsSync(join(DIR_SIGAP, 'vendor/autoload.php'));
-const alasan = !diminta
-    ? 'jalankan lewat `npm run test:laravel`'
-    : siap
-      ? ''
-      : 'PHP atau sigap/vendor tidak tersedia (jalankan composer install di sigap/)';
-if (diminta && !siap) console.warn(`[test:laravel] dilewati: ${alasan}`);
+const siap = spawnSync('php', ['-v']).status === 0 && existsSync(join(DIR_SIGAP, 'vendor/autoload.php'));
+
+// Diminta lewat `npm run test:laravel` tetapi PHP/vendor tidak ada → GAGAL, bukan dilewati diam-diam.
+describe.runIf(diminta && !siap)('verifikasi tulisan TS oleh Laravel asli', () => {
+    it('membutuhkan PHP dan sigap/vendor (composer install di sigap/)', () => {
+        expect.fail('npm run test:laravel butuh `php` di PATH dan sigap/vendor (jalankan composer install di sigap/)');
+    });
+});
 
 async function sesiDariTs() {
     const f = fixture<FixtureSesi>('sesi.json');
@@ -73,7 +73,7 @@ async function sesiDariTs() {
     return hasil;
 }
 
-describe.skipIf(alasan !== '')(`verifikasi tulisan TS oleh Laravel asli${alasan && ` (dilewati: ${alasan})`}`, () => {
+describe.runIf(diminta && siap)('verifikasi tulisan TS oleh Laravel asli', () => {
     it('Laravel membaca semua ciphertext, cookie, sesi, bcrypt, dan serial dari TS', { timeout: 180_000 }, async () => {
         const fe = fixture<FixtureEnkripsi>('enkripsi.json');
         const fc = fixture<FixtureCookie>('cookie.json');
@@ -111,6 +111,8 @@ describe.skipIf(alasan !== '')(`verifikasi tulisan TS oleh Laravel asli${alasan 
             serial: [
                 ...nilaiTs.map((v) => ({ serial: serialize(v) })),
                 ...fixture<FixtureSerial>('serial.json').kasus.map((k) => ({ serial: serialize(unserialize(k.serial)) })),
+                // Termasuk sesi ber-ViewErrorBag: byte objek mentah harus tetap sah bagi unserialize PHP.
+                ...fixture<FixtureSesi>('sesi.json').kasus.map((k) => ({ serial: serialize(unserialize(k.serial)) })),
             ],
             sesi: await sesiDariTs(),
         };
@@ -119,7 +121,10 @@ describe.skipIf(alasan !== '')(`verifikasi tulisan TS oleh Laravel asli${alasan 
         try {
             const berkas = join(dir, 'masukan.json');
             writeFileSync(berkas, JSON.stringify(masukan));
-            const r = spawnSync('php', ['artisan', 'cc:ekspor-fixture-kripto', `--verifikasi=${berkas}`], { cwd: DIR_SIGAP, encoding: 'utf8' });
+            const r = spawnSync('php', ['artisan', 'cc:ekspor-fixture-kripto', '--env=testing', `--verifikasi=${berkas}`], {
+                cwd: DIR_SIGAP,
+                encoding: 'utf8',
+            });
             const baris = r.stdout.trim().split('\n').at(-1) ?? '';
             expect(r.stderr, r.stdout).toBe('');
             const hasil = JSON.parse(baris) as { lulus: number; gagal: string[] };

@@ -36,6 +36,8 @@ use Throwable;
  *
  * Semua kunci di sini KUNCI UJI yang diturunkan dari teks tetap, BUKAN kunci
  * produksi. Sesi ditulis ke SQLite :memory: (hilang saat proses selesai).
+ * Menolak berjalan di lingkungan production (tanpa .env Laravel menganggap
+ * production): jalankan dengan `php artisan cc:ekspor-fixture-kripto --env=testing`.
  */
 class EksporFixtureKripto extends Command
 {
@@ -65,6 +67,12 @@ class EksporFixtureKripto extends Command
 
     public function handle(): int
     {
+        if (app()->isProduction()) {
+            $this->error('cc:ekspor-fixture-kripto menolak berjalan di production; pakai --env=testing di mesin lokal/CI.');
+
+            return self::FAILURE;
+        }
+
         $this->setUpTestEnvironment();
 
         try {
@@ -142,6 +150,12 @@ class EksporFixtureKripto extends Command
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
+        // Kolom users yang dipakai SessionGuard::userFromRecaller.
+        Schema::connection(self::CONNECTION)->create('users', function ($table) {
+            $table->id();
+            $table->string('password')->nullable();
+            $table->rememberToken();
+        });
     }
 
     private function header(array $sources, array $extra = []): array
@@ -153,7 +167,7 @@ class EksporFixtureKripto extends Command
             'commit' => $rev->successful() ? trim($rev->output()) : null,
             'tag' => 'laravel-baseline',
             'laravel' => app()->version(),
-            'perintah' => 'php artisan cc:ekspor-fixture-kripto',
+            'perintah' => 'php artisan cc:ekspor-fixture-kripto --env=testing',
             'peringatan' => 'Semua kunci di berkas ini KUNCI UJI (sha256 teks tetap), bukan kunci produksi.',
             ...$extra,
         ];
@@ -193,6 +207,7 @@ class EksporFixtureKripto extends Command
             'telepon' => '081234567890',
             'json' => json_encode(['aktivasi' => ['token' => hash('sha256', 'token-uji'), 'kedaluwarsa' => '2026-11-14T10:00:00+07:00']]),
             'karakter_khusus' => "baris1\nbaris2\t\"kutip\" \\ / <>&'",
+            'bom_di_awal' => "\u{FEFF}Halo dengan BOM",
         ];
 
         $crypt = app('encrypter');
@@ -256,8 +271,8 @@ class EksporFixtureKripto extends Command
         $keys = [
             'base64' => self::testKey('nik'),
             'literal' => 'kunci-nik-uji-literal-bukan-produksi',
-            'base64_tidak_sah' => 'base64:!!bukan*base64!!',
-            'base64_tanpa_padding' => 'base64:'.rtrim(base64_encode(substr($raw, 0, 31)), '='),
+            'base64_tidak_sah' => 'base64:!!bukan*base64*kunci*uji*panjang!!',
+            'base64_tanpa_padding' => 'base64:'.rtrim(base64_encode($raw), '='),
             'base64_padding_kurang' => 'base64:'.substr(base64_encode(substr($raw, 0, 31)), 0, -1),
             'spasi_di_tepi' => "  \t".self::testKey('nik')."\n",
         ];
@@ -349,7 +364,7 @@ class EksporFixtureKripto extends Command
             'float_besar' => 123456789012345678.0, 'float_0_0001' => 0.0001, 'float_1e_5' => 0.00001, 'float_kecil' => 1.5e-7,
             'float_minus_nol' => -0.0, 'float_1e25' => 1e25, 'float_pi' => 3.14159, 'float_neg' => -1.25e-10, 'float_hampir' => 999999999999999.9,
             'float_inf' => INF, 'float_minus_inf' => -INF, 'float_nan' => NAN,
-            'string_kosong' => '', 'string' => 'abc', 'string_utf8' => 'Sukamaju — ñ 中文 🙂', 'string_jebakan' => 'a";s:1:"b";}', 'string_nul' => "a\0b\nc",
+            'string_kosong' => '', 'string' => 'abc', 'string_utf8' => 'Sukamaju — ñ 中文 🙂', 'string_jebakan' => 'a";s:1:"b";}', 'string_nul' => "a\0b\nc", 'string_bom' => "\u{FEFF}abc",
             'array_kosong' => [], 'daftar' => [1, 2, 3], 'asosiatif' => ['b' => 1, 'a' => 2], 'kunci_campur' => ['x' => 1, 5 => 'lima', -3 => 'neg', '05' => 'string', '7' => 'jadi int'],
             'bersarang' => ['_flash' => ['old' => ['success'], 'new' => []], '_previous' => ['url' => 'https://cc.test/a?b=c', 'route' => null], 'x' => [[[]]]],
             'daftar_berlubang' => [1 => 'a', 2 => 'b'],
@@ -470,7 +485,47 @@ class EksporFixtureKripto extends Command
             'kasus' => $cases,
             'negatif' => $negative,
             'header_xsrf' => $headers,
+            ...$this->rememberCases($remember),
         ];
+    }
+
+    /** Cookie remember_web_* dibaca SessionGuard::user() asli (sesi kosong) terhadap tabel users uji. */
+    private function rememberCases(string $name): array
+    {
+        $token = str_repeat('r', 60);
+        $hash = Hash::make('rahasia123');
+        $users = [
+            ['id' => 101, 'password' => $hash, 'remember_token' => $token],
+            ['id' => 103, 'password' => Hash::make('sandi-baru'), 'remember_token' => $token],
+            ['id' => 104, 'password' => $hash, 'remember_token' => null],
+        ];
+        DB::connection(self::CONNECTION)->table('users')->insert($users);
+        $hmac = Auth::guard('web')->hashPasswordForCookie($hash);
+        $values = [
+            'sah_hmac' => "101|{$token}|{$hmac}",
+            'sah_hash_mentah' => "101|{$token}|{$hash}",
+            'segmen_lebih' => "101|{$token}|{$hmac}|ekstra",
+            'terserialisasi' => serialize("101|{$token}|{$hmac}"),
+            'token_salah' => '101|'.str_repeat('x', 60)."|{$hmac}",
+            'sandi_berubah' => "103|{$token}|{$hmac}",
+            'pengguna_tidak_ada' => "999|{$token}|{$hmac}",
+            'token_db_kosong' => "104|{$token}|{$hmac}",
+            'dua_segmen' => "101|{$token}",
+            'id_kosong' => " |{$token}|{$hmac}",
+            'serial_bukan_string' => serialize(['101', $token, $hmac]),
+            'serial_falsy' => serialize(0),
+        ];
+
+        $cases = [];
+        foreach ($values as $label => $value) {
+            $encrypted = $this->encryptCookie($name, $value)['nilai'];
+            $this->freshSession()->start();
+            $guard = Auth::guard('web');
+            $guard->setRequest(Request::create('/', cookies: [$name => $this->decryptCookie($name, $encrypted)]));
+            $cases[] = ['label' => $label, 'nilai' => $value, 'terenkripsi' => $encrypted, 'user_id' => $guard->user()?->getAuthIdentifier()];
+        }
+
+        return ['pengguna' => $users, 'remember' => $cases];
     }
 
     /** Store sesi baru dari SessionManager asli (database + EncryptedStore), guard ikut segar. */
@@ -571,7 +626,7 @@ class EksporFixtureKripto extends Command
         $guard()->login($warga);
         $s->flash('errors', (new ViewErrorBag)->put('default', new MessageBag(['identifier' => ['NIK atau kata sandi salah.']])));
         $s->save();
-        $record('warga_dengan_errors', $s, $warga, 'withErrors() menyimpan ViewErrorBag (objek O:) di sesi: pembaca TS harus menolak, bukan mengosongkan.', ['harapan_galat' => 'objek']);
+        $record('warga_dengan_errors', $s, $warga, 'withErrors() menyimpan ViewErrorBag (objek O:) di sesi: TS menyimpannya sebagai byte mentah tanpa membuat objek.');
 
         $s = $this->freshSession();
         $s->start();
@@ -609,6 +664,24 @@ class EksporFixtureKripto extends Command
             'kasus' => $cases,
             'password_hash_web' => $hashCases,
         ];
+    }
+
+    /**
+     * Store::readFromHandler memakai unserialize tanpa allowed_classes: payload dari berkas verifikasi
+     * hanya boleh memuat objek ViewErrorBag/MessageBag, tanpa C: (dicek sebelum Laravel membacanya).
+     */
+    private static function assertSafeSessionPayload(string $payload): void
+    {
+        $outer = unserialize(app('encrypter')->decrypt(base64_decode($payload), false), ['allowed_classes' => false]);
+        if (! is_string($outer) || preg_match('/C:\d+:"/', $outer)) {
+            throw new RuntimeException('Payload sesi ditolak: bukan string serial atau memuat C:');
+        }
+        preg_match_all('/O:\d+:"([^"]*)"/', $outer, $classes);
+        foreach ($classes[1] as $class) {
+            if (! in_array($class, [ViewErrorBag::class, MessageBag::class], true)) {
+                throw new RuntimeException("Payload sesi ditolak: kelas {$class}");
+            }
+        }
     }
 
     /** Ubah objek menjadi penanda agar bisa ditulis sebagai JSON. */
@@ -666,6 +739,7 @@ class EksporFixtureKripto extends Command
 
         foreach ($input['sesi'] ?? [] as $i => $case) {
             $try("sesi[{$i}]", function () use ($case, $i, $assert) {
+                self::assertSafeSessionPayload($case['payload']);
                 DB::connection(self::CONNECTION)->table('sessions')->updateOrInsert(['id' => $case['id']], ['payload' => $case['payload'], 'last_activity' => Carbon::now()->getTimestamp()]);
                 $s = $this->freshSession();
                 $s->setId($this->decryptCookie(self::SESSION_COOKIE, $case['cookie']));
