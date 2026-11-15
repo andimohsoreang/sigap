@@ -102,8 +102,9 @@ const macIngat = (isi: string) =>
 /**
  * SessionGuard::login: id pengguna & sidik sandi masuk sesi, id sesi + token CSRF dirotasi (updateSession +
  * regenerate di MasukController). `ingat` → token ingat dipastikan ada; mengembalikan nilai cookie cc_ingat.
- * Isi cookie `id|token|sidik|mac` (Laravel: `id|token|hash` terenkripsi APP_KEY); mac HMAC APP_KEY, jadi bocornya
- * remember_token dari DB saja tidak cukup untuk memalsukan cookie.
+ * Isi cookie `id.token.sidik.mac` (Laravel: `id|token|hash` terenkripsi APP_KEY); mac HMAC APP_KEY, jadi bocornya
+ * remember_token dari DB saja tidak cukup untuk memalsukan cookie. Pemisah titik: tidak di-encode Set-Cookie Next.js
+ * (`|` menjadi `%7C`) dan tidak muncul di bagian mana pun (angka, Str::random alfanumerik/base64url, hex).
  */
 export async function masukkan(s: Sesi, p: Pengguna, ingat: boolean, d: Db = db): Promise<string | null> {
     await rotasiSesi(s, false, d);
@@ -111,8 +112,8 @@ export async function masukkan(s: Sesi, p: Pengguna, ingat: boolean, d: Db = db)
     s.sidikSandi = p.password ? sidikSandi(p.password) : null;
     if (!ingat) return null;
     const token = p.rememberToken || (await gantiTokenIngat(p, d));
-    const isi = `${p.id}|${token}|${sidikSandi(p.password)}`;
-    return `${isi}|${macIngat(isi)}`;
+    const isi = `${p.id}.${token}.${sidikSandi(p.password)}`;
+    return `${isi}.${macIngat(isi)}`;
 }
 
 /**
@@ -120,14 +121,14 @@ export async function masukkan(s: Sesi, p: Pengguna, ingat: boolean, d: Db = db)
  * cookie sama dengan sandi sekarang. Lolos → pengguna; pemanggil lalu masuk tanpa audit (updateSession saja).
  */
 export async function penggunaDariIngat(nilai: string | null, d: Db = db): Promise<Pengguna | null> {
-    const bagian = nilai?.split('|');
+    const bagian = nilai?.split('.');
     if (!bagian || bagian.length !== 4 || !/^\d{1,15}$/.test(bagian[0])) return null;
     const [id, token, sidik, mac] = bagian;
-    if (!samaWaktuTetap(macIngat(`${id}|${token}|${sidik}`), mac)) return null;
+    if (!samaWaktuTetap(macIngat(`${id}.${token}.${sidik}`), mac)) return null;
     const p = await ambilPengguna(Number(id), d);
     if (!p?.rememberToken || !samaWaktuTetap(p.rememberToken, token)) return null;
-    // hash_equals(hashPasswordForCookie($sandi), $hash) || hash_equals($sandi, $hash).
-    return samaWaktuTetap(sidikSandi(p.password), sidik) || samaWaktuTetap(p.password, sidik) ? p : null;
+    // hash_equals(hashPasswordForCookie($sandi), $hash); bentuk lama Laravel (hash sandi mentah) tidak pernah ditulis di sini.
+    return samaWaktuTetap(sidikSandi(p.password), sidik) ? p : null;
 }
 
 /**

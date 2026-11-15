@@ -2,7 +2,7 @@ import 'server-only';
 
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { tokenCocok, tokenDariPermintaan } from '@/server/web/csrf';
+import { metodeBaca, tokenCocok, tokenDariPermintaan } from '@/server/web/csrf';
 import { asalAplikasi, inginJson, ipKlien, jalurAman, jalurTerdekode, responsJson } from '@/server/web/permintaan';
 import { jsonLaravel, redirectLaravel, respons419, responsGalat } from '@/server/web/respons';
 
@@ -21,9 +21,25 @@ import { muatSesi, periksaSidik, rotasiSesi, sentuhSesi, sesiBaru, sidikSandi, s
 // Asal permintaan dicek proxy.ts sebelum ini; token CSRF dicek di sini (dan diulang di route handler).
 
 /** EnsureFrontendRequestsAreStateful::fromFrontend: Referer/Origin dari situs sendiri. */
-function dariFrontend(h: Headers, asal: string): boolean {
+export function dariFrontend(h: Headers, asal: string): boolean {
     const sumber = h.get('referer') || h.get('origin');
     return !!sumber && jalurAman(sumber, asal) !== null;
+}
+
+/**
+ * /api/* dari klien luar (tanpa Referer/Origin situs sendiri): Sanctum tidak memulai sesi, jadi cookie sesi & ingat
+ * dibuang dari permintaan yang diteruskan — rute API (dan penggunaSaatIni) melihat tamu, bukan pengguna cookie.
+ * Tanpa cookie, CSRF tidak relevan (CORS Laravel allowed_origins '*'); token Bearer menyusul di S15.
+ */
+export function teruskanApiLuar(req: NextRequest, headerTeruskan: Headers): NextResponse | null {
+    const asal = asalAplikasi(req.url);
+    const ctx = konteksGuard(req, asal);
+    if (!ctx.path.startsWith('api/') || dariFrontend(req.headers, asal)) return null;
+    // Guard rute tetap berlaku sebagai tamu: auth:sanctum tanpa token → 401 {"message":"Unauthenticated."}.
+    const keputusan = jalankanGuard(ctx, null, langkahRute(ctx.metode, ctx.path));
+    if (keputusan.jenis !== 'lanjut') return keRespons(keputusan, ctx, asal);
+    headerTeruskan.set('cookie', gantiCookie(gantiCookie(req.headers.get('cookie'), COOKIE_SESI, null), COOKIE_INGAT, null));
+    return NextResponse.next({ request: { headers: headerTeruskan } });
 }
 
 /**
@@ -70,9 +86,6 @@ export async function tumpukanWeb(req: NextRequest, headerTeruskan: Headers): Pr
     const h = req.headers;
     const asal = asalAplikasi(req.url);
     const ctx = konteksGuard(req, asal);
-    // API dari klien luar (bukan halaman sendiri): tanpa sesi, seperti Sanctum. Token Bearer menyusul di S15.
-    if (ctx.path.startsWith('api/') && !dariFrontend(h, asal)) return NextResponse.next({ request: { headers: headerTeruskan } });
-
     const meta: MetaPermintaan = { ip: ipKlien(h), userAgent: h.get('user-agent') };
     const baca = ctx.metode === 'GET' || ctx.metode === 'HEAD';
     const cookieSesi = bacaCookie(h.get('cookie'), COOKIE_SESI);
@@ -87,7 +100,7 @@ export async function tumpukanWeb(req: NextRequest, headerTeruskan: Headers): Pr
     // VerifyCsrfToken ada di grup web SEBELUM AuthenticateSession & middleware rute: token salah → 419 lebih dulu
     // daripada redirect auth/guest. Server Action (header Next-Action) dilindungi pemeriksaan asal; /broadcasting/auth
     // dikecualikan Laravel (withoutMiddleware).
-    if (!baca && !h.has('next-action') && ctx.path !== 'broadcasting/auth' && !tokenCocok(sesi?.csrf, await tokenCsrf(req))) {
+    if (!metodeBaca(ctx.metode) && !h.has('next-action') && ctx.path !== 'broadcasting/auth' && !tokenCocok(sesi?.csrf, await tokenCsrf(req))) {
         if (sesi && ubah) await simpanSesi(sesi, meta);
         return respons419(ctx.json);
     }

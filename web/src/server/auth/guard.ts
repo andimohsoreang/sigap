@@ -34,12 +34,10 @@ export type Keputusan =
           intended?: string;
           /** Flash (`->with(...)`) di sesi setelah keputusan diterapkan. */
           kilat?: Record<string, unknown>;
-          /** Keluarkan & invalidasi sesi dulu (akun nonaktif). */
+          /** Akun nonaktif: audit auth.blocked_inactive, keluarkan & invalidasi sesi dulu. */
           keluarkan?: boolean;
-          /** Catat audit auth.blocked_inactive. */
-          audit?: boolean;
       }
-    | { jenis: 'json'; status: number; body: unknown; keluarkan?: boolean; audit?: boolean }
+    | { jenis: 'json'; status: number; body: unknown; keluarkan?: boolean }
     | { jenis: 'galat'; status: number; pesan?: string };
 
 export type Langkah = 'masuk' | 'tamu' | 'portal' | { peran: readonly Peran[] };
@@ -72,8 +70,8 @@ export function wajibPeran(k: KonteksGuard, p: Pengguna | null, peran: readonly 
     }
     if (!p.isActive) {
         return k.json
-            ? { jenis: 'json', status: 403, body: { authenticated: false, error: PESAN_NONAKTIF }, keluarkan: true, audit: true }
-            : { jenis: 'redirect', ke: '/masuk', kilat: { error: PESAN_NONAKTIF }, keluarkan: true, audit: true };
+            ? { jenis: 'json', status: 403, body: { authenticated: false, error: PESAN_NONAKTIF }, keluarkan: true }
+            : { jenis: 'redirect', ke: '/masuk', kilat: { error: PESAN_NONAKTIF }, keluarkan: true };
     }
     if ((peran as readonly string[]).includes(p.role)) return LANJUT;
     if (k.json) return { jenis: 'json', status: 403, body: { authenticated: true, error: PESAN_PERAN } };
