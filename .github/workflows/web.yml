@@ -27,6 +27,9 @@ jobs:
     name: Web (lint, typecheck, test, cek:css + build)
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    # Sama dengan zona proses produksi.
+    env:
+      TZ: Asia/Jakarta
     defaults:
       run:
         working-directory: web
@@ -47,7 +50,10 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run lint
       - run: npm run typecheck
+      # Job ini tanpa PostgreSQL/PHP: test DB (tests/unit/db) dilewati di sini dan wajib jalan di paritas.yml.
       - run: npm run test
+        env:
+          CC_TEST_DB: '0'
       # cek:css menjalankan npm ci + vite build di sigap/ lalu next build, dan gagal bila CSS berbeda.
       - run: npm run cek:css
 

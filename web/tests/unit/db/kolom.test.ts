@@ -16,6 +16,7 @@ describe('waktuWib', () => {
     it('membaca jam dinding WIB sebagai +07:00', () => {
         expect(dariWib('2026-11-14 10:00:00').toISOString()).toBe('2026-11-14T03:00:00.000Z');
         expect(dariWib('2026-01-01 00:00:00').toISOString()).toBe('2025-12-31T17:00:00.000Z');
+        expect(dariWib('2026-11-14T23:59:59').toISOString()).toBe('2026-11-14T16:59:59.000Z');
     });
 
     it('menulis jam WIB dipotong ke detik: 23:59:59.999 tetap hari yang sama', () => {
@@ -63,6 +64,8 @@ describe('hash NIK (hook saving Laravel)', () => {
         expect(denganNikHash({ nik: kasus.nik, name: 'A' })).toEqual({ nik: kasus.nik, name: 'A', nikHash: kasus.hash.base64 });
         expect(denganNikHash({ nik: null })).toEqual({ nik: null, nikHash: null });
         expect(denganNikHash({ name: 'A' })).toEqual({ name: 'A' });
+        expect(denganNikHash({ name: 'A', nik: undefined })).toEqual({ name: 'A', nik: undefined });
+        expect(denganReporterNikHash({ title: 'A', reporterNik: undefined })).not.toHaveProperty('reporterNikHash');
         expect(denganReporterNikHash({ reporterNik: kasus.nik })).toEqual({ reporterNik: kasus.nik, reporterNikHash: kasus.hash.base64 });
     });
 });

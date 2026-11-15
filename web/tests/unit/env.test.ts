@@ -57,4 +57,14 @@ describe('bacaEnv', () => {
         }
         expect(bacaEnv({ NODE_ENV: 'development', APP_PREVIOUS_KEYS: `${KUNCI},` }).APP_PREVIOUS_KEYS).toBe(`${KUNCI},`);
     });
+
+    it('ukuran & nama pool DB: bawaan 10 / cc-web, batas 1–20', () => {
+        expect(bacaEnv({ NODE_ENV: 'development' })).toMatchObject({ DB_POOL_MAX: 10, DB_APP_NAME: 'cc-web' });
+        expect(bacaEnv({ NODE_ENV: 'development', DB_POOL_MAX: '3', DB_APP_NAME: 'cc-worker' })).toMatchObject({
+            DB_POOL_MAX: 3,
+            DB_APP_NAME: 'cc-worker',
+        });
+        for (const nilai of ['0', '21', '2.5', 'banyak'])
+            expect(() => bacaEnv({ NODE_ENV: 'development', DB_POOL_MAX: nilai })).toThrow(/DB_POOL_MAX/);
+    });
 });

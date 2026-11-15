@@ -5,10 +5,12 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { fixture, kunciUji, type FixtureEnkripsi, type FixtureNik } from '../legacy/fixture';
 import { cekLaravel, laravel, type EnvLaravel } from './laravel';
 
-// Terhadap contact_center_dev lokal, di skema sementara `cc_uji_db` (salinan struktur 4 tabel, dihapus sesudahnya):
-// tidak ada baris yang tertinggal di public. Tanpa DB/PHP → dilewati; CC_TEST_DB=1 (`npm run test:db`) → wajib.
+// Terhadap contact_center_dev lokal, di skema sementara `cc_uji_db_<pid>` (salinan struktur 4 tabel, dihapus sesudahnya):
+// tidak ada baris yang tertinggal di public. Tanpa DB/PHP → dilewati, kecuali CC_TEST_DB=1 (`npm run test:db`) atau
+// CI=true → wajib (gagal). CC_TEST_DB=0 → selalu dilewati (job `web` tanpa PostgreSQL; test DB jalan di paritas.yml).
 
-const SKEMA = 'cc_uji_db';
+// Per proses: worktree/CI paralel tidak saling DROP skema.
+const SKEMA = `cc_uji_db_${process.pid}`;
 const TABEL = ['users', 'tickets', 'chat_conversations', 'referrals'];
 const URL_MIGRATE = 'postgres://cc_migrate@127.0.0.1:5432/contact_center_dev';
 const URL_APP = `postgres://cc_app@127.0.0.1:5432/contact_center_dev?options=${encodeURIComponent(`-c search_path=${SKEMA}`)}`;
@@ -33,8 +35,9 @@ async function cekDb(): Promise<string | null> {
     }
 }
 
-const diminta = process.env.CC_TEST_DB === '1';
-const alasanDb = await cekDb();
+const diminta = process.env.CC_TEST_DB === '1' || (process.env.CI === 'true' && process.env.CC_TEST_DB !== '0');
+const dimatikan = process.env.CC_TEST_DB === '0';
+const alasanDb = dimatikan ? 'CC_TEST_DB=0' : await cekDb();
 const alasan = alasanDb ?? cekLaravel();
 
 describe.runIf(diminta && alasan)('lapisan DB (CC_TEST_DB=1)', () => {
@@ -50,7 +53,7 @@ describe.skipIf(!!alasanDb)(`lapisan DB${alasanDb ? ` — dilewati: ${alasanDb};
     vi.stubEnv('NIK_HASH_KEY', envLaravel.nikHashKey);
     const { db, transaksi, kunciBaris, tutupDb, GalatUnik } = await import('@/server/db/client');
     const { users, tickets, chatConversations, referrals } = await import('@/server/db/schema');
-    const { denganNikHash, denganReporterNikHash, hashNikApp, keJsonLaravel } = await import('@/server/db/kolom');
+    const { dariWib, denganNikHash, denganReporterNikHash, hashNikApp, keJsonLaravel } = await import('@/server/db/kolom');
     const { dekripsi } = await import('@/server/legacy/laravel-crypt');
 
     const migrate = new pg.Client({ connectionString: URL_MIGRATE });
@@ -157,6 +160,20 @@ describe.skipIf(!!alasanDb)(`lapisan DB${alasanDb ? ` — dilewati: ${alasanDb};
         });
     });
 
+    it('created_at/updated_at tanpa nilai diisi jam WIB aplikasi (sama satu sama lain), updated_at ikut update', async () => {
+        const [{ id }] = await db.insert(chatConversations).values({ subject: 'tanpa waktu' }).returning({ id: chatConversations.id });
+        const [baris] = await mentah(`SELECT created_at::text AS c, updated_at::text AS u FROM ${SKEMA}.chat_conversations WHERE id = ${id}`);
+        expect(baris.c).not.toBeNull();
+        expect(baris.u).toBe(baris.c);
+        // Jam WIB (bukan UTC = selisih 7 jam) dari waktu sekarang.
+        expect(Math.abs(dariWib(baris.c).getTime() - Date.now())).toBeLessThan(5_000);
+
+        await mentah(`UPDATE ${SKEMA}.chat_conversations SET updated_at = '2000-01-01 00:00:00' WHERE id = ${id}`);
+        await db.update(chatConversations).set({ subject: 'diubah' }).where(eq(chatConversations.id, id));
+        const [setelah] = await mentah(`SELECT updated_at::text AS u FROM ${SKEMA}.chat_conversations WHERE id = ${id}`);
+        expect(Math.abs(dariWib(setelah.u).getTime() - Date.now())).toBeLessThan(5_000);
+    });
+
     it('FOR UPDATE menahan transaksi kedua sampai transaksi pertama commit', { timeout: 20_000 }, async () => {
         const [{ id }] = await db
             .insert(tickets)
@@ -186,7 +203,7 @@ describe.skipIf(!!alasanDb)(`lapisan DB${alasanDb ? ` — dilewati: ${alasanDb};
             async () =>
                 expect(
                     await mentah(`SELECT 1 FROM pg_locks WHERE NOT granted
-                        AND pid IN (SELECT pid FROM pg_stat_activity WHERE application_name = 'contact-center-web')`),
+                        AND pid IN (SELECT pid FROM pg_stat_activity WHERE application_name = 'cc-web')`),
                 ).toHaveLength(1),
             { timeout: 5_000 },
         );

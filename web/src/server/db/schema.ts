@@ -1,5 +1,7 @@
 // Dibangkitkan `drizzle-kit pull` (drizzle-kit 0.31.11) dari contact_center_dev (migrasi laravel-baseline), lalu diubah:
-// - timestamp(0) Laravel → waktuWib (jam dinding WIB); 4 kolom cast `encrypted` → terenkripsi (lihat ./kolom);
+// - timestamp(0) Laravel → waktuWib (jam dinding WIB); created_at/updated_at → waktuDibuat/waktuDiubah (diisi
+//   aplikasi seperti timestamps Eloquent; AiCall, AiQualityRun, ReferralEvent tanpa updated_at);
+// - 4 kolom cast `encrypted` → terenkripsi (lihat ./kolom);
 // - id bigserial mode "number" seperti FK-nya (JSON Laravel berisi angka, bukan BigInt);
 // - opclass indeks hasil pull (salah tebak, mis. timestamp_ops untuk varchar) dibuang → opclass bawaan;
 // - sequence tabel framework dibuang. Tabel framework Laravel tidak ditarik (lihat drizzle.config.ts).
@@ -22,7 +24,7 @@ import {
     unique,
     varchar,
 } from 'drizzle-orm/pg-core';
-import { terenkripsi, waktuWib } from './kolom';
+import { terenkripsi, waktuDibuat, waktuDiubah, waktuWib } from './kolom';
 
 export const channelSyncLogs = pgTable(
     'channel_sync_logs',
@@ -33,8 +35,8 @@ export const channelSyncLogs = pgTable(
         pulledCount: integer('pulled_count').default(0).notNull(),
         status: varchar({ length: 20 }).default('berhasil').notNull(),
         message: text(),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
     },
     (table) => [
         foreignKey({
@@ -58,8 +60,8 @@ export const regions = pgTable(
         infrastructureStatus: varchar('infrastructure_status', { length: 50 }),
         kkCount: integer('kk_count').default(0).notNull(),
         isActive: boolean('is_active').default(true).notNull(),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
     },
     (table) => [unique('regions_code_unique').on(table.code)],
 );
@@ -70,8 +72,8 @@ export const settings = pgTable(
         id: bigserial({ mode: 'number' }).primaryKey().notNull(),
         key: varchar({ length: 100 }).notNull(),
         value: json(),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
     },
     (table) => [unique('settings_key_unique').on(table.key)],
 );
@@ -87,8 +89,8 @@ export const categories = pgTable(
             .default(sql`'14'`)
             .notNull(),
         isActive: boolean('is_active').default(true).notNull(),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
     },
     (table) => [unique('categories_name_unique').on(table.name), unique('categories_slug_unique').on(table.slug)],
 );
@@ -102,8 +104,8 @@ export const channels = pgTable('channels', {
     status: varchar({ length: 30 }).default('aktif').notNull(),
     config: json(),
     lastSyncedAt: waktuWib('last_synced_at'),
-    createdAt: waktuWib('created_at'),
-    updatedAt: waktuWib('updated_at'),
+    createdAt: waktuDibuat(),
+    updatedAt: waktuDiubah(),
 });
 
 export const ticketHistories = pgTable(
@@ -115,8 +117,8 @@ export const ticketHistories = pgTable(
         toStatus: varchar('to_status', { length: 20 }).notNull(),
         actorId: bigint('actor_id', { mode: 'number' }),
         note: text(),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
     },
     (table) => [
         index().using('btree', table.ticketId),
@@ -141,8 +143,8 @@ export const ticketReplies = pgTable(
         authorId: bigint('author_id', { mode: 'number' }),
         body: text().notNull(),
         isPublic: boolean('is_public').default(true).notNull(),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
     },
     (table) => [
         index().using('btree', table.ticketId),
@@ -172,8 +174,8 @@ export const activityLogs = pgTable(
         properties: json(),
         ipAddress: varchar('ip_address', { length: 45 }),
         userAgent: varchar('user_agent', { length: 255 }),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
     },
     (table) => [
         index().using('btree', table.action, table.createdAt),
@@ -213,8 +215,8 @@ export const tickets = pgTable(
         slaDueAt: waktuWib('sla_due_at'),
         respondedAt: waktuWib('responded_at'),
         resolvedAt: waktuWib('resolved_at'),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
         deletedAt: waktuWib('deleted_at'),
         ewsNotifiedAt: waktuWib('ews_notified_at'),
         source: varchar({ length: 30 }),
@@ -310,8 +312,8 @@ export const users = pgTable(
         emailVerifiedAt: waktuWib('email_verified_at'),
         password: varchar({ length: 255 }).notNull(),
         rememberToken: varchar('remember_token', { length: 100 }),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
         nikHash: varchar('nik_hash', { length: 64 }),
         registeredBy: bigint('registered_by', { mode: 'number' }),
         activatedAt: waktuWib('activated_at'),
@@ -350,8 +352,8 @@ export const chatMessages = pgTable(
         senderType: varchar('sender_type', { length: 20 }).default('user').notNull(),
         body: text().notNull(),
         readAt: waktuWib('read_at'),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
         meta: json(),
         feedback: smallint(),
     },
@@ -382,8 +384,8 @@ export const knowledgeDocuments = pgTable(
         error: text(),
         proposals: json(),
         uploadedBy: bigint('uploaded_by', { mode: 'number' }),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
     },
     (table) => [
         foreignKey({
@@ -417,8 +419,8 @@ export const referrals = pgTable(
         closedAt: waktuWib('closed_at'),
         closedBy: bigint('closed_by', { mode: 'number' }),
         closeReason: text('close_reason'),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
         citizenRemindedAt: waktuWib('citizen_reminded_at'),
     },
     (table) => [
@@ -469,8 +471,8 @@ export const chatConversations = pgTable(
         lastMessageAt: waktuWib('last_message_at'),
         unreadAdmin: integer('unread_admin').default(0).notNull(),
         unreadUser: integer('unread_user').default(0).notNull(),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
         guestName: varchar('guest_name', { length: 100 }),
         handledBy: varchar('handled_by', { length: 20 }).default('petugas').notNull(),
         handoffAt: waktuWib('handoff_at'),
@@ -542,8 +544,8 @@ export const portals = pgTable(
         isReachable: boolean('is_reachable').default(true).notNull(),
         lastStatus: smallint('last_status'),
         lastCheckedAt: waktuWib('last_checked_at'),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
     },
     (table) => [unique('portals_code_unique').on(table.code)],
 );
@@ -565,8 +567,8 @@ export const knowledgeArticles = pgTable(
         usedCount: integer('used_count').default(0).notNull(),
         helpfulCount: integer('helpful_count').default(0).notNull(),
         unhelpfulCount: integer('unhelpful_count').default(0).notNull(),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
         keywords: varchar({ length: 500 }),
         sourceUrl: varchar('source_url', { length: 500 }),
         dasarHukum: varchar('dasar_hukum', { length: 255 }),
@@ -603,10 +605,8 @@ export const referralEvents = pgTable(
         actor: varchar({ length: 10 }).notNull(),
         type: varchar({ length: 30 }).notNull(),
         note: text(),
-        // Default DB ini jam UTC (sesi DB ber-TimeZone UTC); Laravel & Next selalu mengisi created_at sendiri.
-        createdAt: waktuWib('created_at')
-            .default(sql`CURRENT_TIMESTAMP`)
-            .notNull(),
+        // DB tetap punya DEFAULT CURRENT_TIMESTAMP (jam UTC karena sesi DB ber-TimeZone UTC); Next tidak memakainya.
+        createdAt: waktuDibuat().notNull(),
     },
     (table) => [
         foreignKey({
@@ -633,8 +633,8 @@ export const accountActivations = pgTable(
         tokenHash: varchar('token_hash', { length: 64 }).notNull(),
         expiresAt: waktuWib('expires_at').notNull(),
         usedAt: waktuWib('used_at'),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
     },
     (table) => [
         index().using('btree', table.conversationId, table.usedAt),
@@ -675,7 +675,7 @@ export const aiQualityRuns = pgTable(
         p95Ms: integer('p95_ms'),
         failures: varchar({ length: 255 }),
         durationS: integer('duration_s').notNull(),
-        createdAt: waktuWib('created_at'),
+        createdAt: waktuDibuat(),
     },
     (table) => [index().using('btree', table.createdAt)],
 );
@@ -691,8 +691,8 @@ export const knowledgePassages = pgTable(
         page: integer(),
         body: text().notNull(),
         position: integer().default(0).notNull(),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
     },
     (table) => [
         foreignKey({
@@ -717,7 +717,7 @@ export const aiCalls = pgTable(
         completionTokens: integer('completion_tokens'),
         conversationId: bigint('conversation_id', { mode: 'number' }),
         errorCode: varchar('error_code', { length: 40 }),
-        createdAt: waktuWib('created_at'),
+        createdAt: waktuDibuat(),
     },
     (table) => [
         index().using('btree', table.status, table.createdAt),
@@ -750,8 +750,8 @@ export const knowledgeSources = pgTable(
         fetchedAt: waktuWib('fetched_at'),
         changedAt: waktuWib('changed_at'),
         createdBy: bigint('created_by', { mode: 'number' }),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
         dasarHukum: varchar('dasar_hukum', { length: 255 }),
         tanggalDasar: date('tanggal_dasar'),
         statusDasar: varchar('status_dasar', { length: 20 }).default('belum_diketahui').notNull(),
@@ -786,8 +786,8 @@ export const units = pgTable(
         sort: smallint()
             .default(sql`'0'`)
             .notNull(),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
     },
     (table) => [
         index().using('btree', table.parentId, table.sort),
@@ -815,8 +815,8 @@ export const ticketDispositions = pgTable(
         acceptedAt: waktuWib('accepted_at'),
         closedAt: waktuWib('closed_at'),
         returnReason: text('return_reason'),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
     },
     (table) => [
         index().using('btree', table.ticketId, table.createdAt),
@@ -856,8 +856,8 @@ export const surveys = pgTable(
         ticketId: bigint('ticket_id', { mode: 'number' }).notNull(),
         rating: smallint(),
         comment: text(),
-        createdAt: waktuWib('created_at'),
-        updatedAt: waktuWib('updated_at'),
+        createdAt: waktuDibuat(),
+        updatedAt: waktuDiubah(),
         version: smallint()
             .default(sql`'1'`)
             .notNull(),

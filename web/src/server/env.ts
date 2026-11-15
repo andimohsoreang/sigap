@@ -30,6 +30,9 @@ const dasar = z.object({
     APP_DEBUG: z.enum(['true', 'false']).default('false'),
     APP_URL: wajib.optional(),
     DATABASE_URL: wajib.optional(),
+    // Worker (paket G) memakai pool sendiri: DB_POOL_MAX=3 ke alias PgBouncer terpisah.
+    DB_POOL_MAX: z.coerce.number().int().min(1).max(20).default(10),
+    DB_APP_NAME: wajib.default('cc-web'),
     // Sama dengan Laravel: data uji bersama (NIK/kontak terenkripsi, hash NIK) dibaca kedua aplikasi.
     APP_KEY: kunciApp.optional(),
     APP_PREVIOUS_KEYS: kunciLama.default(''),

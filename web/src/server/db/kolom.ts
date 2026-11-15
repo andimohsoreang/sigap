@@ -7,8 +7,8 @@ import { bacaKunci, dekripsi, enkripsi, type KunciLaravel } from '@/server/legac
 import { hashNik, kunciNik } from '@/server/legacy/nik';
 
 const WIB_MS = 7 * 3600 * 1000;
-// DateStyle ISO bawaan PostgreSQL untuk timestamp(0): "2026-11-14 10:00:00".
-const POLA_TIMESTAMP = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d+)?$/;
+// DateStyle ISO bawaan PostgreSQL untuk timestamp(0) ("2026-11-14 10:00:00"), juga bentuk ber-"T" (JSON/raw SQL).
+const POLA_TIMESTAMP = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d+)?$/;
 
 /** Jam dinding WIB dari DB (`timestamp(0) without time zone`, ditulis Laravel dengan APP_TIMEZONE=Asia/Jakarta). */
 export function dariWib(nilai: string): Date {
@@ -38,6 +38,21 @@ export const waktuWib = customType<{ data: Date; driverData: string }>({
     toDriver: keWib,
 });
 
+let jamSimpan: Date | undefined;
+/** Satu waktu per penyimpanan (seperti Eloquent): default created_at & updated_at dalam satu insert bernilai sama. */
+function sekarang(): Date {
+    if (!jamSimpan) {
+        jamSimpan = new Date();
+        queueMicrotask(() => (jamSimpan = undefined));
+    }
+    return jamSimpan;
+}
+
+/** created_at Eloquent: diisi aplikasi saat insert bila tidak diberikan. */
+export const waktuDibuat = () => waktuWib('created_at').$defaultFn(sekarang);
+/** updated_at Eloquent: diisi saat insert dan setiap update yang tidak mengisinya sendiri. */
+export const waktuDiubah = () => waktuWib('updated_at').$defaultFn(sekarang).$onUpdateFn(sekarang);
+
 let kunciApp: KunciLaravel | undefined;
 let kunciHashNik: Buffer | undefined;
 
@@ -62,14 +77,15 @@ export function hashNikApp(nik: string | null | undefined): string | null {
     return hashNik(nik, (kunciHashNik ??= kunciNik(env.NIK_HASH_KEY)));
 }
 
-// Padanan hook `saving` User & Ticket: hash ditulis ulang setiap kali kolom NIK ikut di-insert/update.
+// Padanan hook `saving` User & Ticket, hanya bagian NIK (lookup_token & province milik slice tiket): hash ditulis
+// ulang setiap kali kolom NIK ikut di-insert/update.
 
 /** Nilai insert/update `users`: isi `nikHash` bila `nik` ada di nilai. */
 export function denganNikHash<T extends object>(nilai: T & { nik?: string | null }): T & { nikHash?: string | null } {
-    return 'nik' in nilai ? { ...nilai, nikHash: hashNikApp(nilai.nik) } : nilai;
+    return nilai.nik !== undefined ? { ...nilai, nikHash: hashNikApp(nilai.nik) } : nilai;
 }
 
 /** Nilai insert/update `tickets`: isi `reporterNikHash` bila `reporterNik` ada di nilai. */
 export function denganReporterNikHash<T extends object>(nilai: T & { reporterNik?: string | null }): T & { reporterNikHash?: string | null } {
-    return 'reporterNik' in nilai ? { ...nilai, reporterNikHash: hashNikApp(nilai.reporterNik) } : nilai;
+    return nilai.reporterNik !== undefined ? { ...nilai, reporterNikHash: hashNikApp(nilai.reporterNik) } : nilai;
 }
