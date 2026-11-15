@@ -4,12 +4,23 @@ import { createCipheriv, createDecipheriv, createHmac, randomBytes, timingSafeEq
 
 // Padanan Illuminate\Encryption\Encrypter (Laravel 12.69.3) dengan cipher AES-256-CBC (config/app.php).
 
-export type KunciLaravel = {
-    /** Nilai APP_KEY apa adanya (termasuk awalan `base64:`); dipakai SessionGuard::hashPasswordForCookie. */
-    mentah: string;
-    kunci: Buffer;
-    sebelumnya: Buffer[];
-};
+/** Kunci Laravel; tidak pernah tampil di log (JSON.stringify / util.inspect / console.log). */
+export class KunciLaravel {
+    constructor(
+        /** Nilai APP_KEY apa adanya (termasuk awalan `base64:`); dipakai SessionGuard::hashPasswordForCookie. */
+        readonly mentah: string,
+        readonly kunci: Buffer,
+        readonly sebelumnya: Buffer[],
+    ) {}
+
+    toJSON() {
+        return '[KunciLaravel]';
+    }
+
+    [Symbol.for('nodejs.util.inspect.custom')]() {
+        return '[KunciLaravel]';
+    }
+}
 
 /** Pesan sama persis dengan DecryptException Laravel. */
 export class GalatDekripsi extends Error {
@@ -23,7 +34,8 @@ const TAG_AEAD = 'Unable to use tag because the cipher algorithm does not suppor
 
 // Payload sesi terbesar yang masuk akal (_old_input formulir) jauh di bawah ini.
 const MAKS_PAYLOAD = 4 * 1024 * 1024;
-const utf8 = new TextDecoder('utf-8', { fatal: true });
+// ignoreBOM: U+FEFF di awal adalah isi data, bukan penanda yang boleh dibuang.
+const utf8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
 /** EncryptionServiceProvider::parseKey: `base64:` di-decode, selain itu string apa adanya; wajib 32 byte. */
 function parseKunci(nilai: string): Buffer {
@@ -35,14 +47,11 @@ function parseKunci(nilai: string): Buffer {
 
 /** APP_KEY + APP_PREVIOUS_KEYS persis seperti config/app.php (`array_filter(explode(',', …))`, tanpa trim). */
 export function bacaKunci(appKey: string, previousKeys = ''): KunciLaravel {
-    return {
-        mentah: appKey,
-        kunci: parseKunci(appKey),
-        sebelumnya: previousKeys
-            .split(',')
-            .filter((k) => k !== '' && k !== '0')
-            .map(parseKunci),
-    };
+    const sebelumnya = previousKeys
+        .split(',')
+        .filter((k) => k !== '' && k !== '0')
+        .map(parseKunci);
+    return new KunciLaravel(appKey, parseKunci(appKey), sebelumnya);
 }
 
 /** base64_decode($s, true) PHP: spasi/tab/baris dilewati, padding opsional tetapi bila ada harus lengkap. */
@@ -60,8 +69,8 @@ function mac(kunci: Buffer, iv: string, value: string): string {
         .digest('hex');
 }
 
-function samaWaktuTetap(a: string, b: string): boolean {
-    // hash_equals: panjang berbeda langsung false (panjang bukan rahasia).
+/** hash_equals PHP: constant-time; panjang berbeda langsung false (panjang bukan rahasia). */
+export function samaWaktuTetap(a: string, b: string): boolean {
     const x = Buffer.from(a);
     const y = Buffer.from(b);
     return x.length === y.length && timingSafeEqual(x, y);

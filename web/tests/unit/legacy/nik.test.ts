@@ -19,7 +19,13 @@ describe('nik: vektor App\\Support\\Nik', () => {
         if (nik !== null) expect(miripNik(nik)).toBe(mirip_nik);
     });
 
-    it('kunci kosong ditolak (produksi wajib NIK_HASH_KEY)', () => {
-        expect(() => kunciNik(' \n')).toThrow('NIK_HASH_KEY');
+    it.each([' \n', 'null', '(null)', 'EMPTY', 'true', '(false)'])('kunci kosong / sentinel env() %j ditolak', (nilai) => {
+        expect(() => kunciNik(nilai)).toThrow('NIK_HASH_KEY belum diatur');
+    });
+
+    it('kunci < 32 byte ditolak, termasuk base64 yang ter-decode pendek', () => {
+        expect(() => kunciNik('kunci-pendek')).toThrow('minimal 32 byte');
+        expect(() => kunciNik('base64:' + Buffer.alloc(31).toString('base64'))).toThrow('minimal 32 byte');
+        expect(kunciNik('k'.repeat(32))).toHaveLength(32);
     });
 });

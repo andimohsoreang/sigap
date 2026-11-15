@@ -17,12 +17,20 @@ function normalisasi(nik: string | null | undefined): string | null {
     return t === '' ? null : t;
 }
 
-/** Nik::key dengan NIK_HASH_KEY terisi: `base64:` yang sah di-decode, selain itu string literal. */
+// Nilai yang diubah env() Laravel menjadi null/''/true/false: hampir pasti salah isi, bukan kunci.
+const SENTINEL_ENV = /^(null|empty|true|false|\((null|empty|true|false)\))$/i;
+
+/**
+ * Nik::key dengan NIK_HASH_KEY terisi: `base64:` yang sah di-decode, selain itu string literal.
+ * Lebih ketat dari Laravel: kosong, sentinel env(), atau < 32 byte ditolak.
+ */
 export function kunciNik(nikHashKey: string): Buffer {
     const k = trimPhp(nikHashKey);
     // Produksi tanpa NIK_HASH_KEY melempar di Laravel; jatuh ke APP_KEY hanya untuk local/testing.
-    if (k === '') throw new Error('NIK_HASH_KEY belum diatur.');
-    return (k.startsWith('base64:') && base64Ketat(k.slice(7))) || Buffer.from(k, 'utf8');
+    if (k === '' || SENTINEL_ENV.test(k)) throw new Error('NIK_HASH_KEY belum diatur.');
+    const kunci = (k.startsWith('base64:') && base64Ketat(k.slice(7))) || Buffer.from(k, 'utf8');
+    if (kunci.length < 32) throw new Error('NIK_HASH_KEY minimal 32 byte.');
+    return kunci;
 }
 
 /** Nik::hash: blind index HMAC-SHA256 hex; null bila kosong. */

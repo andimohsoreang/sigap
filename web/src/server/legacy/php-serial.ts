@@ -1,16 +1,28 @@
 import 'server-only';
 
 // serialize()/unserialize() PHP minimal untuk payload sesi Laravel: null, bool, int, float, string, array.
-// Objek (O:, C:), referensi (R:, r:), enum (E:) dan tipe lain DITOLAK: tidak ada permukaan gadget.
+// Objek hanya dari daftar izin dan disimpan sebagai byte mentah (tidak pernah dibuat); C:, R:, r:, E: dan
+// tipe lain DITOLAK: tidak ada permukaan gadget.
 
 /** Float PHP (`d:`), dibedakan dari int (`i:`) agar serialize ulang identik byte. */
 export class DesimalPhp {
     constructor(readonly nilai: number) {}
 }
 
+/** Objek PHP dari daftar izin: isinya divalidasi lalu disimpan sebagai byte serial apa adanya, tidak ditafsirkan. */
+export class ObjekPhp {
+    constructor(
+        readonly kelas: string,
+        readonly mentah: Buffer,
+    ) {}
+}
+
 /** Array PHP: urutan dijaga, kunci int (number) atau string. */
 export type ArrayPhp = Map<number | string, NilaiPhp>;
-export type NilaiPhp = null | boolean | number | string | DesimalPhp | ArrayPhp;
+export type NilaiPhp = null | boolean | number | string | DesimalPhp | ObjekPhp | ArrayPhp;
+
+// withErrors() menyimpan ViewErrorBag berisi MessageBag di sesi (flash `errors`).
+const KELAS_DIIZINKAN = new Set(['Illuminate\\Support\\ViewErrorBag', 'Illuminate\\Support\\MessageBag']);
 
 export type JenisGalatSerial = 'rusak' | 'tidak-didukung' | 'batas';
 
@@ -26,7 +38,8 @@ export class GalatSerial extends Error {
 
 export const BATAS_SERIAL = { byte: 1024 * 1024, kedalaman: 32 };
 
-const utf8 = new TextDecoder('utf-8', { fatal: true });
+// ignoreBOM: U+FEFF di awal adalah isi data, bukan penanda yang boleh dibuang.
+const utf8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
 /** Kunci string berbentuk int kanonik ("5", "-3", bukan "05"/"-0") menjadi int, seperti hash table PHP. */
 export function kunciPhp(kunci: number | string): number | string {
@@ -56,9 +69,10 @@ export function unserialize(input: Buffer | string, batas = BATAS_SERIAL): Nilai
         pos = i + 1;
         return s;
     };
-    const bacaInt = (akhir: string): number => {
+    // Nilai `i:` boleh bertanda; panjang & jumlah elemen tidak (unserialize PHP menolak "+"/"-" di sana).
+    const bacaInt = (akhir: string, bertanda = false): number => {
         const s = sampai(akhir);
-        if (!/^[+-]?\d+$/.test(s)) rusak('Int tidak sah');
+        if (!(bertanda ? /^[+-]?\d+$/ : /^\d+$/).test(s)) rusak('Int tidak sah');
         const n = Number(s);
         if (!Number.isSafeInteger(n)) throw new GalatSerial('tidak-didukung', `Int di luar batas aman JavaScript: ${s}`);
         return n;
@@ -88,7 +102,24 @@ export function unserialize(input: Buffer | string, batas = BATAS_SERIAL): Nilai
             rusak('Kunci array harus int atau string');
         }
         harap(':');
-        return bacaInt(';');
+        return bacaInt(';', true);
+    };
+
+    /** `<jumlah>:{<kunci><nilai>…}` untuk array dan properti objek. */
+    const isi = (kedalaman: number): ArrayPhp => {
+        if (kedalaman >= batas.kedalaman) throw new GalatSerial('batas', `Data lebih dalam dari ${batas.kedalaman} tingkat`);
+        const jumlah = bacaInt(':');
+        // Setiap elemen minimal 4 byte ("N;N;"), jadi jumlah lebih besar pasti data rusak.
+        if (jumlah < 0 || jumlah * 4 > buf.length - pos) rusak('Jumlah elemen tidak sah');
+        harap('{');
+        const arr: ArrayPhp = new Map();
+        for (let i = 0; i < jumlah; i++) {
+            const kunci = bacaKunci();
+            // Kunci ganda: nilai ditimpa di posisi lama, seperti unserialize PHP.
+            arr.set(kunci, nilai(kedalaman + 1));
+        }
+        harap('}');
+        return arr;
     };
 
     const nilai = (kedalaman: number): NilaiPhp => {
@@ -105,7 +136,7 @@ export function unserialize(input: Buffer | string, batas = BATAS_SERIAL): Nilai
             }
             case 'i':
                 harap(':');
-                return bacaInt(';');
+                return bacaInt(';', true);
             case 'd': {
                 harap(':');
                 const s = sampai(';');
@@ -117,23 +148,24 @@ export function unserialize(input: Buffer | string, batas = BATAS_SERIAL): Nilai
             }
             case 's':
                 return bacaString();
-            case 'a': {
-                if (kedalaman >= batas.kedalaman) throw new GalatSerial('batas', `Array lebih dalam dari ${batas.kedalaman} tingkat`);
+            case 'a':
                 harap(':');
-                const jumlah = bacaInt(':');
-                // Setiap elemen minimal 4 byte ("N;N;"), jadi jumlah lebih besar pasti data rusak.
-                if (jumlah < 0 || jumlah * 4 > buf.length - pos) rusak('Jumlah elemen tidak sah');
-                harap('{');
-                const arr: ArrayPhp = new Map();
-                for (let i = 0; i < jumlah; i++) {
-                    const kunci = bacaKunci();
-                    // Kunci ganda: nilai ditimpa di posisi lama, seperti unserialize PHP.
-                    arr.set(kunci, nilai(kedalaman + 1));
-                }
-                harap('}');
-                return arr;
+                return isi(kedalaman);
+            case 'O': {
+                // O:<n>:"<kelas>":<jumlah>:{<properti>}; properti diperiksa seperti isi array lalu dibuang.
+                const mulai = pos - 1;
+                harap(':');
+                const panjang = bacaInt(':');
+                harap('"');
+                if (panjang < 0 || pos + panjang > buf.length) rusak('Panjang nama kelas tidak sah');
+                const kelas = buf.toString('latin1', pos, pos + panjang);
+                if (!KELAS_DIIZINKAN.has(kelas)) throw new GalatSerial('tidak-didukung', `Objek PHP '${kelas}' ditolak`);
+                pos += panjang;
+                harap('"');
+                harap(':');
+                isi(kedalaman);
+                return new ObjekPhp(kelas, Buffer.from(buf.subarray(mulai, pos)));
             }
-            case 'O':
             case 'C':
             case 'R':
             case 'r':
@@ -179,6 +211,8 @@ export function serialize(nilai: NilaiPhp): string {
     if (typeof nilai === 'boolean') return nilai ? 'b:1;' : 'b:0;';
     if (typeof nilai === 'string') return serialString(nilai);
     if (nilai instanceof DesimalPhp) return `d:${formatFloat(nilai.nilai)};`;
+    // Semua string di dalamnya sudah divalidasi UTF-8 saat unserialize.
+    if (nilai instanceof ObjekPhp) return nilai.mentah.toString('utf8');
     if (typeof nilai === 'number') {
         if (!Number.isInteger(nilai)) return `d:${formatFloat(nilai)};`;
         if (!Number.isSafeInteger(nilai)) throw new GalatSerial('tidak-didukung', `Int di luar batas aman JavaScript: ${nilai}`);
@@ -190,13 +224,4 @@ export function serialize(nilai: NilaiPhp): string {
         isi += (typeof kunci === 'number' ? `i:${kunci};` : serialString(kunci)) + serialize(v);
     }
     return `a:${nilai.size}:{${isi}}`;
-}
-
-/** Bentuk json_encode PHP (daftar 0..n-1 → array, selain itu objek), untuk membaca & membandingkan isi. */
-export function keJson(nilai: NilaiPhp): unknown {
-    if (nilai instanceof DesimalPhp) return nilai.nilai;
-    if (!(nilai instanceof Map)) return nilai;
-    const kunci = [...nilai.keys()];
-    if (kunci.every((k, i) => k === i)) return [...nilai.values()].map(keJson);
-    return Object.fromEntries([...nilai].map(([k, v]) => [String(k), keJson(v)]));
 }

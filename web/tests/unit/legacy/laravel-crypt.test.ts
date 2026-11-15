@@ -1,3 +1,5 @@
+import { inspect } from 'node:util';
+
 import { describe, expect, it } from 'vitest';
 
 import { bacaKunci, base64Ketat, dekripsi, enkripsi, GalatDekripsi } from '@/server/legacy/laravel-crypt';
@@ -56,6 +58,16 @@ describe('laravel-crypt: kunci', () => {
         expect(() => bacaKunci('')).toThrow('No application encryption key');
         expect(() => bacaKunci('base64:' + Buffer.alloc(16).toString('base64'))).toThrow('incorrect key length');
         expect(() => bacaKunci(f.app_key, ' ' + f.app_previous_keys)).toThrow('incorrect key length');
+    });
+
+    it('kunci tidak pernah tampil lewat JSON.stringify atau util.inspect', () => {
+        const rahasia = Buffer.from(f.app_key.slice(7), 'base64').toString('hex');
+        for (const teks of [JSON.stringify({ kunci }), inspect({ kunci }, { depth: 5 }), `${inspect(kunci, { showHidden: true })}`]) {
+            expect(teks).toContain('[KunciLaravel]');
+            expect(teks).not.toContain(f.app_key);
+            expect(teks).not.toContain(f.app_key.slice(7));
+            expect(teks).not.toContain(rahasia);
+        }
     });
 
     it('APP_PREVIOUS_KEYS: explode(",") + array_filter', () => {
