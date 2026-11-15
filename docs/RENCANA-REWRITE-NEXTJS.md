@@ -398,6 +398,13 @@ Pengecualian yang **di-mask** (konten dari luar yang tidak kita kendalikan), dic
 
 Di luar daftar itu, tidak ada mask dan tidak ada toleransi.
 
+Satu ketentuan tambahan (disetujui pemilik proyek, 15 Nov 2026): screenshot diambil **pas selebar viewport**.
+Konten yang meluber ke luar layar (mis. header admin Laravel di 375 px melebar ke 380 px; Chromium merender strip
+di luar layar itu tidak konsisten, ±1 tingkat warna pada ±2% pemuatan, bahkan Laravel vs Laravel) tidak
+dibandingkan per piksel, tetapi **lebar & tinggi scroll halaman dicatat di snapshot DOM dan harus sama persis**.
+Jadi perbedaan luberan tetap tertangkap; yang tidak dibandingkan hanya isi piksel yang memang tidak terlihat di
+layar.
+
 ### 8.4 Gerbang
 
 - Setiap fase F2–F5 hanya lulus bila halaman yang di-port di fase itu 0 piksel beda di semua kombinasi §8.3.
