@@ -1,5 +1,5 @@
 // Membangun CSS aplikasi di luar Turbopack dengan pipeline yang sama dengan Vite Laravel (sigap/vite.config.js):
-// Tailwind 4.0.8 memindai sigap/ → url() @fontsource ditulis ulang ke aset ber-hash → minify esbuild seperti Vite 6.4.4.
+// Tailwind 4.0.8 memindai sigap/ (hanya berkas terlacak git, lihat sumber-sigap.mjs) → url() @fontsource ditulis ulang ke aset ber-hash → minify esbuild seperti Vite 6.4.4.
 // Hasil: public/_cc/app-<sha8>.css + public/_cc/media/*, href-nya ditulis ke src/app/aset-css.json. Manifest di-commit
 // hanya agar typecheck/lint jalan di checkout bersih; perubahan yang belum di-commit ditangkap `npm run cek:css`.
 // Catatan: CSS Leaflet (MapContainer di Laravel) akan menjadi entri kedua saat halaman peta di-port.
@@ -11,16 +11,15 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import postcss from 'postcss';
 
+import { sumberSigap } from './sumber-sigap.mjs';
+
 const web = path.resolve(import.meta.dirname, '..');
-const sigap = path.resolve(web, '../sigap');
 const sumber = path.join(web, 'src/app/globals.css');
 const keluaran = path.join(web, 'public/_cc');
 const manifest = path.join(web, 'src/app/aset-css.json');
 
 // Target build default Vite ('modules'), dipakai minifyCSS() Vite untuk esbuild.
 const VITE_CSS_TARGET = ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'];
-
-if (!fs.existsSync(path.join(sigap, 'resources'))) throw new Error(`sigap/ tidak ditemukan di ${sigap}: Tailwind harus memindai template Laravel`);
 
 const sha8 = (isi) => createHash('sha256').update(isi).digest('hex').slice(0, 8);
 
@@ -53,8 +52,18 @@ const sepertiVite = () => ({
 fs.rmSync(keluaran, { recursive: true, force: true });
 fs.mkdirSync(path.join(keluaran, 'media'), { recursive: true });
 
-// optimize eksplisit: dev & produksi menghasilkan CSS yang sama (default plugin bergantung NODE_ENV).
-const { css } = await postcss([tailwind({ base: sigap, optimize: true }), sepertiVite()]).process(fs.readFileSync(sumber, 'utf8'), { from: sumber });
+const sigap = sumberSigap();
+let css;
+try {
+    if (!fs.existsSync(path.join(sigap.dir, 'resources')))
+        throw new Error(`sigap/ tidak ditemukan di ${sigap.dir}: Tailwind harus memindai template Laravel`);
+    // optimize eksplisit: dev & produksi menghasilkan CSS yang sama (default plugin bergantung NODE_ENV).
+    ({ css } = await postcss([tailwind({ base: sigap.dir, optimize: true }), sepertiVite()]).process(fs.readFileSync(sumber, 'utf8'), {
+        from: sumber,
+    }));
+} finally {
+    sigap.hapus();
+}
 const href = `/_cc/app-${sha8(css)}.css`;
 fs.writeFileSync(path.join(web, 'public', href), css);
 
