@@ -2,8 +2,9 @@ import 'server-only';
 
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { tokenCocok, tokenDariPermintaan } from '@/server/web/csrf';
 import { asalAplikasi, inginJson, ipKlien, jalurAman, jalurTerdekode, responsJson } from '@/server/web/permintaan';
-import { jsonLaravel, redirectLaravel, responsGalat } from '@/server/web/respons';
+import { jsonLaravel, redirectLaravel, respons419, responsGalat } from '@/server/web/respons';
 
 import { catatAudit } from './audit';
 import { bacaCookie, COOKIE_INGAT, COOKIE_SESI, gantiCookie, pasangCookieIngat, pasangCookieSesi } from './cookie';
@@ -17,12 +18,25 @@ import { muatSesi, periksaSidik, rotasiSesi, sentuhSesi, sesiBaru, sidikSandi, s
 // Tumpukan middleware grup `web` Laravel yang dijalankan proxy.ts (runtime Node.js) untuk setiap permintaan dinamis:
 // StartSession (muat/buat sesi, umur flash, perbarui cookie), SessionGuard::user (termasuk cookie "Ingat saya"),
 // AuthenticateSession (sidik sandi), lalu middleware rute (auth/guest/role/portal.verified, lihat guard.ts).
-// Token CSRF dicek di route handler (web/csrf.ts); asal permintaan dicek proxy.ts sebelum ini.
+// Asal permintaan dicek proxy.ts sebelum ini; token CSRF dicek di sini (dan diulang di route handler).
 
 /** EnsureFrontendRequestsAreStateful::fromFrontend: Referer/Origin dari situs sendiri. */
 function dariFrontend(h: Headers, asal: string): boolean {
     const sumber = h.get('referer') || h.get('origin');
     return !!sumber && jalurAman(sumber, asal) !== null;
+}
+
+/**
+ * Token CSRF permintaan: header X-CSRF-TOKEN / X-XSRF-TOKEN, atau `_token` di body x-www-form-urlencoded (dibaca dari
+ * salinan; body asli tetap diteruskan ke rute). shortcut: `_token` di multipart tidak dibaca di sini (unggahan bisa
+ * besar) — formulir multipart memakai axios `api` yang mengirim X-XSRF-TOKEN; rute tetap memeriksa ulang.
+ */
+async function tokenCsrf(req: NextRequest): Promise<string | null> {
+    const dariHeader = tokenDariPermintaan(req.headers, {});
+    if (dariHeader) return dariHeader;
+    if (!req.headers.get('content-type')?.toLowerCase().startsWith('application/x-www-form-urlencoded')) return null;
+    const t = new URLSearchParams(await req.clone().text()).get('_token');
+    return t || null;
 }
 
 export function konteksGuard(req: NextRequest, asal: string): KonteksGuard {
@@ -69,6 +83,14 @@ export async function tumpukanWeb(req: NextRequest, headerTeruskan: Headers): Pr
     const idAwal = sesi?.ada ? sesi.id : null;
     const csrfAwal = sesi?.csrf;
     let ubah = sesi !== null && umurkanKilat(sesi.data);
+
+    // VerifyCsrfToken ada di grup web SEBELUM AuthenticateSession & middleware rute: token salah → 419 lebih dulu
+    // daripada redirect auth/guest. Server Action (header Next-Action) dilindungi pemeriksaan asal; /broadcasting/auth
+    // dikecualikan Laravel (withoutMiddleware).
+    if (!baca && !h.has('next-action') && ctx.path !== 'broadcasting/auth' && !tokenCocok(sesi?.csrf, await tokenCsrf(req))) {
+        if (sesi && ubah) await simpanSesi(sesi, meta);
+        return respons419(ctx.json);
+    }
 
     let pengguna: Pengguna | null = sesi?.userId ? await ambilPengguna(sesi.userId) : null;
     const cookieIngat = bacaCookie(h.get('cookie'), COOKIE_INGAT);
