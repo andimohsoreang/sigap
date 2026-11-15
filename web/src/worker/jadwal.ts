@@ -49,7 +49,9 @@ export async function pasangJadwal(boss: PgBoss, daftar: readonly Jadwal[] = [..
                     .catch((err) => log.warn({ err, jadwal: j.nama }, 'gagal mengirim jadwal'));
             timer.push(setInterval(kirim, j.setiapDetik! * 1000));
         }
-        await boss.work(j.nama, async () => jalankan(j));
+        // Jadwal tidak butuh latensi detik: cron cukup diperiksa tiap 30 dtk (bawaan pg-boss 2 dtk = ±1,5 query/dtk per
+        // antrean menganggur). Jadwal sub-menit (ai-macet, slot 15 dtk) tiap 5 dtk, jadi tetap berjalan di slotnya.
+        await boss.work(j.nama, { pollingIntervalSeconds: j.setiapDetik ? 5 : 30 }, async () => jalankan(j));
     }
     return () => timer.forEach(clearInterval);
 }
