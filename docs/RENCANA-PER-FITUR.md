@@ -26,7 +26,7 @@ yang sedang aktif — tidak diperlukan. Pemilik proyek memutuskan:
 Yang **dihapus** dari rencana (tidak dikerjakan): jembatan sesi Laravel ↔ Next.js, respons Inertia 409, jembatan
 cron, penerbit event ke Reverb Laravel, peta rute nginx per fitur & `pindah-rute.sh`, deploy gelap, masa pantau 3
 hari per fitur di produksi, penulisan sesi format Laravel. Next.js memakai **sesi & cookie sendiri** (`cc_session`)
-dan **Soketi** sejak awal.
+dan **Sockudo** sejak awal.
 
 Yang **tetap**: freeze & `laravel-baseline`, suite paritas (desain 0 piksel, perilaku identik), vektor uji PHP,
 standar backend §9, siklus QA → review → optimasi, audit keamanan per fitur, UAT oleh pemilik proyek, konfirmasi
