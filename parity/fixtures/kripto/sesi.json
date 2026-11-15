@@ -1,0 +1,349 @@
+{
+    "sumber": [
+        "Illuminate\\Session\\Store",
+        "Illuminate\\Session\\EncryptedStore",
+        "Illuminate\\Session\\DatabaseSessionHandler",
+        "Illuminate\\Auth\\SessionGuard",
+        "Illuminate\\Session\\Middleware\\AuthenticateSession"
+    ],
+    "commit": "f8713a05929dca41c78de8b1df39ec37128148e3",
+    "tag": "laravel-baseline",
+    "laravel": "12.69.3",
+    "perintah": "php artisan cc:ekspor-fixture-kripto",
+    "peringatan": "Semua kunci di berkas ini KUNCI UJI (sha256 teks tetap), bukan kunci produksi.",
+    "app_key": "base64:1Fo/L9cQ+Uap3LCppnuPd4BCnDJzeV0NkVoQs3qxKeU=",
+    "app_previous_keys": "base64:VvU1Arvo96r54OcT6Am8zPdp4H1SrK8hlNAzy5EmnvY=",
+    "cookie_sesi": "sigap_session",
+    "lifetime_menit": 120,
+    "serialization": "php",
+    "sekarang": 1794538800,
+    "kunci_login": "login_web_59ba36addc2b2f9401580f014c7f58ea4e30989d",
+    "catatan": "payload = base64(Encrypter::encrypt(serialize(serialize($attributes)))): EncryptedStore memakai encrypt() yang ikut men-serialize. serial = serialize($attributes).",
+    "kasus": [
+        {
+            "label": "tamu",
+            "catatan": "Tamu: _token + _previous + _flash kosong.",
+            "cookie": "eyJpdiI6IkR5dkFzMHcwbVUvdjlMS2ZIYjFzeGc9PSIsInZhbHVlIjoiNmoyTVdUQ0dIZ1FHNHFDTTNVYi9LdTEzU0lia3U0QTFoYWNOMVJ1aXM1MjIyUHZ6TXBzeXBZNnFOQ3AwRjJJQ1BObzBZNlJpK2lLZndUUGFIdlFJYlM3VXNMajk1UWZrdkxkM010THZjekJISFBoSlJzY2lVUHUvNkVxakJxQ0ciLCJtYWMiOiIxMWRkOWY1NTRjZWIxMWY3NzQ3Zjk3MmY2MDgzMTYyZTMyMjc4NzhhNzE4OTkwOWM4OTc3YTRjYTc1YzJjYWQ3IiwidGFnIjoiIn0=",
+            "baris": {
+                "id": "Uji0002Uji0002Uji0002Uji0002Uji0002Uji00",
+                "user_id": null,
+                "ip_address": "203.0.113.7",
+                "user_agent": "Mozilla/5.0 (fixture uji)",
+                "payload": "ZXlKcGRpSTZJbk5JWVhsdlRtd3djM3BEZERWcmNGTmxWRlF3UVdjOVBTSXNJblpoYkhWbElqb2lRelpQYlRaWGFXNXdWMFUwTXpCWWVWTkVVemRJZDNnNFpqUXdXREpaVWxKalRFbGpNbFpRT0U5TlJqRXlNeXRLY25OdWEyOTNRbk5HTkZSTE0yOVNhMUE1VXpJeVpUQjBjbk56YTBGMVNYQjJiMnBPWVZOTE0xcFlVV3RsTUdkbmJrZGxNMWR6VlVSVE5rWXhRbkpIZUROaGMyVjJNRFJxZURoMFpVNDFWVGgxZFRaWFVETkRZWEYzVUUxVUsyc3pXa2R0Ukd4MlJWbzVTMWxTUVhneGVFTjRRM0pqZVRsWFZpOU1hRFF5YkhGMVJ6QXJValIwYWxCUmVXMUZWVmwwUkZKR01VSmFjblJ1TkdWUFVqbEtjMVpNVlVSc2NFUmxUa00zUm5aWlNrSjJVMWRSU0hsbE5sSlFhRFZpZFVwMFQzZHhSR3AxTDJaVWRGTnRkM1k1ZWtsQ1pWRkljRFJ1VG5KTlJXUk9iRGN5VlVzck1UZzFNeTlEVW5OQ1FXdGFUbHBwYmxwNVRFZERkRkU5SWl3aWJXRmpJam9pT0RjM1ltWTFZalkwTTJNek5XSTNaV1F5TVRNeU4yVXdObVZoTXpGbVpEVTRNVFU0WWpObVpqa3lNR0V6WXpnMlkySmpNbVkxT0dRM09EaGxPV0UwWmlJc0luUmhaeUk2SWlKOQ==",
+                "last_activity": 1794538800
+            },
+            "serial": "a:3:{s:6:\"_token\";s:40:\"Uji0003Uji0003Uji0003Uji0003Uji0003Uji00\";s:9:\"_previous\";a:2:{s:3:\"url\";s:21:\"https://cc.test/lacak\";s:5:\"route\";s:5:\"lacak\";}s:6:\"_flash\";a:2:{s:3:\"old\";a:0:{}s:3:\"new\";a:0:{}}}",
+            "data": {
+                "_token": "Uji0003Uji0003Uji0003Uji0003Uji0003Uji00",
+                "_previous": {
+                    "url": "https://cc.test/lacak",
+                    "route": "lacak"
+                },
+                "_flash": {
+                    "old": [],
+                    "new": []
+                }
+            },
+            "user_hash": null,
+            "harapan": {
+                "user_id": null,
+                "password_hash": null
+            }
+        },
+        {
+            "label": "tamu_chat",
+            "catatan": "Tamu dengan chat_guest_token (ChatController::SESSION_KEY).",
+            "cookie": "eyJpdiI6IlhEL01GcWRtZ1pPQlBPejBqZkoxOXc9PSIsInZhbHVlIjoiSEhiL2Z6NEdueFE2Q2huRHUwbHhKdUZRbmNIdjg3VFFqRFE5Lzk1M0xFSTNsUnRhN0x1czBuRGhUSURTaXRqTkVzRmoxYWVLMTN0N0YvUWg4VkJNMlNrS1dXcmtkMkJVSS9rdWtTck9qcDZVQUlIMlEvUVFsditlaVFtRytLVG4iLCJtYWMiOiI2ZjBmYzMzYmI5OTJkNTY4N2M1YzYwZDM2ZWE2Mzc1OGU0MTBjYTMxMWMyY2JhY2EyOGU2YWRjMGYyZjc3MTUyIiwidGFnIjoiIn0=",
+            "baris": {
+                "id": "Uji0004Uji0004Uji0004Uji0004Uji0004Uji00",
+                "user_id": null,
+                "ip_address": "203.0.113.7",
+                "user_agent": "Mozilla/5.0 (fixture uji)",
+                "payload": "ZXlKcGRpSTZJbGRpUmxwc1NFWXlXbXN6UnpsTFNqQkpiRGRzY0VFOVBTSXNJblpoYkhWbElqb2lPRlZQYlRGc1NGZGtWM1JTWWxwelRTdEROR1l2VUVWQ1RuWTBVMFpqZVZwc2FGTklTRTl6Vlc1WVVUVm1PWFExVURselozZGlVME0zTnpSbmN5dG9Wa3RtTTNvelRuZ3plWEZJVlhaUlVteHVlVmRoVWtscFNYcFZNREZuVDB0c2FUWnZUVEpLVkc5cmFHVktXV0ZuWXpsd09VbDJWMWhVU0VzNE9UQkdWWGhoT1RSQ2FsTnZRWEV4UlRZNVUwaHpNVVkxT0ZkeWRuaGtObThyUmxoV1pIVkxia05oTm5JNVREbFVUbWxtYzB0S1dVeHJaMEZLTlhNNFpsRkRaMngyTVRVck1tdE9ibTF4TmpSVlRWWkdaWE5WV0dkSWRFWm9iSFY0ZDBwdFZrTjNhalEwWkhweGFtYzRTV2xaVW1KdVJEZFhlRE5JUlVvd1IzVkVkR0ZPZDBGTlNFWXlWekEwV0VGWGIwWndibk5LVW1Wc1lURlRlbms0YjJKUlNISkhlbmxJVUc1amNFOVRUbGhrUTJkdE5ESk5aME50VEhwalZFY3hSQ3RtTVhCU2VFWjJibWhpTWpsbVJYWnRVM1pQZVRSS05XSkhPV3gxTkRBelVYRnhSM2xzVEVwNlIyOXpZMGRKUFNJc0ltMWhZeUk2SWpKa1ptTTNPRGM1WldZM09EVmxNakE1TmpOaVkyTTRNVEZoTVRZNE5UTTVObUl5T0dVM01UZ3lORGRpWTJWaU4yVmlOVFpqTnpZeFlXSTFOamczTVRNaUxDSjBZV2NpT2lJaWZRPT0=",
+                "last_activity": 1794538800
+            },
+            "serial": "a:4:{s:6:\"_token\";s:40:\"Uji0005Uji0005Uji0005Uji0005Uji0005Uji00\";s:16:\"chat_guest_token\";s:36:\"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d\";s:9:\"_previous\";a:2:{s:3:\"url\";s:20:\"https://cc.test/chat\";s:5:\"route\";N;}s:6:\"_flash\";a:2:{s:3:\"old\";a:0:{}s:3:\"new\";a:0:{}}}",
+            "data": {
+                "_token": "Uji0005Uji0005Uji0005Uji0005Uji0005Uji00",
+                "chat_guest_token": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                "_previous": {
+                    "url": "https://cc.test/chat",
+                    "route": null
+                },
+                "_flash": {
+                    "old": [],
+                    "new": []
+                }
+            },
+            "user_hash": null,
+            "harapan": {
+                "user_id": null,
+                "password_hash": null
+            }
+        },
+        {
+            "label": "warga",
+            "catatan": "Warga login (SessionGuard::login: migrate(true), login_web_*, password_hash_web) + flash success.",
+            "cookie": "eyJpdiI6IkRtUjljM0xha2lKTGltRHdYUmxsSFE9PSIsInZhbHVlIjoiZUd0T2pEVk5XZVZleXRLMHJBQzRrTTY4OXRDcjIrdzQzZ3JwR25zdHRMUENkaXJWVjVnVTJ4NWlkZjZrS3RPQnRQS01RQzRHQVRldUc2WHBtQUY1dGdQWlAyb1IrNGVFZE9jWGtuQkYwYURxb0RZeXVYYVlISXliMGc5bSsrSEsiLCJtYWMiOiJkYTFiN2I4MTFlM2QwZWRhYzU3OGM1MDdkMjg5NTZjYjFkYWY0ZDc3Y2RjNWEzYWU4NGZiNDI3NmIxNzUxMzllIiwidGFnIjoiIn0=",
+            "baris": {
+                "id": "Uji0008Uji0008Uji0008Uji0008Uji0008Uji00",
+                "user_id": 101,
+                "ip_address": "203.0.113.7",
+                "user_agent": "Mozilla/5.0 (fixture uji)",
+                "payload": "ZXlKcGRpSTZJbmQzZVdVeFdGSTJWREpOWWxaQmRXOXplR0pyVG1jOVBTSXNJblpoYkhWbElqb2lRa2RDWm13eE5FZDRaR1JJVFhGVVlreGllbFppWmsxdE4xZzVUREJWUmxkQ1MxRldaMjVHUVhaek1DOVliak5YUVVsak1GcFhOWEEwTDFkM1VUQnNaV05TUm14UFkyWnVZblpsUzJzdmEzSmtVazFOUjA1b2VXWjNPRTl6TjI1aGVsWnZWV0p0UlhVMlVsRmpWekp6U0ZsaVpWVklTRzFUTjBWT1ZHaHJia2hXWW1sUFIwTnVhakpQZFVSTmVXOWxjRE5NV0VGVmRXa3ZjbHA0WjNVclRHWjBaQzkwU214VlVVZGxlSG8wYW0welZGaDJNVkEyUlZrck5XWjFOamxOY1RsdWVFNUxaalIyTlhSTldqaDRLMVI2UVRaNWNVWktNM1UxTVdoU1JrbEhRMWgxV0d4WlZGVTNjemhxU0hseWNtTkJLMU5SVURsNVVrOU5aV2swU1RJMVN5dDBVRlpHY1U5UlYyRktkekF2VGs5S1RXRkNWVFJhY21oNldWaHRkbXMzVFdaVmVVaHpWaTkxV1VFd2JEaFRVRTAwY21keFNYa3hhak5XWW05d2VHNHpiRU40ZURNelZtTmhSaTl1WVVwVlQwdHZOVzFrVjJSMlkzWnpVMUJRTDNwV2EyaHlTbXRIU3pORFJuaEtTR3RSTm01NlFVOVFhMkV4UkdoVGJFbFNTWEJyWjJNd2FVbE9RMDlwUldwRlRrVkNiV000VWxoWlMzaEdZVkZsVEZaRVptMWpXR1pVTm1oMWFYQnZWVFppZUVWUVVHMVVXVlZqZUVOTk4wNHJkRmRHSzNwRGRuQnFUa3RXV0hwVGNHOTRhREZMZW1kWk9EUkZiRzgzYW0xbGNVVm9iMkp5WkRoalVIZHpTMkprVmtsT1JURm9ZbVp1WVhOSk5UaDRVV04yUVV0elYxcFFiVE5PT1Zad1owUnNRemRzVEc1ck1WZFJUWE5RTm1SU1FVVkhkM1pDY2xBNFBTSXNJbTFoWXlJNklqWXhPRFl5TnpJM1pHRTVaVFUyTldGaE9XSTRNMlU0T0RVd05XTXhNVFZrWmpCaVkyRmhZamRpWldReU16WmpabUk1TldOak9EUmtNV0V3WlRrNE5HSWlMQ0owWVdjaU9pSWlmUT09",
+                "last_activity": 1794538800
+            },
+            "serial": "a:6:{s:6:\"_token\";s:40:\"Uji0009Uji0009Uji0009Uji0009Uji0009Uji00\";s:50:\"login_web_59ba36addc2b2f9401580f014c7f58ea4e30989d\";i:101;s:17:\"password_hash_web\";s:64:\"91fe0e6b14527b1c28ef07019e5b405dce05df73fb9b47cebcc0c12c3c61a65a\";s:7:\"success\";s:23:\"Selamat datang kembali.\";s:6:\"_flash\";a:2:{s:3:\"new\";a:0:{}s:3:\"old\";a:1:{i:0;s:7:\"success\";}}s:9:\"_previous\";a:1:{s:3:\"url\";s:20:\"https://cc.test/akun\";}}",
+            "data": {
+                "_token": "Uji0009Uji0009Uji0009Uji0009Uji0009Uji00",
+                "login_web_59ba36addc2b2f9401580f014c7f58ea4e30989d": 101,
+                "password_hash_web": "91fe0e6b14527b1c28ef07019e5b405dce05df73fb9b47cebcc0c12c3c61a65a",
+                "success": "Selamat datang kembali.",
+                "_flash": {
+                    "new": [],
+                    "old": [
+                        "success"
+                    ]
+                },
+                "_previous": {
+                    "url": "https://cc.test/akun"
+                }
+            },
+            "user_hash": "$2y$12$ExY4GP29yRJUL7x9biLPgu6ifXxssgEA3JdEDjYViMhafV1Tgh266",
+            "harapan": {
+                "user_id": 101,
+                "password_hash": "91fe0e6b14527b1c28ef07019e5b405dce05df73fb9b47cebcc0c12c3c61a65a"
+            }
+        },
+        {
+            "label": "admin",
+            "catatan": "Admin login + url.intended + flash status & _old_input.",
+            "cookie": "eyJpdiI6ImFoYWx4ZDViYy9YbXR4OWk1NDE5dmc9PSIsInZhbHVlIjoidEkvVnBNTDNvMndxb2laQ25iTDZVWU9JdjJRWnNTQWc5a1VGdEdxV0ZzWERHdjlQVVZ4cUEzTXVRQ2ZCTjRpdWNTUFdJQmo0RCtWS0NmQmNvYTliR21jR0dva0NSSTRWbXNqYUxXNURETDZyVXZyVVR4NDZUbFpiUHlVSlVhaXQiLCJtYWMiOiI0ODYzNjE1YTI1Yzk1MTc2MjgwMmMzYjFiMjU3YTZkMjc4NDViMTBlZmQwOWUzOWUzNTg0ZjAwMjc0ZDFmNmZjIiwidGFnIjoiIn0=",
+            "baris": {
+                "id": "Uji0012Uji0012Uji0012Uji0012Uji0012Uji00",
+                "user_id": 1,
+                "ip_address": "203.0.113.7",
+                "user_agent": "Mozilla/5.0 (fixture uji)",
+                "payload": "ZXlKcGRpSTZJazltYkV4bk16ZExia3d4VEdOVWNIWmxUems1Y2xFOVBTSXNJblpoYkhWbElqb2lUM0ExY3pCbmEyeENTRTE1Y25ORlNXVkxTMlJrVUVaVmJEZzFhWFp5UVhwVGJXZEliWGxVZFVaeVNrRXhiVXN5TDFOcVdWUjFja05JVVZnMmJGQmxaMVppWjJsQ01HUlVWelF4ZW1sVlNVRm9TamRsT0dacmNrZERWMlJDUWs5NGJqVlZWRlZyVW5OV2RqWlFWMU53UzJSa09XVkliMlJ4WkZkTVFub3hjVWR1ZDNkVEwyWnVVbGxvZG5WS0t6TmtVMXBPUmpFMVFUaFRkMll2WVhOVE5qa3plRXhXUW01V2MzWnZTR2M0TURkTGRHbG1URFl5T1V4T1prMUpRbkJqY0RaTlYzUXlUMHcxTTJwMFlXZFlkVlZCZVhadGVtazNWSE5zTUhWQlpteFdZbll2VXpZd1JUQk1SRFphVURKNlVscFlXbVZCYlZOaU1HdHpjRlo2Y1RCamRGTlJaRFJFY214RVRFZ3lVRVYwVm04NEsxVllkRWM1YjB3MlN6WXdWRVJ4WTJwUldqaGxSamwzTlRNMk0zUXdRVTVZTUZwMGQzRjZOamhpUkZJdmFqZHNNRWxIWjJ0bmRTdEVjRWRhZFN0M1FUZEtNbTFXYUcxRk5FMUJjU3R4VDBwNE4wZGtkRE51Y1ZKMlJsUllMMjE2U0V3NGNIbG5SMnN6VUhaMWFrcHhTbXBOVFVGcVFrTmxhMlZDWkVKVmVrRm5SVWtyTUc1NlFYQXJXSEIzVkhkVlIzWlBkazAxUjNCcFJHSlJZVWw1YUROWmNHVnhUV0pQU205dFRYQjVURWhTYW1aM05GTlBkbE5TTXpBclpXbExjbEZ3U2s1VFJucHdhRTluV25sTmVEUm9TVTluUW1RM2NXTjVRazF3YlZwb1FYWm9jVGR0YTFoMlpWaDFRemRPWVVOSWFtSXhZMmh3ZDFoeVMwZ3ljalJNWlZjMmNuUk5UR3RTWkRGM1RYVkZiWGRhVEZodFRuRndSVTF5U21OaVRHczNUU3RQVldWa1Z6QmpXbTlNY0hGRlEwTkxjR1ZUVmpKTk0yWnlaVzV2YkZGNVJFRTNRamxIZURaeWNYVmliMEphZURGV1dHcE9jSEkxYUVvNE9Ib3Jka28wTW5wRloyTjRjVGxZY2poVVpHMTRaRVp2TVZsR2QzTktaVGs0ZUM5VFIzQk9RazVpZUdVek5VZFJXakpFUzA5eVZIWklLMDB5T1hNMVMyNDRXVTVWVlVsU2N6RTNjVGN6U25SRFZVTk9hMjV0Y25oWWExVlhkRWhYU1VSc1JqWm9VMkpUU2tocWJIbzVhbTFSYlRoaGNFWlJObGRwZFZKbEswSnRaVmwxVTFKQlNsUnRTa2d5YzNCdFZVdGpkakZXY2pKSFNGTTBUMWxwUmtzMVUwWnFWR0puVFdVM1JWTkNSeXN3Y3pCd1ptRnJMM3BEYTBSa1VtaG9UMmN4VUVNcmRrUklTMWx4V1VwVWVuUkZUM3BtVTBaeWMzSndPR0pEVXpaMk0wRTlQU0lzSW0xaFl5STZJakU1TVdabE5UVTNNbVk1WWpCaVlqTmpPVFZpWlRsaE5qbGhaREU1TVRNNFpqVTFOemt6WXpJeFpqQTRZMlU0TTJJeVlXWXdNRGhqTm1JNE1qQTJZbU1pTENKMFlXY2lPaUlpZlE9PQ==",
+                "last_activity": 1794538800
+            },
+            "serial": "a:8:{s:6:\"_token\";s:40:\"Uji0013Uji0013Uji0013Uji0013Uji0013Uji00\";s:3:\"url\";a:1:{s:8:\"intended\";s:39:\"https://cc.test/admin/tiket?status=baru\";}s:50:\"login_web_59ba36addc2b2f9401580f014c7f58ea4e30989d\";i:1;s:17:\"password_hash_web\";s:64:\"e74211d50d61d553f5c116fd90491cd8aaccbf2fe9d264b3d440925a1a15b30a\";s:6:\"status\";s:22:\"Kata sandi diperbarui.\";s:6:\"_flash\";a:2:{s:3:\"new\";a:0:{}s:3:\"old\";a:2:{i:0;s:6:\"status\";i:1;s:10:\"_old_input\";}}s:10:\"_old_input\";a:2:{s:10:\"identifier\";s:5:\"admin\";s:7:\"catatan\";s:7:\"ñ 🙂\";}s:9:\"_previous\";a:2:{s:3:\"url\";s:21:\"https://cc.test/admin\";s:5:\"route\";s:15:\"admin.dashboard\";}}",
+            "data": {
+                "_token": "Uji0013Uji0013Uji0013Uji0013Uji0013Uji00",
+                "url": {
+                    "intended": "https://cc.test/admin/tiket?status=baru"
+                },
+                "login_web_59ba36addc2b2f9401580f014c7f58ea4e30989d": 1,
+                "password_hash_web": "e74211d50d61d553f5c116fd90491cd8aaccbf2fe9d264b3d440925a1a15b30a",
+                "status": "Kata sandi diperbarui.",
+                "_flash": {
+                    "new": [],
+                    "old": [
+                        "status",
+                        "_old_input"
+                    ]
+                },
+                "_old_input": {
+                    "identifier": "admin",
+                    "catatan": "ñ 🙂"
+                },
+                "_previous": {
+                    "url": "https://cc.test/admin",
+                    "route": "admin.dashboard"
+                }
+            },
+            "user_hash": "$2y$12$ONxdKXz1enibppad7snmcuV3jhHG/9VtJ8cZMlEhkbwTzMbOK4Hay",
+            "harapan": {
+                "user_id": 1,
+                "password_hash": "e74211d50d61d553f5c116fd90491cd8aaccbf2fe9d264b3d440925a1a15b30a"
+            }
+        },
+        {
+            "label": "admin_request_berikutnya",
+            "catatan": "Sesi admin setelah satu request lagi: success/_old_input lama dibuang, flash error baru.",
+            "cookie": "eyJpdiI6InZnTEZYRlBaRU1Ba0dVaE1DbnZjL3c9PSIsInZhbHVlIjoiVUlWVGFvbUxyTkRhOWpMTWRKRFRNbXNrTEFxSHRTTFZ1QVczazdjVVhMYWR0WmRybFo2S1BLaWN4M3B6aWVTVXRpY1hVRG5lVnNVWW1CN0E3dkVRcko4MVVjLzdQK3l6TTlZZVFmQXBSWUZFY091eXhkemVXT3V5YUU5UzRhZjciLCJtYWMiOiJlMGJmNWJmMGVjOTI3M2U3NjI4NjIxZTExNmZkNmFkZmNiYzQxMTJkMGY2ZmNhMmYzZjZlYjUzNTEyNDAzYTE2IiwidGFnIjoiIn0=",
+            "baris": {
+                "id": "Uji0012Uji0012Uji0012Uji0012Uji0012Uji00",
+                "user_id": 1,
+                "ip_address": "203.0.113.7",
+                "user_agent": "Mozilla/5.0 (fixture uji)",
+                "payload": "ZXlKcGRpSTZJbFZXWTJ4RGVraFpjR3QyT0ZFM05VdHJhbkJOZGtFOVBTSXNJblpoYkhWbElqb2lMMWswTldNeE5XbGlNWHA1T1U1NlFWcGtXbFJHTWtVMlkzRnBVV1ZZYzBkc1FqQjRiV2cxVTI5NU5EWktSR0ZITldKd1pVRXZSek5wVDI5VmNEVlNObkpEV0hnMU1IaDRVMUJGV1dvdmRHRkRNbXRzTDJ0UU1uaGthVkpsSzA5MVp6aG5UMDVTVTJaYVYyUllWRGwyVHl0UU0wZEpVSEZaTWtkeVdUbFhkMGMwVHpWd1MzVnhiVEpaV0RKeVNteG9WbkpvYTJsNVZtSnFTbFpWYkdOdVNubHVWVUZPV0ZaT1RFSTRNM0Y1UWxkdE5FcEZNM1ZTUTFwck9FOHhWVEl6Uml0T2MxSnBMMnRSZUVvcmJXcE9ha3BhWWpOTGJVSXdZbTlFVFRCeldtZEZRbTFpVmtOdWNqUldXbUYyTTI5a2NHbDJNVTU1UlU1RFJIUjJWU3RMVFZSNWR6SlpXbEZ5TDNrMk4xQnpORFU0UjA5VmNuRTRjRUZuUmxVMllXZFJZWFJqVDB0MldWSlBNRTk1YVVOSmNFUkpSMnR4T0ZsNVREbGxka1ZCUmtWYVlWQlJTbEU0T1VkR1dtTTNRbWRxZDFVM1MxQndiRU5JWWxOU1VVMVlPRk5oUzJRdk5ISTNLemhVYTB0blFYVmxSREF5UjNGTk9WZFBiVEYyUjJSYWJVMWxhekZhTkVNek5VOUhZMU5KTXpKS09XTkJVR2xzT0hSME0wZGFVSHB0VmpFMFNHWTViMlp3Y0U1amJVUTJZWFIwU0VkcFEwUlJRbUpCTnpoeFlWcHFNSFJFUzI5VlExZ3JMelEyVm1VeWRXOWFXbk5MZGtkb1NubHpRVk5GUVZGWVlrWjJNRTU2UVRSWU1pODBSRFZsZVN0c1JuQldSR1ZEYjJKT1pERlliVXN6TW1Fd1dHVXlXRnBYV0dGYWJIa3ZlbUphU0M5RFYwVjBORTlXT0hGWFl6bHRWV0o2YldSVk4wdFdPVlpxVVd4M1MyTlBTVXBoY2t3eVpFaDRSbTR5TlhsWWRpczJObXBuVlZOVmRrVjBkRnByTWt4eFdGQmhVSHBGYXpsYWVsRTVkMnQwWlRoaGIzSXZjVzFWYW0xVldXSktZMDU0V0dNeVVHeEdkVEZyV1hOT1oySlVhMUpZVXk5SmJrdHpOMjVWZGpaMFVsRTVZbEZoWVhWTGRUVkRhM1pCU1U5V1dFOXFTMDl4UVdveldreHVLekI2Y1hCVVNuVm9jME1pTENKdFlXTWlPaUk0TlRZMU9EaGpaVEF3TWpReFpEVmlOalV3TVdVNU5EWTVORGcwTWpNME5UTTVZalpsWlRCbE5tWTRPVFUwWWpWbE1UVXhaREJoWXpoaE4ySmpPV0ZoSWl3aWRHRm5Jam9pSW4wPQ==",
+                "last_activity": 1794538800
+            },
+            "serial": "a:7:{s:6:\"_token\";s:40:\"Uji0013Uji0013Uji0013Uji0013Uji0013Uji00\";s:3:\"url\";a:1:{s:8:\"intended\";s:39:\"https://cc.test/admin/tiket?status=baru\";}s:50:\"login_web_59ba36addc2b2f9401580f014c7f58ea4e30989d\";i:1;s:17:\"password_hash_web\";s:64:\"e74211d50d61d553f5c116fd90491cd8aaccbf2fe9d264b3d440925a1a15b30a\";s:6:\"_flash\";a:2:{s:3:\"new\";a:0:{}s:3:\"old\";a:1:{i:0;s:5:\"error\";}}s:9:\"_previous\";a:2:{s:3:\"url\";s:21:\"https://cc.test/admin\";s:5:\"route\";s:15:\"admin.dashboard\";}s:5:\"error\";s:22:\"Tiket tidak ditemukan.\";}",
+            "data": {
+                "_token": "Uji0013Uji0013Uji0013Uji0013Uji0013Uji00",
+                "url": {
+                    "intended": "https://cc.test/admin/tiket?status=baru"
+                },
+                "login_web_59ba36addc2b2f9401580f014c7f58ea4e30989d": 1,
+                "password_hash_web": "e74211d50d61d553f5c116fd90491cd8aaccbf2fe9d264b3d440925a1a15b30a",
+                "_flash": {
+                    "new": [],
+                    "old": [
+                        "error"
+                    ]
+                },
+                "_previous": {
+                    "url": "https://cc.test/admin",
+                    "route": "admin.dashboard"
+                },
+                "error": "Tiket tidak ditemukan."
+            },
+            "user_hash": "$2y$12$ONxdKXz1enibppad7snmcuV3jhHG/9VtJ8cZMlEhkbwTzMbOK4Hay",
+            "harapan": {
+                "user_id": 1,
+                "password_hash": "e74211d50d61d553f5c116fd90491cd8aaccbf2fe9d264b3d440925a1a15b30a"
+            }
+        },
+        {
+            "label": "warga_dengan_errors",
+            "catatan": "withErrors() menyimpan ViewErrorBag (objek O:) di sesi: pembaca TS harus menolak, bukan mengosongkan.",
+            "cookie": "eyJpdiI6IktzbC95OVQ5OHFvL3pCWG5kUjk1S2c9PSIsInZhbHVlIjoiN2UxKzJMMk5xb2dKcmNzT1dSYndyZEl0a1l2c0NPUzR5NW1xVnJ4TTlzQm90cW1meDdFeDlTK2c2VlI4ZlNwaGNjSlVPaEFvQ1pDemdzWUtCTG9xbmliWHFkQ2ZIa3BkVzlsNjA1aUlxVFl6bGpJNlFSK0h6cFlkOUU2TnVGRXAiLCJtYWMiOiIzZDU0YjZkNmQ2ZTZhNTFkOTc5NGU1MTdlNWE3Y2NlZDQ4ZjFkYjdhM2RmOTdiMzkzZDEyOGIxZWEzZDFkM2ZiIiwidGFnIjoiIn0=",
+            "baris": {
+                "id": "Uji0017Uji0017Uji0017Uji0017Uji0017Uji00",
+                "user_id": 102,
+                "ip_address": "203.0.113.7",
+                "user_agent": "Mozilla/5.0 (fixture uji)",
+                "payload": "ZXlKcGRpSTZJbU5ETms1NGQwWnhhMjk0UjBVeFVHbEtRbU54SzBFOVBTSXNJblpoYkhWbElqb2laMWRuU1dWS1FYcDFiVU5EUjA1YVlWVnFWVE5DUWxsNk1rUkdRbkJZTTJ4Vk4yTlRabVZpV1RoMUx6SjFNV05CTkZkS1RrcGlPRkZEYmpKRVZWTnZlSFpqWXk5S1FVWmlXalkxT0dsNk5YQmhUR3haUmxoNU56SXdhelF6TVVFclVUZFVObk5OUjBOMGVFNU9VR0p3WkROWWQwdDJlVGhCZUdOcmFVTnhVMUJCVW1scVVuaHNhV05UZUZKUFkxVjFVMjVYUm01emJIbHFibmx3UzIxbUt6SkJMMjlTUTNkMmNVeERRWGcwVG1wbU5HMU5iRFpFVTBSek0wWXZZMjFHTDJaWlkzbzVlVXcwWm0xWE5tUmtOazl5TDBabVJtdERkVGRPSzA1SVFtWTFOalpTTTNkNVUzbElORmw2UVhoNFprRmpXVFZOWW5sTU9GUkhOREpSZUZreE9TODVTSE5ZV1c5c05GZEdlbFJIVFRodFUwWm9RMWg0VlhsWVJTdDZabGxCV0RneE5VMWpMMWRwYTNWMWVYZEViWE5EUXpWVE1WZHRlRlp3TjFWMFQwOVlSbFZuUjFKRFRVaGtTblppZUZWUFdFRXJURlpXYjA5NWFuUmpUbUpOZVdzeFdFNVVSREJ4TTJrd2NVSnVhMnBvVnpCMFdUTnViRTlUY0ROWUsxcGlRbU0wUWtkWFJUaFZkREJDZGtkblkzQlVSWFpRVWtoWE1VeEVOVXM1T1VzMlFUQkJlV2h5WkdacVpWQlpZMHd5Wlc1aE1teFJSRUZHUlZwb1VHWkdRa3A0TjNSWGFreFpjMloyVFZSb2FpdFpOMHMyYURoTVkxQkpaR0pNTkhKalJuQXdRbXhCWXpSV04ybFVjMUV6VEUwd2FsRk1abTU2V1ZsbmVqTjNhakpMWjBKU01TdExVVlpYVWtoRU9HWXZOamxzY2xSSFFtSnRTMjFGTDJZdmVtVnlkVkJMWjBSTVEweHdSMUJUZWpKUlVXcExUSE5VUVVKYVJqZDBjemsxVURSdGVYcFRVMWhaTHpjelRsQlJSWEZPTjFGTmRscHVVV0pzYmtOVU9EUmFhVEZhTDNwMlZ6ZG1VRWg2WVU4d2RqVjJjbE5KYzFKS1VVMVNZMFJRYzFwTlZVVkNWRzg0YnpGWU0zTnJNR2M1VUZacldXdGtVRkIzUkVKclFUZFhXUzlQVEZSbVRtZERNa3AyTWtzMlpqTkJlWEVyV2sxc1MxQTRhVE56V21WWU1uWkRjekJvUTFKb05rMUlaMmQ0WkVKTlpEZFhlbkpDYm5kU2FURndhVGRhV1hOTFNUZDNQU0lzSW0xaFl5STZJak00WlRGa09ESTBZV0l6TnpNeE9ESmlZVGd4TVdJNE16WTJZVFEzWkdNMk9EWTFNbUZqTjJKbE5tSXpPVEJqTkRZME0yVmtPV1psTVRrNE9Ea3paRGdpTENKMFlXY2lPaUlpZlE9PQ==",
+                "last_activity": 1794538800
+            },
+            "serial": "a:5:{s:6:\"_token\";s:40:\"Uji0018Uji0018Uji0018Uji0018Uji0018Uji00\";s:50:\"login_web_59ba36addc2b2f9401580f014c7f58ea4e30989d\";i:102;s:17:\"password_hash_web\";s:64:\"245048b675878e4391fe4c81e3108e3a85d3d8941b896f9feb6dcbac4b5f33e2\";s:6:\"errors\";O:31:\"Illuminate\\Support\\ViewErrorBag\":1:{s:7:\"\u0000*\u0000bags\";a:1:{s:7:\"default\";O:29:\"Illuminate\\Support\\MessageBag\":2:{s:11:\"\u0000*\u0000messages\";a:1:{s:10:\"identifier\";a:1:{i:0;s:26:\"NIK atau kata sandi salah.\";}}s:9:\"\u0000*\u0000format\";s:8:\":message\";}}}s:6:\"_flash\";a:2:{s:3:\"new\";a:0:{}s:3:\"old\";a:1:{i:0;s:6:\"errors\";}}}",
+            "data": {
+                "_token": "Uji0018Uji0018Uji0018Uji0018Uji0018Uji00",
+                "login_web_59ba36addc2b2f9401580f014c7f58ea4e30989d": 102,
+                "password_hash_web": "245048b675878e4391fe4c81e3108e3a85d3d8941b896f9feb6dcbac4b5f33e2",
+                "errors": {
+                    "__objek": "Illuminate\\Support\\ViewErrorBag"
+                },
+                "_flash": {
+                    "new": [],
+                    "old": [
+                        "errors"
+                    ]
+                }
+            },
+            "user_hash": "$2y$12$MV4Zb8ZYg6GDb7WpHEwsN.nNifj9tXs2mlb0RW2e2m8tIrgtcjxey",
+            "harapan": {
+                "user_id": 102,
+                "password_hash": "245048b675878e4391fe4c81e3108e3a85d3d8941b896f9feb6dcbac4b5f33e2"
+            },
+            "harapan_galat": "objek"
+        },
+        {
+            "label": "kedaluwarsa",
+            "catatan": "last_activity < now - lifetime: DatabaseSessionHandler::read mengembalikan sesi kosong.",
+            "cookie": "eyJpdiI6ImJHb2QyNnBuUlA0VlQ3dDN1elgzeGc9PSIsInZhbHVlIjoiK0tlWVE3TlVQRjRzZHRwU1F2N1pOMUVXQ1ZvY000aHZmK0V0S211N3RhSHlnNWRqSW5IOHlveUxURUZ0VFJRRFJiMytGNkcxeDJwYUhaY1BxcjB6TG1oYmxDSmIxMUVzSU1UWm5YVFBJRittSk5NRjNNRVh2U2RDbml1TmE2ZjciLCJtYWMiOiI0NzBmOTI5MjgyNWFjZDNhMTA3MmRjMTY1NzU5NjIyNzg2OWE3MzViM2FkMzZiY2M0Y2VjOGRkODVmODcxMTZiIiwidGFnIjoiIn0=",
+            "baris": {
+                "id": "Uji0019Uji0019Uji0019Uji0019Uji0019Uji00",
+                "user_id": null,
+                "ip_address": "203.0.113.7",
+                "user_agent": "Mozilla/5.0 (fixture uji)",
+                "payload": "ZXlKcGRpSTZJazFWVFVwalkxRXJTMUExTm5kVVdHdEdMMXBsYm5jOVBTSXNJblpoYkhWbElqb2lPSGhJYW0xeE1WZE5TVVZEYTNSak1YbG5hR0Z6YzFoNFkxRnFNbXgzWkdGQk5YWTJUbWhET0d4Q1VrNVpUek5ZVlVRM1RWVTBZVGt3VG5wM1VXeHNXVGxWZG1wcVdUbEtZbVowY0ROdWJFeGtkRUZ6Y0VreVdIbHZUVEoxVm5sRmJsWkxPSGhJY1hoSlUxaFNNV28xV2xkaWRFeHlVMjV4ZGt0U1ZXcE9ZVlJJWnpCU09YVkVjRnBITlU5VFpYSjFTMHM0TDNoM1ZXbFZaV0pJYmpjd1V6RkdOSGRKYVVKaVMxQXdQU0lzSW0xaFl5STZJalkwTnpJeFl6UmxNV1U0TkRVM1lUQXdZVE5tWm1FNFpqUTBPVFZoT1RCaE5HRTJPREpoTURsa05qQXhNR0V6TXpSbE1EVTJNelZqTXprME5tRTBZelVpTENKMFlXY2lPaUlpZlE9PQ==",
+                "last_activity": 1794531599
+            },
+            "serial": "a:2:{s:6:\"_token\";s:40:\"Uji0020Uji0020Uji0020Uji0020Uji0020Uji00\";s:6:\"_flash\";a:2:{s:3:\"old\";a:0:{}s:3:\"new\";a:0:{}}}",
+            "data": {
+                "_token": "Uji0020Uji0020Uji0020Uji0020Uji0020Uji00",
+                "_flash": {
+                    "old": [],
+                    "new": []
+                }
+            },
+            "user_hash": null,
+            "harapan": {
+                "user_id": null,
+                "password_hash": null
+            },
+            "harapan_kosong": true
+        },
+        {
+            "label": "tepat_batas",
+            "catatan": "last_activity = now - lifetime: belum kedaluwarsa (perbandingan <).",
+            "cookie": "eyJpdiI6InN0SmFNVWk0NDE3bG1HenRIbXE5YXc9PSIsInZhbHVlIjoidXRsTTRDN2ZUZlQzWHVHUVpRaEhUNUg4YjBrS0w0ZEwzQlVJRU9yTzlCbThWUlB5WTNlQVBBSnhQTlNWMWk5SFVPb0tUeCtpSm81eXhRendWWnZJTmhYWTdpWWFKV2ZtWGZkTXpob2Jabzlkem14Y2RHUkZtTHVQd3M3THVadkEiLCJtYWMiOiI4NzZjYTczZWI1ZWEyNzQ3ZjdkMGMyYzMyOGE3ZGNkODlkZDMwYmI2ODVlZTk1ZDY3ZjY1N2JkNWRhYjJiNGUwIiwidGFnIjoiIn0=",
+            "baris": {
+                "id": "Uji0021Uji0021Uji0021Uji0021Uji0021Uji00",
+                "user_id": null,
+                "ip_address": "203.0.113.7",
+                "user_agent": "Mozilla/5.0 (fixture uji)",
+                "payload": "ZXlKcGRpSTZJa2hOZEZrMVJuUTVVbEJvYTA1aUsxa3JMM0ZqV1VFOVBTSXNJblpoYkhWbElqb2lTREEwTUZocU5FVk9kMUZrVWpacE9EbDRSM042UldWbE1sTmtTbVpoUWs5S2VubGxablprYlhWbVoxRkhZa2xOYlVOdlowOUxjVW8xVFVoVU9XaHlhV0phY0ZSS1ozRXJPR1o2VDFkdWFXOUZTMUE1VjJJeVYzVnBObHBhTkhoYWJHeFBaVU4xUjNoclUxSlVUVWhTZFZkMWFuQTBTblpTSzBwRFRVTm1NMEZwTmtKeVYzZDVUMGcxSzB0b2VWaHNObmg2Um1VMlRsTkVSRkZuWldrMlFVb3JWWE5aYkRCQ2ExWmpQU0lzSW0xaFl5STZJakJtTmpOaE1UWmlOVGxpTWpnMFlXRTNOemczTVRkaU1UZGpaakl4TldJNU0yWmtaR0V4TldFME16Z3daakZtTldReFpXRm1OR1JrTnpCalpXRmhNRFVpTENKMFlXY2lPaUlpZlE9PQ==",
+                "last_activity": 1794531600
+            },
+            "serial": "a:2:{s:6:\"_token\";s:40:\"Uji0022Uji0022Uji0022Uji0022Uji0022Uji00\";s:6:\"_flash\";a:2:{s:3:\"old\";a:0:{}s:3:\"new\";a:0:{}}}",
+            "data": {
+                "_token": "Uji0022Uji0022Uji0022Uji0022Uji0022Uji00",
+                "_flash": {
+                    "old": [],
+                    "new": []
+                }
+            },
+            "user_hash": null,
+            "harapan": {
+                "user_id": null,
+                "password_hash": null
+            }
+        }
+    ],
+    "password_hash_web": [
+        {
+            "user_hash": "$2y$12$ExY4GP29yRJUL7x9biLPgu6ifXxssgEA3JdEDjYViMhafV1Tgh266",
+            "tersimpan": "91fe0e6b14527b1c28ef07019e5b405dce05df73fb9b47cebcc0c12c3c61a65a",
+            "cocok": true
+        },
+        {
+            "user_hash": "$2y$12$ExY4GP29yRJUL7x9biLPgu6ifXxssgEA3JdEDjYViMhafV1Tgh266",
+            "tersimpan": "$2y$12$ExY4GP29yRJUL7x9biLPgu6ifXxssgEA3JdEDjYViMhafV1Tgh266",
+            "cocok": true
+        },
+        {
+            "user_hash": "$2y$12$KKbVJ/sF5TaRDYfngUXc3./c9NX7waJtbqGt8auKkXarnMuUpkQt.",
+            "tersimpan": "91fe0e6b14527b1c28ef07019e5b405dce05df73fb9b47cebcc0c12c3c61a65a",
+            "cocok": false
+        },
+        {
+            "user_hash": "$2y$12$ONxdKXz1enibppad7snmcuV3jhHG/9VtJ8cZMlEhkbwTzMbOK4Hay",
+            "tersimpan": "e74211d50d61d553f5c116fd90491cd8aaccbf2fe9d264b3d440925a1a15b30a",
+            "cocok": true
+        },
+        {
+            "user_hash": "$2y$12$ONxdKXz1enibppad7snmcuV3jhHG/9VtJ8cZMlEhkbwTzMbOK4Hay",
+            "tersimpan": "$2y$12$ONxdKXz1enibppad7snmcuV3jhHG/9VtJ8cZMlEhkbwTzMbOK4Hay",
+            "cocok": true
+        },
+        {
+            "user_hash": "$2y$12$WkiDDZ8KcNs27FDTkFoFCukRngE1zC2YegCXSyTIOomoqJcMMv5UG",
+            "tersimpan": "e74211d50d61d553f5c116fd90491cd8aaccbf2fe9d264b3d440925a1a15b30a",
+            "cocok": false
+        },
+        {
+            "user_hash": "$2y$12$ONxdKXz1enibppad7snmcuV3jhHG/9VtJ8cZMlEhkbwTzMbOK4Hay",
+            "tersimpan": "e74211d50d61d553f5c116fd90491cd8aaccbf2fe9d264b3d440925a1a15b30a",
+            "cocok": true
+        },
+        {
+            "user_hash": "$2y$12$ONxdKXz1enibppad7snmcuV3jhHG/9VtJ8cZMlEhkbwTzMbOK4Hay",
+            "tersimpan": "$2y$12$ONxdKXz1enibppad7snmcuV3jhHG/9VtJ8cZMlEhkbwTzMbOK4Hay",
+            "cocok": true
+        },
+        {
+            "user_hash": "$2y$12$BV8vfWOl97pTq982HGxGP.TzKDs43byCokxv3LJMpliqkUSKb9SR6",
+            "tersimpan": "e74211d50d61d553f5c116fd90491cd8aaccbf2fe9d264b3d440925a1a15b30a",
+            "cocok": false
+        },
+        {
+            "user_hash": "$2y$12$MV4Zb8ZYg6GDb7WpHEwsN.nNifj9tXs2mlb0RW2e2m8tIrgtcjxey",
+            "tersimpan": "245048b675878e4391fe4c81e3108e3a85d3d8941b896f9feb6dcbac4b5f33e2",
+            "cocok": true
+        },
+        {
+            "user_hash": "$2y$12$MV4Zb8ZYg6GDb7WpHEwsN.nNifj9tXs2mlb0RW2e2m8tIrgtcjxey",
+            "tersimpan": "$2y$12$MV4Zb8ZYg6GDb7WpHEwsN.nNifj9tXs2mlb0RW2e2m8tIrgtcjxey",
+            "cocok": true
+        },
+        {
+            "user_hash": "$2y$12$c8rqn7GLk4PrYUErK2//yeDbkr1FNw5SVHenWTASs0N.p.M91SDhe",
+            "tersimpan": "245048b675878e4391fe4c81e3108e3a85d3d8941b896f9feb6dcbac4b5f33e2",
+            "cocok": false
+        }
+    ]
+}

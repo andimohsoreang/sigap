@@ -1,0 +1,124 @@
+{
+    "sumber": [
+        "Illuminate\\Cookie\\Middleware\\EncryptCookies",
+        "Illuminate\\Cookie\\CookieValuePrefix",
+        "Illuminate\\Foundation\\Http\\Middleware\\ValidateCsrfToken::getTokenFromRequest"
+    ],
+    "commit": "f8713a05929dca41c78de8b1df39ec37128148e3",
+    "tag": "laravel-baseline",
+    "laravel": "12.69.3",
+    "perintah": "php artisan cc:ekspor-fixture-kripto",
+    "peringatan": "Semua kunci di berkas ini KUNCI UJI (sha256 teks tetap), bukan kunci produksi.",
+    "app_key": "base64:1Fo/L9cQ+Uap3LCppnuPd4BCnDJzeV0NkVoQs3qxKeU=",
+    "app_previous_keys": "base64:VvU1Arvo96r54OcT6Am8zPdp4H1SrK8hlNAzy5EmnvY=",
+    "nama_remember": "remember_web_59ba36addc2b2f9401580f014c7f58ea4e30989d",
+    "catatan": "set_cookie = header Set-Cookie Symfony (nilai di-rawurlencode); hasil_dekripsi null = cookie dianggap tidak ada.",
+    "kasus": [
+        {
+            "nama": "sigap_session",
+            "nilai": "AbCdEfGhIjAbCdEfGhIjAbCdEfGhIjAbCdEfGhIj",
+            "terenkripsi": "eyJpdiI6ImhUMDJTU091Wk81TjRSRExac2ZHeXc9PSIsInZhbHVlIjoiMllIR1pGdGVockphUGVxTml1NFZPMm02RW80YUhWTXhlVUF5Y2RBRDlKYURoeHNOOU1NWXV3YmVMS0tvd3l5QjN6WkxRL1hyaVlmSVhOWDQvQkxWYnRGM0hyK1RHRzAxUjFYVDJSSWtwTTg4emJHQWcrZWQ4WXdxbWlMSWxWM0siLCJtYWMiOiIxZmVmMDVhYTY4YmViMmM3NzFiNmFlZDY2NmRhZjFiM2RhNjI0NDI5ODZhZmU4MDExNDIyMzg3ZGFkZDQwMTI4IiwidGFnIjoiIn0=",
+            "set_cookie": "sigap_session=eyJpdiI6ImhUMDJTU091Wk81TjRSRExac2ZHeXc9PSIsInZhbHVlIjoiMllIR1pGdGVockphUGVxTml1NFZPMm02RW80YUhWTXhlVUF5Y2RBRDlKYURoeHNOOU1NWXV3YmVMS0tvd3l5QjN6WkxRL1hyaVlmSVhOWDQvQkxWYnRGM0hyK1RHRzAxUjFYVDJSSWtwTTg4emJHQWcrZWQ4WXdxbWlMSWxWM0siLCJtYWMiOiIxZmVmMDVhYTY4YmViMmM3NzFiNmFlZDY2NmRhZjFiM2RhNjI0NDI5ODZhZmU4MDExNDIyMzg3ZGFkZDQwMTI4IiwidGFnIjoiIn0%3D; path=/; httponly; samesite=lax",
+            "prefix": "cefdb1e95f1a382df100a7abc475f655465b9f55|",
+            "hasil_dekripsi": "AbCdEfGhIjAbCdEfGhIjAbCdEfGhIjAbCdEfGhIj"
+        },
+        {
+            "nama": "XSRF-TOKEN",
+            "nilai": "TokenCsrfUji0123456789abcdefghijklmnopqr",
+            "terenkripsi": "eyJpdiI6IjFEbnhYVExUeWVCSXR4TGFNZ0RwRnc9PSIsInZhbHVlIjoiOHRVazNRM01mcWZNeFptMUJxQ1VtTHFSS21pczRNeU1FSHU4MGhBUGlmMDNjdnpUeGhNeHlTU3BpZENWSUN5T083K2JFWitIRGtUMUkwU3lPbDE3dDR6dVJuZXBIWlJHMkF3TXowNE1WTHNtR0w1NmNwSmpKeERTeDdGOE5Fd3QiLCJtYWMiOiI5ZDg5MjhkNjQzODg5MWVkN2FjMGQ5OWQ2NjQzYzJlM2YyYjE2MGI2OGRjY2Y1ZjM2NjIyMmMzZWRlOTAxNzdkIiwidGFnIjoiIn0=",
+            "set_cookie": "XSRF-TOKEN=eyJpdiI6IjFEbnhYVExUeWVCSXR4TGFNZ0RwRnc9PSIsInZhbHVlIjoiOHRVazNRM01mcWZNeFptMUJxQ1VtTHFSS21pczRNeU1FSHU4MGhBUGlmMDNjdnpUeGhNeHlTU3BpZENWSUN5T083K2JFWitIRGtUMUkwU3lPbDE3dDR6dVJuZXBIWlJHMkF3TXowNE1WTHNtR0w1NmNwSmpKeERTeDdGOE5Fd3QiLCJtYWMiOiI5ZDg5MjhkNjQzODg5MWVkN2FjMGQ5OWQ2NjQzYzJlM2YyYjE2MGI2OGRjY2Y1ZjM2NjIyMmMzZWRlOTAxNzdkIiwidGFnIjoiIn0%3D; path=/; httponly; samesite=lax",
+            "prefix": "45cb70c761d0a9e131cf37f55c491650603b23f8|",
+            "hasil_dekripsi": "TokenCsrfUji0123456789abcdefghijklmnopqr"
+        },
+        {
+            "nama": "sigap_chat_tamu",
+            "nilai": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+            "terenkripsi": "eyJpdiI6Im9KNkhCaDMrWjRsaVJsa2lEaUtrMGc9PSIsInZhbHVlIjoibGkvVVhWb3BtYWVSRkZrZ3BSVG00UnNGRjlSV1FheWxaM21QNGlKY2RpS2lsS1hORUpMM1kyM1NNYzRhSFNBMW1tMG5rcmQ4bnNERW10SEVMYkRBMzBYU2tqcTVnck5rNlRBS2NyK21wUkE9IiwibWFjIjoiNDBiOTNiMjI3NDY2MDZhZWQyYTRmOTdkZTNmMjgyMzU0NWM2NjI0Y2QyNGI2ZjU3MzhmYjY0NDUxZGI1NmI0ZCIsInRhZyI6IiJ9",
+            "set_cookie": "sigap_chat_tamu=eyJpdiI6Im9KNkhCaDMrWjRsaVJsa2lEaUtrMGc9PSIsInZhbHVlIjoibGkvVVhWb3BtYWVSRkZrZ3BSVG00UnNGRjlSV1FheWxaM21QNGlKY2RpS2lsS1hORUpMM1kyM1NNYzRhSFNBMW1tMG5rcmQ4bnNERW10SEVMYkRBMzBYU2tqcTVnck5rNlRBS2NyK21wUkE9IiwibWFjIjoiNDBiOTNiMjI3NDY2MDZhZWQyYTRmOTdkZTNmMjgyMzU0NWM2NjI0Y2QyNGI2ZjU3MzhmYjY0NDUxZGI1NmI0ZCIsInRhZyI6IiJ9; path=/; httponly; samesite=lax",
+            "prefix": "c0f27f760042ed12ca662bc503e2ec41e35e3e63|",
+            "hasil_dekripsi": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+        },
+        {
+            "nama": "remember_web_59ba36addc2b2f9401580f014c7f58ea4e30989d",
+            "nilai": "101|rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr|c4069fe7fe620ce643603f58febf97385998d1e300728afa8502aec598c9bea2",
+            "terenkripsi": "eyJpdiI6Im1BRTFJWVNaWmJvT29SSXNBME8vcEE9PSIsInZhbHVlIjoiZUVrbGlCS1VtV0pRSVlIUlYrS25lUER1QXhSbGEwL1g0TUtrVXpvY2F6OXN1R2NheGRBSXFKbDFmU0xCV0RYamlNcnlET1F4bnowa29wUmZTckthblc1SUxUd2VUZ0FBSjNXY3FhM1JOWXFBTEZvOUJFbmFMRHR3WlRmUklOYTRwY0tPRUF3eG9zanUvVklTamRzQXQxeDJMV1RGaERIK1dIbmFDaDg1UlQ0aXBxb1N1eXNZUnhmdTlRQXE0ZVZVeURFdnJDSlk1ZFptcUp1L05RUVhjYzUzNUhEenViZVM4STdhRUFpSXhpOD0iLCJtYWMiOiJmNzBmODViMjZiNWQwMzcwNjYyYjk3MTYzMGNhY2EzOWMzNjcwMzA0YjhlMjg5N2FhMTBlYTc4Mzk1YmQ5YjBjIiwidGFnIjoiIn0=",
+            "set_cookie": "remember_web_59ba36addc2b2f9401580f014c7f58ea4e30989d=eyJpdiI6Im1BRTFJWVNaWmJvT29SSXNBME8vcEE9PSIsInZhbHVlIjoiZUVrbGlCS1VtV0pRSVlIUlYrS25lUER1QXhSbGEwL1g0TUtrVXpvY2F6OXN1R2NheGRBSXFKbDFmU0xCV0RYamlNcnlET1F4bnowa29wUmZTckthblc1SUxUd2VUZ0FBSjNXY3FhM1JOWXFBTEZvOUJFbmFMRHR3WlRmUklOYTRwY0tPRUF3eG9zanUvVklTamRzQXQxeDJMV1RGaERIK1dIbmFDaDg1UlQ0aXBxb1N1eXNZUnhmdTlRQXE0ZVZVeURFdnJDSlk1ZFptcUp1L05RUVhjYzUzNUhEenViZVM4STdhRUFpSXhpOD0iLCJtYWMiOiJmNzBmODViMjZiNWQwMzcwNjYyYjk3MTYzMGNhY2EzOWMzNjcwMzA0YjhlMjg5N2FhMTBlYTc4Mzk1YmQ5YjBjIiwidGFnIjoiIn0%3D; path=/; httponly; samesite=lax",
+            "prefix": "dda2d146c1b9d6a81354c1b498112029c5520303|",
+            "hasil_dekripsi": "101|rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr|c4069fe7fe620ce643603f58febf97385998d1e300728afa8502aec598c9bea2"
+        },
+        {
+            "nama": "kosong",
+            "nilai": "",
+            "terenkripsi": "eyJpdiI6IjFuWjExS0tRZlgwVStnTS9YR0l5K3c9PSIsInZhbHVlIjoiR2tCYVFMcHhlVkxHRXFDNkNJTzlPZEJrTTdEVENrekRjcTFPY1JrWkh4Q0FrakVFNUNuVjBOcjc3cjNHRE1YeSIsIm1hYyI6IjY1YjU5MjdiZTgzOWU5NjEyYzg5YWYxNTIxMmFmMzcyMGExY2Q0OGQ1M2I0OTU0OTE0NGQ5MmZiMTRjMTI0MmQiLCJ0YWciOiIifQ==",
+            "set_cookie": "kosong=eyJpdiI6IjFuWjExS0tRZlgwVStnTS9YR0l5K3c9PSIsInZhbHVlIjoiR2tCYVFMcHhlVkxHRXFDNkNJTzlPZEJrTTdEVENrekRjcTFPY1JrWkh4Q0FrakVFNUNuVjBOcjc3cjNHRE1YeSIsIm1hYyI6IjY1YjU5MjdiZTgzOWU5NjEyYzg5YWYxNTIxMmFmMzcyMGExY2Q0OGQ1M2I0OTU0OTE0NGQ5MmZiMTRjMTI0MmQiLCJ0YWciOiIifQ%3D%3D; path=/; httponly; samesite=lax",
+            "prefix": "2010434b66ad40544d810d39aa5a5572c1268ba6|",
+            "hasil_dekripsi": ""
+        }
+    ],
+    "negatif": [
+        {
+            "label": "nama_tertukar",
+            "nama": "XSRF-TOKEN",
+            "terenkripsi": "eyJpdiI6ImhUMDJTU091Wk81TjRSRExac2ZHeXc9PSIsInZhbHVlIjoiMllIR1pGdGVockphUGVxTml1NFZPMm02RW80YUhWTXhlVUF5Y2RBRDlKYURoeHNOOU1NWXV3YmVMS0tvd3l5QjN6WkxRL1hyaVlmSVhOWDQvQkxWYnRGM0hyK1RHRzAxUjFYVDJSSWtwTTg4emJHQWcrZWQ4WXdxbWlMSWxWM0siLCJtYWMiOiIxZmVmMDVhYTY4YmViMmM3NzFiNmFlZDY2NmRhZjFiM2RhNjI0NDI5ODZhZmU4MDExNDIyMzg3ZGFkZDQwMTI4IiwidGFnIjoiIn0=",
+            "hasil_dekripsi": null
+        },
+        {
+            "label": "kunci_sebelumnya",
+            "nama": "sigap_session",
+            "terenkripsi": "eyJpdiI6Img2SUc0U2F5NXhCOVpTYU5xenJVeGc9PSIsInZhbHVlIjoidFFWQzloYVZyamNNRFpEZkhjVHFNdTRJdFlvS0hxMW5oYW12b1FwZVFJbjUzVUFySG95U0lWYmpXL1BDdzNiQTAwRjBUb3cvYnJHMmIvUTNPQXB2KytkclFFUm9HYU1udUpUZ01ST3NiTVV3VEQvaUF1U0sxTkZXemtuem43Uk0iLCJtYWMiOiIwZjgwMmM3OTAzNzg2YWI0MzVlZDgxNjNmMmFkNjZmYTFiNmNkM2VjOWVjMDkzYmQ4MTI0ZjVhMDc0ZjM0NThkIiwidGFnIjoiIn0=",
+            "hasil_dekripsi": "AbCdEfGhIjAbCdEfGhIjAbCdEfGhIjAbCdEfGhIj"
+        },
+        {
+            "label": "tanpa_prefix",
+            "nama": "sigap_session",
+            "terenkripsi": "eyJpdiI6IjErOThFSlU2M2w2UytDYlNOVWMwYnc9PSIsInZhbHVlIjoiQVUvQmVyRUQzZmdHS1FkajIwRHJzdzVZVTlsVEZoVjk3dHZEaWhDNlcyaTlVb2F4ZWZJdmlId2F1U0NpaEo2ayIsIm1hYyI6ImQyYzkyZWE4MWY3N2U1ZjBlOGE3MTQzZTEyMjRmYjQwZmEwZjBiNjk0NTgwNjk4ZDA5MWNiY2E0ZTA2YzdmNDUiLCJ0YWciOiIifQ==",
+            "hasil_dekripsi": null
+        },
+        {
+            "label": "prefix_v1_lama",
+            "nama": "sigap_session",
+            "terenkripsi": "eyJpdiI6ImtTUkVUUHhFeGJqblNhT09taGdSanc9PSIsInZhbHVlIjoiK0trZUdmWUVKNzVXcFRsbkpxVUphemVyMkhjMWlIcm9NR1NrT21vaXN5WHlRQ2RyV1VqTHB3ZTFQRUlkT1RXbkFRR1ZNY2tJQnVpblJHbUZYNzRpTldnYzVucVMvaE94aDdmRUhhb0JyQmQ5TGd4SmNpY2IrWXRQeDU2Mnc0NzciLCJtYWMiOiI2M2UxODEwMzQxMjI4ZmZlOGNjODkzNjlkNGI2M2EyMGZmMjE3NDJiNmQ3ZTFhNGQzYjk5MTA2YjJiMTk5NTdkIiwidGFnIjoiIn0=",
+            "hasil_dekripsi": null
+        },
+        {
+            "label": "mac_rusak",
+            "nama": "sigap_session",
+            "terenkripsi": "eyJpdiI6ImhUMDJTU091Wk81TjRSRExac2ZHeXc9PSIsInZhbHVlIjoiMllIR1pGdGVockphUGVxTml1NFZPMm02RW80YUhWTXhlVUF5Y2RBRDlKYURoeHNOOU1NWXV3YmVMS0tvd3l5QjN6WkxRL1hyaVlmSVhOWDQvQkxWYnRGM0hyK1RHRzAxUjFYVDJSSWtwTTg4emJHQWcrZWQ4WXdxbWlMSWxWM0siLCJtYWMiOiIxZmVmMDVhYTY4YmViMmM3NzFiNmFlZDY2NmRhZjFiM2RhNjI0NDI5ODZhZmU4MDExNDIyMzg3ZGFkZDQwMTI4IiwidGFnAAAAAAA=",
+            "hasil_dekripsi": null
+        },
+        {
+            "label": "sampah",
+            "nama": "sigap_session",
+            "terenkripsi": "bukan-cookie-laravel",
+            "hasil_dekripsi": null
+        },
+        {
+            "label": "terserialisasi",
+            "nama": "sigap_session",
+            "terenkripsi": "eyJpdiI6InJHTkloekZWMjZRdWZjdU9OSkZydlE9PSIsInZhbHVlIjoicXltZ2ZINEFwQXliM1F1RS9OTEdzVDJZc1pFTmdPVW9pYnFwZVpQRTMwTjNqRXpCayt2U2lDSTV3TDJEWjNBOUZWT1BocGJiOWh5b09oZTRTOFhQY25XTnBkOWtFaDh3dE1RUFRSWDE4SEJ2Y1kxaDhZcDI2SUJFNEVLZEtYUnYiLCJtYWMiOiIxYmJkZDU4ZDVhZGZiMTBhNmI2MjI1MzZlZTU4YmIzNGJmMTY2ZTYwNDM0NGU0NDZlZTdlNjc4MDJmNGEzZGY5IiwidGFnIjoiIn0=",
+            "hasil_dekripsi": null
+        }
+    ],
+    "header_xsrf": [
+        {
+            "label": "cookie_xsrf",
+            "header": "eyJpdiI6IjFEbnhYVExUeWVCSXR4TGFNZ0RwRnc9PSIsInZhbHVlIjoiOHRVazNRM01mcWZNeFptMUJxQ1VtTHFSS21pczRNeU1FSHU4MGhBUGlmMDNjdnpUeGhNeHlTU3BpZENWSUN5T083K2JFWitIRGtUMUkwU3lPbDE3dDR6dVJuZXBIWlJHMkF3TXowNE1WTHNtR0w1NmNwSmpKeERTeDdGOE5Fd3QiLCJtYWMiOiI5ZDg5MjhkNjQzODg5MWVkN2FjMGQ5OWQ2NjQzYzJlM2YyYjE2MGI2OGRjY2Y1ZjM2NjIyMmMzZWRlOTAxNzdkIiwidGFnIjoiIn0=",
+            "token": "TokenCsrfUji0123456789abcdefghijklmnopqr"
+        },
+        {
+            "label": "cookie_sesi_tanpa_cek_prefix",
+            "header": "eyJpdiI6ImhUMDJTU091Wk81TjRSRExac2ZHeXc9PSIsInZhbHVlIjoiMllIR1pGdGVockphUGVxTml1NFZPMm02RW80YUhWTXhlVUF5Y2RBRDlKYURoeHNOOU1NWXV3YmVMS0tvd3l5QjN6WkxRL1hyaVlmSVhOWDQvQkxWYnRGM0hyK1RHRzAxUjFYVDJSSWtwTTg4emJHQWcrZWQ4WXdxbWlMSWxWM0siLCJtYWMiOiIxZmVmMDVhYTY4YmViMmM3NzFiNmFlZDY2NmRhZjFiM2RhNjI0NDI5ODZhZmU4MDExNDIyMzg3ZGFkZDQwMTI4IiwidGFnIjoiIn0=",
+            "token": "AbCdEfGhIjAbCdEfGhIjAbCdEfGhIjAbCdEfGhIj"
+        },
+        {
+            "label": "tanpa_prefix_terpotong",
+            "header": "eyJpdiI6ImR6YkRpcTk2RkNGSHFzbG5lTGh1TGc9PSIsInZhbHVlIjoidTNyNXFlT3F1c2cxWVFVcS9MWXdrQT09IiwibWFjIjoiMDkxZWNjMzc2OTBhMzIxNjgyZTUxMGIxY2VlNGRkNzI1OWVlOGI5OGRmMzgzZmI4MjQ4NGUxZWY4YWJiYzJjZiIsInRhZyI6IiJ9",
+            "token": ""
+        },
+        {
+            "label": "sampah",
+            "header": "bukan-token",
+            "token": ""
+        }
+    ]
+}

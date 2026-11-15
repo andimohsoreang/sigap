@@ -1,0 +1,229 @@
+{
+    "sumber": [
+        "Illuminate\\Hashing\\BcryptHasher (rounds 12, verify true)",
+        "Illuminate\\Auth\\SessionGuard::hashPasswordForCookie (kunci = config app.key mentah)"
+    ],
+    "commit": "f8713a05929dca41c78de8b1df39ec37128148e3",
+    "tag": "laravel-baseline",
+    "laravel": "12.69.3",
+    "perintah": "php artisan cc:ekspor-fixture-kripto",
+    "peringatan": "Semua kunci di berkas ini KUNCI UJI (sha256 teks tetap), bukan kunci produksi.",
+    "app_key": "base64:1Fo/L9cQ+Uap3LCppnuPd4BCnDJzeV0NkVoQs3qxKeU=",
+    "galat_make_nul": {
+        "kelas": "RuntimeException",
+        "pesan": "Bcrypt hashing not supported."
+    },
+    "kasus": [
+        {
+            "sandi": "rahasia123",
+            "hash": "$2y$12$NUXvs7nsf/uczjF7kogA/eDU99hZEw/z/OUPZCirGmZUy/FIKFBD.",
+            "perlu_rehash": false,
+            "cek": [
+                {
+                    "sandi": "rahasia123",
+                    "hasil": true
+                },
+                {
+                    "sandi": "rahasia123x",
+                    "hasil": false
+                },
+                {
+                    "sandi": "RAHASIA123",
+                    "hasil": false
+                },
+                {
+                    "sandi": "rahasia12",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                }
+            ],
+            "password_hash_web": "63b0d78b43bce85c6bf288e365bd8cb14fa0c6f5d5683aa491786af81d735db3"
+        },
+        {
+            "sandi": "Kata Sandi Indonesia ñ 🙂",
+            "hash": "$2y$12$Yv1jrJ2Pv0n6qvyExeA3LudMm7zJ.E9DTE/HSD/zRmvqTDDjqq21S",
+            "perlu_rehash": false,
+            "cek": [
+                {
+                    "sandi": "Kata Sandi Indonesia ñ 🙂",
+                    "hasil": true
+                },
+                {
+                    "sandi": "Kata Sandi Indonesia ñ 🙂x",
+                    "hasil": false
+                },
+                {
+                    "sandi": "KATA SANDI INDONESIA Ñ 🙂",
+                    "hasil": false
+                },
+                {
+                    "sandi": "Kata Sandi Indonesia ñ ",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                }
+            ],
+            "password_hash_web": "791806da224351915525c1d2119b56a5c00f2d2fc0accab650a77cb5555479b4"
+        },
+        {
+            "sandi": "",
+            "hash": "$2y$12$uOH0OnWHJgOpWxQVdjb7suuji9wIm654OCRTcQfIVEmI/e6rs7BNO",
+            "perlu_rehash": false,
+            "cek": [
+                {
+                    "sandi": "",
+                    "hasil": true
+                },
+                {
+                    "sandi": "x",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                }
+            ],
+            "password_hash_web": "90cfa76d04e42956de5625c8a6e3f1ae52fbf0e3cae6b698fd8486e17787c067"
+        },
+        {
+            "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "hash": "$2y$12$sFHYosq75wm9yu3JqUYAxu18PykbmBQUWCGzcBWfWB2s0nWlrOghS",
+            "perlu_rehash": false,
+            "cek": [
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": true
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaax",
+                    "hasil": true
+                },
+                {
+                    "sandi": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": true
+                }
+            ],
+            "password_hash_web": "2a300eb5fef708e4234e1498bf1d6ae42581bb65849afe20f7b81f10aefcfc9c"
+        },
+        {
+            "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "hash": "$2y$12$goL5xoiAV71ix99yhG6xTe5DDpzghMyQM3D2z647SpBq1g7ZEGEiC",
+            "perlu_rehash": false,
+            "cek": [
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": true
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaax",
+                    "hasil": true
+                },
+                {
+                    "sandi": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": true
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": true
+                }
+            ],
+            "password_hash_web": "4cc20e9fa78909a5ea0c30d0ed6b94645139d4f82109dec25df718d5fcd273fb"
+        },
+        {
+            "sandi": "éééééééééééééééééééééééééééééééééééééééé",
+            "hash": "$2y$12$resE4XolWlTFkwNkM9cwHejdzKlG02Wd6RI44q60M55ZTwdl.YdDi",
+            "perlu_rehash": false,
+            "cek": [
+                {
+                    "sandi": "éééééééééééééééééééééééééééééééééééééééé",
+                    "hasil": true
+                },
+                {
+                    "sandi": "ééééééééééééééééééééééééééééééééééééééééx",
+                    "hasil": true
+                },
+                {
+                    "sandi": "ÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉÉ",
+                    "hasil": false
+                },
+                {
+                    "sandi": "ééééééééééééééééééééééééééééééééééééééé",
+                    "hasil": true
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                },
+                {
+                    "sandi": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "hasil": false
+                }
+            ],
+            "password_hash_web": "a09a335c874b661015d617bbe47de30e722bd7dd3f67e10eede3094a8d6ed898"
+        }
+    ],
+    "negatif": [
+        {
+            "label": "awalan_2b",
+            "hash": "$2b$12$NUXvs7nsf/uczjF7kogA/eDU99hZEw/z/OUPZCirGmZUy/FIKFBD.",
+            "galat": {
+                "kelas": "RuntimeException",
+                "pesan": "This password does not use the Bcrypt algorithm."
+            },
+            "hasil": null
+        },
+        {
+            "label": "awalan_2a",
+            "hash": "$2a$12$NUXvs7nsf/uczjF7kogA/eDU99hZEw/z/OUPZCirGmZUy/FIKFBD.",
+            "galat": {
+                "kelas": "RuntimeException",
+                "pesan": "This password does not use the Bcrypt algorithm."
+            },
+            "hasil": null
+        },
+        {
+            "label": "kosong",
+            "hash": "",
+            "galat": null,
+            "hasil": false
+        },
+        {
+            "label": "bukan_bcrypt",
+            "hash": "bee5688aea66a47460b19c76f8f199c6b9585eb726f8322b1429793863609ca2",
+            "galat": {
+                "kelas": "RuntimeException",
+                "pesan": "This password does not use the Bcrypt algorithm."
+            },
+            "hasil": null
+        }
+    ]
+}
