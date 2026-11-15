@@ -13,9 +13,9 @@
 # Realtime untuk browser: SATU origin, lewat path di cc-web (tanpa hostname tunnel kedua, cloudflared tidak diubah).
 #   Browser  wss://cc-uji…/_realtime/app/<key>  →  cc-web (rewrite Next.js)  →  ws://sockudo:6001/app/<key>
 #   Next.js 16.4.6 meneruskan upgrade WebSocket untuk rewrite ke URL eksternal (router-server upgradeHandler →
-#   proxyRequest). Yang perlu ditambahkan paket G di web/next.config.ts (bukan wilayah devops):
-#       async rewrites() { return [{ source: '/_realtime/app/:key', destination: 'http://sockudo:6001/app/:key' }]; }
-#   dan klien pusher-js: { wsHost: location.hostname, wsPath: '/_realtime', forceTLS: true, enabledTransports: ['ws', 'wss'] }.
+#   proxyRequest; diuji paket G pada server standalone: path, query & Origin sampai utuh). Rewrite di
+#   web/next.config.ts (tujuan sockudo:6001 ditanam saat build), opsi klien pusher-js di web/src/lib/realtime.ts:
+#   { wsHost: location.hostname, wsPath: '/_realtime', forceTLS: true, enabledTransports: ['ws', 'wss'] }.
 #   Hanya endpoint WebSocket /app/:key yang diteruskan; HTTP API (/apps/:id/events, bertanda tangan HMAC), /up,
 #   /usage, /stats hanya terjangkau dari jaringan backend. Cookie Cloudflare Access ikut otomatis (origin sama).
 #   Harga: koneksi WS melewati proses Node cc-web (restart cc-web memutus WS; pusher-js menyambung ulang).
@@ -99,13 +99,13 @@ services:
     # grace period harus > 25 dtk sebelum Docker mengirim SIGKILL.
     stop_grace_period: 30s
 
-  # Hanya jalan dengan --profile worker; entry worker belum ada.
+  # pg-boss (antrean ai/default/ingest + jadwal port Laravel) + dispatcher outbox → pg-boss & Sockudo.
+  # Bundel web/src/worker/main.ts (scripts/bangun-worker.mjs). Skema pgboss harus sudah dipasang service
+  # `migrate` (scripts/deploy-uji.sh menjalankannya sebelum `up`): worker sebagai cc_app hanya DML.
+  # Lewat PgBouncer mode transaksi: pg-boss tanpa LISTEN/NOTIFY & kunci advisory sesi (web/src/worker/boss.ts).
   worker:
     <<: *app
-    profiles: ["worker"]
-    # PLACEHOLDER: entry worker (pg-boss: antrean ai, default, ingest) belum ada di web/ dan belum
-    # ikut output standalone. Ganti perintah ini saat worker dibuat (paket G).
-    command: ["node", "dist/worker.js"]
+    command: ["node", "dist/worker.mjs"]
     environment:
       <<: *app-env
       OTEL_SERVICE_NAME: contact-center-worker
@@ -124,8 +124,10 @@ services:
         limits: { cpus: "1", memory: 512M }
     stop_grace_period: 60s
 
-  # Migrasi sekali jalan dengan role cc_migrate (kredensial hanya di service ini). Skema awal uji TIDAK lewat
-  # sini, tapi lewat init postgres (uji/init.sh); service ini untuk migrasi Next.js berikutnya.
+  # Migrasi sekali jalan dengan role cc_migrate (kredensial hanya di service ini). Skema Laravel TIDAK lewat
+  # sini, tapi lewat init postgres (uji/init.sh). Service ini: tabel khusus Next.js (web/drizzle-cc: cc_outbox,
+  # cc_idempotency, catatan di public.cc_migrasi) + skema pg-boss `pgboss` & antreannya + hak DML cc_app.
+  # Idempoten; dijalankan scripts/deploy-uji.sh tiap deploy (`run --rm migrate`).
   migrate:
     <<: *hardening
     profiles: ["migrate"]
@@ -133,8 +135,7 @@ services:
     pull_policy: never
     restart: "no"
     init: true
-    # PLACEHOLDER: perintah migrasi belum ada (drizzle-kit tidak ikut output standalone).
-    command: ["node", "dist/migrate.js"]
+    command: ["node", "dist/migrate.mjs"]
     environment:
       # Alias session pooling: DDL butuh state sesi & kunci advisory.
       DATABASE_URL_MIGRATE: postgres://cc_migrate:${CC_MIGRATE_PASSWORD:?}@pgbouncer:6432/contact_center_migrate

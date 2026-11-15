@@ -22,6 +22,8 @@ const kunciLama = z.string().refine(
     lolos((v) => v.split(',').forEach((k) => k !== '' && k !== '0' && bacaKunci(k))),
     'setiap kunci harus 32 byte (format base64:… seperti Laravel)',
 );
+// Harus cocok dengan pola rewrite /_realtime/app/:key di next.config.ts.
+const kunciRealtime = wajib.regex(/^[A-Za-z0-9_-]+$/, 'hanya huruf, angka, _ dan -');
 const kunciHashNik = wajib.refine(lolos(kunciNik), 'minimal 32 byte dan bukan nilai kosong/sentinel');
 
 const dasar = z.object({
@@ -33,10 +35,20 @@ const dasar = z.object({
     // Worker (paket G) memakai pool sendiri: DB_POOL_MAX=3 ke alias PgBouncer terpisah.
     DB_POOL_MAX: z.coerce.number().int().min(1).max(20).default(10),
     DB_APP_NAME: wajib.default('cc-web'),
+    // Nama layanan di log (rencana §10.1); compose mengisi contact-center-worker untuk worker.
+    OTEL_SERVICE_NAME: wajib.default('contact-center-web'),
     // Sama dengan Laravel: data uji bersama (NIK/kontak terenkripsi, hash NIK) dibaca kedua aplikasi.
     APP_KEY: kunciApp.optional(),
     APP_PREVIOUS_KEYS: kunciLama.default(''),
     NIK_HASH_KEY: kunciHashNik.optional(),
+    // Valkey (rencana §9.4): rate limit, cache, kunci. Kosong di dev/test → rate limit memakai memori proses.
+    VALKEY_URL: z.url({ protocol: /^rediss?$/ }).optional(),
+    // Realtime berprotokol Pusher (Sockudo). Server → Sockudo lewat HTTP di jaringan backend; APP_KEY publik.
+    REALTIME_APP_ID: wajib.optional(),
+    REALTIME_APP_KEY: kunciRealtime.optional(),
+    REALTIME_APP_SECRET: wajib.optional(),
+    REALTIME_HOST: wajib.default('sockudo'),
+    REALTIME_PORT: z.coerce.number().int().min(1).max(65535).default(6001),
 });
 
 // Produksi menolak start bila kunci wajib kosong atau mode debug aktif (rencana §9.2).
@@ -46,6 +58,10 @@ const produksi = dasar.extend({
     DATABASE_URL: wajib,
     APP_KEY: kunciApp,
     NIK_HASH_KEY: kunciHashNik,
+    VALKEY_URL: z.url({ protocol: /^rediss?$/ }),
+    REALTIME_APP_ID: wajib,
+    REALTIME_APP_KEY: kunciRealtime,
+    REALTIME_APP_SECRET: wajib,
 });
 
 export type Env = z.infer<typeof dasar>;

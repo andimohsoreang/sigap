@@ -1,6 +1,6 @@
 # Image Contact Center (Next.js, web/). Build dari ROOT repo:
 #   docker build -f deploy/next/Dockerfile .      (atau: docker compose -f deploy/next/compose.yml build)
-# Satu image untuk `web`, `worker`, dan `migrate` (beda command).
+# Satu image untuk `web` (web/server.js), `worker` (dist/worker.mjs), dan `migrate` (dist/migrate.mjs).
 # Tata letak repo dipertahankan (/repo/web + /repo/sigap): next.config.ts memakai akar repo untuk Turbopack &
 # file tracing, dan Tailwind memindai ../sigap. Isi konteks diatur deploy/next/Dockerfile.dockerignore.
 
@@ -37,6 +37,9 @@ ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0 TZ=
 COPY --from=build /repo/web/.next/standalone ./
 COPY --from=build /repo/web/.next/static ./web/.next/static
 COPY --from=build /repo/web/public ./web/public
+# Worker & migrasi (paket G): bundel esbuild + berkas migrasi tabel khusus Next.js.
+COPY --from=build /repo/web/dist ./dist
+COPY --from=build /repo/web/drizzle-cc ./drizzle-cc
 RUN mkdir -p web/.next/cache && chown node:node web/.next/cache
 USER node
 EXPOSE 3000

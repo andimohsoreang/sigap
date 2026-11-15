@@ -8,6 +8,7 @@
 !sigap
 web/node_modules
 web/.next
+web/dist
 web/.env*
 web/.cek-css
 web/coverage
