@@ -17,6 +17,7 @@
         "test": "vitest run",
         "test:laravel": "CC_TEST_LARAVEL=1 vitest run tests/unit/legacy/verifikasi-laravel.test.ts",
         "test:db": "CC_TEST_DB=1 vitest run tests/unit/db",
+        "test:integrasi": "CC_TEST_INTEGRASI=1 vitest run tests/integrasi",
         "format": "prettier --write .",
         "cek:css": "node scripts/cek-css.mjs"
     },

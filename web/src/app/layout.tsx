@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
 
 import { APP_NAME } from '@/lib/judul';
@@ -11,7 +12,6 @@ export const metadata: Metadata = {
 };
 
 // Disalin apa adanya dari sigap/resources/views/app.blade.php: tema & aksesibilitas dipasang sebelum paint.
-// TODO(S0 gelombang 2): nonce CSP per-request seperti Vite::cspNonce() di Laravel.
 const skripPreferensi = `
             (function () {
                 try {
@@ -24,12 +24,15 @@ const skripPreferensi = `
             })();
         `;
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+    // Nonce CSP per permintaan dari src/proxy.ts (padanan Vite::cspNonce() di app.blade.php). Membaca header membuat
+    // semua halaman dirender per permintaan — syarat nonce (halaman statis tidak bisa membawa nonce).
+    const nonce = (await headers()).get('x-nonce') ?? undefined;
     return (
         // Skrip di atas menambah kelas pada <html> sebelum hidrasi.
         <html lang="id" suppressHydrationWarning>
             <head>
-                <script dangerouslySetInnerHTML={{ __html: skripPreferensi }} />
+                <script nonce={nonce} dangerouslySetInnerHTML={{ __html: skripPreferensi }} />
                 {/* Tanpa `precedence`: React tidak memindahkan link ini, jadi urutannya sama dengan Blade (skrip lalu CSS). */}
                 <link rel="stylesheet" href={asetCss.href} />
             </head>

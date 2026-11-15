@@ -62,3 +62,12 @@ Di **subdomain uji**:
 | Nama subdomain uji + hostname di Cloudflare Tunnel | paket H |
 | Menjalankan stack subdomain uji di server | paket H |
 | GlitchTip/OTel collector di server | paket I |
+
+## Catatan dari paket F (auth) untuk slice berikutnya & pergantian akhir
+
+| Untuk | Catatan |
+|---|---|
+| S15 (Akun) | `web/src/app/masuk/route.ts` (POST /masuk) akan bentrok dengan `app/masuk/page.tsx`. Rencana: `src/proxy.ts` me-rewrite `POST /masuk` yang **bukan** Server Action (tanpa header `Next-Action`) ke handler internal yang memanggil `prosesMasuk` (`src/server/auth/rute.ts`), lalu `route.ts` dihapus; formulir halaman memakai Server Action dengan fungsi yang sama |
+| S15 (Akun) | Token Bearer `/api/v1` (Sanctum) belum ada: `/api/*` tanpa Referer/Origin situs sendiri diteruskan tanpa cookie sesi (tamu) |
+| Pergantian akhir / LB | cc-web mempercayai `CF-Connecting-IP` sebagai IP klien (rate limit, audit, sesi). Bila di depan cc-web dipasang load balancer/reverse proxy, LB itu **wajib menimpa** `CF-Connecting-IP` (atau hanya menerima lalu lintas dari Cloudflare); tanpa itu klien bisa memalsukan IP. `scripts/deploy-uji.sh` menolak deploy bila port cc-web tidak tepat `127.0.0.1:8094` |
+| Pergantian akhir | Body > 12 MB ditolak 413 (halaman nginx), tetapi Next.js menyalin body hingga 12 MB ke memori sebelum proxy berjalan (`proxyClientMaxBodySize`); penolakan sebelum dibaca butuh batas di edge/LB |

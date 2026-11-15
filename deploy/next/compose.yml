@@ -61,6 +61,8 @@ x-app-env: &app-env
   REALTIME_APP_ID: ${REALTIME_APP_ID:?}
   REALTIME_APP_KEY: ${REALTIME_APP_KEY:?}
   REALTIME_APP_SECRET: ${REALTIME_APP_SECRET:?}
+  # Site key reCAPTCHA (publik): domain Google di CSP. Kosong → CSP tanpa reCAPTCHA (seperti Laravel tanpa site key).
+  RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY:-}
 
 x-app: &app
   <<: *hardening

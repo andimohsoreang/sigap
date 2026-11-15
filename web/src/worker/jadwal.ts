@@ -3,6 +3,7 @@ import 'server-only';
 import type { PgBoss } from 'pg-boss';
 
 import { JADWAL, JADWAL_CC, ZONA_JADWAL, type Jadwal } from '@/server/antrean';
+import { bersihkanSesi } from '@/server/auth/sesi';
 import { db } from '@/server/db/client';
 import { bersihkanIdempotensi } from '@/server/idempotensi';
 import { log } from '@/server/log';
@@ -12,7 +13,12 @@ import { bersihkanOutbox } from '@/server/outbox';
 // Isi job port Laravel masih TODO (slice pemiliknya); hanya cc-bersih yang benar-benar bekerja.
 
 const ISI: Record<string, () => Promise<unknown>> = {
-    'cc-bersih': async () => ({ outbox: await bersihkanOutbox(db), idempotensi: await bersihkanIdempotensi(db) }),
+    'cc-bersih': async () => ({
+        outbox: await bersihkanOutbox(db),
+        idempotensi: await bersihkanIdempotensi(db),
+        // Sesi cc_session kedaluwarsa (padanan lottery GC sesi database Laravel).
+        sesi: await bersihkanSesi(db),
+    }),
 };
 
 async function jalankan(j: Jadwal) {

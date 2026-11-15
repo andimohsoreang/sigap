@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { eq, sql } from 'drizzle-orm';
@@ -74,7 +75,9 @@ describe.skipIf(!!alasan)(`runtime DB${alasan ? ` — dilewati: ${alasan}` : ''}
 
     it('migrasi idempoten dan cc_app tidak punya DDL', async () => {
         await migrasi();
-        expect(await mentah(`SELECT count(*)::int AS n FROM ${SKEMA}.cc_migrasi`)).toEqual([{ n: 1 }]);
+        // Satu baris per berkas migrasi drizzle-cc (bertambah tiap paket menambah tabel).
+        const jumlah = JSON.parse(readFileSync(path.resolve('drizzle-cc/meta/_journal.json'), 'utf8')).entries.length;
+        expect(await mentah(`SELECT count(*)::int AS n FROM ${SKEMA}.cc_migrasi`)).toEqual([{ n: jumlah }]);
         const app = new pg.Client({ connectionString: URL_BOSS });
         await app.connect();
         try {
