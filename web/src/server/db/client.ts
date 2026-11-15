@@ -9,7 +9,8 @@ import { env } from '@/server/env';
 import { log } from '@/server/log';
 
 import { petakanGalatDb } from './galat';
-import * as schema from './schema';
+import * as schemaLaravel from './schema';
+import * as schemaCc from './schema-cc';
 
 export { GalatDb, GalatUnik, petakanGalatDb } from './galat';
 
@@ -31,7 +32,7 @@ const pool = new pg.Pool({
 // Koneksi menganggur yang putus (restart PgBouncer/PG) memancarkan 'error' di pool; tanpa listener proses berhenti.
 pool.on('error', (err) => log.warn({ err }, 'koneksi DB menganggur terputus'));
 
-export const db = drizzle({ client: pool, schema });
+export const db = drizzle({ client: pool, schema: { ...schemaLaravel, ...schemaCc } });
 
 export type Db = typeof db;
 export type Transaksi = Parameters<Parameters<Db['transaction']>[0]>[0];
