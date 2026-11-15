@@ -10,6 +10,7 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Web\PublicController;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Ticket;
+use App\Models\TicketDisposition;
 use App\Models\TicketHistory;
 use App\Models\Unit;
 use App\Models\User;
@@ -21,6 +22,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
@@ -223,6 +225,7 @@ class EksporFixture extends Command
             'sudah_ditugaskan' => ['assignee' => $other->id],
             'didisposisikan' => ['unit' => $unit->id],
             'tanpa_tinjau_ulang' => ['tinjau' => false],
+            'surel_pelapor' => ['email' => 'pelapor@example.test'],
         ];
 
         $cases = [];
@@ -249,11 +252,19 @@ class EksporFixture extends Command
                         'ews_notified_at' => self::EARLIER,
                         'assignee_id' => $v['assignee'] ?? null,
                         'unit_id' => $v['unit'] ?? null,
+                        'reporter_email' => $v['email'] ?? null,
                     ];
 
+                    $mail = Mail::fake();
                     DB::beginTransaction();
                     try {
                         $ticket = $this->ticket(sprintf('TKT-%d', ++$n), $initial);
+                        $disposition = isset($v['unit']) ? TicketDisposition::query()->forceCreate([
+                            'ticket_id' => $ticket->id,
+                            'unit_id' => $v['unit'],
+                            'assigned_by' => $admin->id,
+                            'status' => TicketDisposition::STATUS_WAITING,
+                        ]) : null;
                         $error = null;
                         try {
                             $service->changeStatus($ticket, $to, $actor, 'catatan uji');
@@ -263,19 +274,37 @@ class EksporFixture extends Command
                         $after = $ticket->fresh()->getAttributes();
                         $history = TicketHistory::query()->where('ticket_id', $ticket->id)->orderBy('id')->get()
                             ->map(fn (TicketHistory $h) => ['dari' => $h->from_status, 'ke' => $h->to_status, 'aktor' => $label($h->actor_id), 'catatan' => $h->note])->all();
+                        $dispositionAfter = $disposition?->fresh()->getAttributes();
                     } finally {
                         DB::rollBack();
                     }
+
+                    // Surel ke pelapor (ReporterNotifier::statusChanged) yang dikirim/diantrekan lewat Mail::fake.
+                    [$sent, $queued] = (fn () => [$this->mailables, $this->queuedMailables])->call($mail);
+                    $mails = array_map(function ($mailable) {
+                        $mailable->build();
+
+                        return [
+                            'ke' => array_column($mailable->to, 'address'),
+                            'subjek' => $mailable->subject,
+                            'templat' => $mailable->markdown ?? $mailable->view,
+                            'antre' => $mailable instanceof ShouldQueue,
+                            'isi' => $mailable->payload ?? null,
+                        ];
+                    }, [...$sent, ...$queued]);
 
                     $fields = fn (array $row) => [
                         'status' => $row['status'],
                         'responded_at' => $row['responded_at'],
                         'resolved_at' => $row['resolved_at'],
+                        'review_requested_at' => $row['review_requested_at'],
+                        'review_reason' => $row['review_reason'],
                         'reviewed_at' => $row['reviewed_at'],
                         'reviewed_by' => $label($row['reviewed_by']),
                         'ews_notified_at' => $row['ews_notified_at'],
                         'assignee_id' => $label($row['assignee_id']),
                         'unit_id' => $row['unit_id'] === null ? null : 'unit',
+                        'reporter_email' => $row['reporter_email'],
                     ];
                     $cases[] = [
                         'dari' => $from->value,
@@ -285,6 +314,12 @@ class EksporFixture extends Command
                         'awal' => $fields($initial),
                         'hasil' => $fields($after),
                         'riwayat_baru' => $history,
+                        'disposisi_aktif' => $dispositionAfter === null ? null : [
+                            'status' => $dispositionAfter['status'],
+                            'closed_at' => $dispositionAfter['closed_at'],
+                            'closed_by' => $label($dispositionAfter['closed_by']),
+                        ],
+                        'surel' => $mails,
                         'galat' => $error,
                     ];
                 }
@@ -294,7 +329,7 @@ class EksporFixture extends Command
         return [
             ...$this->header([TicketStatus::class, TicketService::class.'::changeStatus'], [
                 'jam' => self::NOW.' '.self::PRODUCTION_TIMEZONE,
-                'catatan' => 'kasus = changeStatus sungguhan (PostgreSQL, Carbon::now() dibekukan pada `jam`); nilai waktu = string kolom DB. Varian: dasar (aktor super admin, belum ditugaskan, tinjau ulang diminta bila dari selesai), tanpa_aktor, sudah_ditugaskan (assignee lain), didisposisikan (unit_id terisi), tanpa_tinjau_ulang.',
+                'catatan' => 'kasus = changeStatus sungguhan (PostgreSQL, Carbon::now() dibekukan pada `jam`); nilai waktu = string kolom DB. Varian: dasar (aktor super admin, belum ditugaskan, tinjau ulang diminta bila dari selesai), tanpa_aktor, sudah_ditugaskan (assignee lain), didisposisikan (unit_id terisi + disposisi aktif berstatus menunggu), tanpa_tinjau_ulang, surel_pelapor (reporter_email terisi; surel = ReporterNotifier::statusChanged lewat Mail::fake).',
             ]),
             'status' => array_map(fn (TicketStatus $s) => [
                 'nilai' => $s->value,
@@ -443,7 +478,7 @@ class EksporFixture extends Command
                 $props = json_decode((string) $response->getContent(), true)['props'] ?? [];
                 $http[] = [
                     'jalur' => $path,
-                    'query' => $query,
+                    'query' => (object) $query,
                     'status_http' => $response->getStatusCode(),
                     'query_normal' => $props['query'] ?? null,
                     'kode_normal' => $props['kode'] ?? null,
@@ -581,6 +616,8 @@ class EksporFixture extends Command
             'impact' => TicketImpact::Sedang->value,
             'visibility' => TicketVisibility::Publik->value,
             'is_internal' => false,
+            // Kode akses tetap (bawaan model acak) agar tautan survei di surel deterministik.
+            'lookup_token' => 'FXTR2345',
             ...$attrs,
             'ticket_no' => $no,
         ]);

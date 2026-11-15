@@ -1164,7 +1164,7 @@
         },
         {
             "jalur": "/lacak",
-            "query": [],
+            "query": {},
             "status_http": 200,
             "query_normal": "",
             "kode_normal": "",
@@ -1173,7 +1173,7 @@
         },
         {
             "jalur": "/lacak/tkt-261113-abcdef",
-            "query": [],
+            "query": {},
             "status_http": 200,
             "query_normal": "TKT-261113-ABCDEF",
             "kode_normal": "",
