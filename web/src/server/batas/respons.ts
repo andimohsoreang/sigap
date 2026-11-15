@@ -14,8 +14,19 @@ export function headerGagal(maks: number, retryAfter: number, now = Math.floor(D
     return { ...headerLolos(maks, 0), 'Retry-After': String(retryAfter), 'X-RateLimit-Reset': String(now + retryAfter) };
 }
 
-/** Pasang header batas ke respons yang sudah ada (jalur lolos). */
+/**
+ * Pasang header batas ke respons (jalur lolos, juga respons 429 dari limiter lain). Seperti
+ * ThrottleRequests::getHeaders: dilewati bila respons sudah membawa X-RateLimit-Remaining ≤ sisa limiter ini, jadi
+ * yang tampil selalu limiter dengan sisa terkecil.
+ *
+ * Throttle bertumpuk, mis. `['throttle:lookup', 'throttle:pengaduan']` (web.php:57, api.php:54): middleware Laravel
+ * berlapis, jadi urutannya
+ *   1. sebelum handler: batasi('lookup') lalu batasi('pengaduan') — lookup menolak → 429 lookup, pengaduan tidak di-hit;
+ *   2. sesudah handler (atau di 429 pengaduan): pasang header pengaduan DULU, baru lookup.
+ */
 export function pasangHeaderBatas(res: Response, header: HeaderBatas): Response {
+    const ada = res.headers.get('X-RateLimit-Remaining');
+    if (ada !== null && Number.parseInt(ada, 10) <= Number.parseInt(header['X-RateLimit-Remaining'] ?? '', 10)) return res;
     for (const [k, v] of Object.entries(header)) res.headers.set(k, v);
     return res;
 }

@@ -4,7 +4,7 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 vi.stubEnv('VALKEY_URL', '');
 const { cobaBatas, kunciPenyimpanan, MemoriBatas } = await import('@/server/batas/inti');
 const { LIMITER, jalurLaravel } = await import('@/server/batas/limiter');
-const { galat429Formulir, headerGagal, respons429Json } = await import('@/server/batas/respons');
+const { galat429Formulir, headerGagal, headerLolos, pasangHeaderBatas, respons429Json } = await import('@/server/batas/respons');
 afterAll(() => vi.unstubAllEnvs());
 
 const T0 = 1_800_000_000;
@@ -121,6 +121,19 @@ describe('respons 429', () => {
         expect(await r.json()).toEqual({ message: 'Too Many Attempts.' });
         expect(r.headers.get('Retry-After')).toBe('30');
         expect(r.headers.get('X-RateLimit-Reset')).toBe(String(T0 + 30));
+    });
+
+    it('throttle bertumpuk (lookup + pengaduan): header limiter dengan sisa terkecil yang tampil', () => {
+        const header = (r: Response) => [r.headers.get('X-RateLimit-Limit'), r.headers.get('X-RateLimit-Remaining')];
+        // Urutan Laravel: pengaduan (dalam) dulu, lalu lookup (luar) hanya menimpa bila sisanya lebih kecil.
+        const a = pasangHeaderBatas(pasangHeaderBatas(new Response(), headerLolos(10, 9)), headerLolos(30, 29));
+        expect(header(a)).toEqual(['10', '9']);
+        const b = pasangHeaderBatas(pasangHeaderBatas(new Response(), headerLolos(10, 9)), headerLolos(30, 3));
+        expect(header(b)).toEqual(['30', '3']);
+        // 429 pengaduan (sisa 0) tidak ditimpa lookup; Retry-After tetap milik pengaduan.
+        const c = pasangHeaderBatas(respons429Json(headerGagal(10, 120, T0)), headerLolos(30, 0));
+        expect(header(c)).toEqual(['10', '0']);
+        expect(c.headers.get('Retry-After')).toBe('120');
     });
 
     it('pesan formulir sama dengan bootstrap/app.php', () => {

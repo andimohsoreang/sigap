@@ -26,7 +26,7 @@ describe.runIf(diminta && !ada)('Valkey (CC_TEST_VALKEY=1)', () => {
 describe.skipIf(!ada)(`rate limit di Valkey${ada ? '' : ' — dilewati: Valkey lokal tidak terjangkau'}`, async () => {
     vi.stubEnv('VALKEY_URL', URL_VALKEY);
     vi.resetModules();
-    const { cobaBatas } = await import('@/server/batas/inti');
+    const { cobaBatas, resetPemutusValkey } = await import('@/server/batas/inti');
     const { klienValkey, tutupValkey } = await import('@/server/valkey');
     const nama = `uji-${process.pid}-${Date.now()}`;
     afterAll(async () => {
@@ -61,6 +61,25 @@ describe.skipIf(!ada)(`rate limit di Valkey${ada ? '' : ' — dilewati: Valkey l
         await cobaBatas(nama, limits, now);
         expect((await cobaBatas(nama, limits, now)).lolos).toBe(false);
         expect((await cobaBatas(nama, [limits[0]], now)).header['X-RateLimit-Remaining']).toBe('7');
+    });
+
+    it('Valkey putus → memori selama jeda 5 dtk, lalu kembali ke Valkey setelah tersambung lagi', async () => {
+        resetPemutusValkey();
+        const limit = [{ kunci: 'pulih', maks: 100, detik: 30 }];
+        const r = klienValkey();
+        r.disconnect();
+        expect((await cobaBatas(nama, limit)).sumber).toBe('memori');
+        await vi.waitFor(() => expect(r.status).toBe('end'));
+        await r.connect();
+        // Masih di dalam jeda: Valkey belum dicoba lagi walau sudah tersambung.
+        expect((await cobaBatas(nama, limit)).sumber).toBe('memori');
+        vi.useFakeTimers({ toFake: ['Date'] });
+        try {
+            vi.setSystemTime(Date.now() + 5_001);
+            expect((await cobaBatas(nama, limit)).sumber).toBe('valkey');
+        } finally {
+            vi.useRealTimers();
+        }
     });
 
     it('permintaan serentak tidak melampaui batas', async () => {
