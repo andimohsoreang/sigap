@@ -56,5 +56,8 @@ export default defineConfig({
               url: `${baseURL}/api/v1/health`,
               reuseExistingServer: false,
               timeout: 180_000,
+              // Keluaran laravel.sh tampil di log (CI tidak bisa di-debug tanpanya).
+              stdout: 'pipe',
+              stderr: 'pipe',
           },
 });

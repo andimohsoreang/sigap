@@ -50,10 +50,6 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
       options: --ipc=host
-    env:
-      # Dari job container, service dijangkau lewat nama, bukan 127.0.0.1. Butuh laravel.sh menghormati
-      # variabel ini (paket C): DB_HOST="${PARITAS_DB_HOST:-$DB_HOST}" sesudah memuat env/laravel.env.
-      PARITAS_DB_HOST: postgres
     # Image keluarga yang sama dengan produksi (deploy/docker/compose.yml: postgres:16-alpine), dipin
     # digest: kolasi musl en_US.utf8 = urutan byte, zona UTC, seperti produksi (dicek di bawah).
     services:
@@ -119,10 +115,20 @@ jobs:
       # Container berjalan sebagai root, workspace milik user runner.
       - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+      # sigap:e2e-setup (kode Laravel beku) menolak host DB selain loopback, jadi service `postgres`
+      # diteruskan ke 127.0.0.1:5432 di dalam job container (proxy TCP Node, hidup sampai job selesai).
+      # Aman: tujuannya container PostgreSQL sekali pakai milik job ini, bukan DB remote.
+      - name: Teruskan 127.0.0.1:5432 ke service postgres
+        run: |
+          nohup node -e "const n=require('net');n.createServer(c=>{const s=n.connect(5432,'postgres');c.pipe(s).pipe(c);c.on('error',()=>s.destroy());s.on('error',()=>c.destroy())}).listen(5432,'127.0.0.1')" > "$RUNNER_TEMP/proxy-pg.log" 2>&1 &
+          for _ in $(seq 1 20); do pg_isready -h 127.0.0.1 -p 5432 && exit 0; sleep 1; done
+          cat "$RUNNER_TEMP/proxy-pg.log"; exit 1
+
       # Gagal bila PostgreSQL tidak mengurutkan per byte (`Cipta` sebelum `apel`) atau zona bukan UTC.
+      # Lewat 127.0.0.1 = jalur yang sama dengan laravel.sh.
       - name: Database cc_paritas
         env:
-          PGHOST: postgres
+          PGHOST: 127.0.0.1
         run: |
           psql -U postgres -v ON_ERROR_STOP=1 -c 'CREATE ROLE cc_migrate LOGIN' -c 'CREATE DATABASE cc_paritas OWNER cc_migrate'
           urut="$(psql -U cc_migrate -d cc_paritas -tAc "SELECT string_agg(x, ',' ORDER BY x) FROM (VALUES ('Cipta'), ('apel')) v(x)")"
