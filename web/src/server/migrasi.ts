@@ -25,6 +25,25 @@ export interface OpsiMigrasi {
     skemaBoss?: string;
     roleApp?: string;
     catat?: (pesan: string) => void;
+    /** Batas menunggu migrasi latar pg-boss (tabel bam) selesai. */
+    batasBamMs?: number;
+}
+
+/**
+ * Upgrade pg-boss bisa menjadwalkan migrasi latar (BAM: mis. CREATE INDEX CONCURRENTLY) yang hanya dijalankan
+ * instance ber-migrate:true. Worker (cc_app) tidak bisa menjalankannya, jadi migrate menunggu sampai semuanya
+ * `completed` sebelum berhenti; lewat batas waktu → gagal dengan ringkasan status.
+ */
+async function tungguBam(pool: pg.Pool, skemaBoss: string, batasMs: number) {
+    const akhir = Date.now() + batasMs;
+    for (;;) {
+        const { rows } = await pool.query<{ status: string; n: number }>(
+            `SELECT status, count(*)::int AS n FROM ${ident(skemaBoss)}.bam WHERE status <> 'completed' GROUP BY status`,
+        );
+        if (rows.length === 0) return;
+        if (Date.now() >= akhir) throw new Error(`migrasi latar pg-boss belum selesai: ${rows.map((r) => `${r.status}=${r.n}`).join(', ')}`);
+        await new Promise((ok) => setTimeout(ok, 1_000));
+    }
 }
 
 const ident = (s: string) => {
@@ -39,8 +58,15 @@ export async function terapkanMigrasi({
     skemaBoss = SKEMA_PGBOSS,
     roleApp = 'cc_app',
     catat = () => {},
+    batasBamMs = 120_000,
 }: OpsiMigrasi) {
-    const pool = new pg.Pool({ connectionString: url, max: 1, application_name: 'cc-migrate', options: `-c search_path=${skema}` });
+    // PgBouncer menolak parameter startup `options` (search_path tidak dilacak): hanya dikirim untuk skema test.
+    const pool = new pg.Pool({
+        connectionString: url,
+        max: 1,
+        application_name: 'cc-migrate',
+        ...(skema === 'public' ? {} : { options: `-c search_path=${skema}` }),
+    });
     try {
         await migrate(drizzle({ client: pool }), { migrationsFolder: folder, migrationsTable: 'cc_migrasi', migrationsSchema: skema });
         catat(`migrasi tabel cc_* di skema ${skema} selesai`);
@@ -60,6 +86,7 @@ export async function terapkanMigrasi({
             for (const { nama } of [...JADWAL, ...JADWAL_CC]) {
                 if (!(await boss.getQueue(nama))) await boss.createQueue(nama, { policy: KEBIJAKAN_JADWAL });
             }
+            await tungguBam(pool, skemaBoss, batasBamMs);
         } finally {
             await boss.stop({ graceful: false });
         }
