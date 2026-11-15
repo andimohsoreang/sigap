@@ -1,0 +1,11 @@
+/node_modules
+/.next
+/out
+/coverage
+/.cek-css
+next-env.d.ts
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+/public/_cc

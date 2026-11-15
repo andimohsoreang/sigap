@@ -1,0 +1,1163 @@
+@import 'tailwindcss';
+
+/* Huruf di-host sendiri (bukan CDN) agar CSP cukup `font-src 'self'`.
+   Hanya bobot yang dipakai; unicode-range membuat browser hanya mengunduh
+   subset & bobot yang benar-benar dirender (Atkinson baru diunduh saat mode disleksia). */
+@import '@fontsource/inter/300.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/inter/800.css';
+@import '@fontsource/space-grotesk/500.css';
+@import '@fontsource/space-grotesk/600.css';
+@import '@fontsource/space-grotesk/700.css';
+@import '@fontsource/jost/400.css';
+@import '@fontsource/jost/500.css';
+@import '@fontsource/jost/600.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/600.css';
+@import '@fontsource/atkinson-hyperlegible/400.css';
+@import '@fontsource/atkinson-hyperlegible/400-italic.css';
+@import '@fontsource/atkinson-hyperlegible/700.css';
+
+@plugin 'tailwindcss-animate';
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Tipografi referensi absol.id: Space Grotesk (heading) + Jost (body). */
+    --font-heading: 'Space Grotesk', 'Kumbh Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Jost', ui-sans-serif, system-ui, sans-serif;
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    /* ===== Brand Contact Center (paritas token lama) ===== */
+    --color-brand: #0e5b72; /* primary lama */
+    --color-brand-light: #0093b6; /* primaryLight lama */
+    --color-brand-soft: #e5f4f7; /* primarySoft lama */
+    --color-gold: #c3a167; /* secondary lama */
+    --color-surface-light: #f3f4f6; /* light lama */
+
+    --color-sidebar: var(--sidebar-background);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+:root {
+    --background: hsl(0, 0%, 100%);
+    --foreground: hsl(222, 47%, 11%);
+    --card: hsl(0, 0%, 100%);
+    --card-foreground: hsl(222, 47%, 11%);
+    --popover: hsl(0, 0%, 100%);
+    --popover-foreground: hsl(222, 47%, 11%);
+    /* Contact Center brand: #0E5B72 */
+    --primary: hsl(192, 79%, 25%);
+    --primary-foreground: hsl(0, 0%, 98%);
+    /* Contact Center secondary: #C3A167 (gold) */
+    --secondary: hsl(40, 44%, 58%);
+    --secondary-foreground: hsl(222, 47%, 11%);
+    /* Contact Center primarySoft: #E5F4F7 */
+    --muted: hsl(190, 55%, 93%);
+    --muted-foreground: hsl(200, 15%, 40%);
+    --accent: hsl(190, 55%, 93%);
+    --accent-foreground: hsl(192, 79%, 20%);
+    --destructive: hsl(0, 84.2%, 60.2%);
+    --destructive-foreground: hsl(0, 0%, 98%);
+    --border: hsl(200, 15%, 90%);
+    --input: hsl(200, 15%, 88%);
+    --ring: hsl(192, 79%, 25%);
+    --chart-1: hsl(192, 100%, 36%);
+    --chart-2: hsl(40, 44%, 58%);
+    --chart-3: hsl(192, 79%, 25%);
+    --chart-4: hsl(173, 58%, 39%);
+    --chart-5: hsl(27, 87%, 67%);
+    --radius: 0.5rem;
+    --sidebar-background: hsl(190, 55%, 97%);
+    --sidebar-foreground: hsl(192, 79%, 20%);
+    --sidebar-primary: hsl(192, 79%, 25%);
+    --sidebar-primary-foreground: hsl(0, 0%, 98%);
+    --sidebar-accent: hsl(190, 55%, 93%);
+    --sidebar-accent-foreground: hsl(192, 79%, 20%);
+    --sidebar-border: hsl(190, 30%, 88%);
+    --sidebar-ring: hsl(192, 100%, 36%);
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+
+    html {
+        transition: font-size 0.3s ease;
+    }
+}
+
+/* Animasi halaman (paritas .page-section / .admin-section lama) */
+@keyframes sigap-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sigap-page-enter {
+    animation: sigap-fade-in 0.4s ease-in-out;
+}
+
+/* --------------------------------------------------------------------------
+   Scope gaya panel admin (tidak memengaruhi halaman publik).
+   Tipografi: Inter untuk semua teks (x-height tinggi, terbaca di tabel padat
+   dan ukuran kecil) + JetBrains Mono untuk kode tiket/IP. Bentuk tombol &
+   kolom isian mengikuti komponen (sudut 6–8px), tanpa pengecualian global.
+   -------------------------------------------------------------------------- */
+.absol-admin {
+    /* Admin v2 (pen.dev "Admin v2 / …"): navy + emas, Space Grotesk untuk judul,
+       Inter untuk isi, JetBrains Mono untuk kode tiket/NIP/IP. */
+    --adm-primary: #003d68;
+    --adm-primary-deep: #022b4a;
+    /* Warna kategorikal tambahan untuk grafik (pie/batang) Matriks. */
+    --chart-violet: #6f4fb3;
+    --chart-teal: #1f7f7f;
+    --chart-rose: #b4456c;
+    --adm-primary-soft: #e8f0f7;
+    --adm-accent: #c29642;
+    --adm-accent-soft: #fbf3e3;
+    --adm-bg: #f4f6f9;
+    --adm-surface: #ffffff;
+    --adm-surface-2: #f8fafc;
+    --adm-border: #e3e8ee;
+    --adm-border-strong: #cdd6df;
+    --adm-text: #17232f;
+    --adm-text-2: #4a5868;
+    --adm-text-3: #667382;
+    --adm-success: #0d7a5f;
+    --adm-success-soft: #e7f4ef;
+    --adm-warning: #9a5b00;
+    --adm-warning-soft: #fdf3e1;
+    --adm-danger: #b42318;
+    --adm-danger-soft: #fdecea;
+    --adm-info: #0b5fa5;
+    --adm-info-soft: #e8f1fa;
+
+    /* Token tema dihitung di :root, jadi ditimpa langsung di sini agar tombol,
+       teks, dan cincin fokus yang memakai "primary"/"brand" ikut palet baru. */
+    --primary: var(--adm-primary);
+    --ring: var(--adm-primary);
+    --color-primary: var(--adm-primary);
+    --color-ring: var(--adm-primary);
+    --color-accent: var(--adm-primary-soft);
+    --color-accent-foreground: var(--adm-primary);
+    --color-muted: var(--adm-surface-2);
+    --color-muted-foreground: var(--adm-text-3);
+    --color-border: var(--adm-border);
+    --color-input: var(--adm-border-strong);
+    --color-foreground: var(--adm-text);
+    --color-brand: var(--adm-primary);
+    --color-brand-light: var(--adm-primary);
+    --color-brand-soft: var(--adm-primary-soft);
+    --color-gold: var(--adm-accent);
+
+    --font-heading: 'Space Grotesk', var(--font-sans);
+    --font-body: var(--font-sans);
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    color: var(--adm-text);
+
+    font-family: var(--font-sans);
+    /* cv05: "l" berekor, cv08: "I" berserif — l/I/1 tidak tertukar di NIK & kode. */
+    font-feature-settings:
+        'cv05' 1,
+        'cv08' 1;
+    -webkit-font-smoothing: antialiased;
+}
+
+.absol-admin h1,
+.absol-admin h2,
+.absol-admin h3 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.015em;
+}
+
+/* Angka sejajar per kolom di tabel & kartu statistik. */
+.absol-admin table,
+.absol-admin .tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+.absol-admin ::selection {
+    background: var(--color-brand-soft);
+    color: var(--color-brand);
+}
+
+/* reCAPTCHA v3: badge melayang disembunyikan; atribusi teks ditampilkan di
+   formulir (RecaptchaNotice) sesuai ketentuan Google. */
+.grecaptcha-badge {
+    visibility: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   Beranda baru — Contact Center TARA (/beranda-baru).
+   Animasi ringan berbasis CSS: muncul bertahap saat halaman dibuka, maskot
+   melayang, gelembung chat berurutan, konten muncul saat digulir. Semua
+   dimatikan bila pengguna memilih "kurangi gerakan".
+   -------------------------------------------------------------------------- */
+/* Warna merek TARA di :root (bukan .transi-page) agar panel yang dirender di
+   luar halaman (portal) memakainya juga, dan mode kontras tinggi bisa menimpanya. */
+:root {
+    --t-navy: #003d68;
+    --t-deep: #022b4a;
+    --t-gold: #c29642;
+    --t-cream: #f8f3ef;
+    --t-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+.transi-page {
+    font-family: var(--font-body);
+}
+
+@keyframes transi-rise {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 18px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes transi-pop {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 10px, 0) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes transi-float {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0);
+    }
+    50% {
+        transform: translate3d(0, -12px, 0);
+    }
+}
+
+@keyframes transi-halo {
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: scale(1.04);
+        opacity: 0.55;
+    }
+}
+
+@keyframes transi-typing {
+    0% {
+        opacity: 0;
+        max-height: 0;
+        padding-block: 0;
+        border-width: 0;
+    }
+    15%,
+    80% {
+        opacity: 1;
+        max-height: 40px;
+        padding-block: 10px;
+        border-width: 1px;
+    }
+    100% {
+        opacity: 0;
+        max-height: 0;
+        padding-block: 0;
+        border-width: 0;
+        margin-top: -10px;
+    }
+}
+
+@keyframes transi-dot {
+    0%,
+    80%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+    40% {
+        transform: translateY(-4px);
+        opacity: 1;
+    }
+}
+
+@keyframes transi-caret {
+    50% {
+        opacity: 0;
+    }
+}
+
+@keyframes transi-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6);
+    }
+    100% {
+        box-shadow: 0 0 0 8px rgba(74, 222, 128, 0);
+    }
+}
+
+.transi-rise {
+    animation: transi-rise 0.8s var(--t-ease) both;
+    animation-delay: var(--d, 0s);
+}
+
+.transi-pop {
+    animation: transi-pop 0.55s var(--t-ease) both;
+    animation-delay: var(--d, 0s);
+}
+
+.transi-float {
+    animation: transi-float 6s ease-in-out infinite;
+    will-change: transform;
+}
+
+.transi-halo {
+    animation: transi-halo 8s ease-in-out infinite;
+}
+
+.transi-typing {
+    overflow: hidden;
+    animation: transi-typing 1.1s ease both;
+    animation-delay: var(--d, 0s);
+}
+
+.transi-typing span {
+    animation: transi-dot 1s ease-in-out infinite;
+}
+
+.transi-typing span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.transi-typing span:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.transi-caret {
+    animation: transi-caret 1s steps(1) infinite;
+}
+
+.transi-live-dot {
+    animation: transi-pulse 1.8s ease-out infinite;
+}
+
+/* Tombol & kartu interaktif: naik sedikit saat disorot. */
+.transi-lift {
+    transition:
+        transform 0.3s var(--t-ease),
+        box-shadow 0.3s var(--t-ease),
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.transi-lift:hover {
+    transform: translateY(-2px);
+}
+
+.transi-lift:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Muncul saat digulir. Konten tetap terlihat bila JS tidak berjalan. */
+.transi-js [data-reveal] {
+    transition:
+        opacity 0.9s var(--t-ease),
+        transform 0.9s var(--t-ease);
+    transition-delay: var(--d, 0s);
+}
+
+.transi-js [data-reveal]:not(.is-in) {
+    opacity: 0;
+    transform: translate3d(0, 28px, 0);
+}
+
+.transi-js [data-reveal='left']:not(.is-in) {
+    transform: translate3d(-32px, 0, 0);
+}
+
+.transi-js [data-reveal='right']:not(.is-in) {
+    transform: translate3d(32px, 0, 0);
+}
+
+.transi-js [data-reveal='zoom']:not(.is-in) {
+    transform: scale(0.94);
+}
+
+/* Linimasa: garis tergambar mengikuti langkah yang terlihat. */
+.transi-js .transi-rail-line {
+    transform-origin: top;
+    transition: transform 1.1s var(--t-ease) 0.25s;
+}
+
+.transi-js [data-reveal]:not(.is-in) .transi-rail-line {
+    transform: scaleY(0);
+}
+
+/* Akordeon FAQ: tinggi beranimasi tanpa mengukur DOM. */
+.transi-accordion {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.45s var(--t-ease);
+}
+
+.transi-accordion[data-open='true'] {
+    grid-template-rows: 1fr;
+}
+
+.transi-accordion > div {
+    overflow: hidden;
+}
+
+.transi-chips {
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.transi-chips::-webkit-scrollbar {
+    display: none;
+}
+
+/* Peluncur chat TARA. */
+.transi-launcher {
+    transition:
+        transform 0.35s var(--t-ease),
+        opacity 0.25s ease;
+}
+
+.transi-launcher.is-hidden {
+    transform: scale(0.6);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.transi-launcher__bubble {
+    animation: transi-pop 0.6s var(--t-ease) 1.6s both;
+}
+
+.transi-launcher__face {
+    animation: transi-float 5s ease-in-out infinite;
+    transition: transform 0.25s var(--t-ease);
+}
+
+.transi-launcher__face:hover {
+    animation-play-state: paused;
+    transform: scale(1.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .transi-rise,
+    .transi-pop,
+    .transi-float,
+    .transi-halo,
+    .transi-caret,
+    .transi-live-dot,
+    .transi-launcher__bubble,
+    .transi-launcher__face {
+        animation: none;
+    }
+
+    .transi-typing {
+        display: none;
+    }
+
+    .transi-js [data-reveal]:not(.is-in),
+    .transi-js [data-reveal] {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+
+    .transi-js .transi-rail-line {
+        transform: none;
+        transition: none;
+    }
+
+    .transi-lift,
+    .transi-accordion,
+    .transi-launcher {
+        transition: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Transisi landing ↔ Chat TARA (View Transitions; lihat lib/chat-transition).
+   -------------------------------------------------------------------------- */
+@media (min-width: 1024px) {
+    .vt-chat-target {
+        view-transition-name: transi-chat;
+    }
+}
+
+::view-transition-group(transi-chat) {
+    animation-duration: 0.4s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(transi-chat),
+::view-transition-new(transi-chat) {
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+}
+
+::view-transition-old(transi-chat) {
+    animation: vt-fade-out 0.18s ease both;
+}
+
+::view-transition-new(transi-chat) {
+    animation: vt-fade-in 0.3s ease 0.08s both;
+}
+
+html[data-vt='forward']::view-transition-old(root),
+html[data-vt='back']::view-transition-old(root) {
+    animation: vt-fade-out 0.3s ease both;
+}
+
+html[data-vt='forward']::view-transition-new(root),
+html[data-vt='back']::view-transition-new(root) {
+    animation: vt-fade-in 0.3s ease 0.1s both;
+}
+
+/* HP: halaman chat naik dari bawah seperti lembar; kembali = turun. */
+html[data-vt='forward-sheet']::view-transition-old(root) {
+    animation: vt-recede 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+html[data-vt='forward-sheet']::view-transition-new(root) {
+    animation: vt-sheet-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+html[data-vt='back-sheet']::view-transition-old(root) {
+    z-index: 2;
+    animation: vt-sheet-down 0.3s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+html[data-vt='back-sheet']::view-transition-new(root) {
+    animation: vt-recede-back 0.3s ease both;
+}
+
+@keyframes vt-fade-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes vt-fade-in {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes vt-sheet-up {
+    from {
+        transform: translateY(100%);
+        border-radius: 26px 26px 0 0;
+    }
+}
+
+@keyframes vt-sheet-down {
+    to {
+        transform: translateY(100%);
+    }
+}
+
+@keyframes vt-recede {
+    to {
+        transform: scale(0.94);
+        opacity: 0.5;
+    }
+}
+
+@keyframes vt-recede-back {
+    from {
+        transform: scale(0.94);
+        opacity: 0.5;
+    }
+}
+
+/* Halaman Chat TARA. */
+@keyframes transi-msg-in {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 8px, 0);
+    }
+}
+
+.transi-msg-in {
+    animation: transi-msg-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes transi-sheet-in {
+    from {
+        transform: translateY(100%);
+    }
+}
+
+.transi-sheet-in {
+    animation: transi-sheet-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .transi-msg-in,
+    .transi-sheet-in {
+        animation: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Peta Kawasan (TARA): pin bundar navy berlabel, pin terpilih emas, kartu info.
+   -------------------------------------------------------------------------- */
+/* Peta provinsi (ProvinceMap): latar laut tanpa tile, label provinsi berdata. */
+.province-map {
+    background: linear-gradient(180deg, #eef5fb 0%, #e3eef8 100%);
+}
+.province-map .leaflet-container {
+    background: transparent;
+    font: inherit;
+}
+.province-map .leaflet-control-scale {
+    margin: 14px 0 0 14px;
+}
+.province-map .leaflet-control-scale-line {
+    border-color: #94a3b8;
+    background: rgb(255 255 255 / 0.85);
+    color: #4a5868;
+    font-size: 11px;
+}
+.leaflet-tooltip.prov-label {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: #17232f;
+    text-shadow:
+        0 0 3px #fff,
+        0 0 3px #fff,
+        0 0 3px #fff;
+}
+.leaflet-tooltip.prov-label::before {
+    display: none;
+}
+
+.tara-pin {
+    background: none;
+    border: 0;
+}
+.tara-pin__wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+.tara-pin__dot {
+    display: flex;
+    height: 40px;
+    width: 40px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 3px solid #fff;
+    background: #003d68;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(2, 43, 74, 0.35);
+    transition:
+        transform 0.2s ease,
+        background-color 0.2s ease;
+}
+.tara-pin__label {
+    border-radius: 999px;
+    background: #fff;
+    padding: 5px 12px;
+    font: 600 13px/1.2 var(--font-body);
+    color: #022b4a;
+    box-shadow: 0 4px 12px rgba(2, 43, 74, 0.18);
+}
+.tara-pin__wrap.is-selected .tara-pin__dot {
+    background: #c29642;
+    color: #022b4a;
+    transform: scale(1.08);
+}
+.tara-popup .leaflet-popup-content-wrapper {
+    border-radius: 18px;
+    box-shadow: 0 16px 36px rgba(2, 43, 74, 0.2);
+}
+.tara-popup .leaflet-popup-content {
+    margin: 16px 20px;
+    font-family: var(--font-body);
+}
+.tara-popup .leaflet-popup-content p {
+    margin: 0;
+}
+.tara-map .leaflet-control-zoom {
+    border: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 16px rgba(2, 43, 74, 0.15);
+}
+@media (max-width: 640px) {
+    /* Di ponsel label berdempetan saat peta diperkecil; nama tetap ada di kartu info & daftar. */
+    .tara-pin__label {
+        display: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Tema gelap, kontras tinggi & aksesibilitas — halaman publik TARA
+   Kelas di <html> dipasang resources/js/lib/preferences.ts (dan skrip awal di
+   app.blade.php). Komponen memakai var(--tcd-<peran>, warna-terang): di mode
+   terang variabel tidak didefinisikan sehingga warna asli yang dipakai.
+   Didefinisikan di <html> (bukan .transi-page) agar dialog/menu yang dirender
+   di luar halaman (portal) ikut berganti warna.
+   -------------------------------------------------------------------------- */
+/* Juga di admin: komponen bersama (peta provinsi, kanal resmi) memakai token yang sama. */
+html.dark:has(.transi-page),
+html.dark:has(.absol-admin) {
+    color-scheme: dark;
+    --tcd-surface: #0e1b29;
+    --tcd-muted: #142638;
+    --tcd-muted-2: #1b3046;
+    --tcd-cream: #131f2c;
+    --tcd-gold-soft: #33291a;
+    --tcd-primary: #1b6aa5;
+    --tcd-primary-hover: #2479b9;
+    --tcd-heading: #f1f5f9;
+    --tcd-link: #8fc8f2;
+    --tcd-text: #e2e9f0;
+    --tcd-text-2: #b4c2cf;
+    --tcd-text-3: #8b9bab;
+    --tcd-warm: #d6c8b4;
+    --tcd-bronze: #e2ba68;
+    --tcd-border: #22364a;
+    --tcd-border-strong: #33495f;
+    --tcd-border-warm: #34393c;
+    --tcd-info: #8cc6f5;
+    --tcd-info-soft: #112c45;
+    --tcd-info-border: #1f4566;
+    --tcd-success: #5ad3a8;
+    --tcd-success-soft: #0f2f28;
+    --tcd-success-border: #1d4d40;
+    --tcd-danger: #ff8f86;
+    --tcd-danger-soft: #3a1a18;
+    --tcd-danger-border: #5c2621;
+    --tcd-warning: #f2b85b;
+    --tcd-warning-soft: #36290f;
+    --tcd-warning-border: #5a4420;
+
+    /* Komponen shadcn (Select, Dialog) di halaman publik. */
+    --color-background: var(--tcd-surface);
+    --color-foreground: var(--tcd-text);
+    --color-popover: var(--tcd-surface);
+    --color-popover-foreground: var(--tcd-text);
+    --color-card: var(--tcd-surface);
+    --color-card-foreground: var(--tcd-text);
+    --color-muted: var(--tcd-muted);
+    --color-muted-foreground: var(--tcd-text-3);
+    --color-accent: var(--tcd-muted-2);
+    --color-accent-foreground: var(--tcd-text);
+    --color-border: var(--tcd-border);
+    --color-input: var(--tcd-border-strong);
+    background: var(--tcd-surface);
+}
+html.dark .province-map {
+    background: linear-gradient(180deg, #10233a 0%, #0c1c2e 100%);
+}
+html.dark .transi-page .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
+}
+
+/* Kontras tinggi: hitam, putih, kuning (berlaku di mode terang maupun gelap). */
+html.a11y-contrast:has(.transi-page) {
+    color-scheme: dark;
+    --t-navy: #000;
+    --t-deep: #000;
+    --t-gold: #ffd400;
+    --tcd-surface: #000;
+    --tcd-muted: #000;
+    --tcd-muted-2: #1a1a1a;
+    --tcd-cream: #000;
+    --tcd-gold-soft: #000;
+    --tcd-primary: #0047ab;
+    --tcd-primary-hover: #0057d0;
+    --tcd-heading: #fff;
+    --tcd-link: #ffd400;
+    --tcd-text: #fff;
+    --tcd-text-2: #fff;
+    --tcd-text-3: #e6e6e6;
+    --tcd-warm: #fff;
+    --tcd-bronze: #ffd400;
+    --tcd-border: #fff;
+    --tcd-border-strong: #fff;
+    --tcd-border-warm: #fff;
+    --tcd-info: #7fd4ff;
+    --tcd-info-soft: #000;
+    --tcd-info-border: #7fd4ff;
+    --tcd-success: #6dff9e;
+    --tcd-success-soft: #000;
+    --tcd-success-border: #6dff9e;
+    --tcd-danger: #ff7b7b;
+    --tcd-danger-soft: #000;
+    --tcd-danger-border: #ff7b7b;
+    --tcd-warning: #ffd400;
+    --tcd-warning-soft: #000;
+    --tcd-warning-border: #ffd400;
+    --color-background: #000;
+    --color-foreground: #fff;
+    --color-popover: #000;
+    --color-popover-foreground: #fff;
+    --color-card: #000;
+    --color-card-foreground: #fff;
+    --color-muted: #000;
+    --color-muted-foreground: #fff;
+    --color-accent: #1a1a1a;
+    --color-accent-foreground: #ffd400;
+    --color-border: #fff;
+    --color-input: #fff;
+    background: #000;
+}
+html.a11y-contrast .transi-page a:not([class*='bg-']) {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+html.a11y-contrast .transi-page img:not([src*='/tara/']):not([src*='logo']) {
+    filter: grayscale(1) contrast(1.2) brightness(0.6);
+}
+html.a11y-contrast .hero-shade {
+    background: linear-gradient(90deg, #000 0%, #000 42%, rgb(0 0 0 / 0.65) 58%, rgb(0 0 0 / 0.25) 76%, transparent 90%) !important;
+}
+html.a11y-contrast .province-map {
+    background: #000;
+}
+
+/* Ukuran teks: halaman memakai ukuran piksel tetap, jadi seluruh halaman diperbesar. */
+/* Header tidak diperbesar: titik-pecah responsif mengikuti lebar layar, bukan zoom. */
+html.a11y-text-1 .transi-page > :not(header, .chat-grid),
+html.a11y-text-1 .chat-grid > * {
+    zoom: 1.15;
+}
+html.a11y-text-2 .transi-page > :not(header, .chat-grid),
+html.a11y-text-2 .chat-grid > * {
+    zoom: 1.3;
+}
+/* Halaman chat: yang diperbesar isi tiap kolom, bukan grid-nya (lebar kolom tetap). */
+/* Leaflet menghitung posisi kursor tanpa memperhitungkan zoom: peta dikembalikan ke skala 1. */
+html.a11y-text-1 .transi-page .leaflet-container {
+    zoom: calc(1 / 1.15);
+}
+html.a11y-text-2 .transi-page .leaflet-container {
+    zoom: calc(1 / 1.3);
+}
+
+/* Sorot tautan & tombol. */
+html.a11y-links .transi-page :is(a, button, [role='button'], summary) {
+    outline: 2px dashed var(--a11y-highlight, #c29642);
+    outline-offset: 2px;
+}
+html.a11y-links .transi-page a {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+}
+
+/* Huruf mudah dibaca (Atkinson Hyperlegible) dan jarak lebih lega. */
+html.a11y-dyslexia .transi-page,
+html.a11y-dyslexia .transi-page :is(h1, h2, h3, h4, p, li, a, button, span, label, input, textarea, dd, dt, td, th) {
+    font-family: 'Atkinson Hyperlegible', var(--font-body), sans-serif !important;
+}
+html.a11y-dyslexia .transi-page :is(p, li, dd, label, td) {
+    letter-spacing: 0.035em;
+    word-spacing: 0.14em;
+    line-height: 1.75;
+}
+
+/* Hentikan animasi: konten yang menunggu animasi muncul langsung tampil. */
+html.a11y-motion .transi-page *,
+html.a11y-motion .transi-page *::before,
+html.a11y-motion .transi-page *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+}
+html.a11y-motion .transi-js [data-reveal]:not(.is-in) {
+    opacity: 1;
+    transform: none;
+}
+html.a11y-motion {
+    scroll-behavior: auto;
+}
+
+/* Penanda fokus tebal untuk navigasi keyboard. */
+html.a11y-focus .transi-page :focus-visible,
+html.a11y-focus .a11y-panel :focus-visible {
+    outline: 3px solid #ffbf00 !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 6px #022b4a !important;
+}
+
+/* Mode abu-abu. */
+/* Di <html> (bukan <body>) agar elemen melayang tetap menempel di layar. */
+html.a11y-gray:has(.transi-page) {
+    filter: grayscale(1);
+}
+
+/* --------------------------------------------------------------------------
+   Mode gelap — panel admin
+   Nilai --adm-* versi gelap; palet Tailwind (abu-abu & warna lembut) ditimpa
+   hanya di dokumen admin (html:has(.absol-admin)), termasuk dialog/menu yang
+   dirender di luar layout. Latar warna pekat (bg-*-600..900) sudah dikunci ke
+   nilai literal di komponen sehingga tidak ikut berubah.
+   -------------------------------------------------------------------------- */
+html.dark:has(.absol-admin),
+html.dark .absol-admin {
+    color-scheme: dark;
+    --chart-violet: #a98bea;
+    --chart-teal: #5cc4c4;
+    --chart-rose: #f08aae;
+    --adm-primary: #2a74b0;
+    --adm-primary-soft: #13304a;
+    --adm-accent: #d6a94f;
+    --adm-accent-soft: #33291a;
+    --adm-bg: #0b1622;
+    --adm-surface: #111e2c;
+    --adm-surface-2: #16263a;
+    --adm-border: #22364a;
+    --adm-border-strong: #33495f;
+    --adm-text: #e6edf3;
+    --adm-text-2: #b4c2cf;
+    --adm-text-3: #8b9bab;
+    --adm-success: #5ad3a8;
+    --adm-success-soft: #0f2f28;
+    --adm-warning: #f2b85b;
+    --adm-warning-soft: #36290f;
+    --adm-danger: #ff8f86;
+    --adm-danger-soft: #3a1a18;
+    --adm-info: #8cc6f5;
+    --adm-info-soft: #112c45;
+
+    --acd-surface: #111e2c;
+    --acd-muted: #16263a;
+    --acd-muted-2: #1b3046;
+    --acd-border: #22364a;
+    --acd-danger-border: #5c2621;
+    --acd-text: #e6edf3;
+    --acd-text-2: #b4c2cf;
+    --acd-text-3: #8b9bab;
+    --acd-link: #8fc8f2;
+    --acd-heading: #f1f5f9;
+
+    --color-background: #111e2c;
+    --color-foreground: #e6edf3;
+    --color-card: #111e2c;
+    --color-card-foreground: #e6edf3;
+    --color-popover: #111e2c;
+    --color-popover-foreground: #e6edf3;
+    --color-primary: #2a74b0;
+    --color-primary-foreground: #ffffff;
+    --color-ring: #8fc8f2;
+    --color-muted: #16263a;
+    --color-muted-foreground: #8b9bab;
+    --color-accent: #13304a;
+    --color-accent-foreground: #8fc8f2;
+    --color-border: #22364a;
+    --color-input: #33495f;
+    --color-brand: #2a74b0;
+    --color-brand-light: #2a74b0;
+    --color-brand-soft: #13304a;
+    --color-gold: #d6a94f;
+    --color-secondary: #33291a;
+    --color-secondary-foreground: #f2d79c;
+    --color-red-50: color-mix(in oklab, oklch(0.637 0.237 25.331) 13%, #111e2c);
+    --color-red-100: color-mix(in oklab, oklch(0.637 0.237 25.331) 20%, #111e2c);
+    --color-red-200: color-mix(in oklab, oklch(0.637 0.237 25.331) 32%, #111e2c);
+    --color-red-600: oklch(0.704 0.191 22.216);
+    --color-red-700: oklch(0.808 0.114 19.571);
+    --color-red-800: oklch(0.885 0.062 18.334);
+    --color-red-900: oklch(0.936 0.032 17.717);
+    --color-rose-50: color-mix(in oklab, oklch(0.645 0.246 16.439) 13%, #111e2c);
+    --color-rose-100: color-mix(in oklab, oklch(0.645 0.246 16.439) 20%, #111e2c);
+    --color-rose-200: color-mix(in oklab, oklch(0.645 0.246 16.439) 32%, #111e2c);
+    --color-rose-600: oklch(0.712 0.194 13.428);
+    --color-rose-700: oklch(0.81 0.117 11.638);
+    --color-rose-800: oklch(0.892 0.058 10.001);
+    --color-rose-900: oklch(0.941 0.03 12.58);
+    --color-amber-50: color-mix(in oklab, oklch(0.769 0.188 70.08) 13%, #111e2c);
+    --color-amber-100: color-mix(in oklab, oklch(0.769 0.188 70.08) 20%, #111e2c);
+    --color-amber-200: color-mix(in oklab, oklch(0.769 0.188 70.08) 32%, #111e2c);
+    --color-amber-600: oklch(0.828 0.189 84.429);
+    --color-amber-700: oklch(0.879 0.169 91.605);
+    --color-amber-800: oklch(0.924 0.12 95.746);
+    --color-amber-900: oklch(0.962 0.059 95.617);
+    --color-emerald-50: color-mix(in oklab, oklch(0.696 0.17 162.48) 13%, #111e2c);
+    --color-emerald-100: color-mix(in oklab, oklch(0.696 0.17 162.48) 20%, #111e2c);
+    --color-emerald-200: color-mix(in oklab, oklch(0.696 0.17 162.48) 32%, #111e2c);
+    --color-emerald-600: oklch(0.765 0.177 163.223);
+    --color-emerald-700: oklch(0.845 0.143 164.978);
+    --color-emerald-800: oklch(0.905 0.093 164.15);
+    --color-emerald-900: oklch(0.95 0.052 163.051);
+    --color-green-50: color-mix(in oklab, oklch(0.723 0.219 149.579) 13%, #111e2c);
+    --color-green-100: color-mix(in oklab, oklch(0.723 0.219 149.579) 20%, #111e2c);
+    --color-green-200: color-mix(in oklab, oklch(0.723 0.219 149.579) 32%, #111e2c);
+    --color-green-600: oklch(0.792 0.209 151.711);
+    --color-green-700: oklch(0.871 0.15 154.449);
+    --color-green-800: oklch(0.925 0.084 155.995);
+    --color-green-900: oklch(0.962 0.044 156.743);
+    --color-blue-50: color-mix(in oklab, oklch(0.623 0.214 259.815) 13%, #111e2c);
+    --color-blue-100: color-mix(in oklab, oklch(0.623 0.214 259.815) 20%, #111e2c);
+    --color-blue-200: color-mix(in oklab, oklch(0.623 0.214 259.815) 32%, #111e2c);
+    --color-blue-600: oklch(0.707 0.165 254.624);
+    --color-blue-700: oklch(0.809 0.105 251.813);
+    --color-blue-800: oklch(0.882 0.059 254.128);
+    --color-blue-900: oklch(0.932 0.032 255.585);
+    --color-violet-50: color-mix(in oklab, oklch(0.606 0.25 292.717) 13%, #111e2c);
+    --color-violet-100: color-mix(in oklab, oklch(0.606 0.25 292.717) 20%, #111e2c);
+    --color-violet-200: color-mix(in oklab, oklch(0.606 0.25 292.717) 32%, #111e2c);
+    --color-violet-600: oklch(0.702 0.183 293.541);
+    --color-violet-700: oklch(0.811 0.111 293.571);
+    --color-violet-800: oklch(0.894 0.057 293.283);
+    --color-violet-900: oklch(0.943 0.029 294.588);
+    --color-orange-50: color-mix(in oklab, oklch(0.705 0.213 47.604) 13%, #111e2c);
+    --color-orange-100: color-mix(in oklab, oklch(0.705 0.213 47.604) 20%, #111e2c);
+    --color-orange-200: color-mix(in oklab, oklch(0.705 0.213 47.604) 32%, #111e2c);
+    --color-orange-600: oklch(0.75 0.183 55.934);
+    --color-orange-700: oklch(0.837 0.128 66.29);
+    --color-orange-800: oklch(0.901 0.076 70.697);
+    --color-orange-900: oklch(0.954 0.038 75.164);
+    --color-yellow-50: color-mix(in oklab, oklch(0.795 0.184 86.047) 13%, #111e2c);
+    --color-yellow-100: color-mix(in oklab, oklch(0.795 0.184 86.047) 20%, #111e2c);
+    --color-yellow-200: color-mix(in oklab, oklch(0.795 0.184 86.047) 32%, #111e2c);
+    --color-yellow-600: oklch(0.852 0.199 91.936);
+    --color-yellow-700: oklch(0.905 0.182 98.111);
+    --color-yellow-800: oklch(0.945 0.129 101.54);
+    --color-yellow-900: oklch(0.973 0.071 103.193);
+    --color-sky-50: color-mix(in oklab, oklch(0.685 0.169 237.323) 13%, #111e2c);
+    --color-sky-100: color-mix(in oklab, oklch(0.685 0.169 237.323) 20%, #111e2c);
+    --color-sky-200: color-mix(in oklab, oklch(0.685 0.169 237.323) 32%, #111e2c);
+    --color-sky-600: oklch(0.746 0.16 232.661);
+    --color-sky-700: oklch(0.828 0.111 230.318);
+    --color-sky-800: oklch(0.901 0.058 230.902);
+    --color-sky-900: oklch(0.951 0.026 236.824);
+    --color-purple-50: color-mix(in oklab, oklch(0.627 0.265 303.9) 13%, #111e2c);
+    --color-purple-100: color-mix(in oklab, oklch(0.627 0.265 303.9) 20%, #111e2c);
+    --color-purple-200: color-mix(in oklab, oklch(0.627 0.265 303.9) 32%, #111e2c);
+    --color-purple-600: oklch(0.714 0.203 305.504);
+    --color-purple-700: oklch(0.827 0.119 306.383);
+    --color-purple-800: oklch(0.902 0.063 306.703);
+    --color-purple-900: oklch(0.946 0.033 307.174);
+    --color-red-950: oklch(0.971 0.013 17.38);
+    --color-rose-950: oklch(0.969 0.015 12.422);
+    --color-amber-950: oklch(0.987 0.022 95.277);
+    --color-emerald-950: oklch(0.979 0.021 166.113);
+    --color-green-950: oklch(0.982 0.018 155.826);
+    --color-blue-950: oklch(0.97 0.014 254.604);
+    --color-violet-950: oklch(0.969 0.016 293.756);
+    --color-orange-950: oklch(0.98 0.016 73.684);
+    --color-yellow-950: oklch(0.987 0.026 102.212);
+    --color-sky-950: oklch(0.977 0.013 236.62);
+    --color-purple-950: oklch(0.977 0.014 308.299);
+    --color-gray-50: #111c28;
+    --color-gray-100: #182636;
+    --color-gray-200: #22344a;
+    --color-gray-300: #2f4660;
+    --color-gray-400: #7d8fa3;
+    --color-gray-500: #95a5b6;
+    --color-gray-600: #aebccb;
+    --color-gray-700: #c5d0db;
+    --color-gray-800: #dbe3eb;
+    --color-gray-900: #eef2f6;
+}
+html.dark:has(.absol-admin) {
+    background: #0b1622;
+}
+/* Teks berwarna utama: biru terang agar terbaca di latar gelap (bg-primary tetap biru tua). */
+html.dark .absol-admin :is(.text-primary, .text-brand, .text-brand-light, .text-\[var\(--adm-primary\)\]),
+html.dark .absol-admin :is(.hover\:text-primary, .hover\:text-brand-light):hover {
+    color: #8fc8f2;
+}
+html.dark .absol-admin .province-map {
+    background: linear-gradient(180deg, #10233a 0%, #0c1c2e 100%);
+}
