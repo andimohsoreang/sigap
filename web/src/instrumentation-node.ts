@@ -7,12 +7,10 @@ try {
     process.exit(1);
 }
 
-// Dengan NEXT_MANUAL_SIG_HANDLE Next.js tidak memasang handler sinyal sendiri; batas 25 dtk < stop_grace_period container.
-if (process.env.NEXT_MANUAL_SIG_HANDLE) {
-    const { berhentiAnggun } = await import('./server/berhenti');
-    const berhenti = berhentiAnggun(25_000);
-    process.on('SIGTERM', berhenti);
-    process.on('SIGINT', berhenti);
-}
+// Ditambahkan di samping handler sinyal Next.js (NEXT_MANUAL_SIG_HANDLE tidak dipakai); 25 dtk < stop_grace_period.
+const { berhentiAnggun } = await import('./server/berhenti');
+const berhenti = berhentiAnggun(25_000);
+process.on('SIGTERM', berhenti);
+process.on('SIGINT', berhenti);
 
 export {};
