@@ -1,6 +1,7 @@
 // Proses worker Contact Center (contact-center-worker): pg-boss (antrean & jadwal) + dispatcher outbox.
-// Dibundel ke dist/worker.js (scripts/bangun-worker.mjs), image yang sama dengan web; compose: `node dist/worker.js`
-// dengan DATABASE_URL = alias PgBouncer contact_center_worker, DB_POOL_MAX=3.
+// Dibundel ke dist/worker.mjs (scripts/bangun-worker.mjs), image yang sama dengan web; compose:
+// `node --enable-source-maps dist/worker.mjs` dengan DATABASE_URL = alias PgBouncer contact_center_worker, DB_POOL_MAX=3.
+// Worker tidak memakai Valkey: jangan impor @/server/valkey (bangun-worker.mjs gagal bila ioredis ikut terbundel).
 import { setTimeout as tidur } from 'node:timers/promises';
 
 import { db, tutupDb } from '@/server/db/client';
@@ -8,13 +9,14 @@ import { env } from '@/server/env';
 import { log } from '@/server/log';
 import { kirimOutbox } from '@/server/outbox';
 import { terbitkan } from '@/server/realtime/penerbit';
-import { tutupValkey } from '@/server/valkey';
 
 import { buatBoss } from './boss';
 import { pasangJadwal } from './jadwal';
 
 // Di bawah stop_grace_period worker (60 dtk) sebelum Docker mengirim SIGKILL.
 const BATAS_BERHENTI_MS = 50_000;
+// Dispatcher outbox punya loop polling sendiri (tidak ikut pollingIntervalSeconds pg-boss): pesan baru terkirim
+// paling lambat ±1 dtk + waktu kirim.
 const JEDA_OUTBOX_MS = 1_000;
 
 if (!env.DATABASE_URL) throw new Error('DATABASE_URL wajib untuk worker');
@@ -57,7 +59,7 @@ async function matikan(sinyal: string) {
     await outbox;
     // graceful: job aktif diberi waktu selesai, setelah itu digagalkan agar diulang worker lain.
     await boss.stop({ graceful: true, timeout: BATAS_BERHENTI_MS - 10_000 });
-    await Promise.allSettled([tutupDb(), tutupValkey()]);
+    await tutupDb();
     log.info('worker selesai');
     process.exit(0);
 }

@@ -4,6 +4,7 @@ import { isAxiosError } from 'axios';
 import { sql } from 'drizzle-orm';
 
 import type { Db, Transaksi } from '@/server/db/client';
+import { bersihkanGalatDb } from '@/server/db/galat';
 import { chatConversations } from '@/server/db/schema';
 import { ccOutbox } from '@/server/db/schema-cc';
 import { log } from '@/server/log';
@@ -121,7 +122,9 @@ export async function kirimOutbox(db: Db, penerbit: PenerbitOutbox, batas = 50):
     for (const [i, b] of rows.entries()) {
         const h = hasil[i];
         if (h.status === 'fulfilled') continue;
-        const pesan = String((h.reason as Error)?.message ?? h.reason).slice(0, 500);
+        // Galat Drizzle membawa nilai parameter query di pesannya; disimpan versi tanpa data (seperti log).
+        const galat = bersihkanGalatDb(h.reason) as Error;
+        const pesan = String(galat?.message ?? galat).slice(0, 500);
         const menyerah = galatPermanen(h.reason) || b.attempts >= MAKS_PERCOBAAN;
         // Backoff eksponensial 2^n dtk, maks 5 menit.
         await db.execute(sql`

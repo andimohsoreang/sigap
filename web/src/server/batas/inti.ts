@@ -2,6 +2,8 @@ import 'server-only';
 
 import { createHash } from 'node:crypto';
 
+import type Redis from 'ioredis';
+
 import { log } from '@/server/log';
 import { denganValkey } from '@/server/valkey';
 
@@ -112,10 +114,25 @@ export function kunciPenyimpanan(nama: string | null, kunci: string): string {
               .digest('hex');
 }
 
+type DenganSkrip = Redis & { batas(numKeys: number, ...keysDanArgs: (string | number)[]): Promise<[number, number[]]> };
+const sudahDidefinisikan = new WeakSet<Redis>();
+
+/**
+ * EVALSHA (hanya hash 40 byte per permintaan, bukan teks skrip). Bila Valkey menjawab NOSCRIPT (restart, SCRIPT
+ * FLUSH, failover), ioredis otomatis mengulang dengan EVAL yang sekaligus memuat ulang skrip.
+ */
+function denganSkrip(r: Redis): DenganSkrip {
+    if (!sudahDidefinisikan.has(r)) {
+        r.defineCommand('batas', { lua: SKRIP });
+        sudahDidefinisikan.add(r);
+    }
+    return r as DenganSkrip;
+}
+
 async function jalankanValkey(entri: { kunci: string; maks: number; detik: number }[], now: number): Promise<Mentah> {
     const keys = entri.flatMap(({ kunci }) => [`batas:${kunci}`, `batas:${kunci}:timer`]);
     const args = [now, ...entri.flatMap(({ maks, detik }) => [maks, detik])];
-    const [gagal, datar] = await denganValkey((r) => r.eval(SKRIP, keys.length, ...keys, ...args) as Promise<[number, number[]]>);
+    const [gagal, datar] = await denganValkey((r) => denganSkrip(r).batas(keys.length, ...keys, ...args));
     const langkah: Langkah[] = [];
     for (let i = 0; i < datar.length; i += 2) langkah.push({ hits: datar[i], timer: datar[i + 1] });
     return { gagal, langkah };
