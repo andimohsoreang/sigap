@@ -37,6 +37,7 @@ describe('bacaEnv', () => {
         expect(() => bacaEnv({ ...prod, VALKEY_URL: salah })).toThrow(/VALKEY_URL/);
         expect(() => bacaEnv({ ...prod, VALKEY_URL: salah })).not.toThrow(/sandi-rahasia/);
         expect(bacaEnv(prod)).toMatchObject({ REALTIME_HOST: 'sockudo', REALTIME_PORT: 6001 });
+        expect(() => bacaEnv({ ...prod, REALTIME_APP_KEY: 'kunci/../x' })).toThrow(/REALTIME_APP_KEY/);
     });
 
     it('gagal di produksi bila APP_DEBUG aktif', () => {

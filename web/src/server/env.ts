@@ -22,6 +22,8 @@ const kunciLama = z.string().refine(
     lolos((v) => v.split(',').forEach((k) => k !== '' && k !== '0' && bacaKunci(k))),
     'setiap kunci harus 32 byte (format base64:… seperti Laravel)',
 );
+// Harus cocok dengan pola rewrite /_realtime/app/:key di next.config.ts.
+const kunciRealtime = wajib.regex(/^[A-Za-z0-9_-]+$/, 'hanya huruf, angka, _ dan -');
 const kunciHashNik = wajib.refine(lolos(kunciNik), 'minimal 32 byte dan bukan nilai kosong/sentinel');
 
 const dasar = z.object({
@@ -43,7 +45,7 @@ const dasar = z.object({
     VALKEY_URL: z.url({ protocol: /^rediss?$/ }).optional(),
     // Realtime berprotokol Pusher (Sockudo). Server → Sockudo lewat HTTP di jaringan backend; APP_KEY publik.
     REALTIME_APP_ID: wajib.optional(),
-    REALTIME_APP_KEY: wajib.optional(),
+    REALTIME_APP_KEY: kunciRealtime.optional(),
     REALTIME_APP_SECRET: wajib.optional(),
     REALTIME_HOST: wajib.default('sockudo'),
     REALTIME_PORT: z.coerce.number().int().min(1).max(65535).default(6001),
@@ -58,7 +60,7 @@ const produksi = dasar.extend({
     NIK_HASH_KEY: kunciHashNik,
     VALKEY_URL: z.url({ protocol: /^rediss?$/ }),
     REALTIME_APP_ID: wajib,
-    REALTIME_APP_KEY: wajib,
+    REALTIME_APP_KEY: kunciRealtime,
     REALTIME_APP_SECRET: wajib,
 });
 

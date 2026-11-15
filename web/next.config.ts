@@ -18,10 +18,12 @@ const nextConfig: NextConfig = {
     // WebSocket browser → Sockudo lewat origin yang sama. Server standalone meneruskan upgrade WebSocket untuk rewrite
     // ke URL luar (router-server upgradeHandler → proxyRequest, http-proxy ws). Tujuan DITANAM saat build
     // (routes-manifest): bawaan = service compose `sockudo:6001`; env runtime REALTIME_HOST/PORT tidak mengubahnya.
-    // Hanya /app/:key (WebSocket); HTTP API Sockudo (/apps/…) tidak diteruskan.
+    // Hanya /app/:key (WebSocket); HTTP API Sockudo (/apps/…) tidak diteruskan. Diuji: `../` mentah dinormalkan Next
+    // (404), bentuk ter-encode (%2F, %2e%2e, %5C) diteruskan apa adanya di bawah /app/ — tidak keluar dari /app/. Kunci
+    // tetap dibatasi pola kunci Pusher agar hanya kunci sah yang sampai ke Sockudo.
     rewrites: async () => [
         {
-            source: '/_realtime/app/:key',
+            source: '/_realtime/app/:key([A-Za-z0-9_-]+)',
             destination: `http://${process.env.REALTIME_HOST || 'sockudo'}:${process.env.REALTIME_PORT || '6001'}/app/:key`,
         },
     ],
