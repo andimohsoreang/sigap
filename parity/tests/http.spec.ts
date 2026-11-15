@@ -72,6 +72,7 @@ test.describe('S1 header keamanan & cookie sesi', () => {
             const res = await request.get(p.path, { maxRedirects: 0 });
             expect(res.status()).toBe(200);
             const h = res.headers();
+            expect(h['cache-control']).toBe('no-cache, private');
             expect(h['x-content-type-options']).toBe('nosniff');
             expect(h['x-frame-options']).toBe('DENY');
             expect(h['referrer-policy']).toBe('strict-origin-when-cross-origin');
