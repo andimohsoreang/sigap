@@ -18,7 +18,8 @@ name: paritas
 #     `baseline-visual-linux` berisi visual/manifest.json (entri linux-x64) + .baseline/ untuk
 #     ditinjau manusia, lalu commit HANYA visual/manifest.json.
 #   - Setelah entri `linux-x64` ter-commit, langkah suite otomatis beralih ke
-#     `npm run baseline && npx playwright test` (baseline dibuat ulang, dicek ke manifest, lalu suite penuh).
+#     `npm run baseline && npx playwright test --project=http`: baseline sudah menjalankan suite visual
+#     dua kali dan mencocokkannya dengan manifest, jadi suite visual tidak diulang ketiga kalinya.
 on:
   workflow_dispatch:
   push:
@@ -129,7 +130,7 @@ jobs:
         working-directory: parity
         run: |
           if node -e "process.exit(require('./visual/manifest.json')[process.platform + '-' + process.arch] ? 0 : 1)"; then
-            npm run baseline && npx playwright test
+            npm run baseline && npx playwright test --project=http
           else
             echo "visual/manifest.json belum punya entri $(node -p "process.platform + '-' + process.arch"): hanya project http"
             npx playwright test --project=http
