@@ -1,3 +1,14 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+/** Kredensial akun uji yang ditulis `php artisan sigap:e2e-setup` (target memakai snapshot data yang sama). */
+export const CREDENTIALS = process.env.CREDENTIALS ?? path.join(root, '../sigap/storage/app/e2e/credentials.json');
+
+/** storageState hasil login.setup.ts (tidak di-commit). */
+export const AUTH = { warga: path.join(root, '.auth/warga.json'), admin: path.join(root, '.auth/admin.json') } as const;
+
 /** Halaman & redirect slice S1 (docs/RENCANA-PER-FITUR.md §4 S1; sumber: sigap/routes/web.php). */
 export const S1_PAGES = [
     {
@@ -78,15 +89,24 @@ export const S1_PAGES = [
     },
 ];
 
-/** Route::redirect Laravel: Location relatif & query string DIBUANG. */
-export const S1_REDIRECTS: [from: string, to: string][] = [
+/** Route::redirect Laravel: 301, Location relatif, query string DIBUANG, garis miring akhir diterima. */
+const REDIRECTS: [from: string, to: string][] = [
     ['/beranda-baru', '/'],
     ['/beranda-lama', '/'],
     ['/beranda-standar', '/'],
     ['/beranda-absol', '/'],
     ['/katalog/kantor-balai', '/katalog'],
     ['/lacak-tiket', '/lacak'],
-    ['/lacak-tiket?ticket=TKT-260101-ABCDEF', '/lacak'],
     ['/pengaduan', '/pengaduan/baru'],
+];
+
+export const S1_REDIRECTS: [from: string, to: string][] = [
+    ...REDIRECTS,
+    ...REDIRECTS.map(([from, to]): [string, string] => [`${from}/`, to]),
+    ['/lacak-tiket?ticket=TKT-260101-ABCDEF', '/lacak'],
+    ['/lacak-tiket/?ticket=TKT-260101-ABCDEF', '/lacak'],
     ['/pengaduan?utm_source=uji', '/pengaduan/baru'],
 ];
+
+/** Request luar yang diblokir per halaman S1 (sama untuk semua varian tema/login). */
+export const S1_EXTERNAL: Record<string, string[]> = Object.fromEntries(S1_PAGES.map((p) => [p.path, []]));

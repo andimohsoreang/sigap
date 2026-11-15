@@ -1,61 +1,66 @@
 # Suite paritas Contact Center
 
 Membuktikan Next.js berperilaku dan tampil **identik** dengan Laravel (tag `laravel-baseline`).
-Aturan visual: `docs/RENCANA-REWRITE-NEXTJS.md` §8.3 (`maxDiffPixels: 0`, `threshold: 0`, tanpa mask di S1).
+Aturan visual: `docs/RENCANA-REWRITE-NEXTJS.md` §8.3 (`maxDiffPixels: 0`, `threshold: 0`, mask hanya badge reCAPTCHA).
 
-| Folder | Isi |
+| Berkas | Isi |
 |---|---|
-| `tests/http.spec.ts` | halaman S1 → 200, judul, meta, `lang="id"`, h1/h2, header tamu; header keamanan, CSP & cookie `sigap_session`; redirect lama → 301 + `Location` persis (relatif, query dibuang) |
-| `tests/visual.spec.ts` | screenshot full page S1 × desktop 1440 / tablet 768 / ponsel 375 × terang/gelap + header tamu |
-| `visual/<platform>/` | baseline = tampilan Laravel |
-| `env/laravel.env` | konfigurasi target Laravel = cermin produksi (lihat `PRODUKSI.md`), tanpa rahasia |
+| `tests/http.spec.ts` | halaman S1 (+ garis miring akhir) → 200 tanpa redirect, judul, meta, `lang="id"`, h1/h2, header tamu, request luar yang diblokir; header keamanan, CSP per direktif, atribut cookie `sigap_session`/`XSRF-TOKEN`; redirect lama → 301 + `Location` persis (relatif, query dibuang) |
+| `tests/visual.spec.ts` | S1 × desktop 1440 / tablet 768 / ponsel 375 × varian terang, gelap, aksesibilitas (teks 130% + kontras + disleksia), login warga, login admin: screenshot full page + snapshot DOM `<main>` ternormalisasi; header per varian |
+| `tests/login.setup.ts` | login akun uji `sigap:e2e-setup` → `.auth/*.json` |
+| `env/laravel.env` | konfigurasi target Laravel = cermin produksi (`PRODUKSI.md`), tanpa rahasia |
+| `visual/manifest.json` | SHA-256 tiap baseline Laravel per platform + versi Playwright/Chromium (PNG tidak di-commit) |
 | `fixtures/` | vektor JSON dari kelas PHP asli (`cc:ekspor-fixture`); `fixtures/kripto/` milik paket B |
 
-## Menjalankan terhadap Laravel (acuan)
+## Persiapan (sekali)
 
-Sekali saja, di `sigap/`:
+- PostgreSQL lokal: database `cc_paritas` di `127.0.0.1:5432`, pemilik `cc_migrate` (trust), `LC_COLLATE 'C'`,
+  zona UTC — meniru urutan & zona produksi (`PRODUKSI.md`).
+- `sigap/`: `composer install && npm ci`. `sigap/.env` tidak diperlukan.
+- `parity/`: `npm ci && npx playwright install chromium`.
 
-```bash
-composer install && npm ci
-```
+`scripts/laravel.sh` (dipanggil Playwright bila `BASE_URL` kosong) menolak jalan bila `sigap/` berbeda dari tag
+`laravel-baseline` (kecuali `app/Console/Commands/Cc` & `README.md`) atau `sigap/public/hot` ada; lalu memuat
+`env/laravel.env`, membuat `APP_KEY`/`NIK_HASH_KEY` acak, `vite build`, `config:clear`, `sigap:e2e-setup`
+(`migrate:fresh --seed` di `cc_paritas`), dan `php artisan serve` di `127.0.0.1:8124`. Semua request ke origin
+selain `BASE_URL` diblokir dan dicatat.
 
-`sigap/.env` tidak diperlukan: `scripts/laravel.sh` memuat `env/laravel.env` (nilai lingkungan menang atas
-`.env`), membuat `APP_KEY`/`NIK_HASH_KEY` acak, dan menjalankan `vite build` dengan nilai `VITE_*` produksi.
+## Alur
 
-Lalu di `parity/`:
+1. **Baseline Laravel** (di mesin yang sama dengan pembandingan):
 
-```bash
-npm ci
-npx playwright install chromium
-npx playwright test
-```
+   ```bash
+   npm run baseline
+   ```
 
-Tanpa `BASE_URL`, `scripts/laravel.sh` menyalakan Laravel di `127.0.0.1:8124` dengan SQLite terpisah
-(`sigap/database/paritas.sqlite`), `php artisan sigap:e2e-setup` (data dihapus & di-seed ulang tiap run),
-lalu `php artisan serve`. Request ke origin selain `BASE_URL` (mis. Google reCAPTCHA) diblokir; satu-satunya
-mask adalah badge reCAPTCHA (§8.3).
+   Menulis `.baseline/<platform>/` (diabaikan git) dengan `--update-snapshots=all`, menjalankan Laravel kedua kali
+   (DB & kunci baru) dan harus 0 piksel/0 byte beda, lalu mencocokkan hash dengan `visual/manifest.json`. Gagal bila
+   tampilan Laravel di platform ini berubah dari manifest. Platform baru, atau tampilan Laravel memang berubah:
+   `npm run baseline -- tulis`, lalu commit `visual/manifest.json`.
 
-## Menjalankan terhadap Next.js
+2. **Laravel (cek ulang suite)**: `npx playwright test`.
 
-```bash
-BASE_URL=http://127.0.0.1:3000 npx playwright test
-```
+3. **Next.js**: `BASE_URL=http://127.0.0.1:3000 npx playwright test` — dibandingkan dengan `.baseline/` dari langkah 1.
+   Target harus memakai snapshot data yang sama (seed `sigap:e2e-setup`, berkas kredensial
+   `sigap/storage/app/e2e/credentials.json` atau `CREDENTIALS=<path>`). Baseline tidak pernah ditulis dari target
+   lain (`updateSnapshots: 'none'`). Selisih ada di `test-results/` (expected/actual/diff); `npx playwright show-report`.
 
-Target harus memakai snapshot data yang sama dengan Laravel (seed `sigap:e2e-setup`). Selisih piksel
-tersimpan di `test-results/` (gambar expected/actual/diff); `npx playwright show-report` untuk melihatnya.
+Jangan menambah toleransi atau mask untuk meloloskan test.
 
-## Memperbarui baseline
-
-Hanya dari Laravel, dan hanya bila tampilan Laravel memang berubah (atau untuk platform baru, mis. container
-Linux CI): `npm run baseline`, lalu jalankan `npx playwright test` dua kali — keduanya harus hijau tanpa
-mengubah apa pun. Jangan menambah toleransi atau mask untuk meloloskan test.
-
-## Membuat ulang fixtures
+## Fixtures
 
 ```bash
 cd sigap && php artisan cc:ekspor-fixture        # menulis ../parity/fixtures/*.json
 ```
 
-Keluaran deterministik (jam dibekukan, tanpa acak, zona waktu aplikasi dipaksa `Asia/Jakarta` seperti
-produksi — tidak bergantung `.env` lokal); dijalankan dua kali harus tanpa diff. Header berkas mencatat kelas
-sumber dan commit. Di `sla.json`, `kasus` = Asia/Jakarta (produksi, acuan utama); `tambahan_utc` hanya tambahan.
+Berjalan di skema sementara `cc_fixture` pada `cc_paritas` (dibuat & dihapus; `--db`, `--db-user`), jam dibekukan,
+zona waktu dipaksa `Asia/Jakarta` seperti produksi; dijalankan dua kali harus tanpa diff. Header berkas memuat kelas
+sumber dan `commit` = `git rev-parse laravel-baseline`.
+
+| Berkas | Isi |
+|---|---|
+| `sla.json` | `dueAt`/`respondAt`/`resolveDays` + `tersimpan_db` (nilai kolom Eloquent) per dampak × `sla_days` × waktu mulai (termasuk pecahan detik, akhir pekan, batas bulan/tahun); `status` SLA |
+| `status-tiket.json` | matriks transisi + `TicketService::changeStatus` sungguhan per pasangan × varian (kolom hasil, riwayat, galat) |
+| `nomor-tiket.json` | pola, alfabet, normalisasi (`normalizeNo`/`isValidNo`/`isLegacyNo`, NBSP, `\0`, `\x0B`, `ſ`), kode akses, prefiks nomor baru (WIB) |
+| `lacak-tiket.json` | `findForPublicLookup` per jenis tiket × penampil × kode; jalur HTTP `/lacak` (TrimStrings + `?kode=`) |
+| `survei-skm.json` | indeks & mutu SKM, alasan tinjau ulang lewat `SurveyService::submit` (termasuk nilai string dari form) |
