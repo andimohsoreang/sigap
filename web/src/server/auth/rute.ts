@@ -19,7 +19,7 @@ import { jsonLaravel, redirectLaravel, respons419, responsGalat } from '@/server
 import { bacaCookie, COOKIE_INGAT, pasangCookieIngat, pasangCookieSesi } from './cookie';
 import { wajibMasuk } from './guard';
 import { kilatkan, reflash } from './kilat';
-import { penggunaDariSesi, sesiDariHeader } from './konteks';
+import { konteksDariHeader, penggunaDariSesi, sesiDariHeader } from './konteks';
 import { cobaMasuk, keluarkan, masukkan, tujuanSetelahMasuk } from './masuk';
 import { adalahAdmin } from './peran';
 import { ringkasGalat, validasiMasuk, type GalatValidasi } from './permintaan-masuk';
@@ -171,14 +171,14 @@ const KANAL_SAH = /^#?[-a-zA-Z0-9_=@,.;]+$/;
 async function izinKanal(req: NextRequest): Promise<Response> {
     const { h, json, meta } = konteks(req);
     const input = await bacaInput(req, MAKS_BODY_KECIL);
-    const sesi = await sesiDariHeader(h);
-    if (sesi && '_flash' in sesi.data) {
-        reflash(sesi.data);
-        await simpanSesi(sesi, meta);
+    const { sesi, pengguna } = await konteksDariHeader(h);
+    // reflash hanya bila ada flash lama; penulisan memakai baris segar dari DB.
+    if (sesi && reflash(sesi.data)) {
+        const segar = await sesiDariHeader(h);
+        if (segar && reflash(segar.data)) await simpanSesi(segar, meta);
     }
     const kanal = typeof input.channel_name === 'string' ? input.channel_name : '';
     const socketId = typeof input.socket_id === 'string' ? input.socket_id : '';
-    const pengguna = await penggunaDariSesi(sesi);
     // AccessDeniedHttpException tanpa pesan → 403 "Forbidden".
     const izin = kanal !== '' && (await bolehKanal(kanal, pengguna ? { id: pengguna.id, admin: adalahAdmin(pengguna) } : null, pemilikChat));
     if (!izin) return responsGalat(403, json);

@@ -10,6 +10,7 @@ import { catatAudit } from './audit';
 import { bacaCookie, COOKIE_INGAT, COOKIE_SESI, gantiCookie, pasangCookieIngat, pasangCookieSesi } from './cookie';
 import { jalankanGuard, langkahRute, wajibMasuk, type Keputusan, type KonteksGuard } from './guard';
 import { kilatkan, umurkanKilat } from './kilat';
+import { HEADER_KONTEKS, tandaiKonteks } from './konteks-tertanda';
 import { keluarkan, penggunaDariIngat } from './masuk';
 import { ambilPengguna } from './pengguna';
 import type { Pengguna } from './peran';
@@ -19,6 +20,13 @@ import { muatSesi, periksaSidik, rotasiSesi, sentuhSesi, sesiBaru, sidikSandi, s
 // StartSession (muat/buat sesi, umur flash, perbarui cookie), SessionGuard::user (termasuk cookie "Ingat saya"),
 // AuthenticateSession (sidik sandi), lalu middleware rute (auth/guest/role/portal.verified, lihat guard.ts).
 // Asal permintaan dicek proxy.ts sebelum ini; token CSRF dicek di sini (dan diulang di route handler).
+
+/** Konteks auth bertanda tangan untuk rute (lihat konteks-tertanda.ts); selalu menimpa nilai lama. */
+function pasangKonteks(h: Headers, sesi: Sesi | null, pengguna: Pengguna | null) {
+    h.delete(HEADER_KONTEKS);
+    const nilai = tandaiKonteks(h.get('x-nonce'), sesi, pengguna);
+    if (nilai) h.set(HEADER_KONTEKS, nilai);
+}
 
 /** EnsureFrontendRequestsAreStateful::fromFrontend: Referer/Origin dari situs sendiri. */
 export function dariFrontend(h: Headers, asal: string): boolean {
@@ -39,6 +47,7 @@ export function teruskanApiLuar(req: NextRequest, headerTeruskan: Headers): Next
     const keputusan = jalankanGuard(ctx, null, langkahRute(ctx.metode, ctx.path));
     if (keputusan.jenis !== 'lanjut') return keRespons(keputusan, ctx, asal);
     headerTeruskan.set('cookie', gantiCookie(gantiCookie(req.headers.get('cookie'), COOKIE_SESI, null), COOKIE_INGAT, null));
+    pasangKonteks(headerTeruskan, null, null);
     return NextResponse.next({ request: { headers: headerTeruskan } });
 }
 
@@ -174,6 +183,7 @@ export async function tumpukanWeb(req: NextRequest, headerTeruskan: Headers): Pr
             hapusIngat ? null : typeof cookieIngat === 'string' ? cookieIngat : null,
         ),
     );
+    if (keputusan.jenis === 'lanjut') pasangKonteks(headerTeruskan, sesi, pengguna);
     const res = keputusan.jenis === 'lanjut' ? NextResponse.next({ request: { headers: headerTeruskan } }) : keRespons(keputusan, ctx, asal);
     // Cookie diperbarui di setiap respons halaman (Max-Age idle) dan setiap kali id/token berganti.
     if (sesi && (baca || sesi.id !== idAwal || sesi.csrf !== csrfAwal)) pasangCookieSesi(res, sesi.id, sesi.csrf);

@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
 
+import { HEADER_KONTEKS } from '@/server/auth/konteks-tertanda';
 import { teruskanApiLuar, tumpukanWeb } from '@/server/auth/tumpukan';
 import { env } from '@/server/env';
 import { log } from '@/server/log';
@@ -24,6 +25,8 @@ export async function proxy(req: NextRequest) {
     const csp = kebijakanCsp({ nonce, ketat: env.NODE_ENV === 'production', recaptcha: !!env.RECAPTCHA_SITE_KEY, appUrl: env.APP_URL });
     // Next.js membaca nonce dari header CSP permintaan dan memasangnya pada skrip framework; x-nonce untuk layout.
     const teruskan = new Headers(req.headers);
+    // Header internal tidak pernah diterima dari klien; diisi ulang tumpukan web bila permintaan diteruskan.
+    teruskan.delete(HEADER_KONTEKS);
     teruskan.set('x-nonce', nonce);
     teruskan.set('content-security-policy', csp);
     const json = responsJson(req.nextUrl.pathname, req.headers);

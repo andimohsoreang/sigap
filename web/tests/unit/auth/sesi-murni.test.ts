@@ -15,16 +15,18 @@ describe('flash (Session\\Store)', () => {
         expect(d.error).toBe('x');
         umurkanKilat(d); // awal N+1: masih terbaca
         expect(d.error).toBe('x');
-        umurkanKilat(d); // awal N+2: hilang
-        expect(d).not.toHaveProperty('error');
-        expect(umurkanKilat(d)).toBe(false);
+        expect(umurkanKilat(d)).toBe(true); // awal N+2: hilang, `_flash` kosong ikut dibuang
+        expect(d).toEqual({});
+        expect(umurkanKilat(d)).toBe(false); // N+3: tidak ada yang berubah → sesi tidak ditulis
+        expect(reflash(d)).toBe(false);
+        expect(d).toEqual({});
     });
 
     it('reflash mempertahankan satu permintaan lagi; flash ulang kunci lama memindahkan ke new', () => {
         const d: DataSesi = {};
         kilatkan(d, 'status', 'a');
         umurkanKilat(d);
-        reflash(d);
+        expect(reflash(d)).toBe(true);
         umurkanKilat(d);
         expect(d.status).toBe('a');
         kilatkan(d, 'status', 'b');
@@ -36,7 +38,8 @@ describe('flash (Session\\Store)', () => {
 
     it('_flash rusak tidak melempar; tarik() = pull', () => {
         const d: DataSesi = { _flash: 'rusak', a: 1 };
-        expect(umurkanKilat(d)).toBe(false);
+        expect(umurkanKilat(d)).toBe(true);
+        expect(d).toEqual({ a: 1 });
         expect(tarik(d, 'a', null)).toBe(1);
         expect(tarik(d, 'a', 'bawaan')).toBe('bawaan');
     });
