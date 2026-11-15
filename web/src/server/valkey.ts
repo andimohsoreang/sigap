@@ -18,10 +18,13 @@ export class GalatValkey extends Error {
     override name = 'GalatValkey';
 }
 
-let klien: Redis | undefined;
-let sehat = true;
+// Status bersama per proses (globalThis): proxy.ts dan route handler ada di chunk berbeda dengan salinan modul ini
+// masing-masing; tanpa ini tiap salinan membuka koneksi Valkey sendiri. Kunci = URL (test mengganti VALKEY_URL).
+type Keadaan = { klien?: Redis; sehat: boolean; sambunganPertama?: Promise<void> };
+const semua = ((globalThis as { [k: symbol]: Map<string, Keadaan> | undefined })[Symbol.for('cc.valkey')] ??= new Map());
+const keadaan = (url: string) => semua.get(url) ?? semua.set(url, { sehat: true }).get(url)!;
 
-function buat(url: string): Redis {
+function buat(url: string, k: Keadaan): Redis {
     const r = new Redis(url, {
         keyPrefix: 'cc:',
         lazyConnect: true,
@@ -36,12 +39,12 @@ function buat(url: string): Redis {
     });
     // Tanpa listener, ioredis mencetak "Unhandled error event" setiap percobaan sambung ulang. Dicatat sekali per putus.
     r.on('error', (err) => {
-        if (sehat) log.warn({ err }, 'Valkey tidak tersedia; memakai jalur cadangan');
-        sehat = false;
+        if (k.sehat) log.warn({ err }, 'Valkey tidak tersedia; memakai jalur cadangan');
+        k.sehat = false;
     });
     r.on('ready', () => {
-        if (!sehat) log.info('Valkey tersambung kembali');
-        sehat = true;
+        if (!k.sehat) log.info('Valkey tersambung kembali');
+        k.sehat = true;
     });
     // Web tidak menutup klien lebih awal (request yang masih berjalan memakainya); socket diputus saat proses keluar.
     process.once('exit', () => r.disconnect());
@@ -51,14 +54,13 @@ function buat(url: string): Redis {
 /** Klien bersama (dibuat saat pertama dipakai). GalatValkey bila VALKEY_URL kosong. */
 export function klienValkey(): Redis {
     if (!env.VALKEY_URL) throw new GalatValkey('VALKEY_URL tidak diisi');
-    klien ??= buat(env.VALKEY_URL);
-    return klien;
+    const k = keadaan(env.VALKEY_URL);
+    k.klien ??= buat(env.VALKEY_URL, k);
+    return k.klien;
 }
 
 // Sambungan pertama (lazyConnect) ditunggu sekali; setelah itu status selain 'ready' (mis. 'reconnecting' saat
 // Valkey mati) langsung gagal tanpa menunggu.
-let sambunganPertama: Promise<void> | undefined;
-
 function tungguPercobaan(r: Redis): Promise<void> {
     return new Promise<void>((ok) => {
         const selesai = () => {
@@ -72,11 +74,12 @@ function tungguPercobaan(r: Redis): Promise<void> {
 }
 
 async function siap(r: Redis): Promise<void> {
+    const k = keadaan(env.VALKEY_URL!);
     if (r.status === 'wait') {
-        sambunganPertama = tungguPercobaan(r);
+        k.sambunganPertama = tungguPercobaan(r);
         r.connect().catch(() => {}); // galat sambung datang lewat event 'error'
     }
-    await sambunganPertama;
+    await k.sambunganPertama;
     if (r.status !== 'ready') throw new GalatValkey(`Valkey tidak tersambung (${r.status})`);
 }
 
@@ -94,9 +97,9 @@ export async function denganValkey<T>(fn: (r: Redis) => Promise<T>): Promise<T> 
 
 /** Tutup sambungan (worker/CLI/test). QUIT dengan batas waktu, lalu putus paksa. */
 export async function tutupValkey(): Promise<void> {
-    const r = klien;
-    klien = undefined;
-    sambunganPertama = undefined;
+    if (!env.VALKEY_URL) return;
+    const r = semua.get(env.VALKEY_URL)?.klien;
+    semua.delete(env.VALKEY_URL);
     if (!r || r.status === 'end' || r.status === 'wait') return r?.disconnect();
     await Promise.race([r.quit().catch(() => {}), new Promise((ok) => setTimeout(ok, BATAS_PERINTAH_MS))]);
     r.disconnect();

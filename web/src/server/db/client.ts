@@ -20,17 +20,30 @@ export { GalatDb, GalatUnik, petakanGalatDb } from './galat';
 // - statement_timeout & idle_in_transaction_session_timeout TIDAK dikirim sebagai parameter startup (PgBouncer
 //   menolak parameter yang tidak dikenal) — diatur per role: ALTER ROLE cc_app SET … (rencana §9.3, wilayah devops).
 // Ukuran (DB_POOL_MAX, bawaan 10 = default_pool_size PgBouncer): lebih besar hanya menambah antrean di PgBouncer.
-const pool = new pg.Pool({
-    connectionString: env.DATABASE_URL,
-    max: env.DB_POOL_MAX,
-    // Batas menunggu koneksi dari pool lokal & membuka koneksi ke PgBouncer. Antrean di dalam PgBouncer (setelah
-    // terhubung) dibatasi query_wait_timeout di pgbouncer.ini, bukan di sini.
-    connectionTimeoutMillis: 5_000,
-    idleTimeoutMillis: 30_000,
-    application_name: env.DB_APP_NAME,
-});
-// Koneksi menganggur yang putus (restart PgBouncer/PG) memancarkan 'error' di pool; tanpa listener proses berhenti.
-pool.on('error', (err) => log.warn({ err }, 'koneksi DB menganggur terputus'));
+// Satu pool per proses: proxy.ts dan route handler dibundel Turbopack ke chunk berbeda, masing-masing dengan salinan
+// modul ini; tanpa globalThis tiap salinan membuat pool sendiri (koneksi ke PgBouncer berlipat). Kunci = konfigurasi,
+// supaya test dengan DATABASE_URL berbeda di proses worker yang sama tidak memakai pool lama.
+const KUNCI_POOL = `${env.DATABASE_URL}|${env.DB_POOL_MAX}|${env.DB_APP_NAME}`;
+const daftarPool = ((globalThis as { [k: symbol]: Map<string, pg.Pool> | undefined })[Symbol.for('cc.db.pool')] ??= new Map());
+
+function buatPool(): pg.Pool {
+    const p = new pg.Pool({
+        connectionString: env.DATABASE_URL,
+        max: env.DB_POOL_MAX,
+        // Batas menunggu koneksi dari pool lokal & membuka koneksi ke PgBouncer. Antrean di dalam PgBouncer (setelah
+        // terhubung) dibatasi query_wait_timeout di pgbouncer.ini, bukan di sini.
+        connectionTimeoutMillis: 5_000,
+        idleTimeoutMillis: 30_000,
+        application_name: env.DB_APP_NAME,
+    });
+    // Koneksi menganggur yang putus (restart PgBouncer/PG) memancarkan 'error' di pool; tanpa listener proses berhenti.
+    p.on('error', (err) => log.warn({ err }, 'koneksi DB menganggur terputus'));
+    daftarPool.set(KUNCI_POOL, p);
+    return p;
+}
+
+const lama = daftarPool.get(KUNCI_POOL);
+const pool = lama && !lama.ended ? lama : buatPool();
 
 export const db = drizzle({ client: pool, schema: { ...schemaLaravel, ...schemaCc } });
 
@@ -42,6 +55,7 @@ export type Transaksi = Parameters<Parameters<Db['transaction']>[0]>[0];
  * request & `after()` selesai, dan menutup pool lebih awal membuat `after()` yang masih berjalan gagal.
  */
 export function tutupDb(): Promise<void> {
+    if (daftarPool.get(KUNCI_POOL) === pool) daftarPool.delete(KUNCI_POOL);
     return pool.ended ? Promise.resolve() : pool.end();
 }
 
