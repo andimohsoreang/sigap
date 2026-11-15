@@ -25,8 +25,8 @@ const JUDUL: Record<number, string> = {
 export function responsGalat(status: number, json: boolean, pesan?: string, header?: HeadersInit): NextResponse {
     const judul = JUDUL[status] ?? 'Error';
     if (json) {
-        // Tanpa pesan: Laravel memakai teks status ("Forbidden"); 419 & 429 punya pesan sendiri dari pemanggil.
-        const body = JSON.stringify({ message: pesan ?? judul }, null, 4);
+        // convertExceptionToArray: pesan HttpException apa adanya — tanpa pesan (abort(403), AccessDenied) → "".
+        const body = JSON.stringify({ message: pesan ?? '' }, null, 4);
         return new NextResponse(body, { status, headers: { ...Object.fromEntries(new Headers(header)), 'Content-Type': 'application/json' } });
     }
     const isi = htmlGalat(status, judul, status === 403 ? pesan || judul : judul);
