@@ -9,6 +9,10 @@ const prod = {
     DATABASE_URL: 'postgres://u@localhost/db',
     APP_KEY: KUNCI,
     NIK_HASH_KEY: KUNCI,
+    VALKEY_URL: 'redis://:sandi-rahasia@valkey:6379/0',
+    REALTIME_APP_ID: 'cc',
+    REALTIME_APP_KEY: 'kunci-publik',
+    REALTIME_APP_SECRET: 'rahasia',
 };
 
 describe('bacaEnv', () => {
@@ -23,6 +27,16 @@ describe('bacaEnv', () => {
     it('gagal di produksi bila kunci wajib kosong', () => {
         expect(() => bacaEnv({ ...prod, DATABASE_URL: '  ' })).toThrow(/DATABASE_URL/);
         expect(() => bacaEnv({ NODE_ENV: 'production', DATABASE_URL: prod.DATABASE_URL })).toThrow(/APP_URL/);
+    });
+
+    it('produksi menuntut Valkey & realtime; URL Valkey salah tidak dicetak', () => {
+        for (const k of ['VALKEY_URL', 'REALTIME_APP_ID', 'REALTIME_APP_KEY', 'REALTIME_APP_SECRET'] as const) {
+            expect(() => bacaEnv({ ...prod, [k]: '' })).toThrow(new RegExp(k));
+        }
+        const salah = 'http://:sandi-rahasia@valkey:6379';
+        expect(() => bacaEnv({ ...prod, VALKEY_URL: salah })).toThrow(/VALKEY_URL/);
+        expect(() => bacaEnv({ ...prod, VALKEY_URL: salah })).not.toThrow(/sandi-rahasia/);
+        expect(bacaEnv(prod)).toMatchObject({ REALTIME_HOST: 'sockudo', REALTIME_PORT: 6001 });
     });
 
     it('gagal di produksi bila APP_DEBUG aktif', () => {

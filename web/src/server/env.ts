@@ -37,6 +37,14 @@ const dasar = z.object({
     APP_KEY: kunciApp.optional(),
     APP_PREVIOUS_KEYS: kunciLama.default(''),
     NIK_HASH_KEY: kunciHashNik.optional(),
+    // Valkey (rencana §9.4): rate limit, cache, kunci. Kosong di dev/test → rate limit memakai memori proses.
+    VALKEY_URL: z.url({ protocol: /^rediss?$/ }).optional(),
+    // Realtime berprotokol Pusher (Sockudo). Server → Sockudo lewat HTTP di jaringan backend; APP_KEY publik.
+    REALTIME_APP_ID: wajib.optional(),
+    REALTIME_APP_KEY: wajib.optional(),
+    REALTIME_APP_SECRET: wajib.optional(),
+    REALTIME_HOST: wajib.default('sockudo'),
+    REALTIME_PORT: z.coerce.number().int().min(1).max(65535).default(6001),
 });
 
 // Produksi menolak start bila kunci wajib kosong atau mode debug aktif (rencana §9.2).
@@ -46,6 +54,10 @@ const produksi = dasar.extend({
     DATABASE_URL: wajib,
     APP_KEY: kunciApp,
     NIK_HASH_KEY: kunciHashNik,
+    VALKEY_URL: z.url({ protocol: /^rediss?$/ }),
+    REALTIME_APP_ID: wajib,
+    REALTIME_APP_KEY: wajib,
+    REALTIME_APP_SECRET: wajib,
 });
 
 export type Env = z.infer<typeof dasar>;
