@@ -22,6 +22,15 @@ export interface ResponsIdempoten {
 }
 
 const TTL = sql`interval '24 hours'`;
+/** Batas body respons yang disimpan (jsonb per baris). */
+export const MAKS_BODY_TERSIMPAN = 64 * 1024;
+
+// Membatalkan transaksi tanpa melempar ke pemanggil: respons 5xx dikembalikan, tetapi tidak disimpan.
+class TidakDisimpan extends Error {
+    constructor(readonly hasil: ResponsIdempoten) {
+        super('respons 5xx tidak disimpan');
+    }
+}
 
 /** Kunci sama dipakai untuk isi permintaan yang berbeda. */
 export const RESPONS_KUNCI_BENTROK: ResponsIdempoten = {
@@ -37,16 +46,25 @@ export function kunciIdempotensi(nilai: string | null | undefined): string | nul
 
 function stabil(v: unknown): unknown {
     if (Array.isArray(v)) return v.map(stabil);
-    if (v && typeof v === 'object' && v.constructor === Object)
+    if (v !== null && typeof v === 'object') {
+        const proto = Object.getPrototypeOf(v);
+        // File/Blob/Map/FormData/Date akan menjadi `{}` atau string yang tidak mewakili isinya → hash sama untuk
+        // isi berbeda. Pemanggil meringkas dulu, mis. lampiran → { nama, ukuran, sha256 }.
+        if (proto !== Object.prototype && proto !== null)
+            throw new TypeError(`hashPermintaan hanya menerima objek biasa & array (dapat ${proto?.constructor?.name ?? 'objek'})`);
         return Object.fromEntries(
             Object.keys(v)
                 .sort()
                 .map((k) => [k, stabil((v as Record<string, unknown>)[k])]),
         );
+    }
     return v;
 }
 
-/** sha256 dari bagian permintaan (mis. metode, path, body) dengan urutan kunci objek dinormalkan. */
+/**
+ * sha256 dari bagian permintaan (mis. metode, path, body) dengan urutan kunci objek dinormalkan. Hanya nilai JSON
+ * biasa; objek lain (File, Map, FormData, Date, …) → TypeError.
+ */
 export function hashPermintaan(...bagian: unknown[]): string {
     return createHash('sha256')
         .update(JSON.stringify(stabil(bagian)))
@@ -55,14 +73,24 @@ export function hashPermintaan(...bagian: unknown[]): string {
 
 /**
  * Jalankan `fn` sekali per (cakupan, kunci). `cakupan` memisahkan pemilik kunci (mis. `pengaduan:<id sesi>`).
- * `diulang` = respons diambil dari simpanan, bukan hasil menjalankan `fn`.
+ * `diulang` = respons diambil dari simpanan, bukan hasil menjalankan `fn`. Respons ≥ 500 tidak disimpan (transaksi
+ * dibatalkan); body > 64 KB ditolak (galat).
  */
 export async function denganIdempotensi(
     opsi: { cakupan: string; kunci: string; hash: string },
     fn: (tx: Transaksi) => Promise<ResponsIdempoten>,
 ): Promise<ResponsIdempoten & { diulang: boolean }> {
     const { cakupan, kunci, hash } = opsi;
-    return transaksi(async (tx) => {
+    try {
+        return await jalankan(cakupan, kunci, hash, fn);
+    } catch (e) {
+        if (e instanceof TidakDisimpan) return { ...e.hasil, diulang: false };
+        throw e;
+    }
+}
+
+function jalankan(cakupan: string, kunci: string, hash: string, fn: (tx: Transaksi) => Promise<ResponsIdempoten>) {
+    return transaksi(async (tx): Promise<ResponsIdempoten & { diulang: boolean }> => {
         const kondisi = and(eq(ccIdempotency.scope, cakupan), eq(ccIdempotency.key, kunci));
         // Status 0 hanya terlihat di transaksi ini; baris yang ter-commit selalu berisi respons. Baris kedaluwarsa
         // diambil alih di statement yang sama (tidak bisa terhapus job pembersihan di sela-selanya).
@@ -85,6 +113,10 @@ export async function denganIdempotensi(
             return lama.hash === hash ? { status: lama.status, body: lama.body, diulang: true } : { ...RESPONS_KUNCI_BENTROK, diulang: false };
         }
         const hasil = await fn(tx);
+        // 5xx = gagal sementara: transaksi (termasuk tulisan handler & kunci) dibatalkan, klien boleh mencoba lagi.
+        if (hasil.status >= 500) throw new TidakDisimpan(hasil);
+        if (Buffer.byteLength(JSON.stringify(hasil.body ?? null)) > MAKS_BODY_TERSIMPAN)
+            throw new Error(`respons idempoten melebihi ${MAKS_BODY_TERSIMPAN} byte; simpan ringkasan (mis. id), bukan isi penuh`);
         await tx.update(ccIdempotency).set({ status: hasil.status, body: hasil.body }).where(kondisi);
         return { ...hasil, diulang: false };
     });
