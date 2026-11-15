@@ -11,13 +11,16 @@ const baseURL = process.env.BASE_URL ?? `http://127.0.0.1:${PORT}`;
 const viewport = (name: string, width: number, height: number) => ({
     name,
     testMatch: /visual\.spec\.ts/,
+    dependencies: ['login'],
     use: { ...devices['Desktop Chrome'], viewport: { width, height }, deviceScaleFactor: 1 },
 });
 
 export default defineConfig({
     testDir: './tests',
-    // Baseline = tampilan Laravel; font berbeda per OS, jadi dipisah per platform.
-    snapshotPathTemplate: '{testDir}/../visual/{platform}/{projectName}/{arg}{ext}',
+    // Baseline = tampilan & DOM Laravel, dibuat lokal oleh `npm run baseline` (tidak di-commit; hash di visual/manifest.json).
+    snapshotPathTemplate: '{testDir}/../.baseline/{platform}/{projectName}/{arg}{ext}',
+    // Baseline hanya ditulis lewat `npm run baseline` (--update-snapshots=all), tidak pernah diam-diam dari target lain.
+    updateSnapshots: 'none',
     fullyParallel: true,
     workers: 4,
     retries: 0,
@@ -40,6 +43,7 @@ export default defineConfig({
         trace: 'retain-on-failure',
     },
     projects: [
+        { name: 'login', testMatch: /login\.setup\.ts/, use: { ...devices['Desktop Chrome'] } },
         { name: 'http', testMatch: /http\.spec\.ts/, use: { ...devices['Desktop Chrome'] } },
         viewport('desktop', 1440, 900),
         viewport('tablet', 768, 1024),
