@@ -85,9 +85,12 @@ for (const v of VARIANTS) {
             });
         }
 
-        test('header', async ({ page }) => {
-            await open(page, '/panduan', v.theme, v.a11y);
-            await expect(page.locator('header').first()).toHaveScreenshot(`header-${v.auth ? v.name : `tamu-${v.name}`}.png`, { mask: masks(page) });
-        });
+        // Header tamu sudah ikut di screenshot full page; capture header terpisah hanya untuk varian login.
+        if (v.auth) {
+            test('header', async ({ page }) => {
+                await open(page, '/panduan', v.theme, v.a11y);
+                await expect(page.locator('header').first()).toHaveScreenshot(`header-${v.name}.png`, { mask: masks(page) });
+            });
+        }
     });
 }

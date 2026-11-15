@@ -6,7 +6,7 @@ Aturan visual: `docs/RENCANA-REWRITE-NEXTJS.md` §8.3 (`maxDiffPixels: 0`, `thre
 | Berkas | Isi |
 |---|---|
 | `tests/http.spec.ts` | halaman S1 (+ garis miring akhir) → 200 tanpa redirect, judul, meta, `lang="id"`, h1/h2, header tamu, request luar yang diblokir; header keamanan, CSP per direktif, atribut cookie `sigap_session`/`XSRF-TOKEN`; redirect lama → 301 + `Location` persis (relatif, query dibuang) |
-| `tests/visual.spec.ts` | S1 × desktop 1440 / tablet 768 / ponsel 375 × varian terang, gelap, aksesibilitas (teks 130% + kontras + disleksia), login warga, login admin: screenshot full page + snapshot DOM `<main>` ternormalisasi; header per varian |
+| `tests/visual.spec.ts` | S1 × desktop 1440 / tablet 768 / ponsel 375 × varian terang, gelap, aksesibilitas (teks 130% + kontras + disleksia), login warga, login admin: screenshot full page + snapshot DOM `<main>` ternormalisasi; header terpisah untuk varian login |
 | `tests/login.setup.ts` | login akun uji `sigap:e2e-setup` → `.auth/*.json` |
 | `env/laravel.env` | konfigurasi target Laravel = cermin produksi (`PRODUKSI.md`), tanpa rahasia |
 | `visual/manifest.json` | SHA-256 tiap baseline Laravel per platform + versi Playwright/Chromium (PNG tidak di-commit) |
