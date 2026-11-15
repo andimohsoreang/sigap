@@ -1,0 +1,7 @@
+/* Dipasang Playwright saat capture saja: transisi & animasi CSS berhenti di keadaan akhir. */
+*, *::before, *::after {
+    transition: none !important;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    scroll-behavior: auto !important;
+}

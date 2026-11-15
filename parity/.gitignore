@@ -1,0 +1,8 @@
+node_modules/
+playwright-report/
+test-results/
+blob-report/
+.cache/
+# Baseline Laravel & sesi login dibuat lokal; hanya visual/manifest.json yang di-commit.
+.baseline/
+.auth/

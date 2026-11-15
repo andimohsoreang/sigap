@@ -1,0 +1,1804 @@
+{
+    "sumber": [
+        "App\\Support\\SurveyQuestionnaire",
+        "App\\Services\\SurveyService::submit"
+    ],
+    "commit": "f8713a05929dca41c78de8b1df39ec37128148e3",
+    "tag": "laravel-baseline",
+    "perintah": "php artisan cc:ekspor-fixture",
+    "versi_kuesioner": 2,
+    "aspek": [
+        "kemudahan",
+        "konfirmasi",
+        "respons",
+        "penyelesaian",
+        "informasi",
+        "kesesuaian",
+        "sikap",
+        "kompetensi",
+        "kerahasiaan"
+    ],
+    "alasan": {
+        "diminta_pelapor": "Pelapor mengajukan tinjau ulang",
+        "skor_rendah": "Skor survei rendah / belum teratasi"
+    },
+    "catatan": "indeks = round(rata-rata aspek × 25, 2) (round PHP, half away from zero); mutu A ≥ 88.31, B ≥ 76.61, C ≥ 65, selain itu D. skm_index disimpan numeric(5,2) PostgreSQL. tinjau_ulang dibaca (bool): \"0\" = false, \"1\"/\"true\" = true.",
+    "indeks": [
+        {
+            "jawaban": {
+                "kemudahan": 1,
+                "konfirmasi": 1,
+                "respons": 1,
+                "penyelesaian": 1,
+                "informasi": 1,
+                "kesesuaian": 1,
+                "sikap": 1,
+                "kompetensi": 1,
+                "kerahasiaan": 1
+            },
+            "indeks": 25,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 2,
+                "konfirmasi": 1,
+                "respons": 1,
+                "penyelesaian": 1,
+                "informasi": 1,
+                "kesesuaian": 1,
+                "sikap": 1,
+                "kompetensi": 1,
+                "kerahasiaan": 1
+            },
+            "indeks": 27.78,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 2,
+                "konfirmasi": 2,
+                "respons": 1,
+                "penyelesaian": 1,
+                "informasi": 1,
+                "kesesuaian": 1,
+                "sikap": 1,
+                "kompetensi": 1,
+                "kerahasiaan": 1
+            },
+            "indeks": 30.56,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 2,
+                "konfirmasi": 2,
+                "respons": 2,
+                "penyelesaian": 1,
+                "informasi": 1,
+                "kesesuaian": 1,
+                "sikap": 1,
+                "kompetensi": 1,
+                "kerahasiaan": 1
+            },
+            "indeks": 33.33,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 2,
+                "konfirmasi": 2,
+                "respons": 2,
+                "penyelesaian": 2,
+                "informasi": 1,
+                "kesesuaian": 1,
+                "sikap": 1,
+                "kompetensi": 1,
+                "kerahasiaan": 1
+            },
+            "indeks": 36.11,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 2,
+                "konfirmasi": 2,
+                "respons": 2,
+                "penyelesaian": 2,
+                "informasi": 2,
+                "kesesuaian": 1,
+                "sikap": 1,
+                "kompetensi": 1,
+                "kerahasiaan": 1
+            },
+            "indeks": 38.89,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 2,
+                "konfirmasi": 2,
+                "respons": 2,
+                "penyelesaian": 2,
+                "informasi": 2,
+                "kesesuaian": 2,
+                "sikap": 1,
+                "kompetensi": 1,
+                "kerahasiaan": 1
+            },
+            "indeks": 41.67,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 2,
+                "konfirmasi": 2,
+                "respons": 2,
+                "penyelesaian": 2,
+                "informasi": 2,
+                "kesesuaian": 2,
+                "sikap": 2,
+                "kompetensi": 1,
+                "kerahasiaan": 1
+            },
+            "indeks": 44.44,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 2,
+                "konfirmasi": 2,
+                "respons": 2,
+                "penyelesaian": 2,
+                "informasi": 2,
+                "kesesuaian": 2,
+                "sikap": 2,
+                "kompetensi": 2,
+                "kerahasiaan": 1
+            },
+            "indeks": 47.22,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 2,
+                "konfirmasi": 2,
+                "respons": 2,
+                "penyelesaian": 2,
+                "informasi": 2,
+                "kesesuaian": 2,
+                "sikap": 2,
+                "kompetensi": 2,
+                "kerahasiaan": 2
+            },
+            "indeks": 50,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 3,
+                "konfirmasi": 2,
+                "respons": 2,
+                "penyelesaian": 2,
+                "informasi": 2,
+                "kesesuaian": 2,
+                "sikap": 2,
+                "kompetensi": 2,
+                "kerahasiaan": 2
+            },
+            "indeks": 52.78,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 3,
+                "konfirmasi": 3,
+                "respons": 2,
+                "penyelesaian": 2,
+                "informasi": 2,
+                "kesesuaian": 2,
+                "sikap": 2,
+                "kompetensi": 2,
+                "kerahasiaan": 2
+            },
+            "indeks": 55.56,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 3,
+                "konfirmasi": 3,
+                "respons": 3,
+                "penyelesaian": 2,
+                "informasi": 2,
+                "kesesuaian": 2,
+                "sikap": 2,
+                "kompetensi": 2,
+                "kerahasiaan": 2
+            },
+            "indeks": 58.33,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 3,
+                "konfirmasi": 3,
+                "respons": 3,
+                "penyelesaian": 3,
+                "informasi": 2,
+                "kesesuaian": 2,
+                "sikap": 2,
+                "kompetensi": 2,
+                "kerahasiaan": 2
+            },
+            "indeks": 61.11,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 3,
+                "konfirmasi": 3,
+                "respons": 3,
+                "penyelesaian": 3,
+                "informasi": 3,
+                "kesesuaian": 2,
+                "sikap": 2,
+                "kompetensi": 2,
+                "kerahasiaan": 2
+            },
+            "indeks": 63.89,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 3,
+                "konfirmasi": 3,
+                "respons": 3,
+                "penyelesaian": 3,
+                "informasi": 3,
+                "kesesuaian": 3,
+                "sikap": 2,
+                "kompetensi": 2,
+                "kerahasiaan": 2
+            },
+            "indeks": 66.67,
+            "mutu": {
+                "huruf": "C",
+                "mutu": "Kurang baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 3,
+                "konfirmasi": 3,
+                "respons": 3,
+                "penyelesaian": 3,
+                "informasi": 3,
+                "kesesuaian": 3,
+                "sikap": 3,
+                "kompetensi": 2,
+                "kerahasiaan": 2
+            },
+            "indeks": 69.44,
+            "mutu": {
+                "huruf": "C",
+                "mutu": "Kurang baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 3,
+                "konfirmasi": 3,
+                "respons": 3,
+                "penyelesaian": 3,
+                "informasi": 3,
+                "kesesuaian": 3,
+                "sikap": 3,
+                "kompetensi": 3,
+                "kerahasiaan": 2
+            },
+            "indeks": 72.22,
+            "mutu": {
+                "huruf": "C",
+                "mutu": "Kurang baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 3,
+                "konfirmasi": 3,
+                "respons": 3,
+                "penyelesaian": 3,
+                "informasi": 3,
+                "kesesuaian": 3,
+                "sikap": 3,
+                "kompetensi": 3,
+                "kerahasiaan": 3
+            },
+            "indeks": 75,
+            "mutu": {
+                "huruf": "C",
+                "mutu": "Kurang baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 4,
+                "konfirmasi": 3,
+                "respons": 3,
+                "penyelesaian": 3,
+                "informasi": 3,
+                "kesesuaian": 3,
+                "sikap": 3,
+                "kompetensi": 3,
+                "kerahasiaan": 3
+            },
+            "indeks": 77.78,
+            "mutu": {
+                "huruf": "B",
+                "mutu": "Baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 4,
+                "konfirmasi": 4,
+                "respons": 3,
+                "penyelesaian": 3,
+                "informasi": 3,
+                "kesesuaian": 3,
+                "sikap": 3,
+                "kompetensi": 3,
+                "kerahasiaan": 3
+            },
+            "indeks": 80.56,
+            "mutu": {
+                "huruf": "B",
+                "mutu": "Baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 4,
+                "konfirmasi": 4,
+                "respons": 4,
+                "penyelesaian": 3,
+                "informasi": 3,
+                "kesesuaian": 3,
+                "sikap": 3,
+                "kompetensi": 3,
+                "kerahasiaan": 3
+            },
+            "indeks": 83.33,
+            "mutu": {
+                "huruf": "B",
+                "mutu": "Baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 4,
+                "konfirmasi": 4,
+                "respons": 4,
+                "penyelesaian": 4,
+                "informasi": 3,
+                "kesesuaian": 3,
+                "sikap": 3,
+                "kompetensi": 3,
+                "kerahasiaan": 3
+            },
+            "indeks": 86.11,
+            "mutu": {
+                "huruf": "B",
+                "mutu": "Baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 4,
+                "konfirmasi": 4,
+                "respons": 4,
+                "penyelesaian": 4,
+                "informasi": 4,
+                "kesesuaian": 3,
+                "sikap": 3,
+                "kompetensi": 3,
+                "kerahasiaan": 3
+            },
+            "indeks": 88.89,
+            "mutu": {
+                "huruf": "A",
+                "mutu": "Sangat baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 4,
+                "konfirmasi": 4,
+                "respons": 4,
+                "penyelesaian": 4,
+                "informasi": 4,
+                "kesesuaian": 4,
+                "sikap": 3,
+                "kompetensi": 3,
+                "kerahasiaan": 3
+            },
+            "indeks": 91.67,
+            "mutu": {
+                "huruf": "A",
+                "mutu": "Sangat baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 4,
+                "konfirmasi": 4,
+                "respons": 4,
+                "penyelesaian": 4,
+                "informasi": 4,
+                "kesesuaian": 4,
+                "sikap": 4,
+                "kompetensi": 3,
+                "kerahasiaan": 3
+            },
+            "indeks": 94.44,
+            "mutu": {
+                "huruf": "A",
+                "mutu": "Sangat baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 4,
+                "konfirmasi": 4,
+                "respons": 4,
+                "penyelesaian": 4,
+                "informasi": 4,
+                "kesesuaian": 4,
+                "sikap": 4,
+                "kompetensi": 4,
+                "kerahasiaan": 3
+            },
+            "indeks": 97.22,
+            "mutu": {
+                "huruf": "A",
+                "mutu": "Sangat baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 4,
+                "konfirmasi": 4,
+                "respons": 4,
+                "penyelesaian": 4,
+                "informasi": 4,
+                "kesesuaian": 4,
+                "sikap": 4,
+                "kompetensi": 4,
+                "kerahasiaan": 4
+            },
+            "indeks": 100,
+            "mutu": {
+                "huruf": "A",
+                "mutu": "Sangat baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 1,
+                "konfirmasi": 1,
+                "respons": 1,
+                "penyelesaian": 1,
+                "informasi": 1,
+                "kesesuaian": 1,
+                "sikap": 1,
+                "kompetensi": 2
+            },
+            "indeks": 28.13,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 1,
+                "konfirmasi": 1,
+                "respons": 1,
+                "penyelesaian": 1,
+                "informasi": 1,
+                "kesesuaian": 1,
+                "sikap": 2,
+                "kompetensi": 2
+            },
+            "indeks": 31.25,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 1,
+                "konfirmasi": 2,
+                "respons": 3,
+                "penyelesaian": 4,
+                "informasi": 1,
+                "kesesuaian": 2,
+                "sikap": 4
+            },
+            "indeks": 60.71,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": 4,
+                "konfirmasi": 4,
+                "respons": 3
+            },
+            "indeks": 91.67,
+            "mutu": {
+                "huruf": "A",
+                "mutu": "Sangat baik"
+            }
+        },
+        {
+            "jawaban": {
+                "kemudahan": "3",
+                "konfirmasi": "4",
+                "lain": 1
+            },
+            "indeks": 87.5,
+            "mutu": {
+                "huruf": "B",
+                "mutu": "Baik"
+            }
+        },
+        {
+            "jawaban": {
+                "lain": 4
+            },
+            "indeks": null,
+            "mutu": null
+        },
+        {
+            "jawaban": [],
+            "indeks": null,
+            "mutu": null
+        }
+    ],
+    "mutu": [
+        {
+            "indeks": null,
+            "mutu": null
+        },
+        {
+            "indeks": 100,
+            "mutu": {
+                "huruf": "A",
+                "mutu": "Sangat baik"
+            }
+        },
+        {
+            "indeks": 88.31,
+            "mutu": {
+                "huruf": "A",
+                "mutu": "Sangat baik"
+            }
+        },
+        {
+            "indeks": 88.3,
+            "mutu": {
+                "huruf": "B",
+                "mutu": "Baik"
+            }
+        },
+        {
+            "indeks": 88.309,
+            "mutu": {
+                "huruf": "B",
+                "mutu": "Baik"
+            }
+        },
+        {
+            "indeks": 76.61,
+            "mutu": {
+                "huruf": "B",
+                "mutu": "Baik"
+            }
+        },
+        {
+            "indeks": 76.6,
+            "mutu": {
+                "huruf": "C",
+                "mutu": "Kurang baik"
+            }
+        },
+        {
+            "indeks": 65,
+            "mutu": {
+                "huruf": "C",
+                "mutu": "Kurang baik"
+            }
+        },
+        {
+            "indeks": 64.99,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "indeks": 25,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "indeks": 24.99,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        },
+        {
+            "indeks": 0,
+            "mutu": {
+                "huruf": "D",
+                "mutu": "Tidak baik"
+            }
+        }
+    ],
+    "kasus": [
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 1,
+                    "konfirmasi": 1,
+                    "respons": 1,
+                    "penyelesaian": 1,
+                    "informasi": 1,
+                    "kesesuaian": 1,
+                    "sikap": 1,
+                    "kompetensi": 1,
+                    "kerahasiaan": 1
+                },
+                "keseluruhan": 1,
+                "teratasi": "penuh",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "25.00",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 1,
+                    "konfirmasi": 1,
+                    "respons": 1,
+                    "penyelesaian": 1,
+                    "informasi": 1,
+                    "kesesuaian": 1,
+                    "sikap": 1,
+                    "kompetensi": 1,
+                    "kerahasiaan": 1
+                },
+                "keseluruhan": 2,
+                "teratasi": "penuh",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "25.00",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 1,
+                    "konfirmasi": 1,
+                    "respons": 1,
+                    "penyelesaian": 1,
+                    "informasi": 1,
+                    "kesesuaian": 1,
+                    "sikap": 1,
+                    "kompetensi": 1,
+                    "kerahasiaan": 1
+                },
+                "keseluruhan": 3,
+                "teratasi": "penuh",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "25.00",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 1,
+                    "konfirmasi": 1,
+                    "respons": 1,
+                    "penyelesaian": 1,
+                    "informasi": 1,
+                    "kesesuaian": 1,
+                    "sikap": 1,
+                    "kompetensi": 1,
+                    "kerahasiaan": 1
+                },
+                "keseluruhan": 4,
+                "teratasi": "penuh",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "25.00",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 4,
+                    "respons": 4,
+                    "penyelesaian": 4,
+                    "informasi": 4,
+                    "kesesuaian": 4,
+                    "sikap": 4,
+                    "kompetensi": 4,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 1,
+                "teratasi": "penuh",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "100.00",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 4,
+                    "respons": 4,
+                    "penyelesaian": 4,
+                    "informasi": 4,
+                    "kesesuaian": 4,
+                    "sikap": 4,
+                    "kompetensi": 4,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 2,
+                "teratasi": "penuh",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "100.00",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 4,
+                    "respons": 4,
+                    "penyelesaian": 4,
+                    "informasi": 4,
+                    "kesesuaian": 4,
+                    "sikap": 4,
+                    "kompetensi": 4,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 3,
+                "teratasi": "penuh",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "100.00",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 4,
+                    "respons": 4,
+                    "penyelesaian": 4,
+                    "informasi": 4,
+                    "kesesuaian": 4,
+                    "sikap": 4,
+                    "kompetensi": 4,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 4,
+                "teratasi": "penuh",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "100.00",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 1,
+                "teratasi": "penuh",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 2,
+                "teratasi": "penuh",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 3,
+                "teratasi": "penuh",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 4,
+                "teratasi": "penuh",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 1,
+                "teratasi": "penuh",
+                "kembali": 3,
+                "tinjau_ulang": false
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 2,
+                "teratasi": "penuh",
+                "kembali": 3,
+                "tinjau_ulang": false
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 3,
+                "teratasi": "penuh",
+                "kembali": 3,
+                "tinjau_ulang": false
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 4,
+                "teratasi": "penuh",
+                "kembali": 3,
+                "tinjau_ulang": false
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 1,
+                "teratasi": "penuh",
+                "kembali": 3,
+                "tinjau_ulang": true
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 2,
+                "teratasi": "penuh",
+                "kembali": 3,
+                "tinjau_ulang": true
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 3,
+                "teratasi": "penuh",
+                "kembali": 3,
+                "tinjau_ulang": true
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 4,
+                "teratasi": "penuh",
+                "kembali": 3,
+                "tinjau_ulang": true
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 1,
+                "teratasi": "sebagian",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 2,
+                "teratasi": "sebagian",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 3,
+                "teratasi": "sebagian",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 4,
+                "teratasi": "sebagian",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 1,
+                "teratasi": "sebagian",
+                "kembali": 3,
+                "tinjau_ulang": false
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 2,
+                "teratasi": "sebagian",
+                "kembali": 3,
+                "tinjau_ulang": false
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 3,
+                "teratasi": "sebagian",
+                "kembali": 3,
+                "tinjau_ulang": false
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 4,
+                "teratasi": "sebagian",
+                "kembali": 3,
+                "tinjau_ulang": false
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 1,
+                "teratasi": "sebagian",
+                "kembali": 3,
+                "tinjau_ulang": true
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "diminta_pelapor",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 2,
+                "teratasi": "sebagian",
+                "kembali": 3,
+                "tinjau_ulang": true
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "diminta_pelapor",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 3,
+                "teratasi": "sebagian",
+                "kembali": 3,
+                "tinjau_ulang": true
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "diminta_pelapor",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 4,
+                "teratasi": "sebagian",
+                "kembali": 3,
+                "tinjau_ulang": true
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "diminta_pelapor",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 1,
+                "teratasi": "belum",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 2,
+                "teratasi": "belum",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 3,
+                "teratasi": "belum",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 4,
+                "teratasi": "belum",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 1,
+                "teratasi": "belum",
+                "kembali": 3,
+                "tinjau_ulang": false
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 2,
+                "teratasi": "belum",
+                "kembali": 3,
+                "tinjau_ulang": false
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 3,
+                "teratasi": "belum",
+                "kembali": 3,
+                "tinjau_ulang": false
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 4,
+                "teratasi": "belum",
+                "kembali": 3,
+                "tinjau_ulang": false
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 1,
+                "teratasi": "belum",
+                "kembali": 3,
+                "tinjau_ulang": true
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "diminta_pelapor",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 2,
+                "teratasi": "belum",
+                "kembali": 3,
+                "tinjau_ulang": true
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "diminta_pelapor",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 3,
+                "teratasi": "belum",
+                "kembali": 3,
+                "tinjau_ulang": true
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "diminta_pelapor",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": 4,
+                    "konfirmasi": 3,
+                    "respons": 2,
+                    "penyelesaian": 1,
+                    "informasi": 4,
+                    "kesesuaian": 3,
+                    "sikap": 2,
+                    "kompetensi": 1,
+                    "kerahasiaan": 4
+                },
+                "keseluruhan": 4,
+                "teratasi": "belum",
+                "kembali": 3,
+                "tinjau_ulang": true
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "diminta_pelapor",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": "4",
+                    "konfirmasi": "3",
+                    "respons": "2",
+                    "penyelesaian": "1",
+                    "informasi": "4",
+                    "kesesuaian": "3",
+                    "sikap": "2",
+                    "kompetensi": "1",
+                    "kerahasiaan": "4"
+                },
+                "keseluruhan": "3",
+                "teratasi": "sebagian",
+                "kembali": 3,
+                "tinjau_ulang": "1"
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "diminta_pelapor",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": "4",
+                    "konfirmasi": "3",
+                    "respons": "2",
+                    "penyelesaian": "1",
+                    "informasi": "4",
+                    "kesesuaian": "3",
+                    "sikap": "2",
+                    "kompetensi": "1",
+                    "kerahasiaan": "4"
+                },
+                "keseluruhan": "3",
+                "teratasi": "sebagian",
+                "kembali": 3,
+                "tinjau_ulang": "0"
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": "4",
+                    "konfirmasi": "3",
+                    "respons": "2",
+                    "penyelesaian": "1",
+                    "informasi": "4",
+                    "kesesuaian": "3",
+                    "sikap": "2",
+                    "kompetensi": "1",
+                    "kerahasiaan": "4"
+                },
+                "keseluruhan": "4",
+                "teratasi": "belum",
+                "kembali": 3,
+                "tinjau_ulang": "0"
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": "4",
+                    "konfirmasi": "3",
+                    "respons": "2",
+                    "penyelesaian": "1",
+                    "informasi": "4",
+                    "kesesuaian": "3",
+                    "sikap": "2",
+                    "kompetensi": "1",
+                    "kerahasiaan": "4"
+                },
+                "keseluruhan": "4",
+                "teratasi": "belum",
+                "kembali": 3,
+                "tinjau_ulang": "1"
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "diminta_pelapor",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": "4",
+                    "konfirmasi": "3",
+                    "respons": "2",
+                    "penyelesaian": "1",
+                    "informasi": "4",
+                    "kesesuaian": "3",
+                    "sikap": "2",
+                    "kompetensi": "1",
+                    "kerahasiaan": "4"
+                },
+                "keseluruhan": "2",
+                "teratasi": "penuh",
+                "kembali": 3
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "skor_rendah",
+            "ditandai_tinjau_ulang": true
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": "4",
+                    "konfirmasi": "3",
+                    "respons": "2",
+                    "penyelesaian": "1",
+                    "informasi": "4",
+                    "kesesuaian": "3",
+                    "sikap": "2",
+                    "kompetensi": "1",
+                    "kerahasiaan": "4"
+                },
+                "keseluruhan": "3",
+                "teratasi": "penuh",
+                "kembali": 3,
+                "tinjau_ulang": "0"
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": null,
+            "ditandai_tinjau_ulang": false
+        },
+        {
+            "masukan": {
+                "jawaban": {
+                    "kemudahan": "4",
+                    "konfirmasi": "3",
+                    "respons": "2",
+                    "penyelesaian": "1",
+                    "informasi": "4",
+                    "kesesuaian": "3",
+                    "sikap": "2",
+                    "kompetensi": "1",
+                    "kerahasiaan": "4"
+                },
+                "keseluruhan": "3",
+                "teratasi": "sebagian",
+                "kembali": 3,
+                "tinjau_ulang": "true"
+            },
+            "skm_index_tersimpan": "66.67",
+            "alasan_tinjau_ulang": "diminta_pelapor",
+            "ditandai_tinjau_ulang": true
+        }
+    ]
+}

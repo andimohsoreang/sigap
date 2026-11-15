@@ -1,0 +1,16 @@
+{
+  "name": "cc-paritas",
+  "private": true,
+  "type": "module",
+  "description": "Suite paritas Contact Center: Laravel (laravel-baseline) vs Next.js lewat BASE_URL",
+  "scripts": {
+    "test": "playwright test",
+    "test:http": "playwright test --project=http",
+    "baseline": "bash scripts/baseline.sh",
+    "manifest:cek": "node scripts/manifest.mjs cek",
+    "manifest:tulis": "node scripts/manifest.mjs tulis"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}
