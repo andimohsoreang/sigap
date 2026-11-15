@@ -2,6 +2,11 @@
   "darwin-arm64": {
     "playwright": "1.63.0",
     "chromium": "153.0.8010.12",
+    "mesin": {
+      "cpu": "Apple M4",
+      "model": "Mac16,12",
+      "flags": []
+    },
     "files": {
       "desktop/header-admin.png": "338ba05e35df3e7a937b3be7ea33418e126e5ba026e39909d1fa1522ef6b1c87",
       "desktop/header-warga.png": "abc0e9a0b8a6ea1bd535bdcf341457ac046d9ce3c5920a8686eaec7a9f255f31",
