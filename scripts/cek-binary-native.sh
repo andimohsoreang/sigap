@@ -203,13 +203,14 @@ else
 fi
 
 # Sockudo seperti di compose: read-only, user image (non-root), /app/config tmpfs kosong (tanpa config demo),
-# tanpa jaringan. Dockerfile upstream tanpa target-cpu (baseline x86-64), tapi dependensi bisa memilih SIMD saat
+# env dari deploy/next/sockudo.env (berkas yang sama dengan compose) + kredensial & origin uji, tanpa jaringan. Dockerfile upstream tanpa target-cpu (baseline x86-64), tapi dependensi bisa memilih SIMD saat
 # jalan — karena itu diuji di CPU server. Klien = Node image web (WebSocket global) di namespace jaringan
 # container sockudo (--network container:), jadi hanya loopback, tanpa egress.
 # Tanpa --rm (dihapus `bersih`/di bawah) supaya exit code terbaca bila sockudo mati, mis. 132 = SIGILL.
 docker run -d --name "$PREFIX-sockudo" --cpus 2 --memory 4g --network none --read-only \
-  --tmpfs /tmp --tmpfs /app/config -e ENVIRONMENT=production -e METRICS_ENABLED=false \
+  --tmpfs /tmp --tmpfs /app/config --env-file "$ROOT/deploy/next/sockudo.env" \
   -e SOCKUDO_DEFAULT_APP_ID=cek -e SOCKUDO_DEFAULT_APP_KEY=cek-key -e SOCKUDO_DEFAULT_APP_SECRET=cek-secret \
+  -e SOCKUDO_DEFAULT_APP_ALLOWED_ORIGINS=https://cek.invalid \
   "$RT_IMAGE" sockudo >/dev/null
 RT_JS='const c=require("crypto"),h="127.0.0.1:6001";
 const gagal=m=>{console.error(m);process.exit(1)};setTimeout(()=>gagal("tidak ada event dalam 30 dtk"),30000);
@@ -218,12 +219,13 @@ const q="auth_key=cek-key&auth_timestamp="+Math.floor(Date.now()/1000)+"&auth_ve
 const sig=c.createHmac("sha256","cek-secret").update("POST\n"+p+"\n"+q).digest("hex");
 const r=await fetch("http://"+h+p+"?"+q+"&auth_signature="+sig,{method:"POST",headers:{"content-type":"application/json"},body});
 if(!r.ok)gagal("HTTP API "+r.status+" "+await r.text())}
-function sambung(n){const ws=new WebSocket("ws://"+h+"/app/cek-key?protocol=7&client=js&version=8.6.0&flash=false");
+function sambung(n){const ws=new WebSocket("ws://"+h+"/app/cek-key?protocol=7&client=js&version=8.6.0&flash=false",{headers:{origin:"https://cek.invalid"}});
 ws.onerror=()=>n>0?setTimeout(()=>sambung(n-1),1000):gagal("WebSocket tidak tersambung");
 ws.onmessage=e=>{const m=JSON.parse(e.data);
 if(m.event==="pusher:connection_established")ws.send(JSON.stringify({event:"pusher:subscribe",data:{channel:"cc-cek"}}));
 else if(m.event==="pusher_internal:subscription_succeeded")kirim().catch(x=>gagal(x.message));
-else if(m.event==="cek"&&m.channel==="cc-cek"){console.log("event diterima "+m.data);process.exit(0)}}}
+else if(m.event==="cek"&&m.channel==="cc-cek"){console.log("event diterima "+m.data);process.exit(0)}
+else if(m.event==="pusher:error")gagal("pusher:error "+JSON.stringify(m.data))}}
 sambung(20)'
 kode=0
 out="$(jalan rt-klien --network "container:$PREFIX-sockudo" --user "$UID_GID" -e HOME=/tmp "$NODE_IMAGE" node -e "$RT_JS" 2>&1)" || kode=$?

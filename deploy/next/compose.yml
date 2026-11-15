@@ -160,19 +160,17 @@ services:
     # Tanpa --config, dan /app/config diganti tmpfs kosong: config/config.json bawaan image berisi app demo
     # (app-key/app-secret, client events aktif, mode development, CORS *). Jadi: nilai bawaan kode + env di bawah.
     command: ["sockudo"]
+    # Env tanpa rahasia (mode, push, antrean, driver, metrics) dari satu sumber yang juga dipakai
+    # scripts/cek-binary-native.sh — penjelasan tiap kunci ada di berkas itu.
+    env_file: sockudo.env
     environment:
-      ENVIRONMENT: production
       # SOCKUDO_DEFAULT_APP_* mengganti semua app inline. Batas bawaan app ini 100 (koneksi, event/dtk,
       # payload 100 KB) — cukup untuk UAT; dinaikkan lewat SOCKUDO_DEFAULT_APP_MAX_* sebelum pergantian.
       SOCKUDO_DEFAULT_APP_ID: ${REALTIME_APP_ID:?}
       SOCKUDO_DEFAULT_APP_KEY: ${REALTIME_APP_KEY:?}
       SOCKUDO_DEFAULT_APP_SECRET: ${REALTIME_APP_SECRET:?}
-      SOCKUDO_DEFAULT_APP_ENABLE_CLIENT_MESSAGES: "false" # client-* event tidak dipakai Laravel
       # Origin WebSocket wajib origin aplikasi (tanpa header Origin → ditolak); diteruskan apa adanya oleh rewrite.
       SOCKUDO_DEFAULT_APP_ALLOWED_ORIGINS: ${APP_URL:?}
-      # Prometheus :9601 dimatikan sampai ada pengumpul (paket I); /usage tidak dipakai.
-      METRICS_ENABLED: "false"
-      HTTP_API_USAGE_ENABLED: "false"
     tmpfs:
       - /app/config:size=1m
       - /tmp:size=16m,mode=1777
