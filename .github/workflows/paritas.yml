@@ -145,6 +145,36 @@ jobs:
           composer install --no-interaction --prefer-dist --no-progress
           npm ci --no-audit --no-fund
 
+      # Lapisan DB web/ (npm run test:db): DB contact_center_dev = skema migrasi laravel-baseline, role cc_app (DML)
+      # seperti lokal. Test membuat skema sementara cc_uji_db_<pid> lalu menghapusnya, dan memanggil Laravel asli
+      # lewat `php -r` (round-trip waktu WIB, enkripsi, hash NIK). CC_TEST_DB=1: gagal, bukan dilewati, bila PG/PHP
+      # tidak ada.
+      - name: Database contact_center_dev (web test:db)
+        env:
+          PGHOST: 127.0.0.1
+        run: |
+          psql -U postgres -v ON_ERROR_STOP=1 -c 'CREATE ROLE cc_app LOGIN' -c 'CREATE DATABASE contact_center_dev OWNER cc_migrate'
+
+      - name: Migrasi Laravel ke contact_center_dev
+        working-directory: sigap
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: '5432'
+          DB_DATABASE: contact_center_dev
+          DB_USERNAME: cc_migrate
+          DB_PASSWORD: ''
+        run: php artisan migrate --force --no-interaction
+
+      - name: Lapisan DB web (test:db)
+        working-directory: web
+        env:
+          TZ: Asia/Jakarta
+        run: |
+          npm ci --no-audit --no-fund
+          npm run test:db
+
       - name: Dependensi Playwright
         working-directory: parity
         run: npm ci --no-audit --no-fund
