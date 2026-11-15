@@ -64,30 +64,25 @@ export async function denganIdempotensi(
     const { cakupan, kunci, hash } = opsi;
     return transaksi(async (tx) => {
         const kondisi = and(eq(ccIdempotency.scope, cakupan), eq(ccIdempotency.key, kunci));
-        // Status 0 hanya terlihat di transaksi ini; baris yang ter-commit selalu berisi respons.
+        // Status 0 hanya terlihat di transaksi ini; baris yang ter-commit selalu berisi respons. Baris kedaluwarsa
+        // diambil alih di statement yang sama (tidak bisa terhapus job pembersihan di sela-selanya).
         const baru = await tx
             .insert(ccIdempotency)
             .values({ scope: cakupan, key: kunci, requestHash: hash, status: 0, expiresAt: sql`now() + ${TTL}` })
-            .onConflictDoNothing()
+            .onConflictDoUpdate({
+                target: [ccIdempotency.scope, ccIdempotency.key],
+                set: { requestHash: hash, status: 0, body: null, createdAt: sql`now()`, expiresAt: sql`now() + ${TTL}` },
+                setWhere: sql`${ccIdempotency.expiresAt} <= now()`,
+            })
             .returning({ key: ccIdempotency.key });
         if (baru.length === 0) {
             const [lama] = await tx
-                .select({
-                    hash: ccIdempotency.requestHash,
-                    status: ccIdempotency.status,
-                    body: ccIdempotency.body,
-                    kedaluwarsa: sql<boolean>`expires_at <= now()`,
-                })
+                .select({ hash: ccIdempotency.requestHash, status: ccIdempotency.status, body: ccIdempotency.body })
                 .from(ccIdempotency)
                 .where(kondisi)
                 .for('update');
-            if (!lama.kedaluwarsa) {
-                return lama.hash === hash ? { status: lama.status, body: lama.body, diulang: true } : { ...RESPONS_KUNCI_BENTROK, diulang: false };
-            }
-            await tx
-                .update(ccIdempotency)
-                .set({ requestHash: hash, createdAt: sql`now()`, expiresAt: sql`now() + ${TTL}` })
-                .where(kondisi);
+            if (!lama) throw new Error('baris idempotency hilang di tengah transaksi');
+            return lama.hash === hash ? { status: lama.status, body: lama.body, diulang: true } : { ...RESPONS_KUNCI_BENTROK, diulang: false };
         }
         const hasil = await fn(tx);
         await tx.update(ccIdempotency).set({ status: hasil.status, body: hasil.body }).where(kondisi);
