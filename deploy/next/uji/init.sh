@@ -29,7 +29,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE cc_migrate IN SCHEMA public GRANT USAGE, SELEC
 -- role. cc_migrate tanpa batas (migrasi panjang).
 ALTER ROLE cc_app SET statement_timeout = '15s';
 ALTER ROLE cc_app SET idle_in_transaction_session_timeout = '30s';
-ALTER ROLE cc_readonly SET statement_timeout = '60s';
+ALTER ROLE cc_readonly SET statement_timeout = '30s';
 SQL
 
 # role=cc_migrate saat koneksi: objek dibuat milik cc_migrate (dump memakai --no-owner).

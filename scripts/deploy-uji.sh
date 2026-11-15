@@ -56,8 +56,8 @@ if [[ $ENV_BARU -eq 1 ]]; then
   exit 0
 fi
 [[ -f "$DIR/.env" ]] || die "deploy/next/.env belum ada. Salin dari deploy/next/.env.example lalu isi."
-SANDI=(POSTGRES_PASSWORD CC_MIGRATE_PASSWORD CC_APP_PASSWORD CC_READONLY_PASSWORD VALKEY_PASSWORD SOKETI_APP_KEY SOKETI_APP_SECRET)
-for k in "${SANDI[@]}" SOKETI_APP_ID APP_URL APP_KEY NIK_HASH_KEY; do
+SANDI=(POSTGRES_PASSWORD CC_MIGRATE_PASSWORD CC_APP_PASSWORD CC_READONLY_PASSWORD VALKEY_PASSWORD REALTIME_APP_KEY REALTIME_APP_SECRET)
+for k in "${SANDI[@]}" REALTIME_APP_ID APP_URL APP_KEY NIK_HASH_KEY; do
   v="$(val "$k")"
   [[ -n "$v" ]] || die "$k kosong di .env"
   [[ "$v" != *GANTI* ]] || die "$k masih berisi placeholder GANTI"
@@ -66,7 +66,7 @@ done
 for k in "${SANDI[@]}"; do
   [[ "$(val "$k")" =~ ^[A-Za-z0-9]{32,}$ ]] || die "$k harus ≥ 32 karakter huruf/angka (openssl rand -hex 32)"
 done
-[[ "$(val SOKETI_APP_ID)" =~ ^[A-Za-z0-9_-]+$ ]] || die "SOKETI_APP_ID hanya huruf/angka/_/-"
+[[ "$(val REALTIME_APP_ID)" =~ ^[A-Za-z0-9_-]+$ ]] || die "REALTIME_APP_ID hanya huruf/angka/_/-"
 [[ "$(val APP_URL)" == https://* ]] || die "APP_URL harus https://"
 # Sama dengan web/src/server/env.ts (paket E): server menolak start bila format salah.
 bytes() { printf '%s' "${1#base64:}" | base64 -d 2>/dev/null | wc -c | tr -d ' '; }
@@ -91,7 +91,7 @@ health() {
     if curl -fsS -o /dev/null "http://127.0.0.1:$PORT/up"; then echo "OK"; return 0; fi
     sleep 2
   done
-  "${DC[@]}" ps; "${DC[@]}" logs --tail=50 cc-web soketi pgbouncer postgres
+  "${DC[@]}" ps; "${DC[@]}" logs --tail=50 cc-web sockudo pgbouncer postgres
   die "cc-web tidak sehat — pertimbangkan: bash scripts/deploy-uji.sh --rollback"
 }
 

@@ -192,7 +192,7 @@ pada snapshot produksi; tangkapan layar admin cocok secara visual.
 
 | # | Tugas | Sumber Laravel |
 |---|---|---|
-| 4.1 | Server realtime (Soketi) + `/broadcasting/auth` dengan aturan 3 channel; event setelah commit | `routes/channels.php`, `app/Events` |
+| 4.1 | Server realtime (Sockudo) + `/broadcasting/auth` dengan aturan 3 channel; event setelah commit | `routes/channels.php`, `app/Events` |
 | 4.2 | Ganti `@laravel/echo-react` → klien Pusher; fallback polling tetap | `lib/reverb`, `use-chat-unread` |
 | 4.3 | `ChatService`: kirim, unread atomik, `present()` identik (lulus vektor), tandai baca, transkrip | `ChatService` |
 | 4.4 | Identitas tamu: sesi + cookie 30 hari, adopsi percakapan tamu saat login | `ChatController:44-49, 413-428` |
@@ -481,7 +481,7 @@ ruang. Pembagian:
 | Antrean job + outbox | PostgreSQL (pg-boss) — tahan lama & bisa ikut transaksi |
 | Sesi | PostgreSQL (jarang ditulis), cache baca di Valkey |
 | Rate limit, cache (statistik, indeks BM25, setting), kunci terdistribusi, state AI (breaker, token budget, batas per percakapan) | **Valkey** |
-| Pub/sub antar-instance Soketi | **Valkey** |
+| Pub/sub antar-instance Sockudo | **Valkey** |
 
 Valkey = fork Redis yang sepenuhnya open source (Linux Foundation), kompatibel dengan klien Redis. Bila Valkey
 mati, aplikasi tetap jalan: rate limit jatuh ke batas konservatif per-instance, cache dibaca langsung dari DB.
@@ -495,7 +495,7 @@ mati, aplikasi tetap jalan: rate limit jatuh ke batas konservatif per-instance, 
   tetap mungkin. Unduhan tetap lewat handler yang mengecek otorisasi (tanpa URL publik).
 - **Worker per antrean** (`ai`, `default`, `ingest`) dapat diskalakan terpisah; job berat (PDF 20 MB, crawl)
   tidak menahan jawaban TARA.
-- **Soketi** ≥ 2 instance dengan adapter Valkey.
+- **Sockudo** ≥ 2 instance dengan adapter Valkey.
 - **CDN**: aset ber-hash (`immutable`), `/geo/*`, gambar di-cache Cloudflare. HTML tidak di-cache di edge karena
   tergantung sesi.
 - **Degradasi anggun**: AI mati → percakapan langsung ke petugas (sudah ada); berita resmi gagal → tampilkan
@@ -535,7 +535,7 @@ mati, aplikasi tetap jalan: rate limit jatuh ke batas konservatif per-instance, 
 | Beban (k6) | lacak tiket, kirim pengaduan, beranda, chat via WebSocket, panel admin — sampai target §9.1 |
 | Spike | 10× beban selama 15 menit |
 | Soak | beban normal 4 jam; cari kebocoran memori & koneksi |
-| Kegagalan | matikan 1 replica web, worker, Soketi, Valkey; putuskan AI & SMTP → layanan tetap jalan / degradasi anggun |
+| Kegagalan | matikan 1 replica web, worker, Sockudo, Valkey; putuskan AI & SMTP → layanan tetap jalan / degradasi anggun |
 | DR | restore PITR ke server kosong dalam batas RTO |
 
 Dijalankan di staging dengan ukuran setara produksi, bukan di laptop.
@@ -554,7 +554,7 @@ Diputuskan 13 Nov 2026: rewrite berjalan di server produksi yang sama dengan Lar
 
 Konsekuensi yang harus ditangani:
 
-- **CPU tanpa AVX**: **diuji 15 Nov 2026, lulus semua** (SWC/Turbopack, Tailwind oxide, lightningcss, esbuild, sharp, Valkey, PgBouncer, server standalone read-only). Image boleh dibangun di server; Soketi diuji saat S16.
+- **CPU tanpa AVX**: **diuji 15 Nov 2026, lulus semua** (SWC/Turbopack, Tailwind oxide, lightningcss, esbuild, sharp, Valkey, PgBouncer, server standalone read-only). Image boleh dibangun di server; Sockudo (server realtime, keputusan 15 Nov 2026) diuji dengan skrip yang sama sebelum stack uji jalan.
 - **Satu VM** berarti replica web/worker hanya melindungi dari crash proses, bukan dari matinya server. Target
   ketersediaan 99,9% (§9.1) **belum** bisa dijanjikan di hosting ini; dicatat sebagai risiko yang diterima.
 - **Berbagi sumber daya** dengan stack lain: tiap container diberi batas CPU & memori; uji beban (§9.8) di staging
