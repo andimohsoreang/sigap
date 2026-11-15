@@ -116,8 +116,24 @@ health() {
     die "DB uji tidak siap (migrations = ${n:-kosong}, harus 34). Init yang gagal tidak diulang pada volume yang sudah ada;
        reset DB uji (data hilang): ${DC[*]} down && docker volume rm ${PROJECT}_pgdata-uji, lalu deploy lagi."
   fi
+  cek_worker
   echo "OK"
   docker tag "$IMG:uji" "$IMG:uji-sehat"
+}
+
+# Worker (pg-boss + outbox) tidak punya port/healthcheck: setelah ±15 dtk wajib running, belum pernah restart, dan
+# log container ini memuat "worker berjalan" (dicetak setelah boss.start + jadwal terpasang). Gagal → tanpa :uji-sehat.
+WORKER=1
+cek_worker() {
+  if [[ $WORKER -eq 0 ]]; then echo "==> Worker dilewati (image tanpa dist/worker.mjs, --scale worker=0)"; return 0; fi
+  echo "==> Cek worker (tunggu 15 dtk)"
+  sleep 15
+  local id st
+  id="$("${DC[@]}" ps -q worker 2>/dev/null || true)"
+  [[ -n "$id" ]] || { diagnosis; die "container worker tidak ada"; }
+  st="$(docker inspect -f '{{.State.Status}} restart={{.RestartCount}}' "$id" 2>/dev/null || true)"
+  [[ "$st" == "running restart=0" ]] || { diagnosis; die "worker tidak sehat ($st)"; }
+  docker logs "$id" 2>&1 | grep -q 'worker berjalan' || { diagnosis; die "log worker tidak memuat \"worker berjalan\""; }
 }
 
 versions() {
@@ -142,9 +158,14 @@ if [[ $ROLLBACK -eq 1 ]]; then
   [[ "$ROLLBACK_TO" =~ ^(uji-prev|[0-9a-f]{7,40})$ ]] || die "tag rollback tidak sah: $ROLLBACK_TO"
   docker image inspect "$IMG:$ROLLBACK_TO" >/dev/null 2>&1 || { versions; die "tidak ada image $IMG:$ROLLBACK_TO"; }
   echo "==> Rollback ke $IMG:$ROLLBACK_TO (DB uji TIDAK dikembalikan — pulihkan dari deploy/next/backups bila perlu)"
+  # Image sebelum paket G tidak berisi worker: jalankan tanpa worker (bukan crash-loop `node dist/worker.mjs`).
+  SKALA=()
+  if ! docker run --rm --network none --entrypoint test "$IMG:$ROLLBACK_TO" -f /app/dist/worker.mjs; then
+    WORKER=0; SKALA=(--scale worker=0)
+  fi
   docker tag "$IMG:$ROLLBACK_TO" "$IMG:uji"
   # Gagal --wait tetap lanjut ke health: diagnosis & petunjuk muncul di sana.
-  "${DC[@]}" up -d --no-build --remove-orphans --wait || true
+  "${DC[@]}" up -d --no-build --remove-orphans --wait ${SKALA[@]+"${SKALA[@]}"} || true
   health
   exit 0
 fi
