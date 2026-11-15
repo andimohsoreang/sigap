@@ -1,7 +1,7 @@
 // Membangun CSS aplikasi di luar Turbopack dengan pipeline yang sama dengan Vite Laravel (sigap/vite.config.js):
 // Tailwind 4.0.8 memindai sigap/ → url() @fontsource ditulis ulang ke aset ber-hash → minify esbuild seperti Vite 6.4.4.
-// Hasil: public/_cc/app-<sha8>.css + public/_cc/media/*. href-nya dicatat di src/app/aset-css.json (di-commit);
-// skrip gagal bila hash berubah tanpa memperbarui manifest (`node scripts/css-statis.mjs --tulis`).
+// Hasil: public/_cc/app-<sha8>.css + public/_cc/media/*, href-nya ditulis ke src/app/aset-css.json. Manifest di-commit
+// hanya agar typecheck/lint jalan di checkout bersih; perubahan yang belum di-commit ditangkap `npm run cek:css`.
 // Catatan: CSS Leaflet (MapContainer di Laravel) akan menjadi entri kedua saat halaman peta di-port.
 import tailwind from '@tailwindcss/postcss';
 import esbuild from 'esbuild';
@@ -58,15 +58,5 @@ const { css } = await postcss([tailwind({ base: sigap, optimize: true }), sepert
 const href = `/_cc/app-${sha8(css)}.css`;
 fs.writeFileSync(path.join(web, 'public', href), css);
 
-const tercatat = fs.existsSync(manifest) ? JSON.parse(fs.readFileSync(manifest, 'utf8')).href : null;
-if (process.argv.includes('--tulis')) {
-    fs.writeFileSync(manifest, `${JSON.stringify({ href }, null, 4)}\n`);
-    console.log(`css-statis: ${href} dicatat di src/app/aset-css.json`);
-} else if (tercatat !== href) {
-    console.error(
-        `css-statis: hash CSS berubah (${tercatat} → ${href}). Jalankan \`node scripts/css-statis.mjs --tulis\` lalu commit src/app/aset-css.json.`,
-    );
-    process.exit(1);
-} else {
-    console.log(`css-statis: ${href}`);
-}
+fs.writeFileSync(manifest, `${JSON.stringify({ href }, null, 4)}\n`);
+console.log(`css-statis: ${href}`);

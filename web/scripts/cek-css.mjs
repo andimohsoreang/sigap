@@ -21,6 +21,9 @@ if (cssTurbopack.length > 0) throw new Error(`CSS diproses Turbopack (harus lewa
 const statis = path.join(web, 'public/_cc');
 const cssNext = fs.readdirSync(statis).filter((f) => /^app-\w{8}\.css$/.test(f));
 if (cssNext.length !== 1) throw new Error(`Diharapkan 1 berkas public/_cc/app-*.css, ditemukan ${cssNext.length}`);
+if (spawnSync('git', ['diff', '--quiet', '--exit-code', '--', 'src/app/aset-css.json'], { cwd: web }).status !== 0) {
+    throw new Error('src/app/aset-css.json berubah setelah build: commit manifest CSS yang baru.');
+}
 
 function normalisasi(css) {
     return (
