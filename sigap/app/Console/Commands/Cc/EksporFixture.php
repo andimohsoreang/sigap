@@ -190,10 +190,9 @@ class EksporFixture extends Command
             ...$this->header([SlaCalculator::class, TicketImpact::class, TicketPriority::class, Ticket::class.' (sla_due_at)'], [
                 'zona_waktu_aplikasi' => config('app.timezone'),
                 'zona_waktu_produksi' => self::PRODUCTION_TIMEZONE,
-                'catatan' => 'TicketService::create memanggil dueAt(dampak, Carbon::now(), kategori.sla_days) di zona waktu aplikasi; hari kerja = Senin–Jumat di zona waktu nilai mulai; mikrodetik ikut terbawa. tersimpan_db = nilai yang ditulis Eloquent ke kolom (Y-m-d H:i:s, mikrodetik dibuang, tanpa konversi zona). `kasus` = Asia/Jakarta (PRODUKSI, acuan utama); `tambahan_utc` = UTC (tambahan saja, bukan produksi).',
+                'catatan' => 'TicketService::create memanggil dueAt(dampak, Carbon::now(), kategori.sla_days) di zona waktu aplikasi; hari kerja = Senin–Jumat di zona waktu nilai mulai; mikrodetik ikut terbawa. tersimpan_db = nilai yang ditulis Eloquent ke kolom (Y-m-d H:i:s, mikrodetik dibuang, tanpa konversi zona). Hanya Asia/Jakarta (zona produksi).',
             ]),
             'kasus' => $vectors(self::PRODUCTION_TIMEZONE),
-            'tambahan_utc' => $vectors('UTC'),
             'status' => $status,
         ];
     }
