@@ -1,3 +1,5 @@
+import { bodyTerlaluBesar, GalatBodyBesar } from './batas-body';
+
 // `$request->input()` Laravel setelah middleware global TrimStrings + ConvertEmptyStringsToNull: query + body
 // (JSON, x-www-form-urlencoded, atau multipart), body menang atas query.
 
@@ -43,8 +45,10 @@ function pasangPhp(entri: Iterable<[string, unknown]>): Record<string, unknown> 
     return hasil;
 }
 
-/** Input permintaan dengan semantik Laravel. Body rusak (JSON tidak sah) → dianggap kosong, seperti Laravel. */
-export async function bacaInput(req: Request): Promise<Record<string, unknown>> {
+/** Input permintaan dengan semantik Laravel. Body rusak (JSON tidak sah) → dianggap kosong; terlalu besar → GalatBodyBesar. */
+export async function bacaInput(req: Request, maksByte: number): Promise<Record<string, unknown>> {
+    // proxy.ts sudah menolak; diulang agar body besar tidak pernah dibaca ke memori bila rute dipanggil tanpa proxy.
+    if (bodyTerlaluBesar(req.headers, maksByte)) throw new GalatBodyBesar(`body melebihi ${maksByte} byte`);
     const query = pasangPhp(new URL(req.url).searchParams.entries());
     let body: Record<string, unknown> = {};
     const jenis = req.headers.get('content-type')?.toLowerCase() ?? '';

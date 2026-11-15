@@ -10,7 +10,9 @@ const nextConfig: NextConfig = {
     outputFileTracingRoot: root,
     turbopack: { root },
     // Filesystem container read-only (kecuali /tmp & .next/cache): cache ISR tetap di memori.
-    experimental: { isrFlushToDisk: false },
+    // proxyClientMaxBodySize: Next.js menyalin body permintaan ke memori untuk proxy (bawaan 10 MB, sisanya terpotong);
+    // disamakan dengan batas body src/server/web/batas-body.ts (= client_max_body_size 12m nginx produksi).
+    experimental: { isrFlushToDisk: false, proxyClientMaxBodySize: '12mb' },
     // next/image dilarang (§8); endpoint /_next/image dimatikan. sharp tetap ikut standalone untuk lampiran chat (S13).
     images: { unoptimized: true },
     // bcryptjs tidak dibundel: tetap paket di node_modules standalone (dilacak lewat src/server/legacy/sandi.ts yang

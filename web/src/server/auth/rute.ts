@@ -10,6 +10,7 @@ import { chatConversations } from '@/server/db/schema';
 import { GalatSandiSibuk } from '@/server/legacy/sandi';
 import { bolehKanal } from '@/server/realtime/kanal';
 import { tandaTanganKanal } from '@/server/realtime/penerbit';
+import { GalatBodyBesar, MAKS_BODY_KECIL, respons413 } from '@/server/web/batas-body';
 import { tokenCocok, tokenDariPermintaan } from '@/server/web/csrf';
 import { bacaInput, inputBoolean } from '@/server/web/input';
 import { asalAplikasi, inginJson, ipKlien, jalurAman, responsJson } from '@/server/web/permintaan';
@@ -59,9 +60,9 @@ async function kembaliDenganGalat(
 }
 
 /** POST /masuk. */
-export async function prosesMasuk(req: NextRequest): Promise<NextResponse> {
+async function masuk(req: NextRequest): Promise<Response> {
     const { h, asal, json, meta } = konteks(req);
-    const input = await bacaInput(req);
+    const input = await bacaInput(req, MAKS_BODY_KECIL);
     const sesi = await sesiDariHeader(h);
     if (!sesi || !tokenCocok(sesi.csrf, tokenDariPermintaan(h, input))) return respons419(json);
     // guest (proxy.ts sudah memeriksa; diulang di sini sebagai pertahanan berlapis).
@@ -128,9 +129,9 @@ export async function prosesMasuk(req: NextRequest): Promise<NextResponse> {
 }
 
 /** POST /keluar. */
-export async function prosesKeluar(req: NextRequest): Promise<NextResponse> {
+async function keluar(req: NextRequest): Promise<Response> {
     const { h, asal, json, meta } = konteks(req);
-    const input = await bacaInput(req);
+    const input = await bacaInput(req, MAKS_BODY_KECIL);
     const sesi = await sesiDariHeader(h);
     if (!sesi || !tokenCocok(sesi.csrf, tokenDariPermintaan(h, input))) return respons419(json);
     const pengguna = await penggunaDariSesi(sesi);
@@ -167,9 +168,9 @@ async function pemilikChat(conversationId: number, userId: number): Promise<bool
 const KANAL_SAH = /^#?[-a-zA-Z0-9_=@,.;]+$/;
 
 /** BroadcastController::authenticate → PusherBroadcaster::auth. */
-export async function prosesIzinKanal(req: NextRequest): Promise<NextResponse> {
+async function izinKanal(req: NextRequest): Promise<Response> {
     const { h, json, meta } = konteks(req);
-    const input = await bacaInput(req);
+    const input = await bacaInput(req, MAKS_BODY_KECIL);
     const sesi = await sesiDariHeader(h);
     if (sesi && '_flash' in sesi.data) {
         reflash(sesi.data);
@@ -185,3 +186,22 @@ export async function prosesIzinKanal(req: NextRequest): Promise<NextResponse> {
     if (!KANAL_SAH.test(kanal)) throw new Error('Invalid channel name');
     return jsonLaravel(tandaTanganKanal(socketId, kanal));
 }
+
+/** Body terlalu besar (GalatBodyBesar dari bacaInput) → 413 seperti nginx. */
+const dengan413 =
+    (fn: (req: NextRequest) => Promise<Response>) =>
+    async (req: NextRequest): Promise<Response> => {
+        try {
+            return await fn(req);
+        } catch (e) {
+            if (e instanceof GalatBodyBesar) return respons413();
+            throw e;
+        }
+    };
+
+/** POST /masuk. */
+export const prosesMasuk = dengan413(masuk);
+/** POST /keluar. */
+export const prosesKeluar = dengan413(keluar);
+/** GET/POST /broadcasting/auth. */
+export const prosesIzinKanal = dengan413(izinKanal);
