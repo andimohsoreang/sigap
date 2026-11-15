@@ -107,7 +107,8 @@ services:
   # Lewat PgBouncer mode transaksi: pg-boss tanpa LISTEN/NOTIFY & kunci advisory sesi (web/src/worker/boss.ts).
   worker:
     <<: *app
-    command: ["node", "dist/worker.mjs"]
+    # Bundel di-minify; --enable-source-maps mengembalikan berkas:baris asli (src/...) di stack trace log.
+    command: ["node", "--enable-source-maps", "dist/worker.mjs"]
     environment:
       <<: *app-env
       OTEL_SERVICE_NAME: contact-center-worker
@@ -137,7 +138,7 @@ services:
     pull_policy: never
     restart: "no"
     init: true
-    command: ["node", "dist/migrate.mjs"]
+    command: ["node", "--enable-source-maps", "dist/migrate.mjs"]
     environment:
       # Alias session pooling: DDL butuh state sesi & kunci advisory.
       DATABASE_URL_MIGRATE: postgres://cc_migrate:${CC_MIGRATE_PASSWORD:?}@pgbouncer:6432/contact_center_migrate
