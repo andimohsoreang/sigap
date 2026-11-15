@@ -32,8 +32,9 @@ export const JADWAL: readonly Jadwal[] = [
     { nama: 'sync-channels', cron: '0 6 * * *', laravel: "app.php:29 sigap:sync-channels dailyAt('06:00')" },
     { nama: 'ews-check', cron: '0 7 * * *', laravel: "app.php:30 sigap:ews-check dailyAt('07:00')" },
     { nama: 'pengingat-survei', cron: '0 9 * * *', laravel: "app.php:31 sigap:pengingat-survei dailyAt('09:00')" },
-    // between('8:00','17:00') inklusif: jam 08.00 s.d. 17.00, Senin–Jumat.
-    { nama: 'pantau-rujukan', cron: '0 8-17 * * 1-5', laravel: "app.php:32 sigap:pantau-rujukan weekdays()->hourly()->between('8:00','17:00')" },
+    // between('8:00','17:00') membandingkan now() bermikrodetik dengan 17:00:00 → jalan 17.00 tidak lolos (17:00:00.x >
+    // 17:00:00). Jadi jam 08.00 s.d. 16.00, Senin–Jumat.
+    { nama: 'pantau-rujukan', cron: '0 8-16 * * 1-5', laravel: "app.php:32 sigap:pantau-rujukan weekdays()->hourly()->between('8:00','17:00')" },
     { nama: 'cek-portal', cron: '0 * * * *', laravel: 'app.php:33 sigap:cek-portal hourly()' },
     { nama: 'ai-macet', setiapDetik: 15, laravel: 'app.php:36 sigap:ai-macet everyFifteenSeconds()' },
     { nama: 'sinkron-sumber', cron: '0 2 * * 1', laravel: "app.php:38 sigap:sinkron-sumber weeklyOn(1, '02:00')" },
