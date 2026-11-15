@@ -34,6 +34,16 @@ Di **subdomain uji**:
 4. rate limit login bekerja (angka Laravel) dan tetap aman saat Valkey dimatikan;
 5. CI `web` & `paritas` hijau; audit keamanan tanpa temuan `confirmed` ≥ medium.
 
+## Subdomain uji (siap, 15 Nov 2026)
+
+| Hal | Nilai |
+|---|---|
+| Hostname | `cc-uji.andimohamad.my.id` (CNAME ke tunnel `babd7433-…`, dibuat lewat `cloudflared tunnel route dns`) |
+| Ingress | `/etc/cloudflared/config.yml` rule #12 → `http://localhost:8094` (port 8093 sudah dipakai `simtl`) |
+| Akses | Cloudflare Access app **Contact Center Uji**, policy `OnlyMe` (hanya email akun Cloudflare pemilik), sesi 24 jam; tanpa login → 302 ke `broad-brook-65c1.cloudflareaccess.com` |
+| Catatan | config cloudflared ditandai "di-manage oleh Hermes" — rule bisa tertimpa bila Hermes menulis ulang; perubahan config berikutnya lewat skrip: backup → ubah → `ingress validate` → baru restart |
+| Untuk CI/QA nanti | Service Token Access (Zero Trust → Service credentials) agar smoke test otomatis bisa masuk |
+
 ## Butuh dari pemilik proyek
 
 | Langkah | Kapan |
