@@ -32,7 +32,7 @@ const MAC_TIDAK_SAH = 'The MAC is invalid.';
 const GAGAL_DEKRIPSI = 'Could not decrypt the data.';
 const TAG_AEAD = 'Unable to use tag because the cipher algorithm does not support AEAD.';
 
-// Payload sesi terbesar yang masuk akal (_old_input formulir) jauh di bawah ini.
+// Kolom terenkripsi (NIK, kontak, token) jauh di bawah batas ini.
 const MAKS_PAYLOAD = 4 * 1024 * 1024;
 // ignoreBOM: U+FEFF di awal adalah isi data, bukan penanda yang boleh dibuang.
 const utf8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });

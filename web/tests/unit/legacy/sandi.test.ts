@@ -1,8 +1,6 @@
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { bacaKunci } from '@/server/legacy/laravel-crypt';
 import { hashSandi, tutupPoolSandi, verifikasiSandi } from '@/server/legacy/sandi';
-import { hashSandiUntukSesi } from '@/server/legacy/sesi';
 
 import { fixture, type FixtureSandi } from './fixture';
 
@@ -47,11 +45,6 @@ describe('sandi: vektor Hash::make / Hash::check (bcrypt $2y$ cost 12)', () => {
 
     it('hashSandi menolak NUL seperti Laravel', async () => {
         await expect(hashSandi('a\0b')).rejects.toThrow(f.galat_make_nul!.pesan);
-    });
-
-    it('password_hash_web = hashPasswordForCookie dengan APP_KEY mentah', () => {
-        const kunci = bacaKunci(f.app_key);
-        for (const k of f.kasus) expect(hashSandiUntukSesi(k.hash, kunci)).toBe(k.password_hash_web);
     });
 });
 

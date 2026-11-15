@@ -2,42 +2,25 @@
 
 namespace App\Console\Commands\Cc;
 
-use App\Models\User;
 use App\Support\Nik;
-use Illuminate\Auth\SessionGuard;
 use Illuminate\Console\Command;
-use Illuminate\Cookie\CookieValuePrefix;
-use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Encryption\Encrypter;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Session\Store;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Process;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\MessageBag;
 use Illuminate\Support\Str;
-use Illuminate\Support\ViewErrorBag;
 use RuntimeException;
 use Throwable;
 
 /**
- * Rewrite Next.js (S0-B): ekspor vektor kripto dari kelas Laravel ASLI ke
- * `parity/fixtures/kripto/*.json`, dan `--verifikasi=<berkas>` untuk memeriksa
- * ciphertext/cookie/sesi/bcrypt yang ditulis TypeScript dengan kelas yang sama.
- * Hanya alat bantu; tidak mengubah fitur.
+ * Rewrite Next.js (S0-B): ekspor vektor enkripsi, NIK, dan bcrypt dari kelas Laravel ASLI ke
+ * `parity/fixtures/kripto/*.json`, dan `--verifikasi=<berkas>` untuk memeriksa ciphertext/bcrypt
+ * yang ditulis TypeScript dengan kelas yang sama. Hanya alat bantu; tidak mengubah fitur.
  *
- * Semua kunci di sini KUNCI UJI yang diturunkan dari teks tetap, BUKAN kunci
- * produksi. Sesi ditulis ke SQLite :memory: (hilang saat proses selesai).
- * Menolak berjalan di lingkungan production (tanpa .env Laravel menganggap
- * production): jalankan dengan `php artisan cc:ekspor-fixture-kripto --env=testing`.
+ * Semua kunci di sini KUNCI UJI yang diturunkan dari teks tetap, BUKAN kunci produksi.
+ * Menolak berjalan di lingkungan production (tanpa .env Laravel menganggap production):
+ * jalankan dengan `php artisan cc:ekspor-fixture-kripto --env=testing`.
  */
 class EksporFixtureKripto extends Command
 {
@@ -45,19 +28,7 @@ class EksporFixtureKripto extends Command
         {--dir= : Folder tujuan (bawaan: ../parity/fixtures/kripto)}
         {--verifikasi= : Berkas JSON tulisan TypeScript yang diperiksa dengan kelas Laravel asli}';
 
-    protected $description = 'Ekspor vektor enkripsi, NIK, bcrypt, cookie, dan sesi Laravel ke parity/fixtures/kripto (rewrite Next.js)';
-
-    private const NOW = '2026-11-13 10:00:00';
-
-    private const TIMEZONE = 'Asia/Jakarta';
-
-    private const CONNECTION = 'cc_kripto';
-
-    private const SESSION_COOKIE = 'sigap_session';
-
-    private const LIFETIME = 120;
-
-    private int $random = 0;
+    protected $description = 'Ekspor vektor enkripsi, NIK, dan bcrypt Laravel ke parity/fixtures/kripto (rewrite Next.js)';
 
     /** KUNCI UJI: 32 byte dari sha256 teks tetap; bukan kunci produksi. */
     public static function testKey(string $label): string
@@ -75,37 +46,28 @@ class EksporFixtureKripto extends Command
 
         $this->setUpTestEnvironment();
 
-        try {
-            if ($file = $this->option('verifikasi')) {
-                return $this->verify($file);
-            }
-
-            $dir = $this->option('dir') ?: base_path('../parity/fixtures/kripto');
-            File::ensureDirectoryExists($dir);
-
-            $files = [
-                'enkripsi.json' => $this->encryption(),
-                'nik.json' => $this->nik(),
-                'sandi.json' => $this->passwords(),
-                'serial.json' => $this->serialization(),
-                'cookie.json' => $this->cookies(),
-                'sesi.json' => $this->sessions(),
-            ];
-
-            foreach ($files as $name => $data) {
-                File::put($dir.'/'.$name, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)."\n");
-                $this->line("{$name}: ".count($data['kasus']).' kasus');
-            }
-
-            return self::SUCCESS;
-        } finally {
-            Carbon::setTestNow();
-            Str::createRandomStringsNormally();
-            DB::purge(self::CONNECTION);
+        if ($file = $this->option('verifikasi')) {
+            return $this->verify($file);
         }
+
+        $dir = $this->option('dir') ?: base_path('../parity/fixtures/kripto');
+        File::ensureDirectoryExists($dir);
+
+        $files = [
+            'enkripsi.json' => $this->encryption(),
+            'nik.json' => $this->nik(),
+            'sandi.json' => $this->passwords(),
+        ];
+
+        foreach ($files as $name => $data) {
+            File::put($dir.'/'.$name, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)."\n");
+            $this->line("{$name}: ".count($data['kasus']).' kasus');
+        }
+
+        return self::SUCCESS;
     }
 
-    /** Konfigurasi = produksi (SESSION_ENCRYPT=true, sigap_session, database, 120 mnt, bcrypt 12) dengan kunci uji. */
+    /** Konfigurasi = produksi (AES-256-CBC, bcrypt 12, HASH_VERIFY) dengan kunci uji. */
     private function setUpTestEnvironment(): void
     {
         config([
@@ -116,46 +78,12 @@ class EksporFixtureKripto extends Command
             'hashing.driver' => 'bcrypt',
             'hashing.bcrypt.rounds' => 12,
             'hashing.bcrypt.verify' => true,
-            'database.connections.'.self::CONNECTION => ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '', 'foreign_key_constraints' => false],
-            // Tidak ada query yang boleh menyentuh database .env lokal.
-            'database.default' => self::CONNECTION,
-            'session.driver' => 'database',
-            'session.connection' => self::CONNECTION,
-            'session.table' => 'sessions',
-            'session.encrypt' => true,
-            'session.cookie' => self::SESSION_COOKIE,
-            'session.lifetime' => self::LIFETIME,
         ]);
         foreach (['encrypter', 'hash', 'hash.driver'] as $id) {
             app()->forgetInstance($id);
         }
         Crypt::clearResolvedInstance('encrypter');
         Hash::clearResolvedInstance('hash');
-        Event::fake();
-        date_default_timezone_set(self::TIMEZONE);
-        Carbon::setTestNow(Carbon::parse(self::NOW, self::TIMEZONE));
-        // Id sesi & _token deterministik (Str::random) agar diff fixture hanya pada ciphertext.
-        Str::createRandomStringsUsing(fn (int $length) => substr(str_repeat(sprintf('Uji%04d', ++$this->random), 8), 0, $length));
-        app()->instance('request', Request::create('https://cc.test/lacak', 'GET', server: [
-            'REMOTE_ADDR' => '203.0.113.7',
-            'HTTP_USER_AGENT' => 'Mozilla/5.0 (fixture uji)',
-        ]));
-
-        Schema::connection(self::CONNECTION)->create('sessions', function ($table) {
-            // Salinan skema 0001_01_01_000000_create_users_table.
-            $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
-        });
-        // Kolom users yang dipakai SessionGuard::userFromRecaller.
-        Schema::connection(self::CONNECTION)->create('users', function ($table) {
-            $table->id();
-            $table->string('password')->nullable();
-            $table->rememberToken();
-        });
     }
 
     private function header(array $sources, array $extra = []): array
@@ -309,7 +237,6 @@ class EksporFixtureKripto extends Command
             str_repeat('a', 73),
             str_repeat('é', 40),
         ];
-        $guard = Auth::guard('web');
 
         $cases = [];
         foreach ($passwords as $password) {
@@ -323,7 +250,6 @@ class EksporFixtureKripto extends Command
                 'hash' => $hash,
                 'perlu_rehash' => Hash::needsRehash($hash),
                 'cek' => $checks,
-                'password_hash_web' => $guard->hashPasswordForCookie($hash),
             ];
         }
 
@@ -344,11 +270,7 @@ class EksporFixtureKripto extends Command
         }
 
         return [
-            ...$this->header([
-                'Illuminate\Hashing\BcryptHasher (rounds 12, verify true)',
-                SessionGuard::class.'::hashPasswordForCookie (kunci = config app.key mentah)',
-            ], [
-                'app_key' => config('app.key'),
+            ...$this->header(['Illuminate\Hashing\BcryptHasher (rounds 12, verify true)'], [
                 'galat_make_nul' => self::caught(fn () => Hash::make("a\0b")),
             ]),
             'kasus' => $cases,
@@ -356,345 +278,7 @@ class EksporFixtureKripto extends Command
         ];
     }
 
-    private function serialization(): array
-    {
-        $values = [
-            'null' => null, 'true' => true, 'false' => false, 'nol' => 0, 'negatif' => -42, 'int_aman_maks' => 9007199254740991,
-            'float_satu' => 1.0, 'float_0_1' => 0.1, 'float_1e14' => 1e14, 'float_1e15' => 1e15, 'float_1e16' => 1e16, 'float_1e17' => 1e17,
-            'float_besar' => 123456789012345678.0, 'float_0_0001' => 0.0001, 'float_1e_5' => 0.00001, 'float_kecil' => 1.5e-7,
-            'float_minus_nol' => -0.0, 'float_1e25' => 1e25, 'float_pi' => 3.14159, 'float_neg' => -1.25e-10, 'float_hampir' => 999999999999999.9,
-            'float_inf' => INF, 'float_minus_inf' => -INF, 'float_nan' => NAN,
-            'string_kosong' => '', 'string' => 'abc', 'string_utf8' => 'Sukamaju — ñ 中文 🙂', 'string_jebakan' => 'a";s:1:"b";}', 'string_nul' => "a\0b\nc", 'string_bom' => "\u{FEFF}abc",
-            'array_kosong' => [], 'daftar' => [1, 2, 3], 'asosiatif' => ['b' => 1, 'a' => 2], 'kunci_campur' => ['x' => 1, 5 => 'lima', -3 => 'neg', '05' => 'string', '7' => 'jadi int'],
-            'bersarang' => ['_flash' => ['old' => ['success'], 'new' => []], '_previous' => ['url' => 'https://cc.test/a?b=c', 'route' => null], 'x' => [[[]]]],
-            'daftar_berlubang' => [1 => 'a', 2 => 'b'],
-        ];
-
-        $cases = [];
-        foreach ($values as $label => $value) {
-            $isSpecial = is_float($value) && (is_nan($value) || is_infinite($value));
-            $cases[] = ['label' => $label, 'serial' => serialize($value), 'json' => $isSpecial ? null : $value];
-        }
-
-        return [
-            ...$this->header(['serialize() PHP '.PHP_VERSION.' (serialize_precision '.ini_get('serialize_precision').')']),
-            'catatan' => 'json = json_encode nilai PHP (null untuk INF/NAN); int vs float hanya terlihat di serial.',
-            'kasus' => $cases,
-            'int_di_luar_batas_js' => serialize(PHP_INT_MAX),
-        ];
-    }
-
-    /** Cookie persis seperti keluaran EncryptCookies (prefix HMAC + encrypt tanpa serialize). */
-    private function encryptCookie(string $name, string $value): array
-    {
-        $response = (new EncryptCookies(app('encrypter')))->handle(Request::create('/'), fn () => (new Response)->withCookie(cookie($name, $value)));
-        $cookie = collect($response->headers->getCookies())->first(fn ($c) => $c->getName() === $name);
-
-        return ['nilai' => $cookie->getValue(), 'set_cookie' => (string) $cookie];
-    }
-
-    /** Nilai cookie setelah EncryptCookies::decrypt (null = ditolak). */
-    private function decryptCookie(string $name, string $value): ?string
-    {
-        $seen = null;
-        (new EncryptCookies(app('encrypter')))->handle(Request::create('/', cookies: [$name => $value]), function ($request) use ($name, &$seen) {
-            $seen = $request->cookies->get($name);
-
-            return new Response;
-        });
-
-        return $seen;
-    }
-
-    private function xsrfFromHeader(string $header): mixed
-    {
-        $csrf = new class(app(), app('encrypter')) extends ValidateCsrfToken
-        {
-            public function fromRequest($request)
-            {
-                return $this->getTokenFromRequest($request);
-            }
-        };
-
-        return $csrf->fromRequest(Request::create('/', 'POST', server: ['HTTP_X_XSRF_TOKEN' => $header]));
-    }
-
-    private function cookies(): array
-    {
-        $guard = Auth::guard('web');
-        $remember = $guard->getRecallerName();
-        $userHash = Hash::make('rahasia123');
-        $values = [
-            self::SESSION_COOKIE => str_repeat('AbCdEfGhIj', 4),
-            'XSRF-TOKEN' => 'TokenCsrfUji0123456789abcdefghijklmnopqr',
-            'sigap_chat_tamu' => '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
-            $remember => '101|'.str_repeat('r', 60).'|'.$guard->hashPasswordForCookie($userHash),
-            'kosong' => '',
-        ];
-
-        $cases = [];
-        foreach ($values as $name => $value) {
-            $encrypted = $this->encryptCookie($name, $value);
-            $cases[] = [
-                'nama' => $name,
-                'nilai' => $value,
-                'terenkripsi' => $encrypted['nilai'],
-                'set_cookie' => $encrypted['set_cookie'],
-                'prefix' => CookieValuePrefix::create($name, app('encrypter')->getKey()),
-                'hasil_dekripsi' => $this->decryptCookie($name, $encrypted['nilai']),
-            ];
-        }
-
-        $session = $cases[0]['terenkripsi'];
-        $previousKey = base64_decode(Str::after(self::testKey('app-sebelumnya'), 'base64:'));
-        $previous = new Encrypter($previousKey, 'AES-256-CBC');
-        $crypt = app('encrypter');
-        $negative = [
-            // Nilai cookie sesi dipindah ke nama lain: prefix HMAC tidak cocok.
-            ['label' => 'nama_tertukar', 'nama' => 'XSRF-TOKEN', 'terenkripsi' => $session],
-            ['label' => 'kunci_sebelumnya', 'nama' => self::SESSION_COOKIE, 'terenkripsi' => $previous->encryptString(CookieValuePrefix::create(self::SESSION_COOKIE, $previousKey).$values[self::SESSION_COOKIE])],
-            ['label' => 'tanpa_prefix', 'nama' => self::SESSION_COOKIE, 'terenkripsi' => $crypt->encryptString($values[self::SESSION_COOKIE])],
-            ['label' => 'prefix_v1_lama', 'nama' => self::SESSION_COOKIE, 'terenkripsi' => $crypt->encryptString(hash_hmac('sha1', self::SESSION_COOKIE.'v1', $crypt->getKey()).'|'.$values[self::SESSION_COOKIE])],
-            ['label' => 'mac_rusak', 'nama' => self::SESSION_COOKIE, 'terenkripsi' => substr($session, 0, -8).'AAAAAAA='],
-            ['label' => 'sampah', 'nama' => self::SESSION_COOKIE, 'terenkripsi' => 'bukan-cookie-laravel'],
-            ['label' => 'terserialisasi', 'nama' => self::SESSION_COOKIE, 'terenkripsi' => $crypt->encrypt(CookieValuePrefix::create(self::SESSION_COOKIE, $crypt->getKey()).$values[self::SESSION_COOKIE])],
-        ];
-        foreach ($negative as &$case) {
-            $case['hasil_dekripsi'] = $this->decryptCookie($case['nama'], $case['terenkripsi']);
-        }
-        unset($case);
-
-        $xsrf = collect($cases)->firstWhere('nama', 'XSRF-TOKEN')['terenkripsi'];
-        $headers = [
-            ['label' => 'cookie_xsrf', 'header' => $xsrf],
-            ['label' => 'cookie_sesi_tanpa_cek_prefix', 'header' => $session],
-            ['label' => 'tanpa_prefix_terpotong', 'header' => $crypt->encryptString('pendek')],
-            ['label' => 'sampah', 'header' => 'bukan-token'],
-        ];
-        foreach ($headers as &$case) {
-            $case['token'] = $this->xsrfFromHeader($case['header']);
-        }
-        unset($case);
-
-        return [
-            ...$this->header([EncryptCookies::class, CookieValuePrefix::class, ValidateCsrfToken::class.'::getTokenFromRequest'], [
-                ...$this->keys(),
-                'nama_remember' => $remember,
-                'catatan' => 'set_cookie = header Set-Cookie Symfony (nilai di-rawurlencode); hasil_dekripsi null = cookie dianggap tidak ada.',
-            ]),
-            'kasus' => $cases,
-            'negatif' => $negative,
-            'header_xsrf' => $headers,
-            ...$this->rememberCases($remember),
-        ];
-    }
-
-    /** Cookie remember_web_* dibaca SessionGuard::user() asli (sesi kosong) terhadap tabel users uji. */
-    private function rememberCases(string $name): array
-    {
-        $token = str_repeat('r', 60);
-        $hash = Hash::make('rahasia123');
-        $users = [
-            ['id' => 101, 'password' => $hash, 'remember_token' => $token],
-            ['id' => 103, 'password' => Hash::make('sandi-baru'), 'remember_token' => $token],
-            ['id' => 104, 'password' => $hash, 'remember_token' => null],
-        ];
-        DB::connection(self::CONNECTION)->table('users')->insert($users);
-        $hmac = Auth::guard('web')->hashPasswordForCookie($hash);
-        $values = [
-            'sah_hmac' => "101|{$token}|{$hmac}",
-            'sah_hash_mentah' => "101|{$token}|{$hash}",
-            'segmen_lebih' => "101|{$token}|{$hmac}|ekstra",
-            'terserialisasi' => serialize("101|{$token}|{$hmac}"),
-            'token_salah' => '101|'.str_repeat('x', 60)."|{$hmac}",
-            'sandi_berubah' => "103|{$token}|{$hmac}",
-            'pengguna_tidak_ada' => "999|{$token}|{$hmac}",
-            'token_db_kosong' => "104|{$token}|{$hmac}",
-            'dua_segmen' => "101|{$token}",
-            'id_kosong' => " |{$token}|{$hmac}",
-            'serial_bukan_string' => serialize(['101', $token, $hmac]),
-            'serial_falsy' => serialize(0),
-        ];
-
-        $cases = [];
-        foreach ($values as $label => $value) {
-            $encrypted = $this->encryptCookie($name, $value)['nilai'];
-            $this->freshSession()->start();
-            $guard = Auth::guard('web');
-            $guard->setRequest(Request::create('/', cookies: [$name => $this->decryptCookie($name, $encrypted)]));
-            $cases[] = ['label' => $label, 'nilai' => $value, 'terenkripsi' => $encrypted, 'user_id' => $guard->user()?->getAuthIdentifier()];
-        }
-
-        return ['pengguna' => $users, 'remember' => $cases];
-    }
-
-    /** Store sesi baru dari SessionManager asli (database + EncryptedStore), guard ikut segar. */
-    private function freshSession(): Store
-    {
-        foreach (['session', 'session.store', 'auth.driver'] as $id) {
-            app()->forgetInstance($id);
-        }
-        Auth::forgetGuards();
-
-        return app('session.store');
-    }
-
-    private function row(string $id): array
-    {
-        return (array) DB::connection(self::CONNECTION)->table('sessions')->where('id', $id)->first();
-    }
-
-    private function user(int $id, string $password): User
-    {
-        return (new User)->setRawAttributes(['id' => $id, 'password' => Hash::make($password)], true);
-    }
-
-    private function sessions(): array
-    {
-        $guard = fn () => Auth::guard('web');
-        $cases = [];
-        $record = function (string $label, Store $store, ?User $user, string $note, array $extra = []) use (&$cases) {
-            $row = $this->row($store->getId());
-            $inner = app('encrypter')->decrypt(base64_decode($row['payload']));
-            $data = unserialize($inner);
-            $cases[] = [
-                'label' => $label,
-                'catatan' => $note,
-                'cookie' => $this->encryptCookie(self::SESSION_COOKIE, $store->getId())['nilai'],
-                'baris' => $row,
-                'serial' => $inner,
-                'data' => self::jsonable($data),
-                'user_hash' => $user?->getAuthPassword(),
-                'harapan' => [
-                    'user_id' => $data[Auth::guard('web')->getName()] ?? null,
-                    'password_hash' => $data['password_hash_web'] ?? null,
-                ],
-                ...$extra,
-            ];
-        };
-
-        $s = $this->freshSession();
-        $s->start();
-        $s->setPreviousUrl('https://cc.test/lacak');
-        $s->setPreviousRoute('lacak');
-        $s->save();
-        $record('tamu', $s, null, 'Tamu: _token + _previous + _flash kosong.');
-
-        $s = $this->freshSession();
-        $s->start();
-        $s->put('chat_guest_token', '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d');
-        $s->setPreviousUrl('https://cc.test/chat');
-        $s->setPreviousRoute(null);
-        $s->save();
-        $record('tamu_chat', $s, null, 'Tamu dengan chat_guest_token (ChatController::SESSION_KEY).');
-
-        $s = $this->freshSession();
-        $s->start();
-        $warga = $this->user(101, 'sandi-warga-uji');
-        $guard()->login($warga);
-        $s->flash('success', 'Selamat datang kembali.');
-        $s->setPreviousUrl('https://cc.test/akun');
-        $s->save();
-        $record('warga', $s, $warga, 'Warga login (SessionGuard::login: migrate(true), login_web_*, password_hash_web) + flash success.');
-
-        $s = $this->freshSession();
-        $s->start();
-        $admin = $this->user(1, 'sandi-admin-uji');
-        $s->put('url.intended', 'https://cc.test/admin/tiket?status=baru');
-        $guard()->login($admin);
-        $s->flash('status', 'Kata sandi diperbarui.');
-        $s->flashInput(['identifier' => 'admin', 'catatan' => 'ñ 🙂']);
-        $s->setPreviousUrl('https://cc.test/admin');
-        $s->setPreviousRoute('admin.dashboard');
-        $s->save();
-        $record('admin', $s, $admin, 'Admin login + url.intended + flash status & _old_input.');
-
-        // Request berikutnya: flash lama dibuang, flash baru ditulis (ageFlashData).
-        $id = $s->getId();
-        $s = $this->freshSession();
-        $s->setId($id);
-        $s->start();
-        // Seperti request asli: guard sudah me-resolve user (tanpa tabel users di sini).
-        $guard()->setUser($admin);
-        $s->flash('error', 'Tiket tidak ditemukan.');
-        $s->save();
-        $record('admin_request_berikutnya', $s, $admin, 'Sesi admin setelah satu request lagi: success/_old_input lama dibuang, flash error baru.');
-
-        $s = $this->freshSession();
-        $s->start();
-        $warga = $this->user(102, 'sandi-warga-uji-2');
-        $guard()->login($warga);
-        $s->flash('errors', (new ViewErrorBag)->put('default', new MessageBag(['identifier' => ['NIK atau kata sandi salah.']])));
-        $s->save();
-        $record('warga_dengan_errors', $s, $warga, 'withErrors() menyimpan ViewErrorBag (objek O:) di sesi: TS menyimpannya sebagai byte mentah tanpa membuat objek.');
-
-        $s = $this->freshSession();
-        $s->start();
-        $s->save();
-        DB::connection(self::CONNECTION)->table('sessions')->where('id', $s->getId())->update(['last_activity' => Carbon::now()->getTimestamp() - self::LIFETIME * 60 - 1]);
-        $record('kedaluwarsa', $s, null, 'last_activity < now - lifetime: DatabaseSessionHandler::read mengembalikan sesi kosong.', ['harapan_kosong' => true]);
-
-        $s = $this->freshSession();
-        $s->start();
-        $s->save();
-        DB::connection(self::CONNECTION)->table('sessions')->where('id', $s->getId())->update(['last_activity' => Carbon::now()->getTimestamp() - self::LIFETIME * 60]);
-        $record('tepat_batas', $s, null, 'last_activity = now - lifetime: belum kedaluwarsa (perbandingan <).');
-
-        $guardName = Auth::guard('web')->getName();
-        $hashCases = [];
-        foreach ($cases as $case) {
-            if ($case['user_hash']) {
-                $hmac = Auth::guard('web')->hashPasswordForCookie($case['user_hash']);
-                $hashCases[] = ['user_hash' => $case['user_hash'], 'tersimpan' => $hmac, 'cocok' => true];
-                $hashCases[] = ['user_hash' => $case['user_hash'], 'tersimpan' => $case['user_hash'], 'cocok' => true];
-                $hashCases[] = ['user_hash' => Hash::make('sandi-baru'), 'tersimpan' => $hmac, 'cocok' => false];
-            }
-        }
-
-        return [
-            ...$this->header([Store::class, 'Illuminate\Session\EncryptedStore', 'Illuminate\Session\DatabaseSessionHandler', SessionGuard::class, 'Illuminate\Session\Middleware\AuthenticateSession'], [
-                ...$this->keys(),
-                'cookie_sesi' => self::SESSION_COOKIE,
-                'lifetime_menit' => self::LIFETIME,
-                'serialization' => config('session.serialization', 'php'),
-                'sekarang' => Carbon::now()->getTimestamp(),
-                'kunci_login' => $guardName,
-                'catatan' => 'payload = base64(Encrypter::encrypt(serialize(serialize($attributes)))): EncryptedStore memakai encrypt() yang ikut men-serialize. serial = serialize($attributes).',
-            ]),
-            'kasus' => $cases,
-            'password_hash_web' => $hashCases,
-        ];
-    }
-
-    /**
-     * Store::readFromHandler memakai unserialize tanpa allowed_classes: payload dari berkas verifikasi
-     * hanya boleh memuat objek ViewErrorBag/MessageBag, tanpa C: (dicek sebelum Laravel membacanya).
-     */
-    private static function assertSafeSessionPayload(string $payload): void
-    {
-        $outer = unserialize(app('encrypter')->decrypt(base64_decode($payload), false), ['allowed_classes' => false]);
-        if (! is_string($outer) || preg_match('/C:\d+:"/', $outer)) {
-            throw new RuntimeException('Payload sesi ditolak: bukan string serial atau memuat C:');
-        }
-        preg_match_all('/O:\d+:"([^"]*)"/', $outer, $classes);
-        foreach ($classes[1] as $class) {
-            if (! in_array($class, [ViewErrorBag::class, MessageBag::class], true)) {
-                throw new RuntimeException("Payload sesi ditolak: kelas {$class}");
-            }
-        }
-    }
-
-    /** Ubah objek menjadi penanda agar bisa ditulis sebagai JSON. */
-    private static function jsonable(mixed $value): mixed
-    {
-        if (is_object($value)) {
-            return ['__objek' => $value::class];
-        }
-
-        return is_array($value) ? array_map(self::jsonable(...), $value) : $value;
-    }
-
-    /** Periksa keluaran TypeScript dengan kelas Laravel asli; keluaran JSON {lulus, gagal}. */
+    /** Periksa ciphertext & bcrypt tulisan TypeScript dengan kelas Laravel asli; keluaran JSON {lulus, gagal}. */
     private function verify(string $file): int
     {
         $input = json_decode(File::get($file), true, flags: JSON_THROW_ON_ERROR);
@@ -716,52 +300,12 @@ class EksporFixtureKripto extends Command
             $try("enkripsi[{$i}]", fn () => $assert($crypt->decryptString($case['payload']) === $case['plaintext'], "enkripsi[{$i}] plaintext beda"));
         }
 
-        foreach ($input['cookie'] ?? [] as $i => $case) {
-            $try("cookie[{$i}]", fn () => $assert($this->decryptCookie($case['nama'], $case['terenkripsi']) === $case['nilai'], "cookie[{$i}] {$case['nama']} beda"));
-        }
-
         foreach ($input['sandi'] ?? [] as $i => $case) {
             $try("sandi[{$i}]", function () use ($case, $i, $assert) {
                 $assert(str_starts_with($case['hash'], '$2y$12$'), "sandi[{$i}] bukan \$2y\$12\$");
                 $assert(Hash::check($case['sandi'], $case['hash']), "sandi[{$i}] Hash::check benar gagal");
                 $assert(! Hash::check('x'.$case['sandi'], $case['hash']), "sandi[{$i}] Hash::check salah lolos");
                 $assert(! Hash::needsRehash($case['hash']), "sandi[{$i}] perlu rehash");
-            });
-        }
-
-        foreach ($input['serial'] ?? [] as $i => $case) {
-            $try("serial[{$i}]", function () use ($case, $i, $assert) {
-                $value = unserialize($case['serial'], ['allowed_classes' => false]);
-                $assert($value !== false || $case['serial'] === 'b:0;', "serial[{$i}] gagal unserialize");
-                $assert(serialize($value) === $case['serial'], "serial[{$i}] serialize ulang beda");
-            });
-        }
-
-        foreach ($input['sesi'] ?? [] as $i => $case) {
-            $try("sesi[{$i}]", function () use ($case, $i, $assert) {
-                self::assertSafeSessionPayload($case['payload']);
-                DB::connection(self::CONNECTION)->table('sessions')->updateOrInsert(['id' => $case['id']], ['payload' => $case['payload'], 'last_activity' => Carbon::now()->getTimestamp()]);
-                $s = $this->freshSession();
-                $s->setId($this->decryptCookie(self::SESSION_COOKIE, $case['cookie']));
-                $assert($s->getId() === $case['id'], "sesi[{$i}] cookie tidak menunjuk id sesi");
-                $s->start();
-                $assert(serialize($s->all()) === $case['serial'], "sesi[{$i}] isi beda dengan serial TS");
-                if (isset($case['user_hash'])) {
-                    Auth::guard('web')->setUser((new User)->setRawAttributes(['id' => $case['user_id'], 'password' => $case['user_hash']], true));
-                    $assert(hash_equals(Auth::guard('web')->hashPasswordForCookie($case['user_hash']), (string) $s->get('password_hash_web')), "sesi[{$i}] password_hash_web tidak cocok");
-                    $assert($s->get(Auth::guard('web')->getName()) === $case['user_id'], "sesi[{$i}] user id beda");
-                }
-                foreach ($case['flash'] ?? [] as $key => $value) {
-                    $assert($s->get($key) === $value, "sesi[{$i}] flash {$key} tidak terbaca");
-                }
-                // Request berikutnya di Laravel membuang flash yang ditulis TS.
-                $s->save();
-                $s = $this->freshSession();
-                $s->setId($case['id']);
-                $s->start();
-                foreach (array_keys($case['flash'] ?? []) as $key) {
-                    $assert(! $s->has($key), "sesi[{$i}] flash {$key} tidak dibuang");
-                }
             });
         }
 
