@@ -14,7 +14,7 @@ name: paritas
 # (.baseline/, tidak di-commit); hashnya per `${platform}-${arch}` di parity/visual/manifest.json —
 # entri CI ini `linux-x64`.
 #   - Selama manifest belum punya entri `linux-x64`: PR/push hanya menjalankan project `http`.
-#   - Jalankan workflow ini manual → `npm run baseline -- tulis` di container; artefak
+#   - Jalankan workflow ini manual → `npm run baseline -- tulis` sekali di container (tanpa cek dulu); artefak
 #     `baseline-visual-linux` berisi visual/manifest.json (entri linux-x64) + .baseline/ untuk
 #     ditinjau manusia, lalu commit HANYA visual/manifest.json.
 #   - Setelah entri `linux-x64` ter-commit, langkah suite otomatis beralih ke
@@ -126,13 +126,14 @@ jobs:
         working-directory: parity
         run: npm ci --no-audit --no-fund
 
+      # Manual (workflow_dispatch): baseline hanya ditulis sekali di langkah berikutnya, tidak dicek dulu.
       - name: Suite paritas
         working-directory: parity
         run: |
-          if node -e "process.exit(require('./visual/manifest.json')[process.platform + '-' + process.arch] ? 0 : 1)"; then
+          if [ "$GITHUB_EVENT_NAME" != workflow_dispatch ] && node -e "process.exit(require('./visual/manifest.json')[process.platform + '-' + process.arch] ? 0 : 1)"; then
             npm run baseline && npx playwright test --project=http
           else
-            echo "visual/manifest.json belum punya entri $(node -p "process.platform + '-' + process.arch"): hanya project http"
+            echo "manual, atau visual/manifest.json belum punya entri $(node -p "process.platform + '-' + process.arch"): hanya project http"
             npx playwright test --project=http
           fi
 
