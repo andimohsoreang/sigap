@@ -8,6 +8,13 @@
       "when": 1794730892116,
       "tag": "0000_cc_outbox_idempotency",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794732678601,
+      "tag": "0001_cc_sessions",
+      "breakpoints": true
     }
   ]
 }

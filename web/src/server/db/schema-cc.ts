@@ -3,7 +3,7 @@
 // Tabel baru → timestamptz & jsonb (bukan format Laravel, karena tidak dibaca Laravel).
 
 import { sql } from 'drizzle-orm';
-import { bigint, index, integer, jsonb, pgTable, primaryKey, smallint, text, timestamp } from 'drizzle-orm/pg-core';
+import { bigint, index, integer, jsonb, pgTable, primaryKey, smallint, text, timestamp, varchar } from 'drizzle-orm/pg-core';
 
 const waktu = (nama: string) => timestamp(nama, { withTimezone: true, mode: 'date' });
 
@@ -51,4 +51,28 @@ export const ccIdempotency = pgTable(
         expiresAt: waktu('expires_at').notNull(),
     },
     (t) => [primaryKey({ columns: [t.scope, t.key] }), index('cc_idempotency_kedaluwarsa').on(t.expiresAt)],
+);
+
+/**
+ * Sesi milik Next.js (cookie cc_session, paket F) — padanan tabel `sessions` Laravel, tidak dibagi dengan Laravel.
+ * `id` = sha256 hex dari id mentah di cookie: kebocoran tabel tidak memberi sesi yang bisa dipakai. Idle-based:
+ * baris dengan last_activity lebih lama dari SESSION_LIFETIME dianggap tidak ada dan dihapus job cc-bersih.
+ */
+export const ccSessions = pgTable(
+    'cc_sessions',
+    {
+        id: text().primaryKey(),
+        userId: bigint('user_id', { mode: 'number' }),
+        /** Token CSRF sesi (`_token` Laravel); dikirim ke browser lewat cookie XSRF-TOKEN. */
+        csrfToken: text('csrf_token').notNull(),
+        /** HMAC hash sandi saat login (`password_hash_web` Laravel); beda dengan users.password → sesi keluar. */
+        passwordHashFingerprint: text('password_hash_fingerprint'),
+        /** Flash, url.intended, dsb. */
+        data: jsonb().$type<Record<string, unknown>>().notNull().default({}),
+        ipAddress: varchar('ip_address', { length: 45 }),
+        userAgent: text('user_agent'),
+        lastActivity: waktu('last_activity').notNull().defaultNow(),
+        createdAt: waktu('created_at').notNull().defaultNow(),
+    },
+    (t) => [index('cc_sessions_user_id').on(t.userId), index('cc_sessions_last_activity').on(t.lastActivity)],
 );

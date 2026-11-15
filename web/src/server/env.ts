@@ -49,6 +49,10 @@ const dasar = z.object({
     REALTIME_APP_SECRET: wajib.optional(),
     REALTIME_HOST: wajib.default('sockudo'),
     REALTIME_PORT: z.coerce.number().int().min(1).max(65535).default(6001),
+    // Sesi cc_session (paket F): menit idle, sama dengan SESSION_LIFETIME Laravel (config/session.php, produksi 120).
+    SESSION_LIFETIME: z.coerce.number().int().min(1).max(525_600).default(120),
+    // Site key reCAPTCHA (publik): menentukan domain Google di CSP, seperti services.recaptcha.site_key Laravel.
+    RECAPTCHA_SITE_KEY: wajib.optional(),
 });
 
 // Produksi menolak start bila kunci wajib kosong atau mode debug aktif (rencana §9.2).
