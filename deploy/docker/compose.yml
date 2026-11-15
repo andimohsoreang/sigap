@@ -82,7 +82,7 @@ services:
         condition: service_healthy
       reverb:
         condition: service_started
-    networks: [internal, cc-edge]
+    networks: [internal]
     logging: *logging
 
   db:
@@ -108,6 +108,3 @@ volumes:
 
 networks:
   internal:
-  # Jembatan ke Contact Center (deploy/next); hanya nginx ini + cc-web. Tanpa `name:` tetap
-  # (<project>_cc-edge) agar stack staging & produksi terpisah.
-  cc-edge:
