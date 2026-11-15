@@ -7,7 +7,7 @@ import { and, eq, gt, lt, sql } from 'drizzle-orm';
 import { db, type Db } from '@/server/db/client';
 import { ccSessions } from '@/server/db/schema-cc';
 import { env } from '@/server/env';
-import { samaWaktuTetap } from '@/server/legacy/laravel-crypt';
+import { bacaKunci, dekripsi, enkripsi, samaWaktuTetap, type KunciLaravel } from '@/server/legacy/laravel-crypt';
 
 import type { DataSesi } from './kilat';
 
@@ -52,6 +52,22 @@ function dataSah(x: unknown): x is DataSesi {
     return typeof x === 'object' && x !== null && !Array.isArray(x);
 }
 
+let kunci: KunciLaravel | undefined;
+function kunciSesi(): KunciLaravel {
+    if (!env.APP_KEY) throw new Error('APP_KEY belum diatur (data sesi dienkripsi).');
+    return (kunci ??= bacaKunci(env.APP_KEY, env.APP_PREVIOUS_KEYS));
+}
+
+/** Data sesi terenkripsi (Encrypter Laravel, APP_KEY + APP_PREVIOUS_KEYS); rusak/salah kunci → null. */
+function bukaData(payload: string): DataSesi | null {
+    try {
+        const x: unknown = JSON.parse(dekripsi(payload, kunciSesi()));
+        return dataSah(x) ? x : null;
+    } catch {
+        return null;
+    }
+}
+
 /**
  * Baca sesi dari id cookie. Id salah format, baris tidak ada/kedaluwarsa, atau isi rusak → null (tanpa sesi,
  * pemanggil membuat sesi baru) — tidak pernah melempar galat ke halaman karena isi sesi.
@@ -62,15 +78,17 @@ export async function muatSesi(id: string | null | undefined, d: Db = db): Promi
         .select()
         .from(ccSessions)
         .where(and(eq(ccSessions.id, hashId(id)), gt(ccSessions.lastActivity, batasIdle())));
-    if (!r || !dataSah(r.data) || typeof r.csrfToken !== 'string' || r.csrfToken === '') return null;
+    if (!r || typeof r.csrfToken !== 'string' || r.csrfToken === '') return null;
     if (r.userId !== null && !Number.isSafeInteger(r.userId)) return null;
+    const data = bukaData(r.data);
+    if (!data) return null;
     return {
         id,
         ada: true,
         userId: r.userId,
         csrf: r.csrfToken,
         sidikSandi: r.passwordHashFingerprint,
-        data: r.data,
+        data,
         terakhirAktif: r.lastActivity,
     };
 }
@@ -89,7 +107,7 @@ export async function simpanSesi(s: Sesi, meta: MetaPermintaan, d: Db = db): Pro
         userId: s.userId,
         csrfToken: s.csrf,
         passwordHashFingerprint: s.sidikSandi,
-        data: s.data,
+        data: enkripsi(JSON.stringify(s.data), kunciSesi()),
         ipAddress: meta.ip,
         // DatabaseSessionHandler: substr(userAgent, 0, 500).
         userAgent: meta.userAgent === null ? null : meta.userAgent.slice(0, 500),

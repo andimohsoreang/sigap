@@ -1,5 +1,5 @@
 {
-  "id": "cad4e449-d744-424e-86a1-9f6709c0e5d2",
+  "id": "0745dbf2-017b-49f8-adaa-5a5c279b9669",
   "prevId": "52c5e000-20db-4760-9f7c-266078cc6d17",
   "version": "7",
   "dialect": "postgresql",
@@ -261,10 +261,9 @@
         },
         "data": {
           "name": "data",
-          "type": "jsonb",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::jsonb"
+          "notNull": true
         },
         "ip_address": {
           "name": "ip_address",

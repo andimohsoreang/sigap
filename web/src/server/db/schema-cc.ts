@@ -67,8 +67,11 @@ export const ccSessions = pgTable(
         csrfToken: text('csrf_token').notNull(),
         /** HMAC hash sandi saat login (`password_hash_web` Laravel); beda dengan users.password → sesi keluar. */
         passwordHashFingerprint: text('password_hash_fingerprint'),
-        /** Flash, url.intended, dsb. */
-        data: jsonb().$type<Record<string, unknown>>().notNull().default({}),
+        /**
+         * Flash, url.intended, _old_input (bisa memuat NIK), dsb.: JSON terenkripsi APP_KEY (format Encrypter Laravel,
+         * seperti SESSION_ENCRYPT=true produksi). Gagal didekripsi → dianggap tanpa sesi.
+         */
+        data: text().notNull(),
         ipAddress: varchar('ip_address', { length: 45 }),
         userAgent: text('user_agent'),
         lastActivity: waktu('last_activity').notNull().defaultNow(),
