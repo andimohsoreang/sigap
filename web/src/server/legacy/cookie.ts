@@ -7,7 +7,8 @@ import { dekripsiByte, enkripsi, GalatDekripsi, type KunciLaravel } from './lara
 // Padanan Illuminate\Cookie\Middleware\EncryptCookies + CookieValuePrefix (cookie tidak di-serialize).
 
 const PANJANG_PREFIX = 41; // 40 hex sha1 + "|"
-const utf8 = new TextDecoder('utf-8', { fatal: true });
+// ignoreBOM: U+FEFF di awal adalah isi data, bukan penanda yang boleh dibuang.
+const utf8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
 /** CookieValuePrefix::create: hmac-sha1(nama + "v2", kunci) + "|". */
 export function prefixCookie(nama: string, kunci: Buffer): string {
@@ -54,9 +55,9 @@ export function tokenDariHeaderXsrf(header: string, k: KunciLaravel): string {
     return (isi && keString(isi.subarray(PANJANG_PREFIX))) ?? '';
 }
 
-/** urldecode() PHP: "+" menjadi spasi, %XX di-decode, % yang tidak sah dibiarkan. */
-function urldecodePhp(s: string): string {
-    const byte = Buffer.from(s.replace(/\+/g, ' '), 'utf8');
+/** php_raw_url_decode: %XX di-decode, "+" tetap "+", % yang tidak sah dibiarkan. */
+function rawurldecodePhp(s: string): string {
+    const byte = Buffer.from(s, 'utf8');
     const out: number[] = [];
     for (let i = 0; i < byte.length; i++) {
         const hex = byte.toString('latin1', i + 1, i + 3);
@@ -71,15 +72,33 @@ function urldecodePhp(s: string): string {
 }
 
 /**
- * Ambil satu cookie dari header Cookie seperti PHP mengisi $_COOKIE: nilai di-urldecode dan
- * kemunculan PERTAMA yang dipakai (parser cookies() Next.js memakai yang terakhir).
+ * Nama variabel PHP (php_register_variable_ex): spasi awal dibuang, "." dan spasi sebelum "[" pertama → "_".
+ * `nama[…]` dengan "]" → array; "[" tanpa "]" → "_".
+ */
+function namaPhp(mentah: string): { nama: string; array: boolean } {
+    const n = mentah.replace(/^ +/, '');
+    const b = n.indexOf('[');
+    const dasar = (b < 0 ? n : n.slice(0, b)).replace(/[. ]/g, '_');
+    if (b < 0) return { nama: dasar, array: false };
+    if (n.indexOf(']', b) > b) return { nama: dasar, array: true };
+    return { nama: `${dasar}_${n.slice(b + 1)}`, array: false };
+}
+
+/**
+ * Ambil satu cookie dari header Cookie persis seperti PHP 8.4 mengisi $_COOKIE (diuji dengan `php -S`):
+ * pemisah ";", nilai rawurldecode, nama dinormalisasi, kemunculan PERTAMA menang, tetapi bentuk array
+ * (`nama[x]=…`) menimpa nilai string → null karena Laravel tidak memakai cookie array sebagai string.
+ * (Parser cookies() Next.js memakai kemunculan terakhir dan tidak menormalisasi nama.)
  */
 export function bacaCookie(header: string | null | undefined, nama: string): string | null {
     if (!header) return null;
+    let hasil: string | null = null;
     for (const bagian of header.split(';')) {
         const i = bagian.indexOf('=');
-        // shortcut: nama dicocokkan persis; PHP juga mengubah "." dan spasi pada nama menjadi "_".
-        if (i >= 0 && bagian.slice(0, i).replace(/^[ \t]+/, '') === nama) return urldecodePhp(bagian.slice(i + 1));
+        const n = namaPhp((i < 0 ? bagian : bagian.slice(0, i)).replace(/^[ \t]+/, ''));
+        if (n.nama !== nama) continue;
+        if (n.array) return null;
+        hasil ??= i < 0 ? '' : rawurldecodePhp(bagian.slice(i + 1));
     }
-    return null;
+    return hasil;
 }
