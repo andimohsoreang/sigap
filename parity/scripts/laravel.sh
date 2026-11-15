@@ -33,8 +33,6 @@ set -a
 # shellcheck source=../env/laravel.env
 . "$ENV_FILE"
 set +a
-# CI (job container): PostgreSQL service lewat nama host, bukan loopback.
-DB_HOST="${PARITAS_DB_HOST:-$DB_HOST}"
 # Kunci acak per run (bukan rahasia produksi); dipakai bersama oleh setup & server.
 APP_KEY="base64:$(php -r 'echo base64_encode(random_bytes(32));')"
 NIK_HASH_KEY="base64:$(php -r 'echo base64_encode(random_bytes(32));')"
