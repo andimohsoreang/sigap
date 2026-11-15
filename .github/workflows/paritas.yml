@@ -1,18 +1,23 @@
 name: paritas
 
-# Suite paritas (parity/) terhadap Laravel lokal di runner. Laravel di-boot oleh webServer
+# Suite paritas (parity/) terhadap Laravel lokal. Laravel di-boot oleh webServer
 # parity/playwright.config.ts → parity/scripts/laravel.sh (konfigurasi cermin produksi dari
-# parity/env/laravel.env, PostgreSQL cc_paritas milik cc_migrate di 127.0.0.1:5432); CI hanya
-# menyiapkan PostgreSQL, dependensi sigap/, dan menjalankan Playwright. laravel.sh menolak jalan bila
-# sigap/ berbeda dari tag laravel-baseline, jadi checkout memuat riwayat & tag.
+# parity/env/laravel.env, PostgreSQL cc_paritas milik cc_migrate); CI hanya menyiapkan PostgreSQL,
+# dependensi sigap/, dan menjalankan Playwright. laravel.sh menolak jalan bila sigap/ berbeda dari tag
+# laravel-baseline, jadi checkout memuat riwayat & tag.
+#
+# Job berjalan di container resmi Playwright yang dipin digest (rencana §8.3: baseline & pembandingan di
+# container yang sama) supaya font/FreeType tidak bergeser mengikuti apt runner. Paket font dicatat di
+# awal dan job gagal bila langkah apt (git, psql, PHP) mengubahnya.
 #
 # Baseline visual (parity/README.md): PNG/DOM Laravel dibuat di mesin yang sama dengan pembandingan
-# (.baseline/<platform>, tidak di-commit); hashnya per platform di parity/visual/manifest.json.
-#   - Selama manifest belum punya entri `linux`: PR/push hanya menjalankan project `http`.
-#   - Jalankan workflow ini manual → `npm run baseline -- tulis` di runner; artefak
-#     `baseline-visual-linux` berisi visual/manifest.json (entri linux) + .baseline/linux untuk
+# (.baseline/, tidak di-commit); hashnya per `${platform}-${arch}` di parity/visual/manifest.json —
+# entri CI ini `linux-x64`.
+#   - Selama manifest belum punya entri `linux-x64`: PR/push hanya menjalankan project `http`.
+#   - Jalankan workflow ini manual → `npm run baseline -- tulis` di container; artefak
+#     `baseline-visual-linux` berisi visual/manifest.json (entri linux-x64) + .baseline/ untuk
 #     ditinjau manusia, lalu commit HANYA visual/manifest.json.
-#   - Setelah entri `linux` ter-commit, langkah suite otomatis beralih ke
+#   - Setelah entri `linux-x64` ter-commit, langkah suite otomatis beralih ke
 #     `npm run baseline && npx playwright test` (baseline dibuat ulang, dicek ke manifest, lalu suite penuh).
 on:
   workflow_dispatch:
@@ -38,51 +43,76 @@ jobs:
     name: Paritas vs Laravel
     runs-on: ubuntu-24.04
     timeout-minutes: 45
+    # Versi = @playwright/test di parity/package-lock.json (1.63.0). Image sudah memuat Node 24 dan
+    # chromium-headless-shell yang cocok (PLAYWRIGHT_BROWSERS_PATH=/ms-playwright), jadi tanpa
+    # langkah pasang/cache browser. Naikkan tag + digest bersamaan dengan @playwright/test.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+      options: --ipc=host
+    env:
+      # Dari job container, service dijangkau lewat nama, bukan 127.0.0.1. Butuh laravel.sh menghormati
+      # variabel ini (paket C): DB_HOST="${PARITAS_DB_HOST:-$DB_HOST}" sesudah memuat env/laravel.env.
+      PARITAS_DB_HOST: postgres
     # Image keluarga yang sama dengan produksi (deploy/docker/compose.yml: postgres:16-alpine), dipin
-    # digest: kolasi musl en_US.utf8 = urutan byte, zona UTC, seperti produksi.
+    # digest: kolasi musl en_US.utf8 = urutan byte, zona UTC, seperti produksi (dicek di bawah).
     services:
       postgres:
         image: postgres:16-alpine@sha256:f377d590e5474681d4d7838635031a2b50647923b7abfa803ce9b5ff35d5c663
         env:
           # KHUSUS UJI: env/laravel.env memaksa DB_PASSWORD kosong (sama dengan setup lokal `trust`),
-          # jadi tanpa sandi. Container hanya hidup selama job di runner sekali pakai.
+          # jadi tanpa sandi. Container hanya hidup selama job di runner sekali pakai, tanpa port host.
           POSTGRES_HOST_AUTH_METHOD: trust
-        ports:
-          - 5432:5432
         options: >-
           --health-cmd "pg_isready -U postgres"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
     steps:
+      - name: Catat paket font
+        run: |
+          { dpkg-query -W -f '${Package} ${Version}\n' 'libfreetype*' 'libfontconfig*' 'fontconfig*' 'fonts-*' || true; } | sort > "$RUNNER_TEMP/font-awal.txt"
+          cat "$RUNNER_TEMP/font-awal.txt"
+
+      # git dulu supaya actions/checkout membuat clone sungguhan (laravel.sh memakai git diff).
+      - name: Paket dasar
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends git postgresql-client
+
       # fetch-depth 0: tag laravel-baseline & commit-nya harus ada untuk `git diff` di laravel.sh.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
 
+      # Container berjalan sebagai root, workspace milik user runner.
+      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      # Gagal bila PostgreSQL tidak mengurutkan per byte (`Cipta` sebelum `apel`) atau zona bukan UTC.
       - name: Database cc_paritas
         env:
-          PGHOST: 127.0.0.1
-          PGUSER: postgres
+          PGHOST: postgres
         run: |
-          psql -v ON_ERROR_STOP=1 -c 'CREATE ROLE cc_migrate LOGIN' -c 'CREATE DATABASE cc_paritas OWNER cc_migrate'
-          psql -tAc "SELECT datcollate, current_setting('TimeZone') FROM pg_database WHERE datname = 'cc_paritas'"
+          psql -U postgres -v ON_ERROR_STOP=1 -c 'CREATE ROLE cc_migrate LOGIN' -c 'CREATE DATABASE cc_paritas OWNER cc_migrate'
+          urut="$(psql -U cc_migrate -d cc_paritas -tAc "SELECT string_agg(x, ',' ORDER BY x) FROM (VALUES ('Cipta'), ('apel')) v(x)")"
+          zona="$(psql -U cc_migrate -d cc_paritas -tAc 'SHOW TimeZone')"
+          echo "urutan=$urut zona=$zona"
+          [ "$urut" = 'Cipta,apel' ] || { echo "Kolasi bukan urutan byte seperti produksi" >&2; exit 1; }
+          [ "$zona" = 'UTC' ] || [ "$zona" = 'Etc/UTC' ] || { echo "TimeZone server bukan UTC" >&2; exit 1; }
 
+      # setup-php mendukung container Ubuntu (root, PPA ondrej). Tanpa gd: tidak diwajibkan composer dan
+      # halaman paritas, sedangkan libgd membawa dependensi FreeType.
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
           tools: composer:v2
-          extensions: pdo_pgsql
+          extensions: pdo_pgsql, intl, zip, bcmath, mbstring
           coverage: none
 
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: |
-            sigap/package-lock.json
-            parity/package-lock.json
+      - name: Paket font tidak berubah
+        run: |
+          { dpkg-query -W -f '${Package} ${Version}\n' 'libfreetype*' 'libfontconfig*' 'fontconfig*' 'fonts-*' || true; } | sort > "$RUNNER_TEMP/font-akhir.txt"
+          diff "$RUNNER_TEMP/font-awal.txt" "$RUNNER_TEMP/font-akhir.txt"
 
       # Dev dependencies ikut: sigap:e2e-setup memakai factory (Faker). Aset dibangun laravel.sh.
       - name: Dependensi Laravel
@@ -92,40 +122,16 @@ jobs:
           npm ci --no-audit --no-fund
 
       - name: Dependensi Playwright
-        id: pw
         working-directory: parity
-        run: |
-          npm ci --no-audit --no-fund
-          echo "versi=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_OUTPUT"
-
-      # Hanya chromium-headless-shell: parity/playwright.config.ts memakai devices['Desktop Chrome']
-      # tanpa `channel` dan tanpa headed, jadi shell itulah yang dijalankan. Browser di-cache per
-      # OS + versi @playwright/test (+ `-shell` agar entri Chromium penuh lama tidak terpakai);
-      # paket sistem (apt) tetap dipasang tiap run.
-      - name: Cache browser Playwright
-        id: cache-pw
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.pw.outputs.versi }}-shell
-
-      - name: Pasang Chromium headless shell
-        if: steps.cache-pw.outputs.cache-hit != 'true'
-        working-directory: parity
-        run: npx playwright install --with-deps --only-shell chromium
-
-      - name: Pasang dependensi sistem Chromium
-        if: steps.cache-pw.outputs.cache-hit == 'true'
-        working-directory: parity
-        run: npx playwright install-deps chromium
+        run: npm ci --no-audit --no-fund
 
       - name: Suite paritas
         working-directory: parity
         run: |
-          if node -e "process.exit(require('./visual/manifest.json').linux ? 0 : 1)"; then
+          if node -e "process.exit(require('./visual/manifest.json')[process.platform + '-' + process.arch] ? 0 : 1)"; then
             npm run baseline && npx playwright test
           else
-            echo "visual/manifest.json belum punya entri linux: hanya project http"
+            echo "visual/manifest.json belum punya entri $(node -p "process.platform + '-' + process.arch"): hanya project http"
             npx playwright test --project=http
           fi
 
@@ -141,7 +147,7 @@ jobs:
           name: baseline-visual-linux
           path: |
             parity/visual/manifest.json
-            parity/.baseline/linux/
+            parity/.baseline/
           include-hidden-files: true
           retention-days: 14
           if-no-files-found: error
