@@ -33,6 +33,8 @@ set -a
 # shellcheck source=../env/laravel.env
 . "$ENV_FILE"
 set +a
+# CI (job container): PostgreSQL service lewat nama host, bukan loopback.
+DB_HOST="${PARITAS_DB_HOST:-$DB_HOST}"
 # Kunci acak per run (bukan rahasia produksi); dipakai bersama oleh setup & server.
 APP_KEY="base64:$(php -r 'echo base64_encode(random_bytes(32));')"
 NIK_HASH_KEY="base64:$(php -r 'echo base64_encode(random_bytes(32));')"
@@ -45,6 +47,8 @@ npx vite build --logLevel error
 # Folder ini tidak ikut git (isinya di-.gitignore) pada worktree baru.
 mkdir -p storage/framework/views storage/framework/cache/data storage/framework/sessions storage/logs
 php artisan config:clear >/dev/null
+php artisan route:clear >/dev/null
+php artisan event:clear >/dev/null
 php artisan view:clear >/dev/null
 
 # sigap:e2e-setup (migrate:fresh --seed + akun uji) hanya mau jalan di APP_ENV local/testing; server tetap production.
