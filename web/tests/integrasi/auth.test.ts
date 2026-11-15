@@ -24,6 +24,8 @@ const KUNCI = 'base64:' + Buffer.alloc(32, 3).toString('base64');
 const NIK = '3171010101010077';
 const SANDI = 'sandi-uji-123';
 const SESI = '__Host-cc_session';
+const INGAT = '__Host-cc_ingat';
+const NAMA_APP = `cc-web-uji-${process.pid}`;
 
 const portBebas = () =>
     new Promise<number>((ok) => {
@@ -89,6 +91,9 @@ describe.runIf(diminta)('integrasi auth (server standalone)', { timeout: 120_000
                 REALTIME_APP_SECRET: 'rahasia-uji',
                 RECAPTCHA_SITE_KEY: 'kunci-situs-uji',
                 LOG_LEVEL: 'warn',
+                // Satu koneksi per pool: bila proxy & rute masing-masing punya pool, koneksi aplikasi ini menjadi 2.
+                DB_POOL_MAX: '1',
+                DB_APP_NAME: NAMA_APP,
             },
             stdio: ['ignore', 'pipe', 'pipe'],
         });
@@ -206,6 +211,9 @@ describe.runIf(diminta)('integrasi auth (server standalone)', { timeout: 120_000
         expect([json.status, await json.json()]).toEqual([403, { authenticated: true, error: 'Akses khusus petugas' }]);
         const tamu = await peramban('198.51.100.4').minta('/api/v1/admin/tickets', { headers: { referer: `${base}/` } });
         expect([tamu.status, await tamu.json()]).toEqual([401, { message: 'Unauthenticated.' }]);
+        // Cookie admin tanpa Referer/Origin (curl, klien luar): Sanctum tidak memakai sesi → tamu → 401, bukan lolos guard.
+        const luar = await b.minta('/api/v1/admin/tickets');
+        expect([luar.status, await luar.json()]).toEqual([401, { message: 'Unauthenticated.' }]);
         const gagal = await peramban('198.51.100.4').masuk('superadmin', 'salah');
         expect([gagal.status, lokasi(gagal)]).toEqual([302, '/masuk']);
     });
@@ -232,6 +240,47 @@ describe.runIf(diminta)('integrasi auth (server standalone)', { timeout: 120_000
             // Header keamanan statis tetap ada untuk semua jalur (next.config.ts), seperti nginx produksi.
             if (jalur !== '/_realtime/app/kunci-publik') expect(res.headers.get('x-content-type-options'), jalur).toBe('nosniff');
         }
+    });
+
+    it('"Ingat saya": browser baru yang hanya membawa cookie ingat lolos ke /admin dengan sesi baru', async () => {
+        const b = peramban('198.51.100.8');
+        expect(lokasi(await b.masuk('superadmin', SANDI, { remember: '1' }))).toBe('/admin');
+        const ingat = b.jar.get(INGAT);
+        expect(ingat).toMatch(/^\d+\.[A-Za-z0-9_-]+\.[0-9a-f]{64}\.[A-Za-z0-9_-]+$/);
+        const baru = peramban('198.51.100.8');
+        baru.jar.set(INGAT, ingat!);
+        const r = await baru.minta('/admin');
+        expect(r.status).not.toBe(302); // guard lolos (halaman /admin belum di-port → 404)
+        expect(baru.jar.has(SESI)).toBe(true);
+        // Logout di browser pertama mengganti remember_token → cookie ingat lama mati.
+        await b.minta('/keluar', { form: {} });
+        const lagi = peramban('198.51.100.8');
+        lagi.jar.set(INGAT, ingat!);
+        expect(lokasi(await lagi.minta('/admin'))).toBe('/masuk');
+    });
+
+    it('body terlalu besar → 413 halaman nginx sebelum dibaca (12 MB umum, 64 KB rute auth, chunked)', async () => {
+        const b = peramban('198.51.100.9');
+        await b.minta('/_platform');
+        const besar = await b.minta('/masuk', { form: { identifier: 'x', password: 'y'.repeat(70 * 1024) } });
+        expect(besar.status).toBe(413);
+        expect(await besar.text()).toContain('413 Request Entity Too Large');
+        const chunked = await fetch(`${base}/masuk`, {
+            method: 'POST',
+            body: new ReadableStream({ start: (c) => (c.enqueue(new TextEncoder().encode('a=1')), c.close()) }),
+            duplex: 'half',
+        } as RequestInit);
+        expect(chunked.status).toBe(413);
+        // > 12 MB di rute mana pun. Catatan: Next.js menyalin body (maks proxyClientMaxBodySize = 12 MB) SEBELUM proxy
+        // berjalan, jadi memori per permintaan dibatasi 12 MB, tetapi body tetap diterima dulu — beda dengan nginx.
+        const r = await fetch(`${base}/chat/lampiran`, { method: 'POST', body: Buffer.alloc(13 * 1024 * 1024, 97) });
+        expect([r.status, await r.text()]).toEqual([413, expect.stringContaining('<hr><center>nginx</center>')]);
+    });
+
+    it('satu pool DB per proses (proxy & rute berbagi; DB_POOL_MAX=1 → tepat satu koneksi)', async () => {
+        await Promise.all([peramban('198.51.100.10').masuk('superadmin'), peramban('198.51.100.11').minta('/_platform')]);
+        const [r] = await mentah('SELECT count(*)::int AS n FROM pg_stat_activity WHERE application_name = $1', [NAMA_APP]);
+        expect(r.n).toBe(1);
     });
 
     it('/broadcasting/auth: admin boleh admin.chat, warga & tamu 403', async () => {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { batasBody, bodyTerlaluBesar, GalatBodyBesar, HTML_413, MAKS_BODY, MAKS_BODY_KECIL, respons413 } from '@/server/web/batas-body';
 import { asalSah, metodeBaca, tokenCocok, tokenDariPermintaan } from '@/server/web/csrf';
 import { kebijakanCsp } from '@/server/web/header';
 import { bacaInput, inputBoolean, trimLaravel } from '@/server/web/input';
@@ -99,7 +100,7 @@ describe('input (TrimStrings + ConvertEmptyStringsToNull)', () => {
             headers: { 'content-type': 'application/x-www-form-urlencoded' },
             body: 'identifier=+admin1+&password=+rahasia+&kosong=&daftar[]=a&daftar[]=b&peta[k]=v',
         });
-        expect(await bacaInput(req)).toEqual({
+        expect(await bacaInput(req, MAKS_BODY)).toEqual({
             identifier: 'admin1',
             password: ' rahasia ',
             kosong: null,
@@ -111,10 +112,30 @@ describe('input (TrimStrings + ConvertEmptyStringsToNull)', () => {
 
     it('JSON body; JSON rusak → kosong; boolean seperti FILTER_VALIDATE_BOOLEAN', async () => {
         const json = (body: string) => new Request('http://x/', { method: 'POST', headers: { 'content-type': 'application/json' }, body });
-        expect(await bacaInput(json('{"identifier":5,"remember":true}'))).toEqual({ identifier: 5, remember: true });
-        expect(await bacaInput(json('{rusak'))).toEqual({});
+        expect(await bacaInput(json('{"identifier":5,"remember":true}'), MAKS_BODY)).toEqual({ identifier: 5, remember: true });
+        expect(await bacaInput(json('{rusak'), MAKS_BODY)).toEqual({});
         for (const ya of [true, 1, '1', 'true', 'on', 'YES']) expect(inputBoolean({ r: ya }, 'r')).toBe(true);
         for (const tidak of [false, 0, '0', 'off', 'no', '', null, undefined, 'x']) expect(inputBoolean({ r: tidak }, 'r')).toBe(false);
+    });
+});
+
+describe('batas body (client_max_body_size 12m)', () => {
+    it('12 MB umum, 64 KB rute auth; Content-Length rusak atau chunked tanpa panjang ditolak', () => {
+        expect(batasBody('masuk')).toBe(MAKS_BODY_KECIL);
+        expect(batasBody('broadcasting/auth')).toBe(MAKS_BODY_KECIL);
+        expect(batasBody('chat/lampiran')).toBe(MAKS_BODY);
+        expect(bodyTerlaluBesar(h({ 'content-length': String(MAKS_BODY) }), MAKS_BODY)).toBe(false);
+        expect(bodyTerlaluBesar(h({ 'content-length': String(MAKS_BODY + 1) }), MAKS_BODY)).toBe(true);
+        expect(bodyTerlaluBesar(h({ 'content-length': '1e9' }), MAKS_BODY)).toBe(true);
+        expect(bodyTerlaluBesar(h({ 'transfer-encoding': 'chunked' }), MAKS_BODY)).toBe(true);
+        expect(bodyTerlaluBesar(h({}), MAKS_BODY)).toBe(false);
+    });
+
+    it('bacaInput menolak sebelum membaca body; 413 berbentuk halaman nginx', async () => {
+        const req = new Request('http://x/masuk', { method: 'POST', headers: { 'content-length': String(MAKS_BODY_KECIL + 1) }, body: 'a=1' });
+        await expect(bacaInput(req, MAKS_BODY_KECIL)).rejects.toBeInstanceOf(GalatBodyBesar);
+        const r = respons413();
+        expect([r.status, r.headers.get('content-type'), await r.text()]).toEqual([413, 'text/html', HTML_413]);
     });
 });
 
@@ -192,6 +213,8 @@ describe.skipIf(!!alasanLaravel)(
                 { jenis: '429', metode: 'POST', header: json, kita: () => responsGalat(429, true, 'Too Many Attempts.') },
                 { jenis: '503', metode: 'POST', header: html, kita: () => responsGalat(503, false) },
                 { jenis: '503', metode: 'POST', header: json, kita: () => responsGalat(503, true) },
+                { jenis: '500', metode: 'GET', header: html, kita: () => responsGalat(500, false, 'Server Error') },
+                { jenis: '500', metode: 'GET', header: json, kita: () => responsGalat(500, true, 'Server Error') },
                 { jenis: '401', metode: 'GET', header: json, kita: () => Response.json({ message: 'Unauthenticated.' }, { status: 401 }) },
             ];
             const laravel = laravelWeb<{ status: number; jenis: string; isi: string }>(

@@ -25,6 +25,7 @@ foreach (json_decode(stream_get_contents(STDIN), true, flags: JSON_THROW_ON_ERRO
             'akses' => new Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException(),
             '429' => new Illuminate\Http\Exceptions\ThrottleRequestsException('Too Many Attempts.', null, ['Retry-After' => 60]),
             '503' => new Symfony\Component\HttpKernel\Exception\HttpException(503),
+            '500' => new RuntimeException('rahasia internal'),
             '401' => new Illuminate\Auth\AuthenticationException('Unauthenticated.'),
         };
         $r = $h->render($req, $e);

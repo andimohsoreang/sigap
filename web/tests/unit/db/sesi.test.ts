@@ -43,15 +43,16 @@ describe.skipIf(!!alasan)(`sesi & login DB${alasan ? ` — dilewati: ${alasan}` 
     vi.stubEnv('NIK_HASH_KEY', KUNCI);
     vi.stubEnv('APP_URL', 'http://cc.test');
     vi.stubEnv('VALKEY_URL', '');
-    const { db, tutupDb } = await import('@/server/db/client');
-    const { ccSessions } = await import('@/server/db/schema-cc');
+    const { tutupDb } = await import('@/server/db/client');
+    const { bacaKunci, enkripsi } = await import('@/server/legacy/laravel-crypt');
     const { hashNikApp } = await import('@/server/db/kolom');
     const { terapkanMigrasi } = await import('@/server/migrasi');
     const sesiMod = await import('@/server/auth/sesi');
     const { muatSesi, sesiBaru, simpanSesi, rotasiSesi, bersihkanSesi, hapusSesiPengguna, periksaSidik } = sesiMod;
     const { cobaMasuk, masukkan, keluarkan, penggunaDariIngat, PESAN_GAGAL_MASUK, TIMEBOX_MS } = await import('@/server/auth/masuk');
     const { ambilPengguna } = await import('@/server/auth/pengguna');
-    const { tumpukanWeb } = await import('@/server/auth/tumpukan');
+    const { teruskanApiLuar, tumpukanWeb } = await import('@/server/auth/tumpukan');
+    const { penggunaDariSesi, sesiDariHeader } = await import('@/server/auth/konteks');
     const { COOKIE_INGAT, COOKIE_SESI } = await import('@/server/auth/cookie');
     const { tutupPoolSandi } = await import('@/server/legacy/sandi');
 
@@ -68,6 +69,8 @@ describe.skipIf(!!alasan)(`sesi & login DB${alasan ? ` — dilewati: ${alasan}` 
                 CREATE SEQUENCE ${SKEMA}.${t}_id_seq OWNED BY ${SKEMA}.${t}.id;
                 ALTER TABLE ${SKEMA}.${t} ALTER id SET DEFAULT nextval('${SKEMA}.${t}_id_seq')`);
         }
+        // Seperti deploy/next/uji/init.sh: cc_readonly mendapat SELECT otomatis untuk tabel baru cc_migrate.
+        await mentah(`ALTER DEFAULT PRIVILEGES FOR ROLE cc_migrate IN SCHEMA ${SKEMA} GRANT SELECT ON TABLES TO cc_readonly`);
         await terapkanMigrasi({ url: URL_MIGRATE, folder: path.resolve('drizzle-cc'), skema: SKEMA, skemaBoss: SKEMA_BOSS });
         await mentah(`GRANT USAGE ON SCHEMA ${SKEMA} TO cc_app;
             GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA ${SKEMA} TO cc_app;
@@ -111,17 +114,38 @@ describe.skipIf(!!alasan)(`sesi & login DB${alasan ? ` — dilewati: ${alasan}` 
             expect(baris.id).toMatch(/^[0-9a-f]{64}$/);
         });
 
-        it('id salah format, isi rusak, atau kedaluwarsa → tanpa sesi (bukan galat)', async () => {
+        it('data terenkripsi APP_KEY: NIK di _old_input tidak terbaca polos di DB', async () => {
+            const s = sesiBaru();
+            s.data._old_input = { identifier: NIK };
+            await simpanSesi(s, meta);
+            const [baris] = await mentah(`SELECT data FROM ${SKEMA}.cc_sessions WHERE id = encode(sha256($1::bytea), 'hex')`, [s.id]);
+            expect(baris.data).not.toContain(NIK);
+            expect(JSON.parse(Buffer.from(baris.data, 'base64').toString())).toHaveProperty('mac');
+            expect((await muatSesi(s.id))?.data).toEqual({ _old_input: { identifier: NIK } });
+        });
+
+        it('cc_readonly tidak bisa membaca tabel cc_* walau default privileges memberinya SELECT', async () => {
+            for (const t of ['cc_sessions', 'cc_outbox', 'cc_idempotency']) {
+                const [r] = await mentah(`SELECT has_table_privilege('cc_readonly', '${SKEMA}.${t}', 'SELECT') AS boleh`);
+                expect(r.boleh, t).toBe(false);
+            }
+        });
+
+        it('id salah format, isi rusak/salah kunci, atau kedaluwarsa → tanpa sesi (bukan galat)', async () => {
             expect(await muatSesi('pendek')).toBeNull();
             expect(await muatSesi('x'.repeat(43))).toBeNull();
-            const s = sesiBaru();
-            await simpanSesi(s, meta);
-            await db.update(ccSessions).set({ data: [1, 2] as unknown as Record<string, unknown> });
-            expect(await muatSesi(s.id)).toBeNull();
-            const t = sesiBaru();
-            await simpanSesi(t, meta);
-            await mentah(`UPDATE ${SKEMA}.cc_sessions SET csrf_token = '' WHERE data = '{}'`);
-            expect(await muatSesi(t.id)).toBeNull();
+            const satu = async (ubah: string, nilai: string) => {
+                const s = sesiBaru();
+                await simpanSesi(s, meta);
+                await mentah(`UPDATE ${SKEMA}.cc_sessions SET ${ubah} = $2 WHERE id = encode(sha256($1::bytea), 'hex')`, [s.id, nilai]);
+                return muatSesi(s.id);
+            };
+            const kunciLain = bacaKunci('base64:' + Buffer.alloc(32, 6).toString('base64'));
+            expect(await satu('data', 'bukan-payload')).toBeNull();
+            expect(await satu('data', enkripsi('[1,2]', bacaKunci(KUNCI)))).toBeNull();
+            expect(await satu('data', enkripsi('{rusak', bacaKunci(KUNCI)))).toBeNull();
+            expect(await satu('data', enkripsi('{}', kunciLain))).toBeNull();
+            expect(await satu('csrf_token', '')).toBeNull();
             const u = sesiBaru();
             await simpanSesi(u, meta);
             await mentah(`UPDATE ${SKEMA}.cc_sessions SET last_activity = now() - interval '121 minutes'`);
@@ -264,6 +288,32 @@ describe.skipIf(!!alasan)(`sesi & login DB${alasan ? ` — dilewati: ${alasan}` 
             );
             expect(ganda.cookies.get(COOKIE_SESI)!.value).not.toBe(idBaru);
             expect(await muatSesi(ganda.cookies.get(COOKIE_SESI)!.value)).toMatchObject({ userId: null });
+        });
+
+        it('proxy: /api/* tanpa Referer/Origin situs sendiri diteruskan TANPA cookie sesi & ingat (pengguna null)', async () => {
+            const warga = (await ambilPengguna(id.warga))!;
+            const s = sesiBaru();
+            const ingat = await masukkan(s, warga, true);
+            await simpanSesi(s, meta);
+            const cookie = `a=1; ${COOKIE_SESI}=${s.id}; ${COOKIE_INGAT}=${ingat}`;
+            const diteruskan = async (headers: Record<string, string>) => {
+                const res = teruskanApiLuar(
+                    new NextRequest('http://cc.test/api/v1/katalog/kanal', { headers: { cookie, ...headers } }),
+                    new Headers(),
+                );
+                return res === null ? null : res.headers.get('x-middleware-request-cookie');
+            };
+            for (const luar of [{}, { referer: 'https://jahat.test/' }, { origin: 'https://jahat.test' }] as Record<string, string>[]) {
+                const c = await diteruskan(luar);
+                expect(c).toBe('a=1');
+                expect(await penggunaDariSesi(await sesiDariHeader(new Headers({ cookie: c! })))).toBeNull();
+            }
+            // Rute API berguard tetap dijaga sebagai tamu (auth:sanctum tanpa token).
+            const admin = teruskanApiLuar(new NextRequest('http://cc.test/api/v1/admin/tickets', { headers: { cookie } }), new Headers());
+            expect([admin?.status, await admin?.json()]).toEqual([401, { message: 'Unauthenticated.' }]);
+            // Dari halaman sendiri → tumpukan web biasa (sesi dipakai).
+            expect(await diteruskan({ referer: 'http://cc.test/portal-warga' })).toBeNull();
+            expect(await penggunaDariSesi(await sesiDariHeader(new Headers({ cookie })))).toMatchObject({ id: id.warga });
         });
 
         it('proxy: akun nonaktif → audit, sesi di-invalidate, redirect /masuk dengan flash error', async () => {

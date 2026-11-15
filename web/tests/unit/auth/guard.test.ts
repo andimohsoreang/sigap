@@ -110,7 +110,6 @@ describe('EnsureRole', () => {
             ke: '/masuk',
             kilat: { error: 'Akun Anda dinonaktifkan. Hubungi admin Contact Center.' },
             keluarkan: true,
-            audit: true,
         });
         expect(akses('/api/v1/admin/tickets', pengguna('super_admin', { isActive: false }))).toMatchObject({
             jenis: 'json',
