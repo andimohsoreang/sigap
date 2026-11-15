@@ -1,0 +1,28 @@
+# Konteks build = root repo; hanya web/ dan sigap/ (tersaring) yang boleh masuk. BuildKit memakai berkas ini
+# alih-alih /.dockerignore milik image Laravel karena namanya <Dockerfile>.dockerignore.
+# sigap/ ikut karena Tailwind web/ memindai ../sigap (web/postcss.config.mjs); sigap/.gitignore ikut karena
+# Tailwind menghormati berkas ignore. Data & rahasia Laravel (storage, sqlite, .env) TIDAK boleh masuk.
+# scripts/cek-binary-native.sh membaca baris web/ & sigap/ di bawah sebagai daftar --exclude tar.
+*
+!web
+!sigap
+web/node_modules
+web/.next
+web/.env*
+web/.cek-css
+web/coverage
+web/test-results
+web/playwright-report
+sigap/vendor
+sigap/node_modules
+sigap/.env*
+sigap/storage
+sigap/bootstrap/cache/*.php
+sigap/database/*.sqlite
+sigap/public/build
+sigap/public/hot
+sigap/public/storage
+sigap/test-results
+sigap/tests/e2e/.auth
+sigap/.phpunit.result.cache
+**/.DS_Store
