@@ -1,10 +1,15 @@
 // Manifest SHA-256 baseline Laravel (visual/manifest.json), per kunci <platform>-<arch>.
-//   node scripts/manifest.mjs cek   → gagal bila baseline .baseline/<platform>-<arch> berbeda dari manifest kunci ini
+//   node scripts/manifest.mjs cek   → gagal bila baseline .baseline/<platform>-<arch> berbeda dari manifest kunci ini.
+//                                     Hash hanya dibandingkan bila sidik mesin (CPU, fitur SIMD, Playwright, Chromium)
+//                                     sama dengan entri; mesin lain → hanya daftar nama berkas (rasterisasi Skia di CPU
+//                                     memilih jalur SIMD berbeda, jadi antialias berbeda antar-mesin).
 //   node scripts/manifest.mjs tulis → tulis/ganti entri platform ini (hanya bila tampilan Laravel memang berubah)
 import { chromium } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,10 +29,36 @@ for (const rel of readdirSync(dir, { recursive: true }).map(String).sort()) {
     files[rel.split(path.sep).join('/')] = createHash('sha256').update(readFileSync(abs)).digest('hex');
 }
 
+/** Model CPU + fitur SIMD yang memengaruhi jalur rasterisasi Skia. */
+function machine() {
+    if (process.platform === 'linux') {
+        const info = readFileSync('/proc/cpuinfo', 'utf8');
+        const field = (name) => info.match(new RegExp(`^${name}\\s*:\\s*(.*)$`, 'm'))?.[1].trim() ?? '';
+        const flags = field('flags')
+            .split(/\s+/)
+            .filter((f) => /^(ssse3|sse4_[12]|avx.*|fma|f16c|bmi[12])$/.test(f))
+            .sort();
+        return { cpu: field('model name') || os.cpus()[0]?.model, flags };
+    }
+    if (process.platform === 'darwin') {
+        const sysctl = (key) => {
+            try {
+                return execFileSync('sysctl', ['-n', key], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+            } catch {
+                return '';
+            }
+        };
+        const flags = `${sysctl('machdep.cpu.features')} ${sysctl('machdep.cpu.leaf7_features')}`.toLowerCase().split(/\s+/).filter(Boolean).sort();
+        return { cpu: sysctl('machdep.cpu.brand_string'), model: sysctl('hw.model'), flags };
+    }
+    return { cpu: os.cpus()[0]?.model ?? '', flags: [] };
+}
+
 const browser = await chromium.launch();
 const entry = {
     playwright: createRequire(import.meta.url)('@playwright/test/package.json').version,
     chromium: browser.version(),
+    mesin: machine(),
     files,
 };
 await browser.close();
@@ -48,17 +79,22 @@ if (!expected) {
     console.error(`manifest tidak punya entri untuk ${platform}. Bila ini platform baru, jalankan 'npm run manifest:tulis' lalu commit.`);
     process.exit(1);
 }
-const problems = [];
-for (const key of ['playwright', 'chromium']) {
-    if (expected[key] !== entry[key]) problems.push(`${key}: manifest ${expected[key]} ≠ sekarang ${entry[key]}`);
+const fingerprint = (e) => JSON.stringify([e.playwright, e.chromium, e.mesin ?? null]);
+const sameMachine = fingerprint(expected) === fingerprint(entry);
+if (!sameMachine) {
+    console.log(
+        `mesin berbeda: hanya daftar berkas yang dicek; paritas Laravel↔Next tetap dibandingkan di mesin yang sama.\n` +
+            `  manifest: ${fingerprint(expected)}\n  sekarang: ${fingerprint(entry)}`,
+    );
 }
+const problems = [];
 for (const name of new Set([...Object.keys(expected.files), ...Object.keys(files)])) {
-    if (expected.files[name] !== files[name]) {
-        problems.push(`${name}: ${expected.files[name] ? (files[name] ? 'hash berbeda' : 'hilang') : 'tidak ada di manifest'}`);
-    }
+    if (!expected.files[name]) problems.push(`${name}: tidak ada di manifest`);
+    else if (!files[name]) problems.push(`${name}: hilang`);
+    else if (sameMachine && expected.files[name] !== files[name]) problems.push(`${name}: hash berbeda`);
 }
 if (problems.length) {
     console.error(`baseline Laravel (${platform}) tidak cocok dengan visual/manifest.json:\n- ${problems.join('\n- ')}`);
     process.exit(1);
 }
-console.log(`manifest ${platform}: ${Object.keys(files).length} berkas cocok`);
+console.log(`manifest ${platform}: ${Object.keys(files).length} berkas cocok (${sameMachine ? 'nama + hash' : 'nama saja'})`);

@@ -10,7 +10,7 @@ capture selebar viewport — lihat *Pengecualian* di bawah).
 | `tests/visual.spec.ts` | S1 × desktop 1440 / tablet 768 / ponsel 375 × varian terang, gelap, aksesibilitas (teks 130% + kontras + disleksia), login warga, login admin: screenshot full page + snapshot DOM `<header>`/`<main>`/`<footer>` ternormalisasi (ukuran gulir & daftar luapan di komentar awal); header terpisah untuk varian login |
 | `tests/login.setup.ts` | login akun uji `sigap:e2e-setup` → `.auth/*.json` |
 | `env/laravel.env` | konfigurasi target Laravel = cermin produksi (`PRODUKSI.md`), tanpa rahasia |
-| `visual/manifest.json` | SHA-256 tiap baseline Laravel per `<platform>-<arch>` (mis. `darwin-arm64`, CI `linux-x64`) + versi Playwright/Chromium (PNG tidak di-commit) |
+| `visual/manifest.json` | SHA-256 tiap baseline Laravel per `<platform>-<arch>` (mis. `darwin-arm64`, CI `linux-x64`) + sidik mesin (CPU, fitur SIMD) & versi Playwright/Chromium (PNG tidak di-commit) |
 | `fixtures/` | vektor JSON dari kelas PHP asli (`cc:ekspor-fixture`); `fixtures/kripto/` milik paket B |
 
 ## Persiapan (sekali)
@@ -35,9 +35,18 @@ selain `BASE_URL` diblokir dan dicatat.
    ```
 
    Menulis `.baseline/<platform>-<arch>/` (diabaikan git) dengan `--update-snapshots=all`, menjalankan Laravel kedua kali
-   (DB & kunci baru) dan harus 0 piksel/0 byte beda, lalu mencocokkan hash dengan `visual/manifest.json`. Gagal bila
-   tampilan Laravel di platform ini berubah dari manifest. Platform baru, atau tampilan Laravel memang berubah:
-   `npm run baseline -- tulis`, lalu commit `visual/manifest.json`.
+   (DB & kunci baru) dan harus 0 piksel/0 byte beda (ketat, di mesin mana pun), lalu mencocokkan dengan
+   `visual/manifest.json`. Platform baru, atau tampilan Laravel memang berubah: `npm run baseline -- tulis`, lalu commit
+   `visual/manifest.json`.
+
+   **Hash hanya dicek di mesin yang sama.** Chromium merasterisasi di CPU lewat Skia, yang memilih jalur SIMD
+   (AVX2/AVX-512, NEON) sesuai prosesor; antialias tepi bisa beda ±1 nilai warna antar-mesin, walau di satu mesin
+   selalu identik (terbukti di CI: runner GitHub berbeda CPU → 10/186 hash `linux-x64` beda, dua boot di job yang sama
+   tetap 0 beda). Karena itu entri manifest menyimpan sidik mesin (model CPU, fitur SIMD dari `/proc/cpuinfo` atau
+   `sysctl`, versi Playwright & Chromium). Sidik sama → nama **dan** hash dicek; sidik beda → hanya daftar nama berkas,
+   dengan pesan "mesin berbeda: …". Paritas Laravel↔Next tidak terpengaruh: keduanya selalu dibandingkan di mesin &
+   job yang sama. Perlindungan terhadap perubahan Laravel diam-diam tetap dari penjaga `git diff laravel-baseline` di
+   `scripts/laravel.sh` (target menolak jalan bila `sigap/` beda dari tag).
 
 2. **Laravel (cek ulang suite)**: `npx playwright test`.
 
