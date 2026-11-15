@@ -4,14 +4,22 @@ import { execSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { sumberSigap } from './sumber-sigap.mjs';
+
 const web = path.resolve(import.meta.dirname, '..');
-const sigap = path.resolve(web, '../sigap');
 const jalankan = (cmd, cwd) => execSync(cmd, { cwd, stdio: 'inherit' });
 
-jalankan('npm ci --no-audit --no-fund', sigap);
-jalankan('npx vite build', sigap);
-const manifest = JSON.parse(fs.readFileSync(path.join(sigap, 'public/build/manifest.json'), 'utf8'));
-const cssLaravel = path.join(sigap, 'public/build', manifest['resources/css/app.css'].file);
+// CSS pembanding dibangun Vite dari salinan sigap/ yang sama bersihnya dengan sumber css-statis.
+const sigap = sumberSigap();
+let isiLaravel;
+try {
+    jalankan('npm ci --no-audit --no-fund', sigap.dir);
+    jalankan('npx vite build', sigap.dir);
+    const manifest = JSON.parse(fs.readFileSync(path.join(sigap.dir, 'public/build/manifest.json'), 'utf8'));
+    isiLaravel = fs.readFileSync(path.join(sigap.dir, 'public/build', manifest['resources/css/app.css'].file), 'utf8');
+} finally {
+    sigap.hapus();
+}
 
 jalankan('npm run build', web);
 // CSS aplikasi harus datang dari scripts/css-statis.mjs; CSS apa pun hasil Turbopack berarti ada import CSS yang lolos.
@@ -51,12 +59,12 @@ const keluaran = path.join(web, '.cek-css');
 fs.mkdirSync(keluaran, { recursive: true });
 const a = path.join(keluaran, 'laravel.css');
 const b = path.join(keluaran, 'next.css');
-fs.writeFileSync(a, normalisasi(fs.readFileSync(cssLaravel, 'utf8')));
+fs.writeFileSync(a, normalisasi(isiLaravel));
 fs.writeFileSync(b, normalisasi(fs.readFileSync(path.join(statis, cssNext[0]), 'utf8')));
 
 const diff = spawnSync('diff', ['-u', a, b], { encoding: 'utf8' });
 if (diff.status === 0) {
-    console.log(`\ncek:css IDENTIK: ${path.relative(web, cssLaravel)} = public/_cc/${cssNext[0]}`);
+    console.log(`\ncek:css IDENTIK: build Vite sigap/ (berkas terlacak) = public/_cc/${cssNext[0]}`);
 } else {
     process.stdout.write(diff.stdout);
     const baris = diff.stdout.split('\n').filter((l) => /^[-+]/.test(l) && !/^(---|\+\+\+) /.test(l)).length;
