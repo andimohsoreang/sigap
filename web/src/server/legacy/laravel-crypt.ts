@@ -4,14 +4,26 @@ import { createCipheriv, createDecipheriv, createHmac, randomBytes, timingSafeEq
 
 // Padanan Illuminate\Encryption\Encrypter (Laravel 12.69.3) dengan cipher AES-256-CBC (config/app.php).
 
-/** Kunci Laravel; tidak pernah tampil di log (JSON.stringify / util.inspect / console.log). */
+/**
+ * Kunci Laravel. Field privat (#) + getter: spread, Object.entries, JSON.stringify, util.inspect, dan `cause`
+ * galat tidak pernah memuat byte kunci.
+ */
 export class KunciLaravel {
-    constructor(
-        /** Nilai APP_KEY apa adanya (termasuk awalan `base64:`); dipakai SessionGuard::hashPasswordForCookie. */
-        readonly mentah: string,
-        readonly kunci: Buffer,
-        readonly sebelumnya: Buffer[],
-    ) {}
+    readonly #kunci: Buffer;
+    readonly #sebelumnya: Buffer[];
+
+    constructor(kunci: Buffer, sebelumnya: Buffer[]) {
+        this.#kunci = kunci;
+        this.#sebelumnya = sebelumnya;
+    }
+
+    get kunci(): Buffer {
+        return this.#kunci;
+    }
+
+    get sebelumnya(): readonly Buffer[] {
+        return this.#sebelumnya;
+    }
 
     toJSON() {
         return '[KunciLaravel]';
@@ -51,7 +63,7 @@ export function bacaKunci(appKey: string, previousKeys = ''): KunciLaravel {
         .split(',')
         .filter((k) => k !== '' && k !== '0')
         .map(parseKunci);
-    return new KunciLaravel(appKey, parseKunci(appKey), sebelumnya);
+    return new KunciLaravel(parseKunci(appKey), sebelumnya);
 }
 
 /** base64_decode($s, true) PHP: spasi/tab/baris dilewati, padding opsional tetapi bila ada harus lengkap. */

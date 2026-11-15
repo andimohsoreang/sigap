@@ -60,14 +60,27 @@ describe('laravel-crypt: kunci', () => {
         expect(() => bacaKunci(f.app_key, ' ' + f.app_previous_keys)).toThrow('incorrect key length');
     });
 
-    it('kunci tidak pernah tampil lewat JSON.stringify atau util.inspect', () => {
-        const rahasia = Buffer.from(f.app_key.slice(7), 'base64').toString('hex');
-        for (const teks of [JSON.stringify({ kunci }), inspect({ kunci }, { depth: 5 }), `${inspect(kunci, { showHidden: true })}`]) {
-            expect(teks).toContain('[KunciLaravel]');
-            expect(teks).not.toContain(f.app_key);
-            expect(teks).not.toContain(f.app_key.slice(7));
-            expect(teks).not.toContain(rahasia);
+    it('kunci tidak pernah tampil lewat JSON.stringify, util.inspect, spread, Object.entries, atau cause galat', () => {
+        const rahasia = Buffer.from(f.app_key.slice(7), 'base64');
+        expect(JSON.stringify({ ...kunci })).toBe('{}');
+        expect(Object.entries(kunci)).toEqual([]);
+        expect(Object.keys(kunci)).toEqual([]);
+        const teks = [
+            JSON.stringify({ kunci }),
+            inspect({ kunci }, { depth: 5 }),
+            inspect(kunci, { showHidden: true }),
+            inspect({ ...kunci }, { showHidden: true }),
+            inspect(new Error('gagal', { cause: kunci }), { depth: 5 }),
+            inspect(new Error('gagal', { cause: { kunci } }), { depth: 5, showHidden: true }),
+        ];
+        for (const t of teks) {
+            expect(t).not.toContain(f.app_key.slice(7));
+            expect(t).not.toContain(rahasia.toString('hex'));
+            expect(t).not.toMatch(new RegExp(rahasia.toString('hex').slice(0, 2) + ' ' + rahasia.toString('hex').slice(2, 4)));
         }
+        expect(JSON.stringify({ kunci })).toBe('{"kunci":"[KunciLaravel]"}');
+        // Getter tetap dipakai modul internal.
+        expect(kunci.kunci.equals(rahasia)).toBe(true);
     });
 
     it('APP_PREVIOUS_KEYS: explode(",") + array_filter', () => {
