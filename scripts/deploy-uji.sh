@@ -4,13 +4,16 @@
 #   bash scripts/deploy-uji.sh --env-baru       # sekali: buat deploy/next/.env dengan sandi & kunci acak baru
 #   bash scripts/deploy-uji.sh                  # git pull → build → backup DB uji → up → cek /up
 #   bash scripts/deploy-uji.sh --no-pull        # pakai kode yang sudah ada di folder (checkout detached)
-#   bash scripts/deploy-uji.sh --rollback       # kembali ke image sebelumnya (:uji-prev)
+#   bash scripts/deploy-uji.sh --rollback       # kembali ke image sehat sebelumnya (:uji-prev)
 #   bash scripts/deploy-uji.sh --rollback=<sha> # kembali ke image commit <sha> (lihat --versi)
 #   bash scripts/deploy-uji.sh --versi          # daftar tag SHA yang tersedia
 #
-# Tag image: contact-center-web:uji (berjalan), :uji-prev (sebelumnya), :<sha> (tiap build; 5 terbaru disimpan).
-# Tag :latest/:prev TIDAK dipakai, supaya kelak tidak bentrok dengan stack produksi Next.js di server yang sama.
-# Tidak pernah menyentuh /opt/app2-sigap, project app2-sigap, atau image sigap-*. DB uji boleh direset
+# Image contact-center-uji (BUKAN contact-center-web, nama image produksi kelak: pembersihan tag SHA di bawah tidak
+# boleh menyentuh image rollback produksi). Tag: :uji (berjalan), :uji-sehat (terakhir lulus health check),
+# :uji-prev (sehat sebelum build ini = target --rollback), :<sha> (tiap build; 5 terbaru disimpan).
+# Tidak pernah menyentuh /opt/app2-sigap, project app2-sigap, atau image sigap-*: compose selalu dipanggil dengan
+# -p contact-center-uji -f/--env-file eksplisit, dan COMPOSE_* dari shell/.env ditolak — `--remove-orphans` di
+# project yang salah akan menghapus container app2. DB uji boleh direset
 # (docs/RENCANA-PER-FITUR.md §0): rollback image tidak membatalkan perubahan DB — pulihkan dari backups/ bila perlu.
 set -euo pipefail
 
@@ -18,6 +21,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIR="$ROOT/deploy/next"
 PORT=8094
 SIMPAN_SHA=5
+PROJECT=contact-center-uji
+IMG=contact-center-uji
+# COMPOSE_PROJECT_NAME/COMPOSE_FILE/COMPOSE_PROFILES mengalahkan `name:` di compose.yml.
+unset COMPOSE_PROJECT_NAME COMPOSE_FILE COMPOSE_PROFILES
 
 PULL=1; ROLLBACK=0; ROLLBACK_TO=uji-prev; VERSI=0; ENV_BARU=0
 for a in "$@"; do
@@ -55,7 +62,8 @@ if [[ $ENV_BARU -eq 1 ]]; then
   echo "deploy/next/.env dibuat (mode 600). Periksa APP_URL lalu jalankan: bash scripts/deploy-uji.sh"
   exit 0
 fi
-[[ -f "$DIR/.env" ]] || die "deploy/next/.env belum ada. Salin dari deploy/next/.env.example lalu isi."
+[[ -f "$DIR/.env" ]] || die "deploy/next/.env belum ada: bash scripts/deploy-uji.sh --env-baru"
+! grep -qE '^[[:space:]]*(export[[:space:]]+)?COMPOSE_' "$DIR/.env" || die "deploy/next/.env tidak boleh berisi COMPOSE_* (bisa mengarahkan compose ke project lain)"
 SANDI=(POSTGRES_PASSWORD CC_MIGRATE_PASSWORD CC_APP_PASSWORD CC_READONLY_PASSWORD VALKEY_PASSWORD REALTIME_APP_KEY REALTIME_APP_SECRET)
 for k in "${SANDI[@]}" REALTIME_APP_ID APP_URL APP_KEY NIK_HASH_KEY; do
   v="$(val "$k")"
@@ -67,7 +75,8 @@ for k in "${SANDI[@]}"; do
   [[ "$(val "$k")" =~ ^[A-Za-z0-9]{32,}$ ]] || die "$k harus ≥ 32 karakter huruf/angka (openssl rand -hex 32)"
 done
 [[ "$(val REALTIME_APP_ID)" =~ ^[A-Za-z0-9_-]+$ ]] || die "REALTIME_APP_ID hanya huruf/angka/_/-"
-[[ "$(val APP_URL)" == https://* ]] || die "APP_URL harus https://"
+# Origin persis (Sockudo mencocokkan header Origin apa adanya; garis miring di akhir mematikan semua WebSocket).
+[[ "$(val APP_URL)" =~ ^https://[^/]+$ ]] || die "APP_URL harus https://<host> tanpa path/garis miring di akhir"
 # Sama dengan web/src/server/env.ts (paket E): server menolak start bila format salah.
 bytes() { printf '%s' "${1#base64:}" | base64 -d 2>/dev/null | wc -c | tr -d ' '; }
 k="$(val APP_KEY)"; [[ "$k" == base64:* && "$(bytes "$k")" == 32 ]] || die "APP_KEY harus base64: 32 byte (--env-baru membuatnya)"
@@ -77,22 +86,38 @@ if [[ "$k" == base64:* ]]; then n="$(bytes "$k")"; else n="${#k}"; fi
 # DATABASE_URL & DATABASE_URL_READONLY tidak di .env: compose.yml membentuknya dari CC_APP/READONLY_PASSWORD.
 chmod 600 "$DIR/.env"
 
-IMG="$(val CC_IMAGE)"; IMG="${IMG:-contact-center-web}"
-[[ "$(val CC_TAG)" == "" || "$(val CC_TAG)" == uji ]] || die "CC_TAG harus uji (atau kosong); skrip ini yang mengatur tag"
+[[ "$(val CC_IMAGE)" == "$IMG" ]] || die "CC_IMAGE harus $IMG (contact-center-web dicadangkan untuk produksi)"
+[[ "$(val CC_TAG)" == uji ]] || die "CC_TAG harus uji; skrip ini yang mengatur tag lain"
 
 command -v docker >/dev/null 2>&1 || die "docker tidak ditemukan — jalankan di server"
 docker info >/dev/null 2>&1 || die "tidak bisa menghubungi daemon Docker"
 cd "$DIR"
-DC=(docker compose)
+DC=(docker compose -p "$PROJECT" -f "$DIR/compose.yml" --env-file "$DIR/.env")
+
+# Sandi cc_app dibaca dari userlist DI DALAM container pgbouncer: tidak muncul di argumen proses host.
+PSQL_APP='PGPASSWORD="$(sed -n "s/^\"cc_app\" \"\(.*\)\"$/\1/p" /etc/pgbouncer/userlist.txt)" exec psql -X -v ON_ERROR_STOP=1 -h 127.0.0.1 -p 6432 -U cc_app -d contact_center "$@"'
+
+diagnosis() { "${DC[@]}" ps; "${DC[@]}" logs --tail=50 cc-web sockudo pgbouncer postgres || true; }
 
 health() {
   echo "==> Cek kesehatan http://127.0.0.1:$PORT/up"
+  local ok=0
   for _ in $(seq 1 30); do
-    if curl -fsS -o /dev/null "http://127.0.0.1:$PORT/up"; then echo "OK"; return 0; fi
+    if curl -fsS -o /dev/null "http://127.0.0.1:$PORT/up"; then ok=1; break; fi
     sleep 2
   done
-  "${DC[@]}" ps; "${DC[@]}" logs --tail=50 cc-web sockudo pgbouncer postgres
-  die "cc-web tidak sehat — pertimbangkan: bash scripts/deploy-uji.sh --rollback"
+  [[ $ok -eq 1 ]] || { diagnosis; die "cc-web tidak sehat — pertimbangkan: bash scripts/deploy-uji.sh --rollback"; }
+  # /up tidak menyentuh DB: login sungguhan sebagai cc_app lewat PgBouncer + skema baseline lengkap.
+  echo "==> Cek DB lewat PgBouncer (cc_app)"
+  local n
+  n="$("${DC[@]}" exec -T pgbouncer sh -c "$PSQL_APP" sh -tAc 'SELECT count(*) FROM migrations' 2>&1)" || n="galat: $n"
+  if [[ "$n" != 34 ]]; then
+    diagnosis
+    die "DB uji tidak siap (migrations = ${n:-kosong}, harus 34). Init yang gagal tidak diulang pada volume yang sudah ada;
+       reset DB uji (data hilang): ${DC[*]} down && docker volume rm ${PROJECT}_pgdata-uji, lalu deploy lagi."
+  fi
+  echo "OK"
+  docker tag "$IMG:uji" "$IMG:uji-sehat"
 }
 
 versions() {
@@ -118,7 +143,8 @@ if [[ $ROLLBACK -eq 1 ]]; then
   docker image inspect "$IMG:$ROLLBACK_TO" >/dev/null 2>&1 || { versions; die "tidak ada image $IMG:$ROLLBACK_TO"; }
   echo "==> Rollback ke $IMG:$ROLLBACK_TO (DB uji TIDAK dikembalikan — pulihkan dari deploy/next/backups bila perlu)"
   docker tag "$IMG:$ROLLBACK_TO" "$IMG:uji"
-  "${DC[@]}" up -d --no-build --remove-orphans --wait
+  # Gagal --wait tetap lanjut ke health: diagnosis & petunjuk muncul di sana.
+  "${DC[@]}" up -d --no-build --remove-orphans --wait || true
   health
   exit 0
 fi
@@ -131,11 +157,13 @@ SHA="$(git -C "$ROOT" rev-parse --short=7 HEAD)"
 echo "==> Versi: $(git -C "$ROOT" log -1 --format='%h %s')"
 [[ -z "$(git -C "$ROOT" status --porcelain --untracked-files=no)" ]] || echo "PERINGATAN: ada perubahan lokal yang ikut ter-build" >&2
 
-echo "==> Simpan image berjalan sebagai :uji-prev"
-docker image inspect "$IMG:uji" >/dev/null 2>&1 && docker tag "$IMG:uji" "$IMG:uji-prev" || true
+# Dari :uji-sehat, bukan :uji — :uji bisa berisi build gagal dari percobaan sebelumnya.
+echo "==> Simpan image sehat terakhir sebagai :uji-prev"
+docker image inspect "$IMG:uji-sehat" >/dev/null 2>&1 && docker tag "$IMG:uji-sehat" "$IMG:uji-prev" || true
 
 echo "==> Build image $IMG:uji ($SHA)"
-"${DC[@]}" build --pull cc-web
+# Tanpa --pull: base image dipin digest, jadi --pull hanya menambah request Docker Hub & titik gagal.
+"${DC[@]}" build cc-web
 docker tag "$IMG:uji" "$IMG:$SHA"
 
 echo "==> Database uji"
@@ -148,7 +176,7 @@ chmod 600 "$DUMP"
 [[ -s "$DUMP" ]] || die "backup kosong"
 
 echo "==> Jalankan stack"
-"${DC[@]}" up -d --remove-orphans --wait
+"${DC[@]}" up -d --remove-orphans --wait || true
 health
 
 echo "==> Bersihkan tag SHA & backup lama (hanya $IMG dan deploy/next/backups)"

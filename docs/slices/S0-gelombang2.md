@@ -49,7 +49,10 @@ Di **subdomain uji**:
 | Syarat | Nilai | Di mana |
 |---|---|---|
 | Antrean PgBouncer | `query_wait_timeout = 10` dtk (bawaan 120 dtk > `stop_grace_period` cc-web 30 dtk) | `pgbouncer/pgbouncer.ini` |
-| Timeout per role (PgBouncer menolak parameter ini dari klien) | `cc_app`: `statement_timeout` 15s, `idle_in_transaction_session_timeout` 30s; `cc_readonly`: `statement_timeout` 30s; `cc_migrate`: tanpa batas | `uji/init.sh` (berlaku saat volume `pgdata-uji` dibuat; volume lama: `ALTER ROLE` manual) |
+| Timeout per role (PgBouncer menolak parameter ini dari klien) | `cc_app`: `statement_timeout` 15s, `idle_in_transaction_session_timeout` 30s; `cc_readonly`: `statement_timeout` 30s, `idle_in_transaction_session_timeout` 30s, `default_transaction_read_only` on; `cc_migrate`: tanpa batas | `uji/init.sh` (berlaku saat volume `pgdata-uji` dibuat; volume lama: `ALTER ROLE` manual) |
+| Pool koneksi | web `DB_POOL_MAX=10` → alias `contact_center`; worker `DB_POOL_MAX=3` → alias `contact_center_worker` (`pool_size=3`, user `cc_app`). Koneksi server maks: `contact_center` 20 (web 10 + reserve 5 + `cc_readonly` 5) + worker 3 + migrate 2 = **25** ≤ `max_connections` 100 | `pgbouncer/pgbouncer.ini`, `compose.yml` |
+| Image | `contact-center-uji` (tag `:uji`, `:uji-sehat`, `:uji-prev`, `:<sha>`); `contact-center-web` dicadangkan untuk produksi | `scripts/deploy-uji.sh` |
+| Akun admin uji | `bash deploy/next/uji/buat-admin.sh <username>` — super_admin, sandi acak dicetak sekali ke terminal | `uji/buat-admin.sh` |
 | Realtime | Sockudo 5.2.0 (dipin digest), satu instance adapter `local`, browser lewat `/_realtime/app/:key` di cc-web | `compose.yml` |
 
 ## Butuh dari pemilik proyek

@@ -11,12 +11,12 @@
 #   Contoh: bash scripts/sandbox-audit.sh ~/wt/legacy /srv/audit/legacy -- \
 #             sh -c 'grep -rn "eval(" /src/web/src > /scratch/eval.txt'
 #
-# Di mana dijalankan: TIDAK di laptop (tanpa Docker). Dua pilihan, keduanya Linux dengan Docker:
-#   - server, lewat SSH dan HANYA dengan persetujuan pemilik proyek per sesi audit, dari clone /opt/cc-uji:
-#       ssh srvr-dev-andy 'cd /opt/cc-uji && bash scripts/sandbox-audit.sh <worktree> <scratch> -- <perintah>'
-#     (worktree yang diaudit disalin dulu ke server, mis. `git bundle`/rsync ke folder audit milik user deploy);
-#   - runner CI Linux (ubuntu-24.04 punya Docker), sebagai job sekali pakai.
+# Di mana dijalankan: HANYA runner CI Linux (ubuntu-24.04 punya Docker, job sekali pakai) atau laptop dengan Docker.
+# BUKAN server produksi (app2 & stack uji berbagi VM): skrip menolak jalan bila /opt/app2-sigap ada.
 # Image harus sudah ada di cache Docker (`--pull never`): menarik image adalah langkah terpisah yang disetujui.
+# Scratch harus belum ada atau kosong. Di Linux wajib ada ≥ MIN_BEBAS_GB ruang kosong di filesystem scratch; hasil
+# dibatasi MAKS_HASIL_MB (dicek tiap 5 dtk — lewat batas → container di-kill, exit 125), log container 10 MB.
+# Setelah selesai, berkas selain berkas biasa/direktori (symlink, FIFO) di scratch dihapus sebelum dibaca.
 #
 # Isolasi: --network none, --read-only, tmpfs /tmp (noexec tidak dipakai: banyak alat menulis lalu menjalankan
 # di /tmp), --cpus 2, --memory 4g tanpa swap, --pids-limit 512, no-new-privileges, --cap-drop ALL, user pemanggil
@@ -29,6 +29,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 IZIN_ENV=(TZ LANG LC_ALL NO_COLOR)
 IMAGE="$(sed -nE 's/^ARG NODE_IMAGE=(.+)$/\1/p' "$ROOT/deploy/next/Dockerfile")"
 BATAS=1800; RENCANA=0; ENVS=()
+MIN_BEBAS_GB=5; MAKS_HASIL_MB=1024
 
 die() { echo "GAGAL: $*" >&2; exit 1; }
 pakai() { sed -n '2,12p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2; exit 2; }
@@ -51,8 +52,14 @@ done
 [[ $# -ge 4 && "$3" == "--" ]] || pakai
 WT="$(cd "$1" && pwd -P)" || die "worktree tidak ada: $1"
 # Path absolut scratch tanpa membuatnya dulu (dibuat setelah lolos validasi).
-if [[ -d "$2" ]]; then SCRATCH="$(cd "$2" && pwd -P)"
-else SCRATCH="$(cd "$(dirname "$2")" && pwd -P)/$(basename "$2")" || die "induk scratch tidak ada: $2"; fi
+if [[ -d "$2" ]]; then
+  SCRATCH="$(cd "$2" && pwd -P)"
+  [[ -z "$(ls -A "$SCRATCH")" ]] || die "scratch sudah ada dan tidak kosong: $SCRATCH"
+else
+  [[ ! -e "$2" && ! -L "$2" ]] || die "scratch ada tapi bukan direktori: $2"
+  induk="$(cd "$(dirname "$2")" 2>/dev/null && pwd -P)" || die "induk scratch tidak ada: $2"
+  SCRATCH="$induk/$(basename "$2")"
+fi
 shift 3
 
 [[ "$BATAS" =~ ^[1-9][0-9]*$ ]] || die "--timeout harus bilangan detik"
@@ -62,15 +69,20 @@ git -C "$WT" rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "$WT bukan w
 case "$SCRATCH/" in "$WT/"*) die "scratch di dalam worktree" ;; esac
 case "$WT/" in "$SCRATCH/"*) die "worktree di dalam scratch" ;; esac
 [[ "$SCRATCH" != / && "$SCRATCH" != "$HOME" ]] || die "scratch terlalu luas: $SCRATCH"
+[[ ! -e /opt/app2-sigap ]] || die "jangan jalankan sandbox di server produksi (/opt/app2-sigap ada): pakai runner CI atau laptop"
 
 NAMA="cc-audit-$$"
 if [[ $RENCANA -eq 1 ]]; then
   SNAP="<snapshot-sementara>"
 else
-  command -v docker >/dev/null 2>&1 || die "docker tidak ditemukan — sandbox hanya untuk server/runner Linux dengan Docker"
+  command -v docker >/dev/null 2>&1 || die "docker tidak ditemukan — sandbox untuk runner CI Linux atau laptop dengan Docker"
   docker info >/dev/null 2>&1 || die "tidak bisa menghubungi daemon Docker"
   docker image inspect "$IMAGE" >/dev/null 2>&1 || die "image belum ada di cache: $IMAGE (pull dulu, dengan persetujuan)"
   mkdir -p "$SCRATCH" && chmod 700 "$SCRATCH"
+  if [[ "$(uname -s)" == Linux ]]; then
+    bebas_kb="$(df -Pk "$SCRATCH" | awk 'NR == 2 { print $4 }')"
+    (( bebas_kb >= MIN_BEBAS_GB * 1024 * 1024 )) || die "ruang kosong di filesystem scratch < ${MIN_BEBAS_GB} GB"
+  fi
   SNAP="$(mktemp -d "${TMPDIR:-/tmp}/cc-audit.XXXXXX")"
   bersih() { docker rm -f "$NAMA" >/dev/null 2>&1 || true; rm -rf "$SNAP"; }
   trap bersih EXIT
@@ -81,6 +93,7 @@ DOCKER=(docker run --name "$NAMA" -d --pull never
   --network none --read-only --tmpfs /tmp:rw,nosuid,nodev,size=1g
   --cpus 2 --memory 4g --memory-swap 4g --pids-limit 512
   --security-opt no-new-privileges --cap-drop ALL
+  --log-driver json-file --log-opt max-size=10m --log-opt max-file=1
   --user "$(id -u):$(id -g)" -e HOME=/tmp ${ENVS[@]+"${ENVS[@]}"}
   -v "$SNAP:/src:ro" -v "$SCRATCH:/scratch:rw" -w /src
   "$IMAGE" "$@")
@@ -100,13 +113,34 @@ git -C "$WT" ls-files -z -co --exclude-standard \
 echo "==> Sandbox $NAMA: $(find "$SNAP" -type f | wc -l | tr -d ' ') berkas, batas ${BATAS} dtk, image $IMAGE"
 "${DOCKER[@]}" >/dev/null
 mulai=$SECONDS
-( sleep "$BATAS"; docker kill "$NAMA" >/dev/null 2>&1 && echo "==> TIMEOUT ${BATAS} dtk — container di-kill" >&2 ) &
+hasil_mb() { du -sk "$SCRATCH" 2>/dev/null | awk '{ print int($1 / 1024) }'; }
+# Penjaga: batas waktu & ukuran hasil, dicek tiap 5 dtk. `sleep` anak dimatikan bersama penjaga (trap TERM).
+penjaga() {
+  local s=
+  trap '[[ -n "$s" ]] && kill "$s" 2>/dev/null; exit 0' TERM
+  while :; do
+    sleep 5 & s=$!; wait "$s"
+    if (( SECONDS - mulai >= BATAS )); then
+      echo "==> TIMEOUT ${BATAS} dtk — container di-kill" >&2; docker kill "$NAMA" >/dev/null 2>&1; exit 0
+    fi
+    if (( $(hasil_mb) > MAKS_HASIL_MB )); then
+      echo "==> Hasil > ${MAKS_HASIL_MB} MB — container di-kill" >&2; docker kill "$NAMA" >/dev/null 2>&1; exit 0
+    fi
+  done
+}
+penjaga &
 PENJAGA=$!
 docker logs -f "$NAMA" 2>&1 || true
 kode="$(docker wait "$NAMA")"
 kill "$PENJAGA" 2>/dev/null || true
+wait "$PENJAGA" 2>/dev/null || true
 (( SECONDS - mulai < BATAS )) || kode=124
+(( $(hasil_mb) <= MAKS_HASIL_MB )) || kode=125
 
-echo "==> Selesai, exit $kode. Berkas baru di $SCRATCH:"
-find "$SCRATCH" -type f -newer "$SNAP" -exec ls -l {} + 2>/dev/null || true
+# Symlink/FIFO buatan perintah bisa menipu pembaca hasil (mis. menunjuk ke berkas host): dihapus.
+aneh="$(find "$SCRATCH" ! -type f ! -type d -print -delete)"
+[[ -z "$aneh" ]] || printf '==> Dihapus dari scratch (bukan berkas biasa):\n%s\n' "$aneh" >&2
+
+echo "==> Selesai, exit $kode. Isi $SCRATCH:"
+find "$SCRATCH" -type f -exec ls -l {} + 2>/dev/null || true
 exit "$kode"

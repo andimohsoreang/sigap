@@ -5,17 +5,22 @@
 #      cc_migrate = pemilik DB, skema public & semua objek (DDL); cc_app = DML; cc_readonly = SELECT;
 #      ditambah statement_timeout/idle_in_transaction_session_timeout per role.
 #   2. skema + data seeder baseline Laravel (schema.sql, seed.sql — dibuat deploy/next/uji/buat-dump.sh)
-#      dimuat SEBAGAI cc_migrate dalam satu transaksi, sehingga default privileges di bawah berlaku.
+#      dimuat SEBAGAI cc_migrate, sehingga default privileges di bawah berlaku.
+# Semuanya SATU transaksi: init yang gagal di tengah tidak meninggalkan role/skema setengah jadi (entrypoint
+# tidak mengulang init pada volume yang sudah ada — deploy-uji.sh mendeteksinya lewat cek tabel migrations).
 # Sandi role datang dari env service postgres (compose.yml), diteruskan sebagai variabel psql (:'x' →
 # literal ber-quote), tidak pernah disisipkan ke teks SQL oleh shell.
 # Mengisi ulang dari nol (DB uji boleh direset): hentikan stack, hapus volume pgdata-uji, deploy lagi.
 set -euo pipefail
 
 UJI="${UJI_DIR:-/uji}"
+[[ "$UJI" != *[[:space:]]* ]] || { echo "UJI_DIR tidak boleh berisi spasi (\\i psql)" >&2; exit 1; }
 : "${CC_MIGRATE_PASSWORD:?}" "${CC_APP_PASSWORD:?}" "${CC_READONLY_PASSWORD:?}"
 
-psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
-  -v db="$POSTGRES_DB" -v pw_migrate="$CC_MIGRATE_PASSWORD" -v pw_app="$CC_APP_PASSWORD" -v pw_ro="$CC_READONLY_PASSWORD" <<'SQL'
+psql -X -q -v ON_ERROR_STOP=1 -o /dev/null -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+  -v db="$POSTGRES_DB" -v pw_migrate="$CC_MIGRATE_PASSWORD" -v pw_app="$CC_APP_PASSWORD" -v pw_ro="$CC_READONLY_PASSWORD" \
+  -v schema="$UJI/schema.sql" -v seed="$UJI/seed.sql" <<'SQL'
+BEGIN;
 CREATE ROLE cc_migrate LOGIN PASSWORD :'pw_migrate';
 CREATE ROLE cc_app LOGIN PASSWORD :'pw_app';
 CREATE ROLE cc_readonly LOGIN PASSWORD :'pw_ro';
@@ -30,8 +35,11 @@ ALTER DEFAULT PRIVILEGES FOR ROLE cc_migrate IN SCHEMA public GRANT USAGE, SELEC
 ALTER ROLE cc_app SET statement_timeout = '15s';
 ALTER ROLE cc_app SET idle_in_transaction_session_timeout = '30s';
 ALTER ROLE cc_readonly SET statement_timeout = '30s';
+ALTER ROLE cc_readonly SET idle_in_transaction_session_timeout = '30s';
+ALTER ROLE cc_readonly SET default_transaction_read_only = on;
+-- Objek dibuat milik cc_migrate (dump memakai --no-owner).
+SET ROLE cc_migrate;
+\i :schema
+\i :seed
+COMMIT;
 SQL
-
-# role=cc_migrate saat koneksi: objek dibuat milik cc_migrate (dump memakai --no-owner).
-PGOPTIONS='-c role=cc_migrate' psql -v ON_ERROR_STOP=1 --single-transaction -q -o /dev/null -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
-  -f "$UJI/schema.sql" -f "$UJI/seed.sql"

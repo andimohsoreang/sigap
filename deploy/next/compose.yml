@@ -27,7 +27,8 @@
 #   db       internal: HANYA pgbouncer + postgres. Aplikasi tidak bisa menyentuh postgres langsung, dan superuser
 #            `postgres` tidak ada di userlist PgBouncer → login superuser hanya dari dalam container postgres.
 #
-# Anggaran sumber daya (server dibagi ±27 container, rencana §9.10): total batas ±4,5 CPU / ±3,3 GB.
+# Anggaran sumber daya (server dibagi ±27 container, rencana §9.10): total batas 5,0 CPU / ±3,3 GB
+# (cc-web 1,5 + worker 1 + postgres 1 + sockudo/valkey/pgbouncer 0,5 masing-masing; migrate sekali jalan).
 
 name: contact-center-uji
 
@@ -63,7 +64,7 @@ x-app-env: &app-env
 
 x-app: &app
   <<: *hardening
-  image: ${CC_IMAGE:-contact-center-web}:${CC_TAG:-uji}
+  image: ${CC_IMAGE:-contact-center-uji}:${CC_TAG:-uji}
   pull_policy: never
   init: true
   depends_on:
@@ -81,6 +82,8 @@ services:
     environment:
       <<: *app-env
       OTEL_SERVICE_NAME: contact-center-web
+      DB_POOL_MAX: "10" # = default_pool_size PgBouncer alias contact_center
+      DB_APP_NAME: cc-web
     ports:
       - "127.0.0.1:8094:3000"
     tmpfs:
@@ -106,6 +109,11 @@ services:
     environment:
       <<: *app-env
       OTEL_SERVICE_NAME: contact-center-worker
+      # Pool terpisah (alias PgBouncer contact_center_worker, 3 koneksi server): job berat tidak menghabiskan
+      # pool request web.
+      DATABASE_URL: postgres://cc_app:${CC_APP_PASSWORD:?}@pgbouncer:6432/contact_center_worker
+      DB_POOL_MAX: "3"
+      DB_APP_NAME: cc-worker
     tmpfs:
       - /tmp:size=64m,mode=1777
     networks: [default, backend]
@@ -121,7 +129,7 @@ services:
   migrate:
     <<: *hardening
     profiles: ["migrate"]
-    image: ${CC_IMAGE:-contact-center-web}:${CC_TAG:-uji}
+    image: ${CC_IMAGE:-contact-center-uji}:${CC_TAG:-uji}
     pull_policy: never
     restart: "no"
     init: true
