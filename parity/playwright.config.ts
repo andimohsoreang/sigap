@@ -26,6 +26,9 @@ export default defineConfig({
     retries: 0,
     reporter: process.env.CI ? [['github'], ['list'], ['html', { open: 'never' }]] : [['list'], ['html', { open: 'never' }]],
     expect: {
+        // Halaman panjang (/panduan fullPage) bisa butuh > 5 dtk untuk dua tangkapan stabil di runner 4 worker;
+        // timeout bawaan 5 dtk membuat CI merah acak (rewrite/s0 52181d8). Toleransi piksel tetap 0.
+        timeout: 20_000,
         toHaveScreenshot: {
             maxDiffPixels: 0,
             threshold: 0,
