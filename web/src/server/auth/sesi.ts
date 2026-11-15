@@ -45,7 +45,8 @@ const JEDA_SENTUH_DETIK = 60;
 export const idAcak = () => randomBytes(32).toString('base64url');
 /** Token CSRF 40 karakter seperti Str::random(40). */
 export const tokenAcak = () => randomBytes(30).toString('base64url');
-const hashId = (id: string) => createHash('sha256').update(id).digest('hex');
+/** Id sesi internal (kunci baris cc_sessions): sha256 hex id cookie. */
+export const hashId = (id: string) => createHash('sha256').update(id).digest('hex');
 const batasIdle = () => sql`now() - make_interval(mins => ${env.SESSION_LIFETIME})`;
 
 function dataSah(x: unknown): x is DataSesi {
