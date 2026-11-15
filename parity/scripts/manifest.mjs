@@ -1,5 +1,5 @@
-// Manifest SHA-256 baseline Laravel (visual/manifest.json), per platform.
-//   node scripts/manifest.mjs cek   → gagal bila baseline .baseline/<platform> berbeda dari manifest platform ini
+// Manifest SHA-256 baseline Laravel (visual/manifest.json), per kunci <platform>-<arch>.
+//   node scripts/manifest.mjs cek   → gagal bila baseline .baseline/<platform>-<arch> berbeda dari manifest kunci ini
 //   node scripts/manifest.mjs tulis → tulis/ganti entri platform ini (hanya bila tampilan Laravel memang berubah)
 import { chromium } from '@playwright/test';
 import { createHash } from 'node:crypto';
@@ -9,7 +9,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const platform = process.platform;
+const platform = `${process.platform}-${process.arch}`;
 const dir = path.join(root, '.baseline', platform);
 const file = path.join(root, 'visual', 'manifest.json');
 const mode = process.argv[2];
@@ -26,7 +26,6 @@ for (const rel of readdirSync(dir, { recursive: true }).map(String).sort()) {
 
 const browser = await chromium.launch();
 const entry = {
-    arch: process.arch,
     playwright: createRequire(import.meta.url)('@playwright/test/package.json').version,
     chromium: browser.version(),
     files,
@@ -50,7 +49,7 @@ if (!expected) {
     process.exit(1);
 }
 const problems = [];
-for (const key of ['arch', 'playwright', 'chromium']) {
+for (const key of ['playwright', 'chromium']) {
     if (expected[key] !== entry[key]) problems.push(`${key}: manifest ${expected[key]} ≠ sekarang ${entry[key]}`);
 }
 for (const name of new Set([...Object.keys(expected.files), ...Object.keys(files)])) {

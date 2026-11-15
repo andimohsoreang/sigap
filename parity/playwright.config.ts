@@ -18,7 +18,7 @@ const viewport = (name: string, width: number, height: number) => ({
 export default defineConfig({
     testDir: './tests',
     // Baseline = tampilan & DOM Laravel, dibuat lokal oleh `npm run baseline` (tidak di-commit; hash di visual/manifest.json).
-    snapshotPathTemplate: '{testDir}/../.baseline/{platform}/{projectName}/{arg}{ext}',
+    snapshotPathTemplate: `{testDir}/../.baseline/${process.platform}-${process.arch}/{projectName}/{arg}{ext}`,
     // Baseline hanya ditulis lewat `npm run baseline` (--update-snapshots=all), tidak pernah diam-diam dari target lain.
     updateSnapshots: 'none',
     fullyParallel: true,
