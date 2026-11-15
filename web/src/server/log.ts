@@ -34,7 +34,7 @@ function serializerErr(err: unknown) {
 
 export const opsiLog: LoggerOptions = {
     level: env.LOG_LEVEL,
-    base: { service: 'contact-center-web' },
+    base: { service: env.OTEL_SERVICE_NAME },
     // shortcut: hanya kunci di level atas & satu level bersarang, tambah path bila log membawa objek lebih dalam.
     redact: { paths: [...SENSITIF, ...SENSITIF.map((k) => `*.${k}`), 'req.headers.authorization', 'req.headers.cookie'], censor: '[REDACTED]' },
     serializers: { err: serializerErr },

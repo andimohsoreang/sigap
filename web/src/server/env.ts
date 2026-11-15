@@ -33,6 +33,8 @@ const dasar = z.object({
     // Worker (paket G) memakai pool sendiri: DB_POOL_MAX=3 ke alias PgBouncer terpisah.
     DB_POOL_MAX: z.coerce.number().int().min(1).max(20).default(10),
     DB_APP_NAME: wajib.default('cc-web'),
+    // Nama layanan di log (rencana §10.1); compose mengisi contact-center-worker untuk worker.
+    OTEL_SERVICE_NAME: wajib.default('contact-center-web'),
     // Sama dengan Laravel: data uji bersama (NIK/kontak terenkripsi, hash NIK) dibaca kedua aplikasi.
     APP_KEY: kunciApp.optional(),
     APP_PREVIOUS_KEYS: kunciLama.default(''),

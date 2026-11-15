@@ -97,7 +97,7 @@ DC=(docker compose -p "$PROJECT" -f "$DIR/compose.yml" --env-file "$DIR/.env")
 # Sandi cc_app dibaca dari userlist DI DALAM container pgbouncer: tidak muncul di argumen proses host.
 PSQL_APP='PGPASSWORD="$(sed -n "s/^\"cc_app\" \"\(.*\)\"$/\1/p" /etc/pgbouncer/userlist.txt)" exec psql -X -v ON_ERROR_STOP=1 -h 127.0.0.1 -p 6432 -U cc_app -d contact_center "$@"'
 
-diagnosis() { "${DC[@]}" ps; "${DC[@]}" logs --tail=50 cc-web sockudo pgbouncer postgres || true; }
+diagnosis() { "${DC[@]}" ps; "${DC[@]}" logs --tail=50 cc-web worker sockudo pgbouncer postgres || true; }
 
 health() {
   echo "==> Cek kesehatan http://127.0.0.1:$PORT/up"
@@ -174,6 +174,11 @@ echo "==> Backup: $DUMP"
 "${DC[@]}" exec -T postgres pg_dump -U postgres -Fc contact_center_uji > "$DUMP"
 chmod 600 "$DUMP"
 [[ -s "$DUMP" ]] || die "backup kosong"
+
+# Setelah backup, sebelum container baru: tabel khusus Next.js (cc_*) & skema pg-boss, hanya aditif dan idempoten.
+# Worker baru butuh skema pg-boss versi image ini. Gagal → berhenti; container lama tetap berjalan.
+echo "==> Migrasi Next.js (cc_migrate: tabel cc_*, skema pgboss)"
+"${DC[@]}" run --rm migrate || die "migrasi gagal — stack lama tetap berjalan; pulihkan dari $DUMP bila perlu"
 
 echo "==> Jalankan stack"
 "${DC[@]}" up -d --remove-orphans --wait || true

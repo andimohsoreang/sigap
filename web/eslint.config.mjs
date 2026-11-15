@@ -3,4 +3,4 @@ import nextTs from 'eslint-config-next/typescript';
 import prettier from 'eslint-config-prettier';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
-export default defineConfig([...nextVitals, ...nextTs, prettier, globalIgnores(['.next/**', 'next-env.d.ts', '.cek-css/**'])]);
+export default defineConfig([...nextVitals, ...nextTs, prettier, globalIgnores(['.next/**', 'next-env.d.ts', '.cek-css/**', 'dist/**'])]);

@@ -30,6 +30,17 @@ jobs:
     # Sama dengan zona proses produksi.
     env:
       TZ: Asia/Jakarta
+    # Valkey untuk test rate limit (tests/unit/batas-valkey.test.ts, skrip Lua sungguhan). Image & digest sama dengan
+    # deploy/next/compose.yml; tanpa sandi, hanya hidup selama job.
+    services:
+      valkey:
+        image: valkey/valkey:9.0.7-alpine3.24@sha256:2d04268dfa26ab31cfa3fdc538866e76438b2d00e41db41b8cb86d780ac5a416
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     defaults:
       run:
         working-directory: web
@@ -51,9 +62,11 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       # Job ini tanpa PostgreSQL/PHP: test DB (tests/unit/db) dilewati di sini dan wajib jalan di paritas.yml.
+      # Valkey wajib (CC_TEST_VALKEY=1): gagal, bukan dilewati, bila service valkey tidak terjangkau.
       - run: npm run test
         env:
           CC_TEST_DB: '0'
+          CC_TEST_VALKEY: '1'
       # cek:css menjalankan npm ci + vite build di sigap/ lalu next build, dan gagal bila CSS berbeda.
       - run: npm run cek:css
 
