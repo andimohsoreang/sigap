@@ -32,7 +32,7 @@ export interface PesanChat {
 export interface PayloadEvent {
     /** ChatMessageSent → private-chat.{conversation_id} */
     'chat.message': PesanChat;
-    /** ChatUnreadChanged → private-admin.chat. `total` dihitung saat disiarkan (ChatConversation::unreadForAdmins). */
+    /** ChatUnreadChanged → private-admin.chat. `total` dihitung saat disiarkan (ChatConversation::unreadForAdmins, outbox.ts). */
     'chat.unread': { conversation_id: number; total: number };
     /** TicketChanged → private-user.{id} tiap admin penerima */
     'ticket.changed': {
@@ -52,6 +52,18 @@ export type NamaEvent = keyof PayloadEvent;
 
 export type Siaran<E extends NamaEvent = NamaEvent> = { [K in E]: { event: K; kanal: string[]; data: PayloadEvent[K] } }[E];
 
+/**
+ * Data yang ditulis ke outbox. Event yang broadcastWith-nya menghitung nilai saat disiarkan (setelah commit, di
+ * queue Laravel) hanya membawa kuncinya; sisanya dilengkapi dispatcher tepat sebelum terbit (lihat outbox.ts).
+ */
+export interface DataTertunda {
+    'chat.unread': { conversation_id: number };
+}
+
+export type SiaranOutbox =
+    | Siaran<Exclude<NamaEvent, keyof DataTertunda>>
+    | { [K in keyof DataTertunda]: { event: K; kanal: string[]; data: DataTertunda[K] } }[keyof DataTertunda];
+
 /** Padanan konstruktor event Laravel (broadcastOn + broadcastAs + broadcastWith). */
 export const siaran = {
     chatMessageSent: (pesan: PesanChat): Siaran<'chat.message'> => ({
@@ -59,10 +71,11 @@ export const siaran = {
         kanal: [KANAL.chat(pesan.conversation_id)],
         data: pesan,
     }),
-    chatUnreadChanged: (conversationId: number, total: number): Siaran<'chat.unread'> => ({
+    /** `total` (ChatConversation::unreadForAdmins) dihitung dispatcher saat disiarkan, seperti Laravel. */
+    chatUnreadChanged: (conversationId: number): Extract<SiaranOutbox, { event: 'chat.unread' }> => ({
         event: 'chat.unread',
         kanal: [KANAL.adminChat()],
-        data: { conversation_id: conversationId, total },
+        data: { conversation_id: conversationId },
     }),
     ticketChanged: (data: PayloadEvent['ticket.changed'], recipientIds: number[]): Siaran<'ticket.changed'> => ({
         event: 'ticket.changed',

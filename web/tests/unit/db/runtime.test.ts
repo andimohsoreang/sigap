@@ -40,7 +40,7 @@ describe.skipIf(!!alasan)(`runtime DB${alasan ? ` — dilewati: ${alasan}` : ''}
     const { db, transaksi, tutupDb } = await import('@/server/db/client');
     const { ccIdempotency, ccOutbox } = await import('@/server/db/schema-cc');
     const { enqueueOutbox, idJobOutbox, kirimOutbox, MAKS_PERCOBAAN } = await import('@/server/outbox');
-    const { denganIdempotensi, hashPermintaan } = await import('@/server/idempotensi');
+    const { denganIdempotensi, hashPermintaan, MAKS_BODY_TERSIMPAN } = await import('@/server/idempotensi');
     const { terapkanMigrasi } = await import('@/server/migrasi');
     const { siaran } = await import('@/server/realtime/kanal');
     const { JADWAL, JADWAL_CC } = await import('@/server/antrean');
@@ -55,6 +55,8 @@ describe.skipIf(!!alasan)(`runtime DB${alasan ? ` — dilewati: ${alasan}` : ''}
         await migrate.connect();
         await mentah(`DROP SCHEMA IF EXISTS ${SKEMA} CASCADE; DROP SCHEMA IF EXISTS ${SKEMA_BOSS} CASCADE; CREATE SCHEMA ${SKEMA}`);
         await migrasi();
+        // Tabel Laravel yang dibaca dispatcher (chat.unread) — id eksplisit, tanpa sequence public.
+        await mentah(`CREATE TABLE ${SKEMA}.chat_conversations (LIKE public.chat_conversations INCLUDING DEFAULTS)`);
         // Di public hak DML cc_app datang dari default privileges cc_migrate (uji/init.sh); skema uji diberi manual.
         await mentah(`GRANT USAGE ON SCHEMA ${SKEMA} TO cc_app;
             GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA ${SKEMA} TO cc_app;
@@ -87,7 +89,7 @@ describe.skipIf(!!alasan)(`runtime DB${alasan ? ` — dilewati: ${alasan}` : ''}
 
         it('hanya pesan dari transaksi yang commit yang masuk outbox', async () => {
             await kosongkanOutbox();
-            await transaksi((tx) => enqueueOutbox(tx, job({ n: 1 }), { jenis: 'realtime', siaran: siaran.chatUnreadChanged(5, 3) }));
+            await transaksi((tx) => enqueueOutbox(tx, job({ n: 1 }), { jenis: 'realtime', siaran: siaran.chatUnreadChanged(5) }));
             await transaksi(async (tx) => {
                 await enqueueOutbox(tx, job({ n: 2 }));
                 throw new Error('batal');
@@ -98,7 +100,7 @@ describe.skipIf(!!alasan)(`runtime DB${alasan ? ` — dilewati: ${alasan}` : ''}
                 .orderBy(ccOutbox.id);
             expect(baris).toEqual([
                 { kind: 'job', topic: 'default', payload: { n: 1 } },
-                { kind: 'realtime', topic: 'chat.unread', payload: { kanal: ['private-admin.chat'], data: { conversation_id: 5, total: 3 } } },
+                { kind: 'realtime', topic: 'chat.unread', payload: { kanal: ['private-admin.chat'], data: { conversation_id: 5 } } },
             ]);
         });
 
@@ -161,6 +163,118 @@ describe.skipIf(!!alasan)(`runtime DB${alasan ? ` — dilewati: ${alasan}` : ''}
             expect(dikirim).toEqual(['berikut']);
         });
 
+        // Penerbit yang menahan pengiriman sampai dilepas (meniru Sockudo lambat / worker macet).
+        function penerbitTertahan() {
+            const dikirim: string[] = [];
+            let lepas!: () => void;
+            const tahan = new Promise<void>((r) => (lepas = r));
+            const penerbit = {
+                job: async (_: string, d: object) => {
+                    await tahan;
+                    dikirim.push((d as { n: string }).n);
+                },
+                realtime: async () => {},
+            };
+            return { dikirim, lepas, penerbit };
+        }
+        const langsung = (dikirim: string[]) => ({
+            job: async (_: string, d: object) => void dikirim.push((d as { n: string }).n),
+            realtime: async () => {},
+        });
+
+        it('worker mati di antara kirim & tandai terkirim: setelah sewa habis pesan dikirim ulang', async () => {
+            await kosongkanOutbox();
+            await transaksi((tx) => enqueueOutbox(tx, job({ n: 'P' })));
+            const macet = penerbitTertahan();
+            const pertama = kirimOutbox(db, macet.penerbit); // diambil, belum ditandai
+            await vi.waitFor(async () => expect((await db.select().from(ccOutbox))[0].attempts).toBe(1));
+            // Sewa habis tanpa sent_at (worker pertama dianggap mati).
+            await db.update(ccOutbox).set({ availableAt: sql`now()` });
+            const ulang: string[] = [];
+            expect(await kirimOutbox(db, langsung(ulang))).toBe(1);
+            expect(ulang).toEqual(['P']);
+            macet.lepas();
+            await pertama;
+            const [b] = await db.select().from(ccOutbox);
+            expect(b.attempts).toBe(2);
+            expect(b.sentAt).toBeInstanceOf(Date);
+        });
+
+        it('dua dispatcher pada agregat yang sama: A2 tidak diambil selama A1 disewa', async () => {
+            await kosongkanOutbox();
+            await transaksi((tx) => enqueueOutbox(tx, job({ n: 'A1' }, 'sama'), job({ n: 'A2' }, 'sama')));
+            const d1 = penerbitTertahan();
+            const jalan1 = kirimOutbox(db, d1.penerbit);
+            await vi.waitFor(async () =>
+                expect(
+                    (
+                        await db
+                            .select()
+                            .from(ccOutbox)
+                            .where(sql`payload->>'n' = 'A1'`)
+                    )[0].attempts,
+                ).toBe(1),
+            );
+            const d2: string[] = [];
+            expect(await kirimOutbox(db, langsung(d2))).toBe(0);
+            d1.lepas();
+            await jalan1;
+            expect(await kirimOutbox(db, langsung(d2))).toBe(1);
+            expect([...d1.dikirim, ...d2]).toEqual(['A1', 'A2']);
+        });
+
+        it('galat permanen (4xx, antrean tidak ada) langsung menyerah', async () => {
+            await kosongkanOutbox();
+            await transaksi((tx) => enqueueOutbox(tx, job({ n: 'x' }, 'p'), job({ n: 'y' }, 'p')));
+            const dikirim: string[] = [];
+            const penerbit = {
+                job: async (_: string, d: object) => {
+                    if ((d as { n: string }).n === 'x')
+                        throw Object.assign(new Error('Queue default does not exist'), { code: 'PGBOSS_QUEUE_NOT_FOUND' });
+                    dikirim.push((d as { n: string }).n);
+                },
+                realtime: async () => {},
+            };
+            await kirimOutbox(db, penerbit);
+            const [x] = await db
+                .select()
+                .from(ccOutbox)
+                .where(sql`payload->>'n' = 'x'`);
+            expect(x).toMatchObject({ attempts: 1, lastError: 'Queue default does not exist' });
+            expect(x.failedAt).toBeInstanceOf(Date);
+            await kirimOutbox(db, penerbit);
+            expect(dikirim).toEqual(['y']);
+        });
+
+        it('pesan racun yang membuat worker mati berulang (sewa habis 10 kali) dihentikan', async () => {
+            await kosongkanOutbox();
+            await transaksi((tx) => enqueueOutbox(tx, job({ n: 'crash' }, 'r'), job({ n: 'sesudah' }, 'r')));
+            await db
+                .update(ccOutbox)
+                .set({ attempts: MAKS_PERCOBAAN })
+                .where(sql`payload->>'n' = 'crash'`);
+            const dikirim: string[] = [];
+            expect(await kirimOutbox(db, langsung(dikirim))).toBe(1);
+            expect(dikirim).toEqual(['sesudah']);
+            const [c] = await db
+                .select()
+                .from(ccOutbox)
+                .where(sql`payload->>'n' = 'crash'`);
+            expect(c.failedAt).toBeInstanceOf(Date);
+            expect(c.lastError).toBe(`sewa habis ${MAKS_PERCOBAAN} kali tanpa hasil`);
+        });
+
+        it('chat.unread: total dihitung saat dikirim (setelah commit), bukan saat ditulis', async () => {
+            await kosongkanOutbox();
+            await mentah(`INSERT INTO ${SKEMA}.chat_conversations (id, unread_admin) VALUES (1, 2), (2, 0)`);
+            await transaksi((tx) => enqueueOutbox(tx, { jenis: 'realtime', siaran: siaran.chatUnreadChanged(2) }));
+            // Berubah setelah pesan ditulis: Laravel menghitung di queue, jadi yang terkirim nilai terbaru.
+            await mentah(`UPDATE ${SKEMA}.chat_conversations SET unread_admin = 3 WHERE id = 2`);
+            const terbit: unknown[] = [];
+            await kirimOutbox(db, { job: async () => {}, realtime: async (s) => void terbit.push(s) });
+            expect(terbit).toEqual([{ event: 'chat.unread', kanal: ['private-admin.chat'], data: { conversation_id: 2, total: 5 } }]);
+        });
+
         it('dua dispatcher serentak tidak mengirim baris yang sama (SKIP LOCKED)', async () => {
             await kosongkanOutbox();
             await transaksi((tx) => enqueueOutbox(tx, ...Array.from({ length: 40 }, (_, i) => job({ n: i }))));
@@ -219,6 +333,23 @@ describe.skipIf(!!alasan)(`runtime DB${alasan ? ` — dilewati: ${alasan}` : ''}
             expect(await db.select().from(ccIdempotency).where(eq(ccIdempotency.key, 'gagal'))).toEqual([]);
             expect(await db.select().from(ccOutbox)).toEqual([]);
             expect((await denganIdempotensi(opsi('gagal'), async () => ({ status: 200, body: null }))).diulang).toBe(false);
+        });
+
+        it('respons 5xx tidak disimpan dan tulisan handler dibatalkan; body > 64 KB ditolak', async () => {
+            await kosongkanOutbox();
+            const gagal = await denganIdempotensi(opsi('lima-ratus'), async (tx) => {
+                await enqueueOutbox(tx, { jenis: 'job', antrean: 'default', data: {} });
+                return { status: 503, body: { message: 'Layanan sibuk' } };
+            });
+            expect(gagal).toEqual({ status: 503, body: { message: 'Layanan sibuk' }, diulang: false });
+            expect(await db.select().from(ccIdempotency).where(eq(ccIdempotency.key, 'lima-ratus'))).toEqual([]);
+            expect(await db.select().from(ccOutbox)).toEqual([]);
+            expect((await denganIdempotensi(opsi('lima-ratus'), async () => ({ status: 201, body: 1 }))).status).toBe(201);
+
+            await expect(denganIdempotensi(opsi('besar'), async () => ({ status: 200, body: 'x'.repeat(MAKS_BODY_TERSIMPAN) }))).rejects.toThrow(
+                /melebihi/,
+            );
+            expect(await db.select().from(ccIdempotency).where(eq(ccIdempotency.key, 'besar'))).toEqual([]);
         });
 
         it('kunci kedaluwarsa (24 jam) dipakai ulang dan bisa dibersihkan', async () => {

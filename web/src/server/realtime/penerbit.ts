@@ -12,6 +12,8 @@ import type { Siaran } from './kanal';
 
 /** Batas payload Sockudo (bawaan app 100 KB) — gagal di sini dengan pesan jelas, bukan 413 dari server. */
 const MAKS_DATA_BYTE = 100 * 1024;
+/** Batas body permintaan & respons axios: ≥ 2 × MAKS_DATA_BYTE + kanal, jadi data yang lolos cek di atas selalu terkirim. */
+const MAKS_BODY_BYTE = 256 * 1024;
 
 const md5 = (s: string) => createHash('md5').update(s).digest('hex');
 const hmac = (rahasia: string, s: string) => createHmac('sha256', rahasia).update(s).digest('hex');
@@ -57,8 +59,11 @@ export async function terbitkan(s: Siaran): Promise<void> {
     if (s.kanal.length === 0) return;
     const k = konfigurasi();
     const data = JSON.stringify(s.data);
-    if (Buffer.byteLength(data) > MAKS_DATA_BYTE) throw new Error(`Data event ${s.event} melebihi ${MAKS_DATA_BYTE} byte`);
-    klien ??= buatKlien({ baseURL: `http://${k.host}:${k.port}`, timeoutMs: 5_000, maxBytes: 64 * 1024 });
+    if (Buffer.byteLength(data) > MAKS_DATA_BYTE)
+        // permanen: dispatcher outbox langsung menyerah (galatPermanen), tidak mencoba 10 kali.
+        throw Object.assign(new Error(`Data event ${s.event} melebihi ${MAKS_DATA_BYTE} byte`), { permanen: true });
+    // Body = data 100 KB yang di-escape lagi sebagai string JSON (" dan \ menjadi 2 byte) + ≤ 100 nama kanal.
+    klien ??= buatKlien({ baseURL: `http://${k.host}:${k.port}`, timeoutMs: 5_000, maxBytes: MAKS_BODY_BYTE });
     for (let i = 0; i < s.kanal.length; i += 100) {
         const body = JSON.stringify({ name: s.event, channels: s.kanal.slice(i, i + 100), data });
         await klien.post(urlBertandaTangan('POST', `/apps/${k.id}/events`, body, k), body, {

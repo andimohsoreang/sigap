@@ -29,6 +29,11 @@ afterAll(async () => {
 });
 
 const KUNCI = { key: '278d425bdf160c739803', secret: '7ad3773142a6692b25b8' };
+const unread = (conversation_id: number, total: number) => ({
+    event: 'chat.unread' as const,
+    kanal: [KANAL.adminChat()],
+    data: { conversation_id, total },
+});
 
 describe('tanda tangan Pusher (vektor dokumentasi Pusher HTTP API & channel auth)', () => {
     it('auth_signature & body_md5', () => {
@@ -50,7 +55,7 @@ describe('tanda tangan Pusher (vektor dokumentasi Pusher HTTP API & channel auth
 describe('terbitkan', () => {
     it('POST /apps/{id}/events bertanda tangan; data = string JSON', async () => {
         diterima.length = 0;
-        await terbitkan(siaran.chatUnreadChanged(12, 4));
+        await terbitkan(unread(12, 4));
         expect(diterima).toHaveLength(1);
         const u = new URL(diterima[0].url, 'http://x');
         expect(u.pathname).toBe('/apps/cc-uji/events');
@@ -86,10 +91,19 @@ describe('terbitkan', () => {
 
     it('galat server & payload terlalu besar dilempar (dispatcher outbox mencoba lagi)', async () => {
         status = 500;
-        await expect(terbitkan(siaran.chatUnreadChanged(1, 1))).rejects.toThrow(/500/);
+        await expect(terbitkan(unread(1, 1))).rejects.toThrow(/500/);
         status = 200;
         const besar = siaran.notificationBroadcast(1, { body: 'x'.repeat(101 * 1024) });
-        await expect(terbitkan(besar)).rejects.toThrow(/melebihi/);
+        await expect(terbitkan(besar)).rejects.toMatchObject({ message: expect.stringMatching(/melebihi/), permanen: true });
+    });
+
+    it('data 80 KB (di bawah batas 100 KB Sockudo) tetap terkirim; escape JSON tidak melampaui batas body', async () => {
+        diterima.length = 0;
+        // 40 K tanda kutip → data ±80 KB (\"), lalu di-escape lagi di body → ±160 KB (dulu ditolak maxBodyLength 64 KB).
+        await terbitkan(siaran.notificationBroadcast(1, { body: '"'.repeat(40 * 1024) }));
+        expect(diterima).toHaveLength(1);
+        expect(JSON.parse(diterima[0].body).data.length).toBeGreaterThan(80 * 1024);
+        expect(diterima[0].body.length).toBeGreaterThan(160 * 1024);
     });
 });
 
