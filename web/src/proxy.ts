@@ -44,6 +44,8 @@ export async function proxy(req: NextRequest) {
         res = responsGalat(500, json, 'Server Error');
     }
     res.headers.set('Content-Security-Policy', csp);
+    // Respons dinamis Laravel: Cache-Control bawaan Symfony `no-cache, private` (diperiksa di app2 /tentang).
+    if (!res.headers.has('Cache-Control')) res.headers.set('Cache-Control', 'no-cache, private');
     return res;
 }
 
