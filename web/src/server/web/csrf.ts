@@ -30,7 +30,7 @@ export function asalSah(h: Headers, asal: string): boolean {
 
 /** VerifyCsrfToken::getTokenFromRequest: `_token` → X-CSRF-TOKEN → X-XSRF-TOKEN. */
 export function tokenDariPermintaan(h: Headers, input: Record<string, unknown>): string | null {
-    const dariInput = input._token;
+    const dariInput = Object.hasOwn(input, '_token') ? input._token : undefined;
     if (typeof dariInput === 'string' && dariInput !== '') return dariInput;
     return h.get('x-csrf-token') || h.get('x-xsrf-token') || null;
 }

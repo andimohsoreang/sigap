@@ -121,7 +121,8 @@ export const ATURAN_RUTE: readonly { pola: RegExp; metode?: readonly string[]; l
 /** Langkah guard untuk permintaan (kosong = rute publik). */
 export function langkahRute(metode: string, path: string): readonly Langkah[] {
     const p = path.replace(/\/{2,}/g, '/');
-    return ATURAN_RUTE.find((a) => a.pola.test(p) && (!a.metode || a.metode.includes(metode)))?.langkah ?? [];
+    // Object.hasOwn: properti aturan tidak pernah dibaca dari prototipe (pertahanan terhadap prototype pollution).
+    return ATURAN_RUTE.find((a) => a.pola.test(p) && (!Object.hasOwn(a, 'metode') || a.metode!.includes(metode)))?.langkah ?? [];
 }
 
 /** Jalankan langkah berurutan; keputusan pertama yang bukan 'lanjut' menang (urutan middleware Laravel). */

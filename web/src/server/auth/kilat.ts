@@ -8,9 +8,11 @@ export type DataSesi = Record<string, unknown>;
 type DaftarKilat = { new: string[]; old: string[] };
 
 function daftar(data: DataSesi): DaftarKilat {
-    const f = data._flash as Partial<DaftarKilat> | undefined;
+    // Object.hasOwn: isi sesi tidak pernah dibaca dari prototipe.
+    const f = Object.hasOwn(data, '_flash') ? (data._flash as Record<string, unknown> | null) : null;
+    const ambil = (k: 'new' | 'old') => (f && typeof f === 'object' && Object.hasOwn(f, k) ? f[k] : undefined);
     const bersih = (x: unknown) => (Array.isArray(x) ? x.filter((k): k is string => typeof k === 'string') : []);
-    return { new: bersih(f?.new), old: bersih(f?.old) };
+    return { new: bersih(ambil('new')), old: bersih(ambil('old')) };
 }
 
 /** `$session->flash($kunci, $nilai)`: tersedia untuk permintaan berikutnya saja. */
@@ -27,7 +29,7 @@ export function kilatkan(data: DataSesi, kunci: string, nilai: unknown): void {
 export function umurkanKilat(data: DataSesi): boolean {
     const f = daftar(data);
     if (f.new.length === 0 && f.old.length === 0) {
-        if (!('_flash' in data)) return false;
+        if (!Object.hasOwn(data, '_flash')) return false;
         delete data._flash;
         return true;
     }
@@ -47,7 +49,7 @@ export function reflash(data: DataSesi): boolean {
 
 /** `$session->pull($kunci, $bawaan)`. */
 export function tarik<T>(data: DataSesi, kunci: string, bawaan: T): unknown {
-    if (!(kunci in data)) return bawaan;
+    if (!Object.hasOwn(data, kunci)) return bawaan;
     const nilai = data[kunci];
     delete data[kunci];
     return nilai;
