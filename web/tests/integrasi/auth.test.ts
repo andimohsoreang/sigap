@@ -345,6 +345,24 @@ describe.runIf(diminta)('integrasi auth (server standalone)', { timeout: 120_000
         expect(r.n).toBe(1);
     });
 
+    it('prototype pollution lewat nama field (audit run-2): sesi korban utuh, guard tetap berlaku', async () => {
+        const korban = peramban('198.51.100.15');
+        expect(lokasi(await korban.masuk('wargauser'))).toBe('/portal-warga');
+        const sesiKorban = korban.jar.get(SESI);
+        for (const q of ['__proto__[keluarkan]=1', '__proto__[metode]=X', 'constructor[prototype][keluarkan]=1']) {
+            const r = await fetch(`${base}/broadcasting/auth?${q.replace(/\[/g, '%5B').replace(/\]/g, '%5D')}`, { redirect: 'manual' });
+            expect(r.status, q).toBe(403);
+        }
+        // Keputusan guard bukan "lolos" (guest → redirect /) memicu cabang `keluarkan` bila prototipe tercemar.
+        expect(lokasi(await korban.minta('/masuk'))).toBe('/');
+        expect(korban.jar.get(SESI)).toBe(sesiKorban);
+        const r = await korban.minta('/portal-warga');
+        expect(r.status).not.toBe(302); // tetap login (halaman belum di-port → 404)
+        expect(lokasi(await peramban('198.51.100.16').minta('/admin'))).toBe('/masuk');
+        const [a] = await mentah(`SELECT count(*)::int AS n FROM ${SKEMA}.activity_logs WHERE action = 'auth.blocked_inactive'`);
+        expect(a.n).toBe(0);
+    });
+
     it('/broadcasting/auth: admin boleh admin.chat, warga & tamu 403', async () => {
         const form = { socket_id: '123.456', channel_name: 'private-admin.chat' };
         const admin = peramban('198.51.100.6');
