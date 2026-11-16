@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import { langkahRute } from '@/server/auth/guard';
+import { validasiMasuk } from '@/server/auth/permintaan-masuk';
 import { batasBody, bodyTerlaluBesar, GalatBodyBesar, HTML_413, MAKS_BODY, MAKS_BODY_KECIL, respons413 } from '@/server/web/batas-body';
 import { asalSah, metodeBaca, tokenCocok, tokenDariPermintaan } from '@/server/web/csrf';
 import { kebijakanCsp } from '@/server/web/header';
-import { bacaInput, inputBoolean, trimLaravel } from '@/server/web/input';
+import { bacaInput, inputBoolean, nilaiInput, trimLaravel } from '@/server/web/input';
 import { inginJson, ipKlien, jalurAman, jalurTerdekode, responsJson, tipeDiterima } from '@/server/web/permintaan';
 import { respons419, responsGalat } from '@/server/web/respons';
 import nextConfig from '../../../next.config';
@@ -116,6 +118,56 @@ describe('input (TrimStrings + ConvertEmptyStringsToNull)', () => {
         expect(await bacaInput(json('{rusak'), MAKS_BODY)).toEqual({});
         for (const ya of [true, 1, '1', 'true', 'on', 'YES']) expect(inputBoolean({ r: ya }, 'r')).toBe(true);
         for (const tidak of [false, 0, '0', 'off', 'no', '', null, undefined, 'x']) expect(inputBoolean({ r: tidak }, 'r')).toBe(false);
+    });
+});
+
+describe('input tidak mencemari prototipe (audit run-2)', () => {
+    const cemar = () => [({} as Record<string, unknown>).a, ({} as Record<string, unknown>).keluarkan, ({} as Record<string, unknown>).metode];
+
+    it('query, form, dan JSON dengan __proto__/constructor/prototype: Object.prototype tetap bersih, kunci dibuang', async () => {
+        const kueri = await bacaInput(new Request('http://x/broadcasting/auth?__proto__[a]=1&__proto__[keluarkan]=1&x[__proto__]=2&ok=1'), MAKS_BODY);
+        const form = await bacaInput(
+            new Request('http://x/', {
+                method: 'POST',
+                headers: { 'content-type': 'application/x-www-form-urlencoded' },
+                body: '__proto__[a]=1&constructor[prototype][a]=1&prototype[a]=1&__proto__=1&nama=uji',
+            }),
+            MAKS_BODY,
+        );
+        const json = await bacaInput(
+            new Request('http://x/', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: '{"__proto__":{"a":1},"b":{"constructor":{"prototype":{"a":1}},"c":1}}',
+            }),
+            MAKS_BODY,
+        );
+        expect(cemar()).toEqual([undefined, undefined, undefined]);
+        expect({ ...kueri }).toEqual({ ok: '1' });
+        expect({ ...form }).toEqual({ nama: 'uji' });
+        expect(JSON.parse(JSON.stringify(json))).toEqual({ b: { c: 1 } });
+        // Objek hasil tanpa prototipe: field yang tidak dikirim tidak pernah "ada" lewat pewarisan.
+        expect(Object.getPrototypeOf(kueri)).toBeNull();
+        expect(nilaiInput(kueri, 'toString')).toBeUndefined();
+    });
+
+    it('larik campuran seperti PHP: a[]=1&a[x]=2 → satu wadah, bukan properti larik (length)', async () => {
+        const r = await bacaInput(new Request('http://x/?a[]=1&a[x]=2&b[]=1&b[length]=0'), MAKS_BODY);
+        expect(JSON.parse(JSON.stringify(r))).toEqual({ a: { 0: '1', x: '2' }, b: { 0: '1', length: '0' } });
+    });
+
+    it('guard tidak terpengaruh walau prototipe sempat tercemar (pertahanan berlapis)', () => {
+        const awal = langkahRute('GET', 'admin');
+        const proto = Object.prototype as Record<string, unknown>;
+        proto.metode = ['X'];
+        try {
+            expect(langkahRute('GET', 'admin')).toEqual(awal);
+            expect(tokenDariPermintaan(h({}), Object.create({ _token: 'warisan' }))).toBeNull();
+            expect(validasiMasuk(Object.create({ identifier: 'a', password: 'b' })).ok).toBe(false);
+        } finally {
+            delete proto.metode;
+        }
+        expect(awal).toEqual(['masuk', { peran: ['admin_kawasan', 'super_admin'] }]);
     });
 });
 

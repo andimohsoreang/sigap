@@ -12,11 +12,11 @@ const kosong = (v: unknown) => v === null || v === undefined || (typeof v === 's
 /** `required|string|max:150` untuk identifier, `required|string` untuk password. Input sudah lewat bacaInput(). */
 export function validasiMasuk(input: Record<string, unknown>): HasilValidasi {
     const galat: GalatValidasi = {};
-    const id = input.identifier;
+    const id = Object.hasOwn(input, 'identifier') ? input.identifier : undefined;
     if (kosong(id)) galat.identifier = ['The identifier field is required.'];
     else if (typeof id !== 'string') galat.identifier = ['The identifier field must be a string.'];
     else if (Array.from(id).length > 150) galat.identifier = ['The identifier field must not be greater than 150 characters.'];
-    const pw = input.password;
+    const pw = Object.hasOwn(input, 'password') ? input.password : undefined;
     if (kosong(pw)) galat.password = ['The password field is required.'];
     else if (typeof pw !== 'string') galat.password = ['The password field must be a string.'];
     return Object.keys(galat).length > 0 ? { ok: false, galat } : { ok: true, identifier: id as string, password: pw as string };

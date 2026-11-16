@@ -151,7 +151,7 @@ export async function tumpukanWeb(req: NextRequest, headerTeruskan: Headers): Pr
     if (keputusan.jenis === 'lanjut') keputusan = jalankanGuard(ctx, pengguna, langkahRute(ctx.metode, ctx.path));
 
     if (keputusan.jenis !== 'lanjut' && sesi) {
-        if ('keluarkan' in keputusan && keputusan.keluarkan && pengguna) {
+        if (Object.hasOwn(keputusan, 'keluarkan') && keputusan.jenis !== 'galat' && keputusan.keluarkan === true && pengguna) {
             // EnsureRole::deactivated: audit, Auth::guard('web')->logout(), invalidate(), regenerateToken().
             await catatAudit({
                 aksi: 'auth.blocked_inactive',
@@ -165,9 +165,11 @@ export async function tumpukanWeb(req: NextRequest, headerTeruskan: Headers): Pr
             ubah = true;
         }
         if (keputusan.jenis === 'redirect') {
-            if (keputusan.intended !== undefined) sesi.data['url.intended'] = jalurAman(keputusan.intended, asal) ?? '/';
-            for (const [kunci, nilai] of Object.entries(keputusan.kilat ?? {})) kilatkan(sesi.data, kunci, nilai);
-            ubah ||= keputusan.intended !== undefined || keputusan.kilat !== undefined;
+            const intended = Object.hasOwn(keputusan, 'intended') ? keputusan.intended : undefined;
+            const kilat = Object.hasOwn(keputusan, 'kilat') ? keputusan.kilat : undefined;
+            if (intended !== undefined) sesi.data['url.intended'] = jalurAman(intended, asal) ?? '/';
+            for (const [kunci, nilai] of Object.entries(kilat ?? {})) kilatkan(sesi.data, kunci, nilai);
+            ubah ||= intended !== undefined || kilat !== undefined;
         }
     }
 

@@ -8,11 +8,12 @@ import { pasangHeaderBatas } from '@/server/batas/respons';
 import { db } from '@/server/db/client';
 import { chatConversations } from '@/server/db/schema';
 import { GalatSandiSibuk } from '@/server/legacy/sandi';
+import { log } from '@/server/log';
 import { bolehKanal } from '@/server/realtime/kanal';
 import { tandaTanganKanal } from '@/server/realtime/penerbit';
 import { GalatBodyBesar, MAKS_BODY_KECIL, respons413 } from '@/server/web/batas-body';
 import { tokenCocok, tokenDariPermintaan } from '@/server/web/csrf';
-import { bacaInput, inputBoolean } from '@/server/web/input';
+import { bacaInput, inputBoolean, nilaiInput } from '@/server/web/input';
 import { asalAplikasi, inginJson, ipKlien, jalurAman, responsJson } from '@/server/web/permintaan';
 import { jsonLaravel, redirectLaravel, respons419, responsGalat } from '@/server/web/respons';
 
@@ -68,11 +69,11 @@ async function masuk(req: NextRequest): Promise<Response> {
     // guest (proxy.ts sudah memeriksa; diulang di sini sebagai pertahanan berlapis).
     if (await penggunaDariSesi(sesi)) return redirectLaravel(asal, '/');
 
-    const batas = await batasi('login', { ip: meta.ip, identifier: input.identifier });
+    const batas = await batasi('login', { ip: meta.ip, identifier: nilaiInput(input, 'identifier') });
     if (!batas.lolos) {
         // bootstrap/app.php:93-105: formulir Inertia (non-GET) → 303 kembali dengan pesan validasi, bukan 429.
         if (h.get('x-inertia')) {
-            const field = 'identifier' in input ? 'identifier' : 'throttle';
+            const field = Object.hasOwn(input, 'identifier') ? 'identifier' : 'throttle';
             const res = await kembaliDenganGalat(
                 sesi,
                 meta,
@@ -114,7 +115,7 @@ async function masuk(req: NextRequest): Promise<Response> {
             asal,
             h,
             { identifier: [hasil.galat] },
-            'identifier' in input ? { identifier: input.identifier } : {},
+            Object.hasOwn(input, 'identifier') ? { identifier: input.identifier } : {},
         );
         return pasangHeaderBatas(res, batas.header) as NextResponse;
     }
@@ -177,8 +178,9 @@ async function izinKanal(req: NextRequest): Promise<Response> {
         const segar = await sesiDariHeader(h);
         if (segar && reflash(segar.data)) await simpanSesi(segar, meta);
     }
-    const kanal = typeof input.channel_name === 'string' ? input.channel_name : '';
-    const socketId = typeof input.socket_id === 'string' ? input.socket_id : '';
+    const [k, sid] = [nilaiInput(input, 'channel_name'), nilaiInput(input, 'socket_id')];
+    const kanal = typeof k === 'string' ? k : '';
+    const socketId = typeof sid === 'string' ? sid : '';
     // AccessDeniedHttpException tanpa pesan → 403 "Forbidden".
     const izin = kanal !== '' && (await bolehKanal(kanal, pengguna ? { id: pengguna.id, admin: adalahAdmin(pengguna) } : null, pemilikChat));
     if (!izin) return responsGalat(403, json);
@@ -187,21 +189,26 @@ async function izinKanal(req: NextRequest): Promise<Response> {
     return jsonLaravel(tandaTanganKanal(socketId, kanal));
 }
 
-/** Body terlalu besar (GalatBodyBesar dari bacaInput) → 413 seperti nginx. */
-const dengan413 =
+/**
+ * Galat rute auth: body terlalu besar → 413 seperti nginx; galat lain (mis. DB mati) → dicatat lewat pino (galat DB
+ * dibersihkan serializer, tanpa parameter query seperti token/IP/UA) lalu 500 Laravel. Tanpa ini Next.js mencetak
+ * galat apa adanya ke console.
+ */
+const tanganiGalat =
     (fn: (req: NextRequest) => Promise<Response>) =>
     async (req: NextRequest): Promise<Response> => {
         try {
             return await fn(req);
-        } catch (e) {
-            if (e instanceof GalatBodyBesar) return respons413();
-            throw e;
+        } catch (err) {
+            if (err instanceof GalatBodyBesar) return respons413();
+            log.error({ err, jalur: req.nextUrl.pathname }, 'rute auth gagal');
+            return responsGalat(500, responsJson(req.nextUrl.pathname, req.headers), 'Server Error');
         }
     };
 
 /** POST /masuk. */
-export const prosesMasuk = dengan413(masuk);
+export const prosesMasuk = tanganiGalat(masuk);
 /** POST /keluar. */
-export const prosesKeluar = dengan413(keluar);
+export const prosesKeluar = tanganiGalat(keluar);
 /** GET/POST /broadcasting/auth. */
-export const prosesIzinKanal = dengan413(izinKanal);
+export const prosesIzinKanal = tanganiGalat(izinKanal);
