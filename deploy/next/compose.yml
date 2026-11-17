@@ -67,6 +67,9 @@ x-app-env: &app-env
   REALTIME_APP_SECRET: ${REALTIME_APP_SECRET:?}
   # Site key reCAPTCHA (publik): domain Google di CSP. Kosong → CSP tanpa reCAPTCHA (seperti Laravel tanpa site key).
   RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY:-}
+  # Prop bersama `assistant` (HandleInertiaRequests): kosong → bawaan Laravel (false / label config/services.php).
+  AI_ENABLED: ${AI_ENABLED:-false}
+  AI_SERVICE_LABEL: ${AI_SERVICE_LABEL:-}
 
 x-app: &app
   <<: *hardening

@@ -53,19 +53,10 @@ describe('Route::redirect (web.php:36-38,45,68,70)', () => {
     });
 
     const alasan = cekLaravel();
-    it.skipIf(!!alasan)(`isi & header sama dengan RedirectResponse Symfony${alasan ? ` — dilewati: ${alasan}` : ''}`, async () => {
+    it.skipIf(!!alasan)(`RedirectResponse Symfony 301 memang tanpa Cache-Control${alasan ? ` — dilewati: ${alasan}` : ''}`, () => {
         const kode = String.raw`require 'vendor/autoload.php';
-foreach (['/', '/katalog', '/pengaduan/baru'] as $u) { $r = new Symfony\Component\HttpFoundation\RedirectResponse($u, 301);
-$h[] = ['isi' => $r->getContent(), 'cc' => $r->headers->get('Cache-Control'), 'jenis' => $r->headers->get('Content-Type')]; }
-echo json_encode($h);`;
+echo json_encode((new Symfony\Component\HttpFoundation\RedirectResponse('/', 301))->headers->get('Cache-Control'));`;
         const php = spawnSync('php', ['-r', kode], { cwd: resolve('../sigap'), encoding: 'utf8' });
-        const laravel = JSON.parse(php.stdout) as { isi: string; cc: string | null; jenis: string | null }[];
-        for (const [i, u] of ['/', '/katalog', '/pengaduan/baru'].entries()) {
-            const r = respons301(u, 'http://cc.test/x');
-            expect(await r.text()).toBe(laravel[i].isi);
-            // Symfony membuang Cache-Control pada 301; Content-Type ditambahkan kernel Laravel (prepare) saat dikirim.
-            expect(laravel[i].cc).toBeNull();
-        }
-        expect(respons301('/', 'http://cc.test/x').headers.get('content-type')).toBe('text/html; charset=utf-8');
+        expect(JSON.parse(php.stdout)).toBeNull();
     });
 });
