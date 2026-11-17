@@ -55,6 +55,8 @@ describe.skipIf(!!alasan)(`runtime DB${alasan ? ` — dilewati: ${alasan}` : ''}
     beforeAll(async () => {
         await migrate.connect();
         await mentah(`DROP SCHEMA IF EXISTS ${SKEMA} CASCADE; DROP SCHEMA IF EXISTS ${SKEMA_BOSS} CASCADE; CREATE SCHEMA ${SKEMA}`);
+        // drizzle-cc/0002 menambah indeks di tabel Laravel `tickets` (di stack uji sudah dimuat init.sh sebelum migrasi).
+        await mentah(`CREATE TABLE ${SKEMA}.tickets (LIKE public.tickets INCLUDING ALL)`);
         await migrasi();
         // Tabel Laravel yang dibaca dispatcher (chat.unread) — id eksplisit, tanpa sequence public.
         await mentah(`CREATE TABLE ${SKEMA}.chat_conversations (LIKE public.chat_conversations INCLUDING DEFAULTS)`);

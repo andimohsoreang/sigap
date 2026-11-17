@@ -53,7 +53,7 @@ describe.runIf(diminta)('integrasi auth (server standalone)', { timeout: 120_000
         if (!existsSync(SERVER)) throw new Error('jalankan `npm run build` dulu (.next/standalone/web/server.js tidak ada)');
         await migrate.connect();
         await mentah(`DROP SCHEMA IF EXISTS ${SKEMA} CASCADE; DROP SCHEMA IF EXISTS ${SKEMA_BOSS} CASCADE; CREATE SCHEMA ${SKEMA}`);
-        for (const t of ['users', 'activity_logs', 'chat_conversations']) {
+        for (const t of ['users', 'activity_logs', 'chat_conversations', 'tickets']) {
             await mentah(`CREATE TABLE ${SKEMA}.${t} (LIKE public.${t} INCLUDING ALL);
                 CREATE SEQUENCE ${SKEMA}.${t}_id_seq OWNED BY ${SKEMA}.${t}.id;
                 ALTER TABLE ${SKEMA}.${t} ALTER id SET DEFAULT nextval('${SKEMA}.${t}_id_seq')`);
