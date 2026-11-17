@@ -12,3 +12,6 @@ dan perilaku identik). Diisi oleh tim slice; dikerjakan setelah S17.
 | 5 | Rencana §9.9 | Format enkripsi baru + rotasi kunci | data terenkripsi | sedang |
 | 6 | S0-A re-review | Keluarkan `@img/sharp-wasm32` (9,3 MB) dari standalone setelah binary native sharp terbukti jalan di server (cek S0/S13) | image −19%; bukan perubahan tampilan, ditunda karena bergantung hasil cek CPU | rendah |
 | 7 | S0-A review | Muat axios di browser secara lazy (`import()` saat interaksi) | −22 KB gzip muatan awal; mengubah timing request pertama | rendah |
+| 8 | S1 review | Render halaman di server (SSR) agar judul & meta ada di HTML awal | SEO & paint pertama lebih baik; urutan atribut DOM berubah (Laravel saat ini client-only) | sedang |
+| 9 | S1 review | View transition lintas dokumen (`@view-transition`) untuk `goToChat` | animasi ke `/chat` kembali; selama transisi navigasi ke `/chat` reload penuh tanpa animasi | rendah |
+| 10 | S0 audit run-2 (NV-B) | Tolak tanda tangan kanal privat untuk akun nonaktif | akun nonaktif kehilangan realtime (Laravel saat ini mengizinkan) | sedang — keputusan pemilik |
