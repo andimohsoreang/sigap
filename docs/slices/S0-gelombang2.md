@@ -34,6 +34,29 @@ Di **subdomain uji**:
 4. rate limit login bekerja (angka Laravel) dan tetap aman saat Valkey dimatikan;
 5. CI `web` & `paritas` hijau; audit keamanan tanpa temuan `confirmed` ≥ medium.
 
+## Hasil gerbang S0 (17 Nov 2026, stack uji @ 27555b9)
+
+| No | Syarat | Hasil | Bukti |
+|---|---|---|---|
+| 1 | `/_platform` 0 piksel vs kerangka Laravel | **lulus** | 6/6 (1280×800, 768×1024, 375×812 × terang/gelap) 0 piksel; kontrol negatif terdeteksi; CSS & 84 font woff2 identik dengan app2 |
+| 2 | login/logout warga & admin, peran salah ditolak | **lulus** | 45/45 cek (ulang setelah perbaikan audit); 401/403 JSON & halaman 403 identik byte dengan app2 |
+| 3 | event realtime Sockudo diterima | **lulus** | outbox → worker → Sockudo → pusher-js 292–742 ms; Origin asing ditolak 4009 |
+| 4 | rate limit login angka Laravel, aman saat Valkey mati | **lulus** | 5/mnt id+IP, 20/mnt IP, 30/jam id; fallback memori saat Valkey mati; kembali ke Valkey setelah hidup |
+| 5 | CI hijau + audit tanpa confirmed ≥ medium | **lulus** | CI `web` & `paritas` hijau @ 27555b9; audit run-2 menemukan 1 medium (prototype pollution `pasangPhp`), diperbaiki di `s0/aman-input` dan diverifikasi ulang (0/73 varian tembus; sebelumnya 13/73) |
+
+Laporan: `~/security-audit-skill/contact-center/run-2/` (REPORT.md, FINDINGS-DETAIL.md, NEEDS-VALIDATION.md, `followup-aman-input/RESULT.md`).
+
+**Batasan yang diketahui:** pembanding `/_platform` dirakit dari shell app2 (Laravel tidak punya rute ini); realtime diuji dengan pusher-js di Node lewat tunnel (bukan browser, Cloudflare Access); halaman 429 tidak dibandingkan byte dengan produksi.
+
+**Perbedaan kecil dengan Laravel (tidak terlihat pengguna):** body 302 dari proxy berupa teks URL; `POST /masuk` gagal tidak memperpanjang cookie; sesi tamu lama dihapus saat login (Laravel menyimpannya); urutan tag `<head>` Next.
+
+**Tindak lanjut:**
+- `deploy-uji.sh` tidak me-restart pgbouncer/valkey/sockudo saat berkas config ter-mount berubah (bind mount satu berkas memegang inode lama) — 17 Nov dipulihkan manual dengan `compose restart pgbouncer`. Perlu restart otomatis berbasis hash config.
+- NV-B (akun nonaktif tetap mendapat tanda tangan kanal privat, sama dengan Laravel) menunggu keputusan pemilik proyek.
+- Sockudo mencatat penolakan Origin sebagai ERROR → atur level/peringatan di paket I.
+- Halaman & Server Action baru wajib memakai penanganan galat yang sama (`tanganiGalat`/`onRequestError`), bukan console.error bawaan Next.
+- Data uji di DB uji: akun `adminuji` (super_admin) dan warga uji id 2 (NIK palsu `3200000000000001`).
+
 ## Subdomain uji (siap, 15 Nov 2026)
 
 | Hal | Nilai |
