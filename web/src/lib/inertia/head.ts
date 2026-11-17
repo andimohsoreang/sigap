@@ -116,7 +116,10 @@ function awalTag(node: Node_): string {
     const attrs = Object.keys(node.props).reduce((carry, name) => {
         if (['head-key', 'children', 'dangerouslySetInnerHTML'].includes(name)) return carry;
         const value = node.props[name];
-        return value === '' ? `${carry} ${name}` : `${carry} ${name}="${value}"`;
+        // Inertia asli menyisipkan nilai mentah ke innerHTML; di sini `&` dan `"` di-escape agar nilai berisi kutip
+        // (mis. deskripsi dari data) tidak bisa menambah atribut. Nilai normal menghasilkan DOM yang sama.
+        const aman = String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+        return value === '' ? `${carry} ${name}` : `${carry} ${name}="${aman}"`;
     }, '');
     return `<${node.type}${attrs}>`;
 }

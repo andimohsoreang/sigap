@@ -109,6 +109,31 @@ describe('opsi yang belum didukung → galat jelas', () => {
     });
 });
 
+describe('Head: nilai atribut di-escape', () => {
+    it('deskripsi berisi kutip tidak menambah meta refresh; & dan " tetap utuh', async () => {
+        siapkanDokumen();
+        const jahat = 'x" http-equiv="refresh" content="0;url=https://evil';
+        const Halaman = () =>
+            ReactWeb.createElement(
+                kompat.Head,
+                { title: 'Uji & "kutip"' },
+                ReactWeb.createElement('meta', { name: 'description', content: jahat }),
+                ReactWeb.createElement('meta', { name: 'keywords', content: 'A & B &amp; C' }),
+            );
+        const ziggy = { url: 'http://cc.test', port: null, defaults: {}, routes: {} };
+        await act(async () => {
+            ReactDomWeb.createRoot(document.body.appendChild(document.createElement('div'))).render(
+                ReactWeb.createElement(InertiaApp, { page: PAGE, komponen: Halaman as never, ziggy }),
+            );
+        });
+        await tunggu();
+        expect(document.head.querySelector('meta[http-equiv]')).toBeNull();
+        expect(metaDeskripsi()).toBe(jahat);
+        expect(document.head.querySelector('meta[name="keywords"]')?.getAttribute('content')).toBe('A & B &amp; C');
+        expect(document.title).toBe('Uji & "kutip" - Contact Center');
+    });
+});
+
 describe('head manager = createHeadManager @inertiajs/core', () => {
     it.skipIf(!adaSigap)('kumpulan tag sama untuk title default, Head bertitle, meta ber/tanpa head-key', async () => {
         const core = await import(pathToFileURL(join(NM, '@inertiajs/core/dist/index.esm.js')).href);
