@@ -292,7 +292,7 @@ describe.skipIf(!!alasan)(`paritas statistik publik vs Laravel${alasan ? ` — d
     );
 
     it(
-        'EXPLAIN (data sintetis 30 ribu tiket): withCount kategori & kanal memakai indeks parsial (index-only scan), paritas tetap',
+        'EXPLAIN (data sintetis 30 ribu tiket): withCount kategori & kanal memakai indeks parsial (tanpa Seq Scan tickets), paritas tetap',
         { timeout: 60_000 },
         async () => {
             await mentah(`INSERT INTO ${SKEMA}.tickets (ticket_no, title, description, status, created_at, updated_at, category_id, channel_id, province, is_internal, deleted_at)
@@ -311,13 +311,17 @@ describe.skipIf(!!alasan)(`paritas statistik publik vs Laravel${alasan ? ` — d
                     await mentah('RESET search_path');
                 }
             };
+            // Yang dijaga: subquery withCount memakai indeks parsial dan tidak pernah Seq Scan `tickets`. Jenis node
+            // (Index Only Scan vs Bitmap) tidak diasersikan: index-only bergantung pada visibility map, dan VACUUM tidak
+            // bisa menandai halaman all-visible selama file test:db lain (paralel, cluster sama) memegang snapshot lama
+            // — di CI planner lalu memilih Bitmap Index Scan pada indeks yang sama (gagal-kadang di run 44178885860).
+            const seqScanTickets = /"Node Type":"Seq Scan"[^{}]*"Relation Name":"tickets"/;
             const kat = await rencana(kategoriTeratas().toSQL());
-            expect(kat).toContain('"Node Type":"Index Only Scan"');
-            expect(kat).toContain('"Index Name":"tickets_category_id_publik_index"');
-            expect(kat).toMatch(/"Heap Fetches":0/);
+            expect(kat).toMatch(/"Node Type":"(Index Only Scan|Bitmap Index Scan)"[^{}]*"Index Name":"tickets_category_id_publik_index"/);
+            expect(kat).not.toMatch(seqScanTickets);
             const kan = await rencana(semuaKanal().toSQL());
-            expect(kan).toContain('"Node Type":"Index Only Scan"');
-            expect(kan).toContain('"Index Name":"tickets_channel_id_publik_index"');
+            expect(kan).toMatch(/"Node Type":"(Index Only Scan|Bitmap Index Scan)"[^{}]*"Index Name":"tickets_channel_id_publik_index"/);
+            expect(kan).not.toMatch(seqScanTickets);
 
             // Rencana baru (index-only scan) tidak mengubah hasil atau urutan baris yang totalnya sama.
             await bandingkan(['2026-11-17 10:20:30.5', '2026-03-01 12:00:00']);
