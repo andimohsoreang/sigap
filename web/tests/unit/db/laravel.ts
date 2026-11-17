@@ -50,8 +50,9 @@ export function cekLaravel(): string | null {
 
 export type EnvLaravel = { skema: string; appKey: string; appPreviousKeys: string; nikHashKey: string };
 
-export function laravel<T>(e: EnvLaravel, masukan: Record<string, unknown>): T {
-    const r = spawnSync('php', ['-r', KODE], {
+/** `kode`: skrip PHP lain (bootstrap sendiri, keluaran JSON di baris terakhir); bawaan = round-trip model di atas. */
+export function laravel<T>(e: EnvLaravel, masukan: Record<string, unknown>, kode = KODE): T {
+    const r = spawnSync('php', ['-r', kode], {
         cwd: DIR_SIGAP,
         input: JSON.stringify(masukan),
         encoding: 'utf8',
