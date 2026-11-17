@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { log } from '@/server/log';
-import { denganValkey } from '@/server/valkey';
+import { denganValkey, GalatValkey } from '@/server/valkey';
 
 import { jendelaWib, persenSla, STATUS_TIKET, type StatistikPublik } from './hitung';
 import { agregatTiket, kategoriTeratas, provinsiTeratas, semuaKanal } from './repo';
@@ -47,14 +47,13 @@ export async function ambilStatistikPublik(sekarang: Date = new Date()): Promise
         const tersimpan = await denganValkey((r) => r.get(KUNCI_CACHE));
         if (tersimpan !== null) return JSON.parse(tersimpan) as StatistikPublik;
     } catch (err) {
-        valkeyHidup = false;
-        log.warn({ err }, 'cache statistik publik tidak terbaca; dihitung dari DB');
+        // GalatValkey tidak dicatat per permintaan: valkey.ts mencatat putus sekali per gangguan. Galat lain (isi cache
+        // rusak) dicatat, lalu cache ditimpa hasil baru.
+        if (err instanceof GalatValkey) valkeyHidup = false;
+        else log.warn({ err }, 'cache statistik publik tidak terbaca; dihitung dari DB');
     }
     const hasil = await hitungStatistikPublik(sekarang);
-    if (valkeyHidup) {
-        await denganValkey((r) => r.set(KUNCI_CACHE, JSON.stringify(hasil), 'EX', TTL_DETIK)).catch((err) =>
-            log.warn({ err }, 'cache statistik publik tidak tersimpan'),
-        );
-    }
+    // denganValkey membungkus semua galat sebagai GalatValkey → diabaikan (sama seperti di atas).
+    if (valkeyHidup) await denganValkey((r) => r.set(KUNCI_CACHE, JSON.stringify(hasil), 'EX', TTL_DETIK)).catch(() => {});
     return hasil;
 }
