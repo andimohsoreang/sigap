@@ -1,0 +1,440 @@
+'use client';
+
+import { Link } from '@/lib/inertia';
+import {
+    ArrowRight,
+    AtSign,
+    ChartColumn,
+    CircleCheck,
+    Database,
+    FilePenLine,
+    HandCoins,
+    Inbox,
+    Landmark,
+    Loader,
+    type LucideIcon,
+    Megaphone,
+    MessageCircle,
+    RefreshCw,
+    Route,
+    Scale,
+    ShieldCheck,
+    Sprout,
+    Tag,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+import TaraPage, { AskTaraCard, TaraEyebrow } from '@/components/contact-center/tara-shell';
+import { statusLabel } from '@/lib/contact-center';
+import { cn } from '@/lib/utils';
+
+interface Props {
+    stats: {
+        total: number;
+        today: number;
+        this_month: number;
+        by_status: Record<string, number>;
+        by_category: { name: string; total: number }[];
+        by_channel: { name: string; total: number }[];
+        /** Provinsi asal pengaduan (top 6). */
+        by_province?: { name: string; total: number }[];
+        sla_pct: number;
+    };
+}
+
+/** Teks dari pemilik layanan (30-10-2026). */
+const DASAR_HUKUM: { judul: string; peran: string }[] = [
+    {
+        judul: 'Undang-Undang Nomor 25 Tahun 2009 tentang Pelayanan Publik',
+        peran: 'Sebagai landasan penyelenggaraan pelayanan publik yang efektif, transparan, akuntabel, serta memberikan kemudahan akses bagi masyarakat, termasuk dalam penyampaian dan pengelolaan pengaduan masyarakat.',
+    },
+    {
+        judul: 'Undang-Undang Nomor 27 Tahun 2022 tentang Pelindungan Data Pribadi',
+        peran: 'Sebagai landasan dalam pelindungan data pribadi yang diproses dalam penyelenggaraan layanan Dashboard Contact Center, termasuk data identitas, kontak, lokasi, dokumen pendukung, serta data lain yang berkaitan dengan pelapor dan pengaduan masyarakat.',
+    },
+    {
+        judul: 'Undang-Undang Nomor 1 Tahun 2024 tentang Perubahan Kedua atas Undang-Undang Nomor 11 Tahun 2008 tentang Informasi dan Transaksi Elektronik',
+        peran: 'Sebagai landasan penyelenggaraan sistem elektronik dan pemanfaatan teknologi informasi dalam pengembangan serta pengoperasian aplikasi Dashboard Contact Center.',
+    },
+    {
+        judul: 'Peraturan Presiden Nomor 76 Tahun 2013 tentang Pengelolaan Pengaduan Pelayanan Publik',
+        peran: 'Sebagai landasan penyelenggaraan pengelolaan pengaduan masyarakat secara terintegrasi, termasuk penerimaan, pencatatan, penyaluran, pemantauan, dan penyelesaian pengaduan.',
+    },
+    {
+        judul: 'Peraturan Presiden Nomor 95 Tahun 2018 tentang Sistem Pemerintahan Berbasis Elektronik (SPBE)',
+        peran: 'Sebagai landasan dalam pembangunan dan pengembangan sistem informasi pemerintahan yang terintegrasi, efektif, efisien, aman, dan berorientasi pada peningkatan kualitas layanan pemerintahan.',
+    },
+    {
+        judul: 'Peraturan Presiden Nomor 39 Tahun 2019 tentang Satu Data Indonesia',
+        peran: 'Sebagai landasan dalam pengelolaan data yang akurat, mutakhir, terpadu, dapat dipertanggungjawabkan, mudah diakses, dan dapat dibagipakaikan untuk mendukung perencanaan, pelaksanaan, evaluasi, dan pengendalian pembangunan.',
+    },
+    {
+        judul: 'Peraturan Presiden Nomor 132 Tahun 2022 tentang Arsitektur Sistem Pemerintahan Berbasis Elektronik Nasional',
+        peran: 'Sebagai acuan dalam penyelarasan arsitektur aplikasi, data, infrastruktur, keamanan, dan layanan digital yang dibangunkan dengan arsitektur SPBE.',
+    },
+    {
+        judul: 'Peraturan Menteri Komunikasi dan Informatika Nomor 1 Tahun 2023 tentang Interoperabilitas Data dalam Penyelenggaraan Sistem Pemerintahan Berbasis Elektronik dan Satu Data Indonesia',
+        peran: 'Sebagai acuan dalam penyediaan interoperabilitas data dan pertukaran data antar sistem secara andal, aman, akuntabel, serta terdokumentasi.',
+    },
+    {
+        judul: 'Peraturan Presiden Nomor 172 Tahun 2024 tentang Kementerian Transmigrasi',
+        peran: 'Sebagai landasan kelembagaan penyelenggaraan tugas dan fungsi Kementerian Transmigrasi, termasuk penyelenggaraan dukungan administrasi, koordinasi, pengelolaan data dan informasi, serta pelaksanaan kebijakan di bidang transmigrasi.',
+    },
+];
+
+const STATUS_ORDER: { key: string; color: string }[] = [
+    { key: 'baru', color: '#0b5fa5' },
+    { key: 'verifikasi', color: '#003d68' },
+    { key: 'diproses', color: '#c29642' },
+    { key: 'selesai', color: '#0d7a5f' },
+    { key: 'ditolak', color: '#b42318' },
+];
+
+function categoryIcon(name: string): LucideIcon {
+    const n = name.toLowerCase();
+    if (n.includes('infrastruktur') || n.includes('jalan')) return Route;
+    if (n.includes('lahan') || n.includes('tanah')) return Sprout;
+    if (n.includes('bantuan') || n.includes('sosial')) return HandCoins;
+    if (n.includes('data') || n.includes('tik')) return Database;
+    return Tag;
+}
+
+function channelIcon(name: string): LucideIcon {
+    const n = name.toLowerCase();
+    if (n.includes('chat') || n.includes('tara')) return MessageCircle;
+    if (n.includes('formulir') || n.includes('web')) return FilePenLine;
+    if (n.startsWith('@') || n.includes('instagram') || n.includes('media')) return AtSign;
+    if (n.includes('kantor') || n.includes('loket')) return Landmark;
+    if (n.includes('whistle') || n.includes('inspektorat')) return ShieldCheck;
+    return Megaphone;
+}
+
+const nf = (n: number) => n.toLocaleString('id-ID');
+
+function Card({ className, children }: { className?: string; children: React.ReactNode }) {
+    return (
+        <div className={cn('rounded-[20px] border border-[var(--tcd-border,#e8edf2)] bg-[var(--tcd-surface,#fff)] p-6 sm:p-7', className)}>
+            {children}
+        </div>
+    );
+}
+
+export default function Tentang({ stats }: Props) {
+    // Angka dihitung saat halaman diminta; waktu ditampilkan di sisi browser (zona waktu pengguna).
+    const [now, setNow] = useState<string | null>(null);
+    useEffect(() => {
+        setNow(
+            new Date().toLocaleString('id-ID', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            }),
+        );
+    }, []);
+
+    const statusTotal = STATUS_ORDER.reduce((s, x) => s + (stats.by_status?.[x.key] ?? 0), 0);
+    const categories = [...stats.by_category].sort((a, b) => b.total - a.total).slice(0, 6);
+    const maxCategory = Math.max(1, ...categories.map((c) => c.total));
+    const channels = [...stats.by_channel].sort((a, b) => b.total - a.total);
+    const channelTotal = channels.reduce((s, c) => s + c.total, 0);
+    const provinces = stats.by_province ?? [];
+    const maxProvince = Math.max(1, ...provinces.map((p) => p.total));
+
+    const kpis: { icon: LucideIcon; label: string; value: number; hint: string; tone: string }[] = [
+        { icon: Inbox, label: 'Laporan masuk hari ini', value: stats.today, hint: 'Dari semua kanal', tone: 'text-[var(--tcd-link,#003d68)]' },
+        {
+            icon: Loader,
+            label: 'Sedang diproses',
+            value: stats.by_status?.diproses ?? 0,
+            hint: 'Ditangani petugas',
+            tone: 'text-[var(--tcd-warning,#9a5b00)]',
+        },
+        {
+            icon: CircleCheck,
+            label: 'Selesai ditangani',
+            value: stats.by_status?.selesai ?? 0,
+            hint: 'Warga diminta mengisi survei',
+            tone: 'text-[var(--tcd-success,#0d7a5f)]',
+        },
+        {
+            icon: ChartColumn,
+            label: 'Total laporan publik',
+            value: stats.total,
+            hint: 'Sejak layanan dibuka',
+            tone: 'text-[var(--tcd-bronze,#8b682b)]',
+        },
+    ];
+
+    return (
+        <TaraPage
+            title="Data Terbuka"
+            description="Data terbuka pelayanan pengaduan Kementerian Transmigrasi: laporan harian, status penanganan, kategori, kanal, dan provinsi asal pengaduan."
+            active="data"
+            eyebrow="Data Terbuka"
+            heading="Data Terbuka Contact Center"
+            subtitle="Transparansi pelayanan pengaduan Kementerian Transmigrasi. Angka diperbarui otomatis dari sistem, tanpa data pribadi pelapor."
+            pose="tablet"
+            poseAlt="TARA memegang tablet berisi data layanan"
+        >
+            <div className="mx-auto flex max-w-[1312px] flex-col gap-12 px-4 py-12 sm:px-6 lg:gap-14 lg:px-16 lg:py-14">
+                <p className="flex items-center gap-2 text-sm font-medium text-[var(--tcd-success,#0d7a5f)]">
+                    <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                    Diperbarui otomatis{now ? ` · ${now}` : ''}
+                </p>
+
+                <section id="sec-harian" className="flex scroll-mt-24 flex-col gap-4" aria-labelledby="judul-harian">
+                    <TaraEyebrow>
+                        <span id="judul-harian">Matriks laporan harian</span>
+                    </TaraEyebrow>
+                    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
+                        {kpis.map(({ icon: Icon, label, value, hint, tone }) => (
+                            <Card key={label} className="flex flex-col gap-2.5">
+                                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--tcd-muted,#eef3f8)]">
+                                    <Icon className={cn('h-[22px] w-[22px]', tone)} aria-hidden="true" />
+                                </span>
+                                <p className="text-[15px] font-medium text-[var(--tcd-text-2,#5b6b7a)]">{label}</p>
+                                <p className={cn('font-heading text-[36px] leading-none font-bold tabular-nums sm:text-[44px]', tone)}>{nf(value)}</p>
+                                <p className="text-[13px] text-[var(--tcd-text-3,#6d7681)]">{hint}</p>
+                            </Card>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
+                    <Card className="flex flex-col gap-5">
+                        <h2 className="font-heading text-xl font-bold text-[var(--tcd-heading,var(--t-deep))]">Status penanganan</h2>
+                        <div
+                            className="flex h-[18px] w-full gap-[3px] overflow-hidden rounded-full bg-[var(--tcd-muted,#eef1f4)]"
+                            role="img"
+                            aria-label="Sebaran status penanganan"
+                        >
+                            {statusTotal > 0 &&
+                                STATUS_ORDER.map(({ key, color }) => {
+                                    const v = stats.by_status?.[key] ?? 0;
+                                    return v > 0 ? <span key={key} style={{ width: `${(v / statusTotal) * 100}%`, background: color }} /> : null;
+                                })}
+                        </div>
+                        <ul className="divide-y divide-[var(--tcd-border,#e8edf2)]">
+                            {STATUS_ORDER.map(({ key, color }) => {
+                                const v = stats.by_status?.[key] ?? 0;
+                                return (
+                                    <li key={key} className="flex items-center gap-3 py-3">
+                                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color }} aria-hidden="true" />
+                                        <span className="flex-1 text-[15px] font-medium text-[var(--tcd-heading,var(--t-deep))]">
+                                            {statusLabel(key)}
+                                        </span>
+                                        <span className="font-heading text-[17px] font-bold text-[var(--tcd-heading,var(--t-deep))] tabular-nums">
+                                            {nf(v)}
+                                        </span>
+                                        <span className="w-12 text-right text-sm text-[var(--tcd-text-3,#6d7681)] tabular-nums">
+                                            {statusTotal > 0 ? Math.round((v / statusTotal) * 100) : 0}%
+                                        </span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </Card>
+
+                    <div
+                        id="sec-bulanan"
+                        className="flex scroll-mt-24 flex-col gap-5 rounded-[20px] bg-[radial-gradient(120%_120%_at_85%_0%,#0a5a91_0%,#022b4a_60%)] p-7 text-white"
+                    >
+                        <p className="text-[13px] font-semibold tracking-[0.12em] text-[#c9d6e2] uppercase">Matriks laporan bulanan</p>
+                        <p className="flex items-end gap-2.5">
+                            <span className="font-heading text-[56px] leading-none font-bold tabular-nums">{nf(stats.this_month)}</span>
+                            <span className="pb-1 text-base text-[#c9d6e2]">laporan bulan ini</span>
+                        </p>
+                        <span className="h-px w-full bg-white/15" aria-hidden="true" />
+                        <p className="flex items-end gap-2.5">
+                            <span className="font-heading text-[40px] leading-none font-bold text-[var(--t-gold)] tabular-nums">
+                                {stats.sla_pct}%
+                            </span>
+                            <span className="pb-1 text-[15px] text-[#c9d6e2]">ditangani tepat waktu (SLA)</span>
+                        </p>
+                        <span className="h-2.5 w-full overflow-hidden rounded-full bg-white/15" aria-hidden="true">
+                            <span className="block h-full rounded-full bg-[var(--t-gold)]" style={{ width: `${Math.min(100, stats.sla_pct)}%` }} />
+                        </span>
+                        <p className="text-[13px] leading-relaxed text-[#9fb2c3]">
+                            Dihitung dari tiket yang selesai bulan ini terhadap batas waktu penanganannya.
+                        </p>
+                    </div>
+                </section>
+
+                <section className="grid gap-6 lg:grid-cols-2">
+                    <Card className="flex flex-col gap-5">
+                        <h2 className="font-heading text-xl font-bold text-[var(--tcd-heading,var(--t-deep))]">Top kategori keluhan</h2>
+                        {categories.length === 0 ? (
+                            <p className="text-sm text-[var(--tcd-text-3,#6d7681)]">Belum ada data kategori.</p>
+                        ) : (
+                            <ul className="flex flex-col gap-4">
+                                {categories.map((c, i) => {
+                                    const Icon = categoryIcon(c.name);
+                                    return (
+                                        <li key={c.name} className="flex flex-col gap-2">
+                                            <span className="flex items-center gap-2.5">
+                                                <Icon
+                                                    className="h-[18px] w-[18px] shrink-0 text-[var(--tcd-link,var(--t-navy))]"
+                                                    aria-hidden="true"
+                                                />
+                                                <span className="flex-1 text-[15px] font-medium text-[var(--tcd-heading,var(--t-deep))]">
+                                                    {c.name}
+                                                </span>
+                                                <span className="font-heading font-bold text-[var(--tcd-heading,var(--t-deep))] tabular-nums">
+                                                    {nf(c.total)}
+                                                </span>
+                                            </span>
+                                            <span
+                                                className="h-2.5 w-full overflow-hidden rounded-full bg-[var(--tcd-muted,#eef1f4)]"
+                                                aria-hidden="true"
+                                            >
+                                                <span
+                                                    className={cn(
+                                                        'block h-full rounded-full',
+                                                        i === 0 ? 'bg-[var(--t-gold)]' : 'bg-[var(--tcd-primary,var(--t-navy))]',
+                                                    )}
+                                                    style={{ width: `${(c.total / maxCategory) * 100}%` }}
+                                                />
+                                            </span>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        )}
+                    </Card>
+
+                    <Card className="flex flex-col">
+                        <h2 className="font-heading text-xl font-bold text-[var(--tcd-heading,var(--t-deep))]">Distribusi kanal pengaduan</h2>
+                        <div className="mt-4 overflow-x-auto">
+                            <table className="w-full text-[15px]">
+                                <thead>
+                                    <tr className="border-b border-[var(--tcd-border,#e8edf2)] text-left text-xs font-semibold tracking-[0.1em] text-[var(--tcd-text-3,#6d7681)] uppercase">
+                                        <th className="py-2.5 font-semibold">Sumber kanal</th>
+                                        <th className="w-20 py-2.5 text-right font-semibold">Jumlah</th>
+                                        <th className="w-16 py-2.5 text-right font-semibold">%</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-[var(--tcd-border,#e8edf2)]">
+                                    {channels.map((c) => {
+                                        const Icon = channelIcon(c.name);
+                                        return (
+                                            <tr key={c.name}>
+                                                <td className="py-3">
+                                                    <span className="flex items-center gap-2.5 text-[var(--tcd-heading,var(--t-deep))]">
+                                                        <Icon
+                                                            className="h-[17px] w-[17px] shrink-0 text-[var(--tcd-link,var(--t-navy))]"
+                                                            aria-hidden="true"
+                                                        />{' '}
+                                                        {c.name}
+                                                    </span>
+                                                </td>
+                                                <td className="font-heading py-3 text-right font-bold text-[var(--tcd-heading,var(--t-deep))] tabular-nums">
+                                                    {nf(c.total)}
+                                                </td>
+                                                <td className="py-3 text-right text-sm text-[var(--tcd-text-3,#6d7681)] tabular-nums">
+                                                    {channelTotal > 0 ? ((c.total / channelTotal) * 100).toFixed(1) : '0.0'}%
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                    {channels.length === 0 && (
+                                        <tr>
+                                            <td colSpan={3} className="py-4 text-sm text-[var(--tcd-text-3,#6d7681)]">
+                                                Belum ada data kanal.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+                </section>
+
+                <section id="sec-petugas" className="flex scroll-mt-24 flex-col gap-4" aria-labelledby="judul-wilayah">
+                    <div className="flex flex-wrap items-end justify-between gap-3">
+                        <div>
+                            <TaraEyebrow>Wilayah asal pengaduan</TaraEyebrow>
+                            <h2 id="judul-wilayah" className="font-heading mt-1.5 text-2xl font-bold text-[var(--tcd-heading,var(--t-deep))]">
+                                Provinsi dengan pengaduan terbanyak
+                            </h2>
+                        </div>
+                        <Link
+                            href="/peta"
+                            className="flex items-center gap-1.5 text-[15px] font-semibold text-[var(--tcd-heading,var(--t-deep))] hover:text-[var(--tcd-link,var(--t-navy))]"
+                        >
+                            Lihat di Peta Wilayah <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                        </Link>
+                    </div>
+                    {provinces.length > 0 ? (
+                        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {provinces.map((p, i) => (
+                                <li
+                                    key={p.name}
+                                    className="flex flex-col gap-3 rounded-[20px] border border-[var(--tcd-border,#e8edf2)] bg-[var(--tcd-surface,#fff)] p-5"
+                                >
+                                    <span className="flex items-center gap-3">
+                                        <span className="font-heading flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--tcd-muted,#eef3f8)] text-sm font-bold text-[var(--tcd-link,var(--t-navy))]">
+                                            {i + 1}
+                                        </span>
+                                        <span className="font-heading min-w-0 flex-1 truncate text-lg font-bold text-[var(--tcd-heading,var(--t-deep))]">
+                                            {p.name}
+                                        </span>
+                                        <span className="font-heading text-xl font-bold text-[var(--tcd-heading,var(--t-deep))] tabular-nums">
+                                            {nf(p.total)}
+                                        </span>
+                                    </span>
+                                    <span className="h-1.5 overflow-hidden rounded-full bg-[var(--tcd-muted-2,#e6ebf0)]" aria-hidden="true">
+                                        <span
+                                            className="block h-full rounded-full bg-[var(--t-gold)]"
+                                            style={{ width: `${(p.total / maxProvince) * 100}%` }}
+                                        />
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="rounded-[20px] border border-dashed border-[var(--tcd-border-strong,#cdd6df)] p-6 text-center text-[var(--tcd-text-2,#5b6b7a)]">
+                            Belum ada pengaduan yang masuk.
+                        </p>
+                    )}
+                </section>
+
+                <section
+                    id="sec-dasar-hukum"
+                    className="grid scroll-mt-24 gap-8 rounded-[24px] bg-[var(--tcd-cream,#f7f3ee)] p-7 sm:p-9 lg:grid-cols-[340px_minmax(0,1fr)] lg:gap-10"
+                >
+                    <div className="flex flex-col gap-2.5 lg:sticky lg:top-28 lg:self-start">
+                        <TaraEyebrow tone="bronze">Dasar hukum</TaraEyebrow>
+                        <h2 className="font-heading text-2xl leading-tight font-bold text-[var(--tcd-heading,var(--t-deep))]">
+                            Keterbukaan data ini dijalankan berdasarkan
+                        </h2>
+                        <p className="text-[15px] leading-relaxed text-[var(--tcd-warm,#5b4a36)]">
+                            Data yang tampil tidak memuat identitas pelapor dan tidak termasuk tiket internal pegawai.
+                        </p>
+                    </div>
+                    <ul className="flex flex-col gap-2.5">
+                        {DASAR_HUKUM.map((h) => (
+                            <li
+                                key={h.judul}
+                                className="flex items-start gap-3 rounded-[14px] border border-[var(--tcd-border-warm,#ece6dc)] bg-[var(--tcd-surface,#fff)] px-[18px] py-3.5"
+                            >
+                                <Scale className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[var(--tcd-link,var(--t-navy))]" aria-hidden="true" />
+                                <div className="min-w-0">
+                                    <p className="text-[15px] leading-snug font-semibold text-[var(--tcd-heading,var(--t-deep))]">{h.judul}</p>
+                                    <p className="mt-1 text-sm leading-relaxed text-[var(--tcd-warm,#5b4a36)]">{h.peran}</p>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+
+                <AskTaraCard
+                    title="Butuh data yang lebih rinci?"
+                    desc="Tanya TARA, atau ajukan permohonan informasi publik lewat PPID Kementerian Transmigrasi."
+                />
+            </div>
+        </TaraPage>
+    );
+}

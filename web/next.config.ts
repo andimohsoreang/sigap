@@ -7,6 +7,8 @@ const root = path.resolve(import.meta.dirname, '..');
 const nextConfig: NextConfig = {
     output: 'standalone',
     poweredByHeader: false,
+    // Laravel melayani `/panduan/` sama dengan `/panduan` (200, tanpa redirect); bawaan Next.js 308 ke tanpa garis miring.
+    skipTrailingSlashRedirect: true,
     outputFileTracingRoot: root,
     turbopack: { root },
     // Filesystem container read-only (kecuali /tmp & .next/cache): cache ISR tetap di memori.
@@ -23,6 +25,12 @@ const nextConfig: NextConfig = {
     // CSS & font dari scripts/css-statis.mjs: nama berkas ber-hash konten, aman di-cache permanen.
     headers: async () => [
         { source: '/_cc/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
+        // Gambar publik salinan sigap/public (images/ hanya berisi png/jpg/webp): nginx produksi
+        // `location ~* \.(?:ico|png|jpe?g|webp|gif|svg|woff2?)$ { expires 7d; … }`.
+        ...['/images/:path*', '/favicon.ico', '/logo.svg'].map((source) => ({
+            source,
+            headers: [{ key: 'Cache-Control', value: 'public, max-age=604800' }],
+        })),
         // Header keamanan untuk SEMUA respons (termasuk aset), nilai & urutan persis deploy/docker/security-headers.conf
         // produksi app2 (`add_header … always`; HSTS juga di http, diabaikan browser). CSP ber-nonce: src/proxy.ts.
         {

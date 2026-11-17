@@ -1,0 +1,1032 @@
+{
+    "public": {
+        "home": {
+            "uri": "/",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "panduan": {
+            "uri": "panduan",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "tentang": {
+            "uri": "tentang",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "katalog": {
+            "uri": "katalog",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "peta": {
+            "uri": "peta",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "lacak": {
+            "uri": "lacak",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "lacak.show": {
+            "uri": "lacak/{ticket}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "wheres": {
+                "ticket": "[A-Za-z0-9-]{1,32}"
+            },
+            "parameters": [
+                "ticket"
+            ]
+        },
+        "lacak.survei": {
+            "uri": "lacak/survei",
+            "methods": [
+                "POST"
+            ]
+        },
+        "pedoman": {
+            "uri": "pedoman-layanan",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "syarat": {
+            "uri": "syarat-ketentuan",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "privasi": {
+            "uri": "kebijakan-privasi",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "tentang-kami": {
+            "uri": "tentang-kami",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "pengaduan": {
+            "uri": "pengaduan/baru",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "pengaduan.store": {
+            "uri": "pengaduan/baru",
+            "methods": [
+                "POST"
+            ]
+        },
+        "pengaduan.internal": {
+            "uri": "pengaduan/internal",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "pengaduan.internal.store": {
+            "uri": "pengaduan/internal",
+            "methods": [
+                "POST"
+            ]
+        },
+        "masuk": {
+            "uri": "masuk",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "masuk.store": {
+            "uri": "masuk",
+            "methods": [
+                "POST"
+            ]
+        },
+        "keluar": {
+            "uri": "keluar",
+            "methods": [
+                "POST"
+            ]
+        },
+        "chat.index": {
+            "uri": "chat/pesan",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "chat.start": {
+            "uri": "chat/mulai",
+            "methods": [
+                "POST"
+            ]
+        },
+        "chat.store": {
+            "uri": "chat/pesan",
+            "methods": [
+                "POST"
+            ]
+        },
+        "chat.handoff": {
+            "uri": "chat/petugas",
+            "methods": [
+                "POST"
+            ]
+        },
+        "chat.contact": {
+            "uri": "chat/kontak",
+            "methods": [
+                "POST"
+            ]
+        },
+        "chat.feedback": {
+            "uri": "chat/pesan/{message}/nilai",
+            "methods": [
+                "POST"
+            ],
+            "wheres": {
+                "message": "[0-9]+"
+            },
+            "parameters": [
+                "message"
+            ],
+            "bindings": {
+                "message": "id"
+            }
+        },
+        "rujukan.show": {
+            "uri": "rujukan/{token}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "parameters": [
+                "token"
+            ]
+        },
+        "rujukan.open": {
+            "uri": "rujukan/{token}/buka",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "token"
+            ]
+        },
+        "rujukan.confirm": {
+            "uri": "rujukan/{token}/berhasil",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "token"
+            ]
+        },
+        "rujukan.help": {
+            "uri": "rujukan/{token}/bantuan",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "token"
+            ]
+        }
+    },
+    "warga": {
+        "warga.portal": {
+            "uri": "portal-warga",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "warga.profil.update": {
+            "uri": "portal-warga/profil",
+            "methods": [
+                "PATCH"
+            ]
+        },
+        "warga.tiket.lampiran": {
+            "uri": "portal-warga/tiket/{ticket}/lampiran",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "parameters": [
+                "ticket"
+            ],
+            "bindings": {
+                "ticket": "ticket_no"
+            }
+        },
+        "warga.tiket.destroy": {
+            "uri": "portal-warga/tiket/{ticket}",
+            "methods": [
+                "DELETE"
+            ],
+            "parameters": [
+                "ticket"
+            ],
+            "bindings": {
+                "ticket": "ticket_no"
+            }
+        }
+    },
+    "admin": {
+        "admin.dashboard": {
+            "uri": "admin",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.matriks": {
+            "uri": "admin/matriks",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.tiket": {
+            "uri": "admin/tiket",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.tiket.show": {
+            "uri": "admin/tiket/{ticket}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "parameters": [
+                "ticket"
+            ],
+            "bindings": {
+                "ticket": "ticket_no"
+            }
+        },
+        "admin.tiket.lampiran": {
+            "uri": "admin/tiket/{ticket}/lampiran",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "parameters": [
+                "ticket"
+            ],
+            "bindings": {
+                "ticket": "ticket_no"
+            }
+        },
+        "admin.tiket.status": {
+            "uri": "admin/tiket/{ticket}/status",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "ticket"
+            ],
+            "bindings": {
+                "ticket": "ticket_no"
+            }
+        },
+        "admin.tiket.reply": {
+            "uri": "admin/tiket/{ticket}/tanggapan",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "ticket"
+            ],
+            "bindings": {
+                "ticket": "ticket_no"
+            }
+        },
+        "admin.tiket.tinjau": {
+            "uri": "admin/tiket/{ticket}/tinjau-ulang",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "ticket"
+            ],
+            "bindings": {
+                "ticket": "ticket_no"
+            }
+        },
+        "admin.tiket-internal": {
+            "uri": "admin/tiket-internal",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.input-manual": {
+            "uri": "admin/input-manual",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.input-manual.store": {
+            "uri": "admin/input-manual",
+            "methods": [
+                "POST"
+            ]
+        },
+        "admin.chat": {
+            "uri": "admin/chat",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.chat.reply": {
+            "uri": "admin/chat/{conversation}/balas",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "conversation"
+            ],
+            "bindings": {
+                "conversation": "id"
+            }
+        },
+        "admin.chat.read": {
+            "uri": "admin/chat/{conversation}/baca",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "conversation"
+            ],
+            "bindings": {
+                "conversation": "id"
+            }
+        },
+        "admin.chat.unread": {
+            "uri": "admin/chat/belum-dibaca",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.chat.take": {
+            "uri": "admin/chat/{conversation}/ambil",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "conversation"
+            ],
+            "bindings": {
+                "conversation": "id"
+            }
+        },
+        "admin.chat.close": {
+            "uri": "admin/chat/{conversation}/tutup",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "conversation"
+            ],
+            "bindings": {
+                "conversation": "id"
+            }
+        },
+        "admin.chat.refer": {
+            "uri": "admin/chat/{conversation}/rujuk",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "conversation"
+            ],
+            "bindings": {
+                "conversation": "id"
+            }
+        },
+        "admin.chat.saran-tiket": {
+            "uri": "admin/chat/{conversation}/saran-tiket",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "parameters": [
+                "conversation"
+            ],
+            "bindings": {
+                "conversation": "id"
+            }
+        },
+        "admin.chat.akun": {
+            "uri": "admin/chat/{conversation}/akun",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "conversation"
+            ],
+            "bindings": {
+                "conversation": "id"
+            }
+        },
+        "admin.chat.konfirmasi": {
+            "uri": "admin/chat/{conversation}/konfirmasi-data",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "conversation"
+            ],
+            "bindings": {
+                "conversation": "id"
+            }
+        },
+        "admin.chat.lampiran": {
+            "uri": "admin/chat/lampiran/{message}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "wheres": {
+                "message": "[0-9]+"
+            },
+            "parameters": [
+                "message"
+            ],
+            "bindings": {
+                "message": "id"
+            }
+        },
+        "admin.chat.akun.pulihkan": {
+            "uri": "admin/chat/{conversation}/akun/pulihkan",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "conversation"
+            ],
+            "bindings": {
+                "conversation": "id"
+            }
+        },
+        "admin.chat.akun.ulang": {
+            "uri": "admin/chat/{conversation}/akun/kirim-ulang",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "conversation"
+            ],
+            "bindings": {
+                "conversation": "id"
+            }
+        },
+        "admin.rujukan": {
+            "uri": "admin/rujukan",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.rujukan.catatan": {
+            "uri": "admin/rujukan/{referral}/catatan",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "referral"
+            ],
+            "bindings": {
+                "referral": "code"
+            }
+        },
+        "admin.rujukan.pesan": {
+            "uri": "admin/rujukan/{referral}/pesan",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "referral"
+            ],
+            "bindings": {
+                "referral": "code"
+            }
+        },
+        "admin.rujukan.berhasil": {
+            "uri": "admin/rujukan/{referral}/berhasil",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "referral"
+            ],
+            "bindings": {
+                "referral": "code"
+            }
+        },
+        "admin.rujukan.alihkan": {
+            "uri": "admin/rujukan/{referral}/alihkan",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "referral"
+            ],
+            "bindings": {
+                "referral": "code"
+            }
+        },
+        "admin.rujukan.tutup": {
+            "uri": "admin/rujukan/{referral}/tutup",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "referral"
+            ],
+            "bindings": {
+                "referral": "code"
+            }
+        },
+        "admin.portal": {
+            "uri": "admin/portal",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.portal.store": {
+            "uri": "admin/portal",
+            "methods": [
+                "POST"
+            ]
+        },
+        "admin.portal.update": {
+            "uri": "admin/portal/{portal}",
+            "methods": [
+                "PUT"
+            ],
+            "parameters": [
+                "portal"
+            ],
+            "bindings": {
+                "portal": "id"
+            }
+        },
+        "admin.portal.cek": {
+            "uri": "admin/portal/{portal}/cek",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "portal"
+            ],
+            "bindings": {
+                "portal": "id"
+            }
+        },
+        "admin.pengetahuan": {
+            "uri": "admin/pengetahuan",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.pengetahuan.tinjau": {
+            "uri": "admin/pengetahuan/tinjau",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.pengetahuan.dokumen": {
+            "uri": "admin/pengetahuan/dokumen",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.pengetahuan.dokumen.store": {
+            "uri": "admin/pengetahuan/dokumen",
+            "methods": [
+                "POST"
+            ]
+        },
+        "admin.pengetahuan.dokumen.simpan": {
+            "uri": "admin/pengetahuan/dokumen/{document}/simpan",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "document"
+            ],
+            "bindings": {
+                "document": "id"
+            }
+        },
+        "admin.pengetahuan.dokumen.ulang": {
+            "uri": "admin/pengetahuan/dokumen/{document}/ulang",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "document"
+            ],
+            "bindings": {
+                "document": "id"
+            }
+        },
+        "admin.pengetahuan.dokumen.berkas": {
+            "uri": "admin/pengetahuan/dokumen/{document}/berkas",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "parameters": [
+                "document"
+            ],
+            "bindings": {
+                "document": "id"
+            }
+        },
+        "admin.pengetahuan.dokumen.destroy": {
+            "uri": "admin/pengetahuan/dokumen/{document}",
+            "methods": [
+                "DELETE"
+            ],
+            "parameters": [
+                "document"
+            ],
+            "bindings": {
+                "document": "id"
+            }
+        },
+        "admin.pengetahuan.sumber": {
+            "uri": "admin/pengetahuan/sumber",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.pengetahuan.sumber.store": {
+            "uri": "admin/pengetahuan/sumber",
+            "methods": [
+                "POST"
+            ]
+        },
+        "admin.pengetahuan.sumber.sinkron-semua": {
+            "uri": "admin/pengetahuan/sumber/sinkron",
+            "methods": [
+                "POST"
+            ]
+        },
+        "admin.pengetahuan.sumber.update": {
+            "uri": "admin/pengetahuan/sumber/{source}",
+            "methods": [
+                "PUT"
+            ],
+            "parameters": [
+                "source"
+            ],
+            "bindings": {
+                "source": "id"
+            }
+        },
+        "admin.pengetahuan.sumber.sinkron": {
+            "uri": "admin/pengetahuan/sumber/{source}/sinkron",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "source"
+            ],
+            "bindings": {
+                "source": "id"
+            }
+        },
+        "admin.pengetahuan.sumber.destroy": {
+            "uri": "admin/pengetahuan/sumber/{source}",
+            "methods": [
+                "DELETE"
+            ],
+            "parameters": [
+                "source"
+            ],
+            "bindings": {
+                "source": "id"
+            }
+        },
+        "admin.pengetahuan.store": {
+            "uri": "admin/pengetahuan",
+            "methods": [
+                "POST"
+            ]
+        },
+        "admin.pengetahuan.update": {
+            "uri": "admin/pengetahuan/{article}",
+            "methods": [
+                "PUT"
+            ],
+            "parameters": [
+                "article"
+            ],
+            "bindings": {
+                "article": "id"
+            }
+        },
+        "admin.pengetahuan.terbitkan": {
+            "uri": "admin/pengetahuan/{article}/terbitkan",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "article"
+            ],
+            "bindings": {
+                "article": "id"
+            }
+        },
+        "admin.pengetahuan.kembalikan": {
+            "uri": "admin/pengetahuan/{article}/kembalikan",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "article"
+            ],
+            "bindings": {
+                "article": "id"
+            }
+        },
+        "admin.pengetahuan.destroy": {
+            "uri": "admin/pengetahuan/{article}",
+            "methods": [
+                "DELETE"
+            ],
+            "parameters": [
+                "article"
+            ],
+            "bindings": {
+                "article": "id"
+            }
+        },
+        "admin.kawasan": {
+            "uri": "admin/kawasan",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.kawasan.store": {
+            "uri": "admin/kawasan",
+            "methods": [
+                "POST"
+            ]
+        },
+        "admin.kawasan.update": {
+            "uri": "admin/kawasan/{region}",
+            "methods": [
+                "PUT"
+            ],
+            "parameters": [
+                "region"
+            ],
+            "bindings": {
+                "region": "id"
+            }
+        },
+        "admin.kawasan.destroy": {
+            "uri": "admin/kawasan/{region}",
+            "methods": [
+                "DELETE"
+            ],
+            "parameters": [
+                "region"
+            ],
+            "bindings": {
+                "region": "id"
+            }
+        },
+        "admin.kanal": {
+            "uri": "admin/kanal",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.kanal.store": {
+            "uri": "admin/kanal",
+            "methods": [
+                "POST"
+            ]
+        },
+        "admin.integrasi.sync": {
+            "uri": "admin/integrasi/{channel}",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "channel"
+            ]
+        },
+        "admin.pengaturan": {
+            "uri": "admin/pengaturan",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.pengaturan.update": {
+            "uri": "admin/pengaturan",
+            "methods": [
+                "PUT"
+            ]
+        },
+        "admin.pengaturan.kanal-publik": {
+            "uri": "admin/pengaturan/kanal-publik",
+            "methods": [
+                "PUT"
+            ]
+        },
+        "admin.profil.update": {
+            "uri": "admin/profil",
+            "methods": [
+                "PUT"
+            ]
+        },
+        "admin.kategori.store": {
+            "uri": "admin/kategori",
+            "methods": [
+                "POST"
+            ]
+        },
+        "admin.kategori.destroy": {
+            "uri": "admin/kategori/{category}",
+            "methods": [
+                "DELETE"
+            ],
+            "parameters": [
+                "category"
+            ],
+            "bindings": {
+                "category": "id"
+            }
+        },
+        "admin.petugas": {
+            "uri": "admin/petugas",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.petugas.store": {
+            "uri": "admin/petugas",
+            "methods": [
+                "POST"
+            ]
+        },
+        "admin.petugas.email": {
+            "uri": "admin/petugas/{petugas}/email",
+            "methods": [
+                "PUT"
+            ],
+            "wheres": {
+                "petugas": "[0-9]+"
+            },
+            "parameters": [
+                "petugas"
+            ],
+            "bindings": {
+                "petugas": "id"
+            }
+        },
+        "admin.petugas.unit": {
+            "uri": "admin/petugas/{petugas}/unit",
+            "methods": [
+                "PUT"
+            ],
+            "wheres": {
+                "petugas": "[0-9]+"
+            },
+            "parameters": [
+                "petugas"
+            ],
+            "bindings": {
+                "petugas": "id"
+            }
+        },
+        "admin.unit": {
+            "uri": "admin/unit-kerja",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.unit.store": {
+            "uri": "admin/unit-kerja",
+            "methods": [
+                "POST"
+            ]
+        },
+        "admin.unit.update": {
+            "uri": "admin/unit-kerja/{unit}",
+            "methods": [
+                "PUT"
+            ],
+            "wheres": {
+                "unit": "[0-9]+"
+            },
+            "parameters": [
+                "unit"
+            ],
+            "bindings": {
+                "unit": "id"
+            }
+        },
+        "admin.unit.destroy": {
+            "uri": "admin/unit-kerja/{unit}",
+            "methods": [
+                "DELETE"
+            ],
+            "wheres": {
+                "unit": "[0-9]+"
+            },
+            "parameters": [
+                "unit"
+            ],
+            "bindings": {
+                "unit": "id"
+            }
+        },
+        "admin.tiket.disposisi": {
+            "uri": "admin/tiket/{ticket}/disposisi",
+            "methods": [
+                "POST"
+            ],
+            "parameters": [
+                "ticket"
+            ],
+            "bindings": {
+                "ticket": "ticket_no"
+            }
+        },
+        "admin.tiket.disposisi.tarik": {
+            "uri": "admin/tiket/{ticket}/disposisi",
+            "methods": [
+                "DELETE"
+            ],
+            "parameters": [
+                "ticket"
+            ],
+            "bindings": {
+                "ticket": "ticket_no"
+            }
+        },
+        "admin.log": {
+            "uri": "admin/log-aktivitas",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        "admin.kesehatan-ai": {
+            "uri": "admin/kesehatan-ai",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        }
+    }
+}
