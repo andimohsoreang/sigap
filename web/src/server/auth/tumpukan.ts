@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import { metodeBaca, tokenCocok, tokenDariPermintaan } from '@/server/web/csrf';
 import { asalAplikasi, inginJson, ipKlien, jalurAman, jalurTerdekode, responsJson } from '@/server/web/permintaan';
+import { redirectLama, respons301 } from '@/server/web/redirect-lama';
 import { jsonLaravel, redirectLaravel, respons419, responsGalat } from '@/server/web/respons';
 
 import { catatAudit } from './audit';
@@ -185,8 +186,14 @@ export async function tumpukanWeb(req: NextRequest, headerTeruskan: Headers): Pr
             hapusIngat ? null : typeof cookieIngat === 'string' ? cookieIngat : null,
         ),
     );
-    if (keputusan.jenis === 'lanjut') pasangKonteks(headerTeruskan, sesi, pengguna);
-    const res = keputusan.jenis === 'lanjut' ? NextResponse.next({ request: { headers: headerTeruskan } }) : keRespons(keputusan, ctx, asal);
+    // Middleware lolos → rute. Route::redirect (alamat lama, 301) dijawab di sini agar sesi & cookie sama dengan Laravel.
+    const keLama = keputusan.jenis === 'lanjut' ? redirectLama(ctx.metode, ctx.path) : null;
+    if (keputusan.jenis === 'lanjut' && !keLama) pasangKonteks(headerTeruskan, sesi, pengguna);
+    const res = keLama
+        ? respons301(keLama, req.url)
+        : keputusan.jenis === 'lanjut'
+          ? NextResponse.next({ request: { headers: headerTeruskan } })
+          : keRespons(keputusan, ctx, asal);
     // Cookie diperbarui di setiap respons halaman (Max-Age idle) dan setiap kali id/token berganti.
     if (sesi && (baca || sesi.id !== idAwal || sesi.csrf !== csrfAwal)) pasangCookieSesi(res, sesi.id, sesi.csrf);
     if (hapusIngat) pasangCookieIngat(res, null);
