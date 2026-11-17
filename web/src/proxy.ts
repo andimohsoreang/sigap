@@ -48,9 +48,12 @@ export async function proxy(req: NextRequest) {
         res = responsGalat(500, json, 'Server Error');
     }
     res.headers.set('Content-Security-Policy', csp);
-    // Respons dinamis Laravel: Cache-Control bawaan Symfony `no-cache, private` (diperiksa di app2 /tentang); RedirectResponse
-    // 301 Symfony justru membuangnya (boleh di-cache).
-    if (!res.headers.has('Cache-Control') && res.status !== 301) res.headers.set('Cache-Control', 'no-cache, private');
+    // Respons dinamis Laravel: Cache-Control bawaan Symfony `no-cache, private` (diperiksa di app2 /tentang). RedirectResponse
+    // 301 Symfony membuangnya (boleh di-cache), tetapi 301 yang membawa Set-Cookie sesi tetap `no-cache, private`: cache
+    // bersama tidak boleh menyimpan sesi satu pengunjung untuk pengunjung lain (audit S1 run-3 NV-S1-A; perbedaan
+    // disengaja #5 di docs/slices/S1.md). 301 tanpa cookie (OPTIONS) tetap tanpa Cache-Control seperti Laravel.
+    const bolehCache301 = res.status === 301 && res.headers.getSetCookie().length === 0;
+    if (!res.headers.has('Cache-Control') && !bolehCache301) res.headers.set('Cache-Control', 'no-cache, private');
     return res;
 }
 

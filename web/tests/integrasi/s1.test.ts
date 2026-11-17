@@ -117,13 +117,22 @@ describe.runIf(diminta)('integrasi proxy S1 (server standalone)', { timeout: 120
         expect(await r.text()).toContain('<div id="app"></div>');
     });
 
-    it('redirect lama: 301, Location relatif, query dibuang, tanpa Cache-Control', async () => {
+    it('redirect lama: 301, Location relatif, query dibuang; membawa cookie sesi → no-cache, private', async () => {
         const r = await minta('/beranda-baru?x=1');
         expect(r.status).toBe(301);
         expect(r.headers.get('location')).toBe('/');
-        expect(r.headers.get('cache-control')).toBeNull();
+        expect(namaCookie(r).sort()).toEqual([SESI, 'XSRF-TOKEN'].sort());
+        // Perbedaan disengaja #5 (S1.md): Laravel tanpa Cache-Control; cache bersama tidak boleh menyimpan sesi pengunjung.
+        expect(r.headers.get('cache-control')).toBe('no-cache, private');
         // Isi: Next.js mengirim teks URL, Laravel halaman "Redirecting to /" (perbedaan yang diketahui, lihat redirect-lama.ts).
         expect(await r.text()).toBe('/');
+    });
+
+    it('redirect lama OPTIONS: 301 tanpa cookie tetap tanpa Cache-Control (seperti Laravel)', async () => {
+        const r = await minta('/lacak-tiket', { method: 'OPTIONS' });
+        expect(r.status).toBe(301);
+        expect(r.headers.getSetCookie()).toEqual([]);
+        expect(r.headers.get('cache-control')).toBeNull();
     });
 
     it('x-cc-url dari klien diabaikan: url objek halaman /tentang tetap dari URL permintaan', async () => {
