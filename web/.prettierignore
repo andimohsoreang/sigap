@@ -5,3 +5,5 @@ package-lock.json
 src/app/globals.css
 dist
 drizzle-cc
+src/server/inertia/ziggy-rute.json
+public
