@@ -6,9 +6,12 @@ capture selebar viewport — lihat *Pengecualian* di bawah).
 
 | Berkas | Isi |
 |---|---|
-| `tests/http.spec.ts` | halaman S1 (+ garis miring akhir) → 200 tanpa redirect, judul, meta, `lang="id"`, h1/h2, header tamu, request & WebSocket luar yang diblokir; `Cache-Control: no-cache, private`, header keamanan, CSP per direktif, atribut cookie `sigap_session`/`XSRF-TOKEN`; redirect lama → 301 + `Location` persis (relatif, query dibuang) |
+| `tests/http.spec.ts` | halaman S1 (+ garis miring akhir) → 200 tanpa redirect, judul, meta, `lang="id"`, h1/h2, header tamu, request & WebSocket luar yang diblokir; `Cache-Control: no-cache, private`, header keamanan, CSP per direktif, tepat dua cookie (sesi + `XSRF-TOKEN`) dengan atribut persis; redirect lama → 301 + `Location` persis (relatif, query dibuang) |
 | `tests/visual.spec.ts` | S1 × desktop 1440 / tablet 768 / ponsel 375 × varian terang, gelap, aksesibilitas (teks 130% + kontras + disleksia), login warga, login admin: screenshot full page + snapshot DOM `<header>`/`<main>`/`<footer>` ternormalisasi (ukuran gulir & daftar luapan di komentar awal); header terpisah untuk varian login |
-| `tests/login.setup.ts` | login akun uji `sigap:e2e-setup` → `.auth/*.json` |
+| `tests/login.setup.ts` | login akun uji `sigap:e2e-setup` → `.auth/*.json`; Laravel lewat formulir `/masuk`, Next.js lewat `POST /masuk` (halaman Masuk baru di S15) dengan redirect per peran yang dicek |
+| `tests/target.ts` | `TARGET` (`laravel`/`next`), port & `BASE_URL`, dan **satu-satunya** tempat harapan yang boleh beda per target (nama cookie sesi + Secure, origin WebSocket di CSP `connect-src`) — daftar & alasannya di `docs/slices/S1.md` "Perbedaan yang disengaja" |
+| `scripts/laravel.sh`, `scripts/next.sh`, `scripts/umum.sh` | target lokal (dipanggil Playwright); `umum.sh` = penjaga `laravel-baseline`, env, kunci acak, seed `sigap:e2e-setup` yang dipakai kedua target |
+| `perf/ttfb.ts`, `perf/vitals.ts` | ukur TTFB p50/p95 (beban ringan) & TTFB/FCP/LCP/CLS/INP-proksi lab, lokal dan indikatif (lihat *Performa*) |
 | `env/laravel.env` | konfigurasi target Laravel = cermin produksi (`PRODUKSI.md`), tanpa rahasia |
 | `visual/manifest.json` | SHA-256 tiap baseline Laravel per `<platform>-<arch>` (mis. `darwin-arm64`, CI `linux-x64`) + sidik mesin (CPU, fitur SIMD) & versi Playwright/Chromium (PNG tidak di-commit) |
 | `fixtures/` | vektor JSON dari kelas PHP asli (`cc:ekspor-fixture`); `fixtures/kripto/` milik paket B |
@@ -50,16 +53,35 @@ selain `BASE_URL` diblokir dan dicatat.
 
 2. **Laravel (cek ulang suite)**: `npx playwright test`.
 
-3. **Next.js**: `BASE_URL=http://127.0.0.1:3000 npx playwright test` — dibandingkan dengan `.baseline/` dari langkah 1.
-   - Jalankan build produksi: `next build && next start` (bukan `next dev`: indikator dev & overlay mengubah piksel/DOM).
-   - Data sama dengan Laravel: seed `sigap:e2e-setup` ke database target, berkas kredensial
-     `sigap/storage/app/e2e/credentials.json` atau `CREDENTIALS=<path>`.
+3. **Next.js**: `TARGET=next npx playwright test` — dibandingkan dengan `.baseline/` dari langkah 1.
+   - `scripts/next.sh` (port 3124): `npm run build` di `web/` (build produksi standalone, bukan `next dev`: indikator dev &
+     overlay mengubah piksel/DOM), seed `sigap:e2e-setup` yang sama dengan target Laravel (kunci `APP_KEY`/`NIK_HASH_KEY`
+     acak dipakai bersama Laravel seeder & Next.js), migrasi tabel `cc_*` (`web/dist/migrate.mjs`), Valkey sementara di
+     port+10000 (`valkey-server` atau `redis-server` wajib ada), lalu `node .next/standalone/web/server.js` dengan env
+     image produksi (`NODE_ENV=production`, `TZ=Asia/Jakarta`) dan nilai `env/laravel.env`. `PARITAS_NEXT_BUILD=0` memakai
+     build yang sudah ada.
+   - Server Next.js yang sudah hidup (mis. stack uji): `TARGET=next BASE_URL=<url> npx playwright test`, data harus seed
+     `sigap:e2e-setup` yang sama, berkas kredensial `sigap/storage/app/e2e/credentials.json` atau `CREDENTIALS=<path>`.
+   - `PARITAS_DB=<db>` (kedua target) memakai database lain dari `cc_paritas` (pemilik `cc_migrate`, `LC_COLLATE 'C'`),
+     agar run di worktree lain tidak menimpa seed; `PARITAS_PORT` mengganti port.
    - Jam server **tidak** dibekukan (hanya jam browser): seed dan jalankan pada hari yang sama dengan baseline,
      karena penghitung "Laporan masuk hari ini" di `/tentang` dihitung dari jam server.
    - Baseline tidak pernah ditulis dari target lain (`updateSnapshots: 'none'`). Selisih ada di `test-results/`
      (expected/actual/diff); `npx playwright show-report`.
 
 Jangan menambah toleransi atau mask untuk meloloskan test.
+
+## Performa (lokal, indikatif)
+
+Gerbang p95 < 300 ms diukur di stack uji; angka laptop hanya pembanding Laravel ↔ Next.js pada data yang sama.
+
+```bash
+node perf/ttfb.ts                                   # Next.js, BASE_URL bawaan http://127.0.0.1:3124; KLIEN=10 DETIK=30
+BASE_URL=http://127.0.0.1:8124 node perf/ttfb.ts    # Laravel (php artisan serve: tanpa FPM/opcache, lebih lambat dari produksi)
+node perf/vitals.ts                                 # TTFB/FCP/LCP/CLS + INP-proksi, median 5 muat dingin, ponsel CPU 4×
+```
+
+Server dinyalakan sendiri (mis. `bash scripts/next.sh 3124`, `bash scripts/laravel.sh 8124`), lalu dimatikan.
 
 ## Pengecualian: capture selebar viewport
 

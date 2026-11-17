@@ -1,4 +1,5 @@
 import { S1_EXTERNAL, S1_PAGES, S1_REDIRECTS } from './s1';
+import { EXPECT } from './target';
 import { expect, test } from './test';
 
 /** Atribut Set-Cookie sebagai himpunan ternormalisasi: huruf kecil, tanpa expires, urut. */
@@ -25,7 +26,10 @@ const parseCsp = (header: string) =>
             }),
     );
 
-/** CSP produksi (APP_ENV=production, site key reCAPTCHA terisi); connect-src = Reverb lingkungan paritas. */
+/**
+ * CSP produksi (APP_ENV=production, site key reCAPTCHA terisi). connect-src = origin WebSocket yang dikonfigurasi target
+ * (perbedaan disengaja no. 2, tests/target.ts): Laravel = Reverb VITE_REVERB_*, Next.js = origin aplikasi.
+ */
 const CSP = {
     'default-src': ["'self'"],
     'base-uri': ["'self'"],
@@ -36,7 +40,7 @@ const CSP = {
     'style-src': ["'self'", "'unsafe-inline'"],
     'img-src': ["'self'", 'blob:', 'data:', 'https://*.tile.openstreetmap.org', 'https://www.transmigrasi.go.id'],
     'font-src': ["'self'", 'data:'],
-    'connect-src': ["'self'", 'ws://localhost:8080'],
+    'connect-src': ["'self'", EXPECT.wsOrigin].sort(),
     'frame-src': ['https://recaptcha.google.com/recaptcha/', 'https://www.google.com/recaptcha/'],
     'worker-src': ["'self'", 'blob:'],
     'manifest-src': ["'self'"],
@@ -83,8 +87,11 @@ test.describe('S1 header keamanan & cookie sesi', () => {
                 .headersArray()
                 .filter((x) => x.name.toLowerCase() === 'set-cookie')
                 .map((x) => x.value);
-            expect(cookieAttrs(setCookies, 'sigap_session')).toEqual(['httponly', 'max-age=7200', 'path=/', 'samesite=lax']);
-            expect(cookieAttrs(setCookies, 'XSRF-TOKEN')).toEqual(['max-age=7200', 'path=/', 'samesite=lax']);
+            // Tepat dua cookie. Nama cookie sesi & Secure = perbedaan disengaja no. 1 (tests/target.ts); atribut lain sama.
+            const secure = EXPECT.cookieSecure ? ['secure'] : [];
+            expect(setCookies.map((c) => c.slice(0, c.indexOf('='))).sort()).toEqual([EXPECT.sessionCookie, 'XSRF-TOKEN'].sort());
+            expect(cookieAttrs(setCookies, EXPECT.sessionCookie)).toEqual(['httponly', 'max-age=7200', 'path=/', 'samesite=lax', ...secure]);
+            expect(cookieAttrs(setCookies, 'XSRF-TOKEN')).toEqual(['max-age=7200', 'path=/', 'samesite=lax', ...secure]);
         });
     }
 });

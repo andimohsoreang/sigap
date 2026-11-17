@@ -1,12 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
 
+import { BASE_URL as baseURL, PORT, TARGET } from './tests/target';
+
 /**
  * Suite paritas Contact Center (docs/RENCANA-REWRITE-NEXTJS.md §8.3).
- * BASE_URL kosong → boot Laravel lokal (scripts/laravel.sh) sebagai acuan.
- * BASE_URL diisi → jalankan suite yang sama ke target itu (mis. Next.js).
+ * TARGET=laravel (bawaan) + BASE_URL kosong → boot Laravel lokal (scripts/laravel.sh) sebagai acuan.
+ * TARGET=next + BASE_URL kosong → build & boot Next.js standalone lokal (scripts/next.sh) dengan data seed yang sama.
+ * BASE_URL diisi → jalankan suite ke server yang sudah hidup; TARGET tetap menentukan perbedaan yang disengaja.
  */
-const PORT = 8124;
-const baseURL = process.env.BASE_URL ?? `http://127.0.0.1:${PORT}`;
 
 const viewport = (name: string, width: number, height: number) => ({
     name,
@@ -55,11 +56,12 @@ export default defineConfig({
     webServer: process.env.BASE_URL
         ? undefined
         : {
-              command: `bash scripts/laravel.sh ${PORT}`,
-              url: `${baseURL}/api/v1/health`,
+              command: `bash scripts/${TARGET}.sh ${PORT}`,
+              url: TARGET === 'laravel' ? `${baseURL}/api/v1/health` : `${baseURL}/up`,
               reuseExistingServer: false,
-              timeout: 180_000,
-              // Keluaran laravel.sh tampil di log (CI tidak bisa di-debug tanpanya).
+              // next.sh menjalankan `npm run build` (± 2–4 menit) sebelum server hidup.
+              timeout: TARGET === 'laravel' ? 180_000 : 600_000,
+              // Keluaran skrip target tampil di log (CI tidak bisa di-debug tanpanya).
               stdout: 'pipe',
               stderr: 'pipe',
           },
