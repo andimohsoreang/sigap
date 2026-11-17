@@ -1,7 +1,6 @@
 import Tentang from '@/halaman/public/tentang';
 import { renderInertia } from '@/server/inertia/halaman';
-// SEMENTARA: ganti menjadi '@/server/statistik' saat s1/statistik digabung (lihat berkas stub).
-import { ambilStatistikPublik } from '@/server/statistik-sementara';
+import { ambilStatistikPublik } from '@/server/statistik';
 
 // PublicController::about → Inertia::render('public/tentang', ['stats' => publicOverview()]). Dinamis per permintaan
 // (renderInertia membaca header), tanpa prerender saat build.
