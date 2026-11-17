@@ -24,6 +24,13 @@ const kunciLama = z.string().refine(
 );
 // Harus cocok dengan pola rewrite /_realtime/app/:key di next.config.ts.
 const kunciRealtime = wajib.regex(/^[A-Za-z0-9_-]+$/, 'hanya huruf, angka, _ dan -');
+/** `(bool) env(...)` Laravel: true/(true) dan false/(false), null/empty; selain itu cast PHP ('' & '0' → false). */
+export function boolLaravel(v: string): boolean {
+    const k = v.toLowerCase();
+    if (k === 'true' || k === '(true)') return true;
+    if (['false', '(false)', 'null', '(null)', 'empty', '(empty)'].includes(k)) return false;
+    return v !== '' && v !== '0';
+}
 const kunciHashNik = wajib.refine(lolos(kunciNik), 'minimal 32 byte dan bukan nilai kosong/sentinel');
 
 const dasar = z.object({
@@ -53,6 +60,9 @@ const dasar = z.object({
     SESSION_LIFETIME: z.coerce.number().int().min(1).max(525_600).default(120),
     // Site key reCAPTCHA (publik): menentukan domain Google di CSP, seperti services.recaptcha.site_key Laravel.
     RECAPTCHA_SITE_KEY: wajib.optional(),
+    // Prop bersama `assistant` (HandleInertiaRequests): `(bool) env('AI_ENABLED', false)` & AI_SERVICE_LABEL Laravel.
+    AI_ENABLED: z.string().default('false').transform(boolLaravel),
+    AI_SERVICE_LABEL: wajib.default('Senin–Jumat, 08.00–16.00 WIB'),
 });
 
 // Produksi menolak start bila kunci wajib kosong atau mode debug aktif (rencana §9.2).

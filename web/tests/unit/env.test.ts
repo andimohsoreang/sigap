@@ -73,6 +73,14 @@ describe('bacaEnv', () => {
         expect(bacaEnv({ NODE_ENV: 'development', APP_PREVIOUS_KEYS: `${KUNCI},` }).APP_PREVIOUS_KEYS).toBe(`${KUNCI},`);
     });
 
+    it('AI_ENABLED = (bool) env() Laravel; label jam layanan bawaan config/services.php', () => {
+        const ai = (v?: string) => bacaEnv({ NODE_ENV: 'development', AI_ENABLED: v }).AI_ENABLED;
+        expect(ai()).toBe(false);
+        for (const v of ['true', '(true)', 'TRUE', '1', 'ya']) expect(ai(v), v).toBe(true);
+        for (const v of ['false', '(false)', '0', 'null', '(null)', 'empty', '(empty)']) expect(ai(v), v).toBe(false);
+        expect(bacaEnv({ NODE_ENV: 'development' }).AI_SERVICE_LABEL).toBe('Senin–Jumat, 08.00–16.00 WIB');
+    });
+
     it('ukuran & nama pool DB: bawaan 10 / cc-web, batas 1–20', () => {
         expect(bacaEnv({ NODE_ENV: 'development' })).toMatchObject({ DB_POOL_MAX: 10, DB_APP_NAME: 'cc-web' });
         expect(bacaEnv({ NODE_ENV: 'development', DB_POOL_MAX: '3', DB_APP_NAME: 'cc-worker' })).toMatchObject({

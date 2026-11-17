@@ -1,15 +1,11 @@
-import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
-
-import { APP_NAME } from '@/lib/judul';
 
 // CSS dibangun scripts/css-statis.mjs dari globals.css (bukan lewat Turbopack) agar identik dengan build Vite Laravel.
 import asetCss from './aset-css.json';
 
-export const metadata: Metadata = {
-    title: { default: APP_NAME, template: `%s - ${APP_NAME}` },
-};
+// Tanpa judul metadata: <title> halaman dirender <InertiaApp> (lihat src/lib/inertia/head.ts) — dua <title> milik React
+// saling berebut elemen yang sama di <head>.
 
 // Disalin apa adanya dari sigap/resources/views/app.blade.php: tema & aksesibilitas dipasang sebelum paint.
 const skripPreferensi = `
