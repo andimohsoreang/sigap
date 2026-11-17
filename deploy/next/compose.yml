@@ -32,6 +32,10 @@
 
 name: contact-center-uji
 
+# x-config-hash: pgbouncer, valkey, sockudo membaca berkas config hanya saat start, dan bind mount satu berkas tetap
+# memegang inode lama setelah `git pull` (17 Nov: pgbouncer.ini baru tidak terbaca). Label cc.config-hash = sha256
+# isi berkas config service itu, dihitung scripts/deploy-uji.sh; label berubah → `up -d` membuat ulang HANYA service
+# itu. Tanpa skrip nilainya "manual". Berkas uji/ (init postgres) tidak di-hash: hanya dibaca saat volume kosong.
 x-logging: &logging
   driver: json-file
   options: { max-size: "10m", max-file: "5" }
@@ -167,6 +171,8 @@ services:
     # Env tanpa rahasia (mode, push, antrean, driver, metrics) dari satu sumber yang juga dipakai
     # scripts/cek-binary-native.sh — penjelasan tiap kunci ada di berkas itu.
     env_file: sockudo.env
+    labels:
+      cc.config-hash: ${CC_HASH_SOCKUDO:-manual} # lihat x-config-hash di atas
     environment:
       # SOCKUDO_DEFAULT_APP_* mengganti semua app inline. Batas bawaan app ini 100 (koneksi, event/dtk,
       # payload 100 KB) — cukup untuk UAT; dinaikkan lewat SOCKUDO_DEFAULT_APP_MAX_* sebelum pergantian.
@@ -200,6 +206,8 @@ services:
     command: ["valkey-server", "/usr/local/etc/valkey/valkey.conf", "--requirepass", "${VALKEY_PASSWORD:?VALKEY_PASSWORD wajib diisi di .env}"]
     environment:
       VALKEYCLI_AUTH: ${VALKEY_PASSWORD}
+    labels:
+      cc.config-hash: ${CC_HASH_VALKEY:-manual} # lihat x-config-hash di atas
     volumes:
       - ./valkey/valkey.conf:/usr/local/etc/valkey/valkey.conf:ro
       - valkey-data:/data
@@ -217,6 +225,8 @@ services:
   pgbouncer:
     <<: *hardening
     image: edoburu/pgbouncer:v1.26.1-p0@sha256:488422e38cff912895d0d65d8963fcd306e6ac589a724398b6eb8e294e94d624
+    labels:
+      cc.config-hash: ${CC_HASH_PGBOUNCER:-manual} # lihat x-config-hash di atas
     volumes:
       - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
       - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro

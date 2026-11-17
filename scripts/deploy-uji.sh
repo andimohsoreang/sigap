@@ -15,6 +15,7 @@
 # -p contact-center-uji -f/--env-file eksplisit, dan COMPOSE_* dari shell/.env ditolak — `--remove-orphans` di
 # project yang salah akan menghapus container app2. DB uji boleh direset
 # (docs/RENCANA-PER-FITUR.md §0): rollback image tidak membatalkan perubahan DB — pulihkan dari backups/ bila perlu.
+# Config ter-mount (pgbouncer, valkey, sockudo) yang berubah memicu pembuatan ulang service itu saja (label cc.config-hash).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -139,6 +140,10 @@ cek_worker() {
   st="$(docker inspect -f '{{.State.Status}} restart={{.RestartCount}}' "$id" 2>/dev/null || true)"
   [[ "$st" == "running restart=0" ]] || { diagnosis; die "worker tidak sehat ($st)"; }
   docker logs "$id" 2>&1 | grep -q 'worker berjalan' || { diagnosis; die "log worker tidak memuat \"worker berjalan\""; }
+  # Putus DB hanya wajar selama jendela restart pgbouncer (sebelum T_SIAP).
+  if docker logs --since "$T_SIAP" "$id" 2>&1 | grep -q 'ECONNREFUSED'; then
+    diagnosis; die "worker masih ECONNREFUSED setelah pgbouncer siap"
+  fi
 }
 
 versions() {
@@ -157,7 +162,34 @@ chmod 700 "$DIR"
   printf '"cc_readonly" "%s"\n' "$(val CC_READONLY_PASSWORD)"
   printf '"cc_migrate" "%s"\n' "$(val CC_MIGRATE_PASSWORD)"
 } > pgbouncer/userlist.txt.baru
-chmod 644 pgbouncer/userlist.txt.baru && mv pgbouncer/userlist.txt.baru pgbouncer/userlist.txt
+chmod 644 pgbouncer/userlist.txt.baru
+# Ganti hanya bila isinya berubah (perubahan → hash config pgbouncer berubah → pgbouncer dibuat ulang).
+if cmp -s pgbouncer/userlist.txt.baru pgbouncer/userlist.txt; then rm -f pgbouncer/userlist.txt.baru
+else mv pgbouncer/userlist.txt.baru pgbouncer/userlist.txt; fi
+
+# Config ter-mount dibaca proses hanya saat start, dan bind mount satu berkas memegang inode lama: label
+# cc.config-hash (compose.yml) = sha256 isi berkas tiap service → `up -d` membuat ulang HANYA service yang
+# config-nya berubah. Dipilih ketimbang `configs:` Compose (non-swarm = bind mount juga, deteksi perubahan isi
+# bergantung versi Compose) dan mount direktori (isi baru terlihat, tapi pgbouncer/valkey/sockudo tetap tidak
+# membaca ulang config tanpa restart). Hash dihitung setelah git pull (lihat hash_config).
+sha() { if command -v sha256sum >/dev/null 2>&1; then cat "$@" | sha256sum; else cat "$@" | shasum -a 256; fi | cut -c1-16; }
+hash_config() {
+  export CC_HASH_PGBOUNCER CC_HASH_VALKEY CC_HASH_SOCKUDO
+  CC_HASH_PGBOUNCER="$(sha pgbouncer/pgbouncer.ini pgbouncer/userlist.txt)"
+  CC_HASH_VALKEY="$(sha valkey/valkey.conf)"
+  CC_HASH_SOCKUDO="$(sha sockudo.env)"
+  echo "==> Hash config: pgbouncer=$CC_HASH_PGBOUNCER valkey=$CC_HASH_VALKEY sockudo=$CC_HASH_SOCKUDO"
+}
+
+# Infrastruktur lebih dulu (pgbouncer dibuat ulang sebelum migrasi & sebelum cc-web/worker dicek). Selama jendela
+# itu klien lama boleh ECONNREFUSED; setelah T_SIAP (+5 dtk tenggang retry) worker tidak boleh lagi.
+T_SIAP=0
+infra() {
+  echo "==> Infrastruktur postgres, pgbouncer, valkey, sockudo (dibuat ulang hanya bila image/config berubah)"
+  "${DC[@]}" up -d --wait --no-deps postgres pgbouncer valkey sockudo \
+    || { diagnosis; die "infrastruktur tidak sehat — periksa config yang berubah (pgbouncer.ini, valkey.conf, sockudo.env)"; }
+  T_SIAP=$(( $(date +%s) + 5 ))
+}
 
 if [[ $ROLLBACK -eq 1 ]]; then
   [[ "$ROLLBACK_TO" =~ ^(uji-prev|[0-9a-f]{7,40})$ ]] || die "tag rollback tidak sah: $ROLLBACK_TO"
@@ -169,6 +201,8 @@ if [[ $ROLLBACK -eq 1 ]]; then
     WORKER=0; SKALA=(--scale worker=0)
   fi
   docker tag "$IMG:$ROLLBACK_TO" "$IMG:uji"
+  hash_config
+  infra
   # Gagal --wait tetap lanjut ke health: diagnosis & petunjuk muncul di sana.
   "${DC[@]}" up -d --no-build --remove-orphans --wait ${SKALA[@]+"${SKALA[@]}"} || true
   health
@@ -182,6 +216,7 @@ fi
 SHA="$(git -C "$ROOT" rev-parse --short=7 HEAD)"
 echo "==> Versi: $(git -C "$ROOT" log -1 --format='%h %s')"
 [[ -z "$(git -C "$ROOT" status --porcelain --untracked-files=no)" ]] || echo "PERINGATAN: ada perubahan lokal yang ikut ter-build" >&2
+hash_config
 
 # Dari :uji-sehat, bukan :uji — :uji bisa berisi build gagal dari percobaan sebelumnya.
 echo "==> Simpan image sehat terakhir sebagai :uji-prev"
@@ -201,7 +236,9 @@ echo "==> Backup: $DUMP"
 chmod 600 "$DUMP"
 [[ -s "$DUMP" ]] || die "backup kosong"
 
-# Setelah backup, sebelum container baru: tabel khusus Next.js (cc_*) & skema pg-boss, hanya aditif dan idempoten.
+infra
+
+# Setelah backup & infrastruktur (migrasi lewat pgbouncer dengan config baru), sebelum container aplikasi baru: tabel khusus Next.js (cc_*) & skema pg-boss, hanya aditif dan idempoten.
 # Worker baru butuh skema pg-boss versi image ini. Gagal → berhenti; container lama tetap berjalan.
 echo "==> Migrasi Next.js (cc_migrate: tabel cc_*, skema pgboss)"
 "${DC[@]}" run --rm migrate || die "migrasi gagal — stack lama tetap berjalan; pulihkan dari $DUMP bila perlu"

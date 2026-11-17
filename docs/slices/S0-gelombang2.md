@@ -51,7 +51,7 @@ Laporan: `~/security-audit-skill/contact-center/run-2/` (REPORT.md, FINDINGS-DET
 **Perbedaan kecil dengan Laravel (tidak terlihat pengguna):** body 302 dari proxy berupa teks URL; `POST /masuk` gagal tidak memperpanjang cookie; sesi tamu lama dihapus saat login (Laravel menyimpannya); urutan tag `<head>` Next.
 
 **Tindak lanjut:**
-- `deploy-uji.sh` tidak me-restart pgbouncer/valkey/sockudo saat berkas config ter-mount berubah (bind mount satu berkas memegang inode lama) — 17 Nov dipulihkan manual dengan `compose restart pgbouncer`. Perlu restart otomatis berbasis hash config.
+- ~~`deploy-uji.sh` tidak me-restart pgbouncer/valkey/sockudo saat berkas config ter-mount berubah (bind mount satu berkas memegang inode lama) — 17 Nov dipulihkan manual dengan `compose restart pgbouncer`.~~ **Diperbaiki** (branch `s1/deploy-config`): label `cc.config-hash` = sha256 isi `pgbouncer.ini`+`userlist.txt` / `valkey.conf` / `sockudo.env`, dihitung skrip setelah `git pull` → `up -d` membuat ulang hanya service yang config-nya berubah. Infrastruktur dinaikkan lebih dulu (sebelum migrasi & cek aplikasi); ECONNREFUSED worker hanya wajar sebelum pgbouncer siap (+5 dtk), sesudahnya cek worker gagal. Berkas `uji/` (init postgres) sengaja tidak di-hash: hanya dibaca saat volume kosong.
 - NV-B (akun nonaktif tetap mendapat tanda tangan kanal privat, sama dengan Laravel) menunggu keputusan pemilik proyek.
 - Sockudo mencatat penolakan Origin sebagai ERROR → atur level/peringatan di paket I.
 - Halaman & Server Action baru wajib memakai penanganan galat yang sama (`tanganiGalat`/`onRequestError`), bukan console.error bawaan Next.
