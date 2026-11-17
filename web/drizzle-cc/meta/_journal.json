@@ -15,6 +15,13 @@
       "when": 1794735295516,
       "tag": "0001_cc_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794946680213,
+      "tag": "0002_tickets_publik_index",
+      "breakpoints": true
     }
   ]
 }

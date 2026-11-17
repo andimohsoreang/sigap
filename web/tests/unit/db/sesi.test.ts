@@ -66,7 +66,7 @@ describe.skipIf(!!alasan)(`sesi & login DB${alasan ? ` — dilewati: ${alasan}` 
     beforeAll(async () => {
         await migrate.connect();
         await mentah(`DROP SCHEMA IF EXISTS ${SKEMA} CASCADE; DROP SCHEMA IF EXISTS ${SKEMA_BOSS} CASCADE; CREATE SCHEMA ${SKEMA}`);
-        for (const t of ['users', 'activity_logs', 'chat_conversations']) {
+        for (const t of ['users', 'activity_logs', 'chat_conversations', 'tickets']) {
             await mentah(`CREATE TABLE ${SKEMA}.${t} (LIKE public.${t} INCLUDING ALL);
                 CREATE SEQUENCE ${SKEMA}.${t}_id_seq OWNED BY ${SKEMA}.${t}.id;
                 ALTER TABLE ${SKEMA}.${t} ALTER id SET DEFAULT nextval('${SKEMA}.${t}_id_seq')`);

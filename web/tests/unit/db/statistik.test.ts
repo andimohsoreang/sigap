@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -9,6 +12,8 @@ import { cekLaravel, laravel, type EnvLaravel } from './laravel';
 // tanpa DB/PHP → dilewati, kecuali CC_TEST_DB=1 (`npm run test:db`) atau CI=true → wajib.
 
 const SKEMA = `cc_uji_stat_${process.pid}`;
+const SKEMA_BOSS = `cc_uji_stat_boss_${process.pid}`;
+const INDEKS_PUBLIK = ['tickets_category_id_publik_index', 'tickets_channel_id_publik_index'];
 const TABEL = ['tickets', 'categories', 'channels'];
 const URL_MIGRATE = 'postgres://cc_migrate@127.0.0.1:5432/contact_center_dev';
 const URL_APP = `postgres://cc_app@127.0.0.1:5432/contact_center_dev?options=${encodeURIComponent(`-c search_path=${SKEMA}`)}`;
@@ -70,18 +75,23 @@ describe.skipIf(!!alasan)(`paritas statistik publik vs Laravel${alasan ? ` — d
     vi.stubEnv('VALKEY_URL', '');
     const { tutupDb } = await import('@/server/db/client');
     const { hitungStatistikPublik } = await import('@/server/statistik');
+    const { kategoriTeratas, semuaKanal } = await import('@/server/statistik/repo');
+    const { terapkanMigrasi } = await import('@/server/migrasi');
+    // Migrasi drizzle-cc sebagai cc_migrate seperti service `migrate` (0002 = indeks parsial statistik di `tickets`).
+    const migrasi = () => terapkanMigrasi({ url: URL_MIGRATE, folder: path.resolve('drizzle-cc'), skema: SKEMA, skemaBoss: SKEMA_BOSS });
 
     const migrate = new pg.Client({ connectionString: URL_MIGRATE });
     const mentah = async (teks: string, nilai: unknown[] = []) => (await migrate.query(teks, nilai)).rows;
 
     beforeAll(async () => {
         await migrate.connect();
-        await mentah(`DROP SCHEMA IF EXISTS ${SKEMA} CASCADE; CREATE SCHEMA ${SKEMA}`);
+        await mentah(`DROP SCHEMA IF EXISTS ${SKEMA} CASCADE; DROP SCHEMA IF EXISTS ${SKEMA_BOSS} CASCADE; CREATE SCHEMA ${SKEMA}`);
         for (const t of TABEL) {
             await mentah(`CREATE TABLE ${SKEMA}.${t} (LIKE public.${t} INCLUDING ALL);
                 CREATE SEQUENCE ${SKEMA}.${t}_id_seq OWNED BY ${SKEMA}.${t}.id;
                 ALTER TABLE ${SKEMA}.${t} ALTER id SET DEFAULT nextval('${SKEMA}.${t}_id_seq')`);
         }
+        await migrasi();
         await mentah(`GRANT USAGE ON SCHEMA ${SKEMA} TO cc_app;
             GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA ${SKEMA} TO cc_app;
             GRANT USAGE ON ALL SEQUENCES IN SCHEMA ${SKEMA} TO cc_app`);
@@ -89,7 +99,7 @@ describe.skipIf(!!alasan)(`paritas statistik publik vs Laravel${alasan ? ` — d
 
     afterAll(async () => {
         await tutupDb();
-        await mentah(`DROP SCHEMA IF EXISTS ${SKEMA} CASCADE`);
+        await mentah(`DROP SCHEMA IF EXISTS ${SKEMA} CASCADE; DROP SCHEMA IF EXISTS ${SKEMA_BOSS} CASCADE`);
         await migrate.end();
         vi.unstubAllEnvs();
     });
@@ -253,4 +263,64 @@ describe.skipIf(!!alasan)(`paritas statistik publik vs Laravel${alasan ? ` — d
             [0, 1, 0],
         ]);
     });
+
+    const indeksPublik = () =>
+        mentah(`SELECT indexname AS nama, indexdef AS def FROM pg_indexes WHERE schemaname = $1 AND indexname LIKE '%publik%' ORDER BY 1`, [SKEMA]);
+
+    it(
+        'migrasi indeks idempoten: jalan dua kali, dan melewati indeks yang sudah dibuat CONCURRENTLY secara manual',
+        { timeout: 60_000 },
+        async () => {
+            const jumlahMigrasi = JSON.parse(readFileSync(path.resolve('drizzle-cc/meta/_journal.json'), 'utf8')).entries.length;
+            const awal = await indeksPublik();
+            expect(awal.map((i) => i.nama)).toEqual(INDEKS_PUBLIK);
+            for (const i of awal) expect(i.def).toMatch(/WHERE \(\(is_internal = false\) AND \(deleted_at IS NULL\)\)$/);
+
+            await migrasi();
+            expect(await indeksPublik()).toEqual(awal);
+            expect(await mentah(`SELECT count(*)::int AS n FROM ${SKEMA}.cc_migrasi`)).toEqual([{ n: jumlahMigrasi }]);
+
+            // Langkah pergantian produksi (docs/slices/S1.md): indeks dibuat CONCURRENTLY sebelum migrasi 0002 tercatat.
+            const [terakhir] = await mentah(`SELECT max(created_at) AS t FROM ${SKEMA}.cc_migrasi`);
+            await mentah(`DELETE FROM ${SKEMA}.cc_migrasi WHERE created_at = $1`, [terakhir.t]);
+            for (const i of awal) await mentah(`DROP INDEX ${SKEMA}.${i.nama}`);
+            for (const i of awal) await mentah(i.def.replace('CREATE INDEX', 'CREATE INDEX CONCURRENTLY'));
+            await migrasi();
+            expect(await indeksPublik()).toEqual(awal);
+            expect(await mentah(`SELECT count(*)::int AS n FROM ${SKEMA}.cc_migrasi`)).toEqual([{ n: jumlahMigrasi }]);
+        },
+    );
+
+    it(
+        'EXPLAIN (data sintetis 30 ribu tiket): withCount kategori & kanal memakai indeks parsial (index-only scan), paritas tetap',
+        { timeout: 60_000 },
+        async () => {
+            await mentah(`INSERT INTO ${SKEMA}.tickets (ticket_no, title, description, status, created_at, updated_at, category_id, channel_id, province, is_internal, deleted_at)
+            SELECT 'SIN-' || g, 'x', 'x', (ARRAY['baru','verifikasi','diproses','selesai','ditolak'])[1 + g % 5],
+                timestamp '2026-01-01' + g * interval '7 minutes', timestamp '2026-01-01', 1 + g % 8, 1 + g % 5, 'Provinsi ' || g % 38,
+                g % 20 = 0, CASE WHEN g % 50 = 0 THEN timestamp '2026-06-01' END
+            FROM generate_series(1, 30000) g`);
+            await mentah(`VACUUM ANALYZE ${SKEMA}.tickets`);
+
+            const rencana = async (q: { sql: string; params: unknown[] }) => {
+                await mentah(`SET search_path = ${SKEMA}`);
+                try {
+                    const [baris] = await mentah(`EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${q.sql}`, q.params);
+                    return JSON.stringify(baris['QUERY PLAN']);
+                } finally {
+                    await mentah('RESET search_path');
+                }
+            };
+            const kat = await rencana(kategoriTeratas().toSQL());
+            expect(kat).toContain('"Node Type":"Index Only Scan"');
+            expect(kat).toContain('"Index Name":"tickets_category_id_publik_index"');
+            expect(kat).toMatch(/"Heap Fetches":0/);
+            const kan = await rencana(semuaKanal().toSQL());
+            expect(kan).toContain('"Node Type":"Index Only Scan"');
+            expect(kan).toContain('"Index Name":"tickets_channel_id_publik_index"');
+
+            // Rencana baru (index-only scan) tidak mengubah hasil atau urutan baris yang totalnya sama.
+            await bandingkan(['2026-11-17 10:20:30.5', '2026-03-01 12:00:00']);
+        },
+    );
 });

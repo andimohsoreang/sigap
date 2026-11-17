@@ -103,26 +103,30 @@ async function muat(urlValkey: string) {
     vi.resetModules();
     const statistik = await import('@/server/statistik');
     const valkey = await import('@/server/valkey');
-    return { ...statistik, ...valkey };
+    const { log } = await import('@/server/log');
+    return { ...statistik, ...valkey, peringatan: vi.spyOn(log, 'warn') };
 }
 
 describe('Valkey mati / tidak dikonfigurasi: halaman tetap mendapat data dari DB', () => {
     afterAll(() => vi.unstubAllEnvs());
 
     it('Valkey tidak terjangkau → dihitung langsung, tanpa melempar, permintaan berikutnya tidak menunggu', async () => {
-        const { ambilStatistikPublik, tutupValkey } = await muat('redis://127.0.0.1:1/15');
+        const { ambilStatistikPublik, tutupValkey, peringatan } = await muat('redis://127.0.0.1:1/15');
         expect(JSON.stringify(await ambilStatistikPublik())).toBe(HARAPAN);
         const mulai = performance.now();
         expect(JSON.stringify(await ambilStatistikPublik())).toBe(HARAPAN);
         expect(performance.now() - mulai).toBeLessThan(500);
         expect(repo.agregatTiket).toHaveBeenCalledTimes(2);
+        // Dua permintaan, satu peringatan: hanya catatan putus dari valkey.ts, bukan per permintaan.
+        expect(peringatan.mock.calls.map(([, pesan]) => pesan)).toEqual(['Valkey tidak tersedia; memakai jalur cadangan']);
         await tutupValkey();
     });
 
     it('VALKEY_URL kosong → dihitung langsung', async () => {
-        const { ambilStatistikPublik } = await muat('');
+        const { ambilStatistikPublik, peringatan } = await muat('');
         expect(JSON.stringify(await ambilStatistikPublik())).toBe(HARAPAN);
         expect(repo.agregatTiket).toHaveBeenCalledTimes(1);
+        expect(peringatan).not.toHaveBeenCalled();
     });
 });
 
@@ -157,6 +161,18 @@ describe.skipIf(!ada)(`cache statistik di Valkey${ada ? '' : ' — dilewati: Val
         expect(repo.agregatTiket).toHaveBeenCalledTimes(1);
 
         await r.del('stats:public-overview');
+        await tutupValkey();
+    });
+
+    it('isi cache rusak → dicatat, dihitung dari DB, lalu cache ditimpa hasil baru', async () => {
+        const { ambilStatistikPublik, denganValkey, tutupValkey, peringatan } = await muat(URL_VALKEY);
+        await denganValkey((v) => v.set('stats:public-overview', '{rusak', 'EX', 60));
+
+        expect(JSON.stringify(await ambilStatistikPublik())).toBe(HARAPAN);
+        expect(peringatan).toHaveBeenCalledTimes(1);
+        expect(await denganValkey((v) => v.get('stats:public-overview'))).toBe(HARAPAN);
+
+        await denganValkey((v) => v.del('stats:public-overview'));
         await tutupValkey();
     });
 });
