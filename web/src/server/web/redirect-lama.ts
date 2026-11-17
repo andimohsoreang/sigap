@@ -24,26 +24,12 @@ export function redirectLama(metode: string, path: string): string | null {
 }
 
 /**
- * RedirectResponse Symfony: Location relatif apa adanya, query dibuang, isi HTML bawaan, tanpa Cache-Control (301).
+ * RedirectResponse Symfony: 301, Location relatif apa adanya, query dibuang, tanpa Cache-Control.
  * Location ditulis absolut terhadap URL permintaan karena adapter proxy Next.js menolak Location relatif; adapter yang
  * sama menulisnya kembali menjadi relatif (`/katalog`) untuk host yang sama (next/dist/server/web/adapter.js).
+ * Isi respons tidak dikirim: server Next.js mengganti isi redirect dari proxy dengan teks URL (perbedaan yang sama
+ * dengan 302 di S0; Laravel mengirim halaman "Redirecting to …" yang tidak terlihat karena browser langsung pindah).
  */
 export function respons301(ke: string, urlPermintaan: string): NextResponse {
-    const e = ke.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const isi = `<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8" />
-        <meta http-equiv="refresh" content="0;url='${e}'" />
-
-        <title>Redirecting to ${e}</title>
-    </head>
-    <body>
-        Redirecting to <a href="${e}">${e}</a>.
-    </body>
-</html>`;
-    return new NextResponse(isi, {
-        status: 301,
-        headers: { Location: new URL(ke, urlPermintaan).toString(), 'Content-Type': 'text/html; charset=utf-8' },
-    });
+    return new NextResponse(null, { status: 301, headers: { Location: new URL(ke, urlPermintaan).toString() } });
 }
