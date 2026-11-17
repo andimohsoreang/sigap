@@ -1,14 +1,17 @@
 import 'server-only';
 
-import { and, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, desc, isNotNull, sql } from 'drizzle-orm';
 
 import { db } from '@/server/db/client';
 import { categories, channels, tickets } from '@/server/db/schema';
 
-import { STATUS_BERJALAN, STATUS_TIKET, type Jendela, type JumlahPerNama, type StatusTiket } from './hitung';
+import { STATUS_BERJALAN, STATUS_TIKET, type Jendela, type StatusTiket } from './hitung';
 
 // Query StatsService::computePublicOverview. Ticket::scopePublic + SoftDeletes = semua query tiket di bawah.
-const publik = and(eq(tickets.isInternal, false), isNull(tickets.deletedAt));
+// Fungsi daftar mengembalikan query builder (thenable) agar test dapat memeriksa EXPLAIN lewat .toSQL().
+// Literal, bukan parameter: predikat indeks parsial tickets_*_publik_index (drizzle-cc/0002) hanya terbukti cocok bila
+// `false` tertulis di SQL — dengan parameter, rencana generik (prepared statement) tidak bisa memakainya.
+const publik = sql`${tickets}."is_internal" = false and ${tickets}."deleted_at" is null`;
 const hitungBila = (kondisi: ReturnType<typeof sql>) => sql`count(*) filter (where ${kondisi})`.mapWith(Number);
 
 /**
@@ -53,19 +56,19 @@ function jumlahTiketPer(induk: 'categories' | 'channels', fk: 'category_id' | 'c
 }
 
 /** Category::withCount(tickets publik)->orderByDesc('total')->limit(5). */
-export function kategoriTeratas(): Promise<JumlahPerNama[]> {
+export function kategoriTeratas() {
     const total = jumlahTiketPer('categories', 'category_id');
     return db.select({ name: categories.name, total }).from(categories).orderBy(desc(total)).limit(5);
 }
 
 /** Channel::withCount(tickets publik)->orderByDesc('total'), semua kanal. */
-export function semuaKanal(): Promise<JumlahPerNama[]> {
+export function semuaKanal() {
     const total = jumlahTiketPer('channels', 'channel_id');
     return db.select({ name: channels.name, total }).from(channels).orderBy(desc(total));
 }
 
 /** Top 6 provinsi tiket publik (province NOT NULL), GROUP BY province ORDER BY total DESC. */
-export function provinsiTeratas(): Promise<JumlahPerNama[]> {
+export function provinsiTeratas() {
     const total = sql<number>`count(*)`.mapWith(Number).as('total');
     return db
         .select({ name: sql<string>`${tickets.province}`, total })
